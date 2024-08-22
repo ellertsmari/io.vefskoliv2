@@ -30,7 +30,6 @@ export const ProfileImage = styled(Image)`
   background-color: var(--primary-white);
 `;
 
-
 export const ProfileName = styled.h2`
   font-size: 24px;
   font-weight: 500;
@@ -55,6 +54,7 @@ export const ExitAndLogoutWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   width: 100%;
+  align-items: center;
 `;
 
 export const LogoutButton = styled.div`
@@ -62,10 +62,14 @@ export const LogoutButton = styled.div`
   border: none;
   cursor: pointer;
   transition: 0.1s ease-in-out;
-
+  align-self: flex-end;
+  flex-direction: row;
+  display: flex;
+  gap: 8px;
   &:hover {
     filter: brightness(0.1);
   }
+  align-items: center;
 `;
 
 export const LogoutIcon = styled(Image)`
@@ -84,7 +88,6 @@ export const AdditionalInfo = styled.p`
   font-size: 14px;
   color: var(--theme-module3-100);
 `;
-
 
 export const Form = styled.form`
   display: flex;

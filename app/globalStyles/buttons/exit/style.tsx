@@ -2,8 +2,8 @@ import styled from "styled-components";
 import Image from "next/image";
 
 export const Button = styled.button`
-  background-color: transparent;
-  border: 1px solid var(--error-failure-100);
+  background-color: var(--primary-black-60);
+  border: transparent;
   border-radius: 50%;
   font-size: 24px;
   width: 18px;
