@@ -1,4 +1,37 @@
-import { Document, Schema, model, models, InferSchemaType, Types} from "mongoose";
+import {
+  Document,
+  Schema,
+  model,
+  models,
+  InferSchemaType,
+  Types,
+  Model,
+} from "mongoose";
+
+interface RequiredUserInfo {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  createdAt: Date;
+}
+
+interface OptionalUserInfo {
+  background?: string;
+  careerGoals?: string;
+  interests?: string;
+  favoriteArtists?: string;
+  avatarUrl?: string;
+}
+
+type UserInfo = RequiredUserInfo & OptionalUserInfo;
+
+interface UserMethods {
+  updateUserInfo: (
+    this: UserDocument,
+    updatedFields: OptionalUserInfo
+  ) => Promise<void>;
+}
 
 const userSchema = new Schema({
   name: { type: Schema.Types.String, required: true },
@@ -10,12 +43,24 @@ const userSchema = new Schema({
   favoriteArtists: { type: Schema.Types.String, required: false },
   createdAt: { type: Schema.Types.Date, required: true },
   role: { type: Schema.Types.String, required: true },
-  avatarUrl: { type: Schema.Types.String, required: false }
+  avatarUrl: { type: Schema.Types.String, required: false },
 });
+
+userSchema.method(
+  "updateUserInfo",
+  async function (this: UserDocument, updatedFields: Partial<UserType>) {
+    Object.assign(this, updatedFields);
+
+    await this.save();
+  }
+);
 
 export type UserType = InferSchemaType<typeof userSchema> & {
   isLoggedIn?: boolean;
 };
-export type UserWithIdType = UserType & { id: Types.ObjectId };
-type UserDocument = UserType & Document;
-export const User = models.User || model<UserDocument>("User", userSchema);
+export type UserWithIdType = UserType & { id: Types.ObjectId } & UserMethods;
+export type UserDocument = UserType & Document & UserMethods;
+type UserModel = Model<UserInfo, {}, UserMethods>;
+
+export const User =
+  models?.User || model<UserDocument, UserModel>("User", userSchema);
