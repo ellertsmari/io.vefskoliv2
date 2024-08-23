@@ -16,7 +16,7 @@ interface RequiredUserInfo {
   createdAt: Date;
 }
 
-interface OptionalUserInfo {
+export interface OptionalUserInfo {
   background?: string;
   careerGoals?: string;
   interests?: string;

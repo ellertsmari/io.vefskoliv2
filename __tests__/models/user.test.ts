@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import { User, UserDocument } from "../app/models/user";
-import { connectToDatabase } from "../app/utils/mongoose-connector";
+import { User, UserDocument } from "../../app/models/user";
+import { connectToDatabase } from "../../app/utils/mongoose-connector";
 
 describe("User model", () => {
   beforeAll(async () => {
