@@ -1,12 +1,6 @@
 import { Profile } from "./profile/profile";
 
-type Props = {
- 
+function Sidebar() {
+  return <Profile />;
 }
-export const Sidebar = ({}: Props) => {
-    return ( 
-        <div>
-            <Profile />
-        </div>
-    );
-}
+export default Sidebar;

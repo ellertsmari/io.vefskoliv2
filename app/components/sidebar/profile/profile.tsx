@@ -20,15 +20,15 @@ import ExitButton from "../../../globalStyles/buttons/exit";
 import logouticon from "../../../assets/logout.svg";
 import DefaultButton from "../../../globalStyles/buttons/default";
 import { signOut } from "../../../utils/actions";
-import { useSession } from "next-auth/react";
 import ProfilePic from "./Defaultuser.svg";
 import { UserWithIdType } from "../../../models/user";
+import { useSession } from "../../../providers/SessionProvider";
 
 export const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   //getting the user from session
-  const { data: session } = useSession();
+  const session = useSession();
   //fix unknown later
   const user = session?.user as unknown as UserWithIdType;
 
