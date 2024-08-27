@@ -19,17 +19,17 @@ import Input from "../../../globalStyles/input";
 import ExitButton from "../../../globalStyles/buttons/exit";
 import logouticon from "../../../assets/logout.svg";
 import DefaultButton from "../../../globalStyles/buttons/default";
-import { signOut, updateUserInfo } from "../../../utils/actions";
-import { useSession } from "next-auth/react";
+import { signOut } from "../../../utils/actions";
 import ProfilePic from "./Defaultuser.svg";
-import { User, UserDocument } from "../../../models/user";
-import { connectToDatabase } from "../../../utils/mongoose-connector";
+import { UserWithIdType } from "../../../models/user";
+import { useSession } from "../../../providers/SessionProvider";
+
 
 export const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   //getting the user from session
-  const { data: session } = useSession();
+  const session = useSession();
   //fix unknown later
   const user = session?.user as unknown as UserDocument;
 
