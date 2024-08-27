@@ -13,7 +13,7 @@ import {
   AdditionalInfo,
   ButtonWrapper,
 } from "./style";
-import { useState } from "react";
+import { SetStateAction, useState } from "react";
 import Modal from "../../modal/modal";
 import Input from "../../../globalStyles/input";
 import ExitButton from "../../../globalStyles/buttons/exit";
@@ -24,13 +24,31 @@ import ProfilePic from "./Defaultuser.svg";
 import { UserWithIdType } from "../../../models/user";
 import { useSession } from "../../../providers/SessionProvider";
 
+
 export const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   //getting the user from session
   const session = useSession();
   //fix unknown later
-  const user = session?.user as unknown as UserWithIdType;
+  const user = session?.user as unknown as UserDocument;
+
+  const [background, setBackground] = useState(user?.background || "");
+  const [careerGoals, setCareerGoals] = useState(user?.careerGoals || "");
+  const [interests, setInterests] = useState(user?.interests || "");
+  const [favoriteArtists, setFavoriteArtists] = useState(
+    user?.favoriteArtists || ""
+  );
+
+  const onSave = async () => {
+    console.log("onSave called");
+    updateUserInfo(user.email, {
+      background,
+      careerGoals,
+      interests,
+      favoriteArtists,
+    });
+  };
 
   return (
     <div>
@@ -86,27 +104,42 @@ export const Profile = () => {
             <Form>
               <Input
                 type="text"
-                placeholder={user.background}
+                value={background}
+                onChange={(e: { target: { value: SetStateAction<string> } }) =>
+                  setBackground(e.target.value)
+                }
                 label="BACKGROUND"
               />
               <Input
                 type="text"
-                placeholder={user.careerGoals}
+                value={careerGoals}
+                onChange={(e: { target: { value: SetStateAction<string> } }) =>
+                  setCareerGoals(e.target.value)
+                }
                 label="NEAR FUTURE CAREER GOALS"
               />
               <Input
                 type="text"
                 placeholder={user.interests}
+                value={interests}
+                onChange={(e: { target: { value: SetStateAction<string> } }) =>
+                  setInterests(e.target.value)
+                }
                 label="MAIN INTERESTS"
               />
               <Input
                 type="text"
-                placeholder={user.favoriteArtists}
+                value={favoriteArtists}
+                onChange={(e: { target: { value: SetStateAction<string> } }) =>
+                  setFavoriteArtists(e.target.value)
+                }
                 label="FAVORITE BAND/ARTIST"
               />
             </Form>
             <ButtonWrapper>
-              <DefaultButton style="default">SAVE</DefaultButton>
+              <DefaultButton style="default" onClick={onSave}>
+                SAVE
+              </DefaultButton>
               <DefaultButton style="outlined">CHANGE PASSWORD</DefaultButton>
             </ButtonWrapper>
           </ModalContent>

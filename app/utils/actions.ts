@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 
 import { signIn, signOut as s } from "../../auth";
 import { AuthError } from "next-auth";
+import { OptionalUserInfo } from "../models/user";
 
 export const signOut = s; //needs to be in actions.ts so that it can be called on the client side
 export async function authenticate(
