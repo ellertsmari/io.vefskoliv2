@@ -2,20 +2,20 @@
 
 import { useActionState, useRef } from "react";
 import { authenticate } from "../utils/actions";
+import DefaultButton from "../globalStyles/buttons/default";
+import Input from "../globalStyles/input";
 import {
   Container,
   Form,
+  Logo,
+  Wrapper,
   InputWrapper,
   ButtonWrapper,
-  Wrapper,
-  Logo,
   Toast,
-} from "../../app/login/style";
-import Input from "../globalStyles/input";
-import DefaultButton from "../globalStyles/buttons/default";
+} from "../login/style";
 import LogoSvg from "../../public/logo.svg";
 
-export default function LoginForm({
+export default function RegisterForm({
   setSelectedForm,
 }: {
   setSelectedForm: (form: "login" | "register") => void;
@@ -27,16 +27,17 @@ export default function LoginForm({
 
   const formRef = useRef(null);
 
-  const handleLogin = (event: any) => {
+  const handleRegister = (event: any) => {
     event.preventDefault();
-    if (formRef.current) {
-      formAction(new FormData(formRef.current));
-    }
+    console.log("registering");
+    //   if (formRef.current) {
+    //     formAction(new FormData(formRef.current));
+    //   }
   };
 
-  const handleGoToRegister = (event: any) => {
+  const handleGoToLogin = (event: any) => {
     event.preventDefault();
-    setSelectedForm("register");
+    setSelectedForm("login");
   };
 
   return (
@@ -61,15 +62,15 @@ export default function LoginForm({
             />
           </InputWrapper>
           <ButtonWrapper>
-            <DefaultButton style="outlined" onClick={handleGoToRegister}>
-              REGISTER
+            <DefaultButton style="outlined" onClick={handleGoToLogin}>
+              BACK TO LOGIN
             </DefaultButton>
             <DefaultButton
               style="default"
               aria-disabled={isPending}
-              onClick={handleLogin}
+              onClick={handleRegister}
             >
-              LOGIN
+              REGISTER
             </DefaultButton>
           </ButtonWrapper>
         </Wrapper>

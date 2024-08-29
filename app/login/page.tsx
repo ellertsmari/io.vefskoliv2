@@ -1,7 +1,7 @@
 "use client";
 
-import LoginForm from "../components/LoginForm";
+import LoginOrRegister from "../components/LoginOrRegister";
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return <LoginOrRegister />;
 }
