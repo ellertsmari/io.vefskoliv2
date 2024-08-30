@@ -9,7 +9,7 @@ import {
   ButtonWrapper,
   Wrapper,
   Logo,
-  Toast,
+  ErrorToast,
 } from "../../app/login/style";
 import Input from "../globalStyles/input";
 import DefaultButton from "../globalStyles/buttons/default";
@@ -36,6 +36,7 @@ export default function LoginForm({
 
   const handleGoToRegister = (event: any) => {
     event.preventDefault();
+    console.log("going to register");
     setSelectedForm("register");
   };
 
@@ -76,7 +77,7 @@ export default function LoginForm({
       </Form>
       {errorMessage && (
         <>
-          <Toast>{errorMessage}</Toast>
+          <ErrorToast>{errorMessage}</ErrorToast>
         </>
       )}
     </Container>
