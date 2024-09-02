@@ -102,6 +102,7 @@ export const Profile = () => {
             <Form>
               <Input
                 type="text"
+                id="background"
                 value={background}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
                   setBackground(e.target.value)
@@ -110,6 +111,7 @@ export const Profile = () => {
               />
               <Input
                 type="text"
+                id="careerGoals"
                 value={careerGoals}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
                   setCareerGoals(e.target.value)
@@ -118,6 +120,7 @@ export const Profile = () => {
               />
               <Input
                 type="text"
+                id="interests"
                 placeholder={user.interests}
                 value={interests}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
@@ -127,6 +130,7 @@ export const Profile = () => {
               />
               <Input
                 type="text"
+                id="favoriteArtists"
                 value={favoriteArtists}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
                   setFavoriteArtists(e.target.value)
