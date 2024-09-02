@@ -19,11 +19,10 @@ import Input from "../../../globalStyles/input";
 import ExitButton from "../../../globalStyles/buttons/exit";
 import logouticon from "../../../assets/logout.svg";
 import DefaultButton from "../../../globalStyles/buttons/default";
-import { signOut } from "../../../utils/actions";
+import { signOut, updateUserInfo } from "../../../utils/actions";
 import ProfilePic from "./Defaultuser.svg";
-import { UserWithIdType } from "../../../models/user";
+import { UserDocument } from "../../../models/user";
 import { useSession } from "../../../providers/SessionProvider";
-
 
 export const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +40,6 @@ export const Profile = () => {
   );
 
   const onSave = async () => {
-    console.log("onSave called");
     updateUserInfo(user.email, {
       background,
       careerGoals,
@@ -104,6 +102,7 @@ export const Profile = () => {
             <Form>
               <Input
                 type="text"
+                id="background"
                 value={background}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
                   setBackground(e.target.value)
@@ -112,6 +111,7 @@ export const Profile = () => {
               />
               <Input
                 type="text"
+                id="careerGoals"
                 value={careerGoals}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
                   setCareerGoals(e.target.value)
@@ -120,6 +120,7 @@ export const Profile = () => {
               />
               <Input
                 type="text"
+                id="interests"
                 placeholder={user.interests}
                 value={interests}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
@@ -129,6 +130,7 @@ export const Profile = () => {
               />
               <Input
                 type="text"
+                id="favoriteArtists"
                 value={favoriteArtists}
                 onChange={(e: { target: { value: SetStateAction<string> } }) =>
                   setFavoriteArtists(e.target.value)

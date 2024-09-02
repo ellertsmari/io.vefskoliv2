@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import nextImage from "next/image";
-import Input from '../globalStyles/input';
+import Input from "../globalStyles/input";
 
 export const Container = styled.div`
   display: flex;
@@ -51,16 +51,30 @@ export const Logo = styled(nextImage)`
   height: 154px;
 `;
 
-export const Toast = styled.div`
+const Toast = styled.div`
   padding: 16px;
   top: 100px;
   position: absolute;
   border-radius: 8px;
+`;
+
+export const ErrorToast = styled(Toast)`
   background-color: var(--error-failure-10);
   border: 1px solid var(--error-failure-100);
-  color: var(--error-failure-100);
+  color: var(--primary-black-100);
+`;
+
+export const SuccessToast = styled(Toast)`
+  background-color: var(--error-success-10);
+  border: 1px solid var(--error-success-100);
+  color: var(--primary-black-100);
 `;
 
 export const ErrorInput = styled(Input)`
   border: 1px solid var(--error-failure-100);
+`;
+
+export const ErrorMessage = styled.p`
+  color: var(--error-failure-100);
+  font-size: 14px;
 `;

@@ -9,16 +9,17 @@ import {
   ButtonWrapper,
   Wrapper,
   Logo,
-  Toast,
+  ErrorToast,
 } from "../../app/login/style";
 import Input from "../globalStyles/input";
 import DefaultButton from "../globalStyles/buttons/default";
 import LogoSvg from "../../public/logo.svg";
-import { useSession } from "../providers/SessionProvider";
 
-export default function LoginForm() {
-  const session = useSession();
-
+export default function LoginForm({
+  setSelectedForm,
+}: {
+  setSelectedForm: (form: "login" | "register") => void;
+}) {
   const [errorMessage, formAction, isPending] = useActionState(
     authenticate,
     undefined
@@ -26,14 +27,19 @@ export default function LoginForm() {
 
   const formRef = useRef(null);
 
-  const onLogin = (event: any) => {
+  const handleLogin = (event: any) => {
     event.preventDefault();
     if (formRef.current) {
       formAction(new FormData(formRef.current));
     }
   };
 
-  return !session?.user ? (
+  const handleGoToRegister = (event: any) => {
+    event.preventDefault();
+    setSelectedForm("register");
+  };
+
+  return (
     <Container>
       <Form ref={formRef}>
         <Logo src={LogoSvg} alt="logo" />
@@ -55,11 +61,13 @@ export default function LoginForm() {
             />
           </InputWrapper>
           <ButtonWrapper>
-            <DefaultButton style="outlined">REGISTER</DefaultButton>
+            <DefaultButton style="outlined" onClick={handleGoToRegister}>
+              REGISTER
+            </DefaultButton>
             <DefaultButton
               style="default"
               aria-disabled={isPending}
-              onClick={onLogin}
+              onClick={handleLogin}
             >
               LOGIN
             </DefaultButton>
@@ -68,9 +76,9 @@ export default function LoginForm() {
       </Form>
       {errorMessage && (
         <>
-          <Toast>{errorMessage}</Toast>
+          <ErrorToast>{errorMessage}</ErrorToast>
         </>
       )}
     </Container>
-  ) : null;
+  );
 }

@@ -8,7 +8,7 @@ import {
   Model,
 } from "mongoose";
 
-interface RequiredUserInfo {
+export interface RequiredUserInfo {
   name: string;
   email: string;
   password: string;
@@ -33,18 +33,20 @@ interface UserMethods {
   ) => Promise<void>;
 }
 
-const userSchema = new Schema({
-  name: { type: Schema.Types.String, required: true },
-  email: { type: Schema.Types.String, required: true, unique: true },
-  password: { type: Schema.Types.String, required: true },
-  background: { type: Schema.Types.String, required: false },
-  careerGoals: { type: Schema.Types.String, required: false },
-  interests: { type: Schema.Types.String, required: false },
-  favoriteArtists: { type: Schema.Types.String, required: false },
-  createdAt: { type: Schema.Types.Date, required: true },
-  role: { type: Schema.Types.String, required: true },
-  avatarUrl: { type: Schema.Types.String, required: false },
-});
+const userSchema = new Schema(
+  {
+    name: { type: Schema.Types.String, required: true },
+    email: { type: Schema.Types.String, required: true, unique: true },
+    password: { type: Schema.Types.String, required: true },
+    background: { type: Schema.Types.String, required: false },
+    careerGoals: { type: Schema.Types.String, required: false },
+    interests: { type: Schema.Types.String, required: false },
+    favoriteArtists: { type: Schema.Types.String, required: false },
+    role: { type: Schema.Types.String, required: true },
+    avatarUrl: { type: Schema.Types.String, required: false },
+  },
+  { timestamps: true }
+);
 
 userSchema.method(
   "updateUserInfo",
