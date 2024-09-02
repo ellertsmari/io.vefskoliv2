@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
   }
 
   const user: UserDocument | null = await getUser(email);
-  console.log("user", user);
   if (user) {
     try {
       await user?.updateUserInfo(info);

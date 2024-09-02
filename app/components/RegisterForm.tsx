@@ -24,7 +24,7 @@ export default function RegisterForm({
 }) {
   const [state, formAction, isPending] = useActionState(signUp, undefined);
 
-  const formRef = useRef(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleRegister = async (event: React.FormEvent<HTMLButtonElement>) => {
     event.preventDefault();

@@ -19,11 +19,10 @@ import Input from "../../../globalStyles/input";
 import ExitButton from "../../../globalStyles/buttons/exit";
 import logouticon from "../../../assets/logout.svg";
 import DefaultButton from "../../../globalStyles/buttons/default";
-import { signOut } from "../../../utils/actions";
+import { signOut, updateUserInfo } from "../../../utils/actions";
 import ProfilePic from "./Defaultuser.svg";
-import { UserWithIdType } from "../../../models/user";
+import { UserDocument } from "../../../models/user";
 import { useSession } from "../../../providers/SessionProvider";
-
 
 export const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +40,6 @@ export const Profile = () => {
   );
 
   const onSave = async () => {
-    console.log("onSave called");
     updateUserInfo(user.email, {
       background,
       careerGoals,

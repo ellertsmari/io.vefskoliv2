@@ -6,14 +6,11 @@ import type { UserDocument } from "./app/models/user";
 import { User } from "./app/models/user";
 import bcrypt from "bcrypt";
 import { connectToDatabase } from "./app/utils/mongoose-connector";
-import { AdapterUser } from "next-auth/adapters";
 
 export async function getUser(email: string): Promise<UserDocument | null> {
   try {
     connectToDatabase();
-    console.log("fetching user");
     const user: UserDocument | null = await User.findOne({ email });
-    console.log("user fetched!", user);
     return user;
   } catch (error) {
     console.error("Failed to fetch user:", error);
@@ -33,13 +30,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
           const user = await getUser(email);
-          console.log("user", user);
           if (!user) return null;
           const passwordsMatch = await bcrypt.compare(password, user.password);
-          console.log("passwordsMatch", passwordsMatch);
           if (passwordsMatch) return user;
         }
-        console.log("Invalid credentials");
         return null;
       },
     }),
@@ -82,7 +76,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         id,
         emailVerified,
       };
-      console.log("this is the user: ", session);
 
       return session;
     },

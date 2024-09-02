@@ -36,7 +36,6 @@ export default function LoginForm({
 
   const handleGoToRegister = (event: any) => {
     event.preventDefault();
-    console.log("going to register");
     setSelectedForm("register");
   };
 

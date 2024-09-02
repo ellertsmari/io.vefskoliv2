@@ -3,14 +3,9 @@
 import { SignupFormSchema, FormState } from "../utils/formvalidation";
 import bcrypt from "bcrypt";
 
-import { signIn, signOut as s } from "../../auth";
+import { signIn, signOut as s, getUser } from "../../auth";
 import { AuthError } from "next-auth";
-import {
-  OptionalUserInfo,
-  RequiredUserInfo,
-  User,
-  UserDocument,
-} from "../models/user";
+import { OptionalUserInfo, User } from "../models/user";
 
 export const signOut = s; //needs to be in actions.ts so that it can be called on the client side
 export async function authenticate(
@@ -71,13 +66,13 @@ export async function signUp(state: FormState, formData: FormData) {
   }
 
   try {
+    const user = await getUser(email);
     await signIn("credentials", {
       email,
       password: rawPassword,
     });
-  } catch (error) {
-    console.error("Failed to sign in user:", error);
-  }
+  } catch (error) {}
+
   return {
     success: true,
     message:
@@ -94,9 +89,7 @@ export async function updateUserInfo(email: string, info: OptionalUserInfo) {
     },
     body: JSON.stringify({ email, info }),
   });
-  console.log("response", response);
   if (!response.ok) {
-    console.log("response not ok", response);
     throw new Error("Failed to update user info");
   }
 
