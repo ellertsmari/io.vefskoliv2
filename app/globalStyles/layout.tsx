@@ -1,37 +1,52 @@
-'use client'
-import styled from 'styled-components';
+"use client";
+import styled from "styled-components";
+
+const breakpoint = "768px";
 
 export const LayoutGrid = styled.div`
   display: grid;
-  grid-template-columns: 3fr 9fr;
-  grid-template-rows: 1fr 15fr;
-  grid-template-areas: 
-    "sidebar navbar" 
-    "sidebar main";
+  grid-template-rows: auto 15fr;
+  grid-template-areas:
+    "navbar"
+    "main";
   padding: 2rem;
   gap: 2rem;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  grid-auto-rows: min-content;
+
+  @media (min-width: ${breakpoint}) {
+    grid-template-columns: 3fr 9fr;
+    grid-template-rows: auto 15fr;
+    grid-template-areas:
+      "navbar navbar"
+      "sidebar main";
+  }
 `;
 
 export const SidebarContainer = styled.div`
   max-height: 100vh;
+  width: 100%;
   grid-area: sidebar;
-  border-radius:.8rem;
-`
+  border-radius: 0.8rem;
+  display: none;
+
+  @media (min-width: ${breakpoint}) {
+    display: block;
+  }
+`;
 export const NavbarContainer = styled.div`
   max-width: 100%;
+  width: 100%;
   border-radius: 0.8rem;
   grid-area: navbar;
-`
+`;
 export const Main = styled.div`
-    max-width: 100%;
-    display: flex;
-    background-color: white;
-    border: solid 1px #6563EB;
-    flex-direction: column;
-    border-radius: 0.8rem;
-    transition: 1s ease-in-out;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    grid-area: main;
-` 
+  max-width: 100%;
+  height: 100%;
+  overflow: scroll;
+  background-color: white;
+  border: solid 1px #6563eb;
+  border-radius: 0.8rem;
+  grid-area: main;
+`;

@@ -1,18 +1,11 @@
-import { NavbarButton, Nav } from "./style";
+import { DesktopNavbar } from "./DesktopNav";
+import { MobileNavbar } from "./MobileNav";
 
-type Props = {
- 
-}
-
-export const Navbar = ({}: Props) => {
-    return ( 
-        <Nav>
-            <NavbarButton href="/">HOME</NavbarButton>
-            <NavbarButton href="/guides">GUIDES</NavbarButton>
-            <NavbarButton href="/resources">RESOURCES</NavbarButton>
-            <NavbarButton href="/halloffame">HALL OF FAME</NavbarButton>
-            <NavbarButton href="/people">PEOPLE</NavbarButton>
-            <NavbarButton href="/calendar">CALENDAR</NavbarButton>
-        </Nav>
-    );
-}
+export const Navbar = () => {
+  return (
+    <>
+      <DesktopNavbar />
+      <MobileNavbar />
+    </>
+  );
+};
