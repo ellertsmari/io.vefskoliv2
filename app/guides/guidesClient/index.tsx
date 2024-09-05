@@ -1,25 +1,28 @@
-"use client"
+import { GuideType } from "../../models/guide";
+import GuideCard from "../../components/guideCard";
 
-import { GuideType } from "../../models/guide"
-import GuideCard from "../../components/guideCard"
-
-import { Grid } from "../style"
+import { Grid } from "../style";
 
 type Props = {
-    fetchedGuides: (GuideType & {individualGuideLink: string})[]
-}
+  fetchedGuides: (GuideType & { individualGuideLink: string })[];
+};
 
-const GuidesClient = ({fetchedGuides} : Props) => {
-
-    return (
-        <Grid>
-            <>
+const GuidesClient = ({ fetchedGuides }: Props) => {
+  return (
+    <Grid>
+      <>
         {fetchedGuides.map((guide, index) => (
-            <GuideCard forReturn={guide.individualGuideLink} key={guide.individualGuideLink} guideNr={index + 1} name={guide.title} status="Guide not Returned"/>
+          <GuideCard
+            forReturn={guide.individualGuideLink}
+            key={guide.individualGuideLink}
+            guideNr={index + 1}
+            name={guide.title}
+            status="Guide not Returned"
+          />
         ))}
-        </>
-        </Grid>
-    )
-}
+      </>
+    </Grid>
+  );
+};
 
 export default GuidesClient;
