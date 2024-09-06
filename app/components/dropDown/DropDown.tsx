@@ -45,7 +45,7 @@ export const DropDown = ({ title, options, currentOption }: DropDownProps) => {
   return (
     <DropDownContainer>
       <AccordianContainer>
-        {!isOpen ? (
+        {!isOpen && (
           <AccordianTitle onClick={() => setIsOpen(!isOpen)}>
             <AccordianText>
               {currentOption
@@ -54,15 +54,14 @@ export const DropDown = ({ title, options, currentOption }: DropDownProps) => {
             </AccordianText>
             <ArrowDown />
           </AccordianTitle>
-        ) : (
-          <AccordianExpanded>
-            <AccordianTitle onClick={() => setIsOpen(!isOpen)} expanded={"yes"}>
-              <AccordianText>{title.toUpperCase()}</AccordianText>
-              <ArrowUp />
-            </AccordianTitle>
-            {Options}
-          </AccordianExpanded>
         )}
+        <AccordianExpanded isOpen={isOpen}>
+          <AccordianTitle onClick={() => setIsOpen(!isOpen)} expanded={"yes"}>
+            <AccordianText>{title.toUpperCase()}</AccordianText>
+            <ArrowUp />
+          </AccordianTitle>
+          {Options}
+        </AccordianExpanded>
       </AccordianContainer>
     </DropDownContainer>
   );

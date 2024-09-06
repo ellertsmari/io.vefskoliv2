@@ -1,7 +1,27 @@
 "use client";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 const radius = "8px";
+
+const fadeIn = keyframes`
+  0% {
+    max-height: 40px;
+  }
+  100% {
+    max-height: 500px; 
+  }
+`;
+
+const fadeOut = keyframes`
+  0% {
+    max-height: 500px;
+    border: solid 1px var(--theme-module3-100);
+  }
+  100% {
+    max-height: 0;
+    border: none;
+  }
+`;
 
 export const DropDownContainer = styled.div`
   display: flex;
@@ -61,7 +81,11 @@ export const AccordianText = styled.p`
   }
 `;
 
-export const AccordianExpanded = styled.div`
+interface AccordianExpandedProps {
+  isOpen: boolean;
+}
+
+export const AccordianExpanded = styled.div<AccordianExpandedProps>`
   display: flex;
   position: absolute;
   width: 100%;
@@ -77,7 +101,10 @@ export const AccordianExpanded = styled.div`
   padding: 0;
   text-align: center;
   height: auto;
-  transition: height 0.3s ease-in-out;
+  border: ${(props) =>
+    props.isOpen ? "solid 1px var(--theme-module3-100)" : "none"};
+  max-height: ${(props) => (props.isOpen ? "500px" : 0)};
+  animation: ${(props) => (props.isOpen ? fadeIn : fadeOut)} 0.5s ease-in-out;
 `;
 
 export const AccordianOptionContainer = styled(Accordian)`
