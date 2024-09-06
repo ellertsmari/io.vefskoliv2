@@ -9,7 +9,7 @@ import {
   NavbarContainer,
   Main,
 } from "./globalStyles/layout";
-import { Navbar } from "./components/navbar/navbar";
+import { Navbar } from "./components/navbar/Navbar";
 import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
 import LoginPage from "./login/page";
