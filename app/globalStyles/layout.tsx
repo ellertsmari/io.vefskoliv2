@@ -9,14 +9,14 @@ export const LayoutGrid = styled.div`
   grid-template-areas:
     "navbar"
     "main";
-  padding: 2rem;
-  gap: 2rem;
+  padding: 1rem;
+  gap: 1rem;
   width: 100%;
   height: 100%;
   grid-auto-rows: min-content;
 
   @media (min-width: ${breakpoint}) {
-    grid-template-columns: 3fr 9fr;
+    grid-template-columns: minmax(0, 200px) auto;
     grid-template-rows: auto 15fr;
     grid-template-areas:
       "navbar navbar"
