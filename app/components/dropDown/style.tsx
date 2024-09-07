@@ -5,7 +5,7 @@ const radius = "8px";
 const minHeightSmall = "42px";
 const minHeightLarge = "54px";
 const maxHeight = "500px";
-export const animationDuration = 1;
+export const animationDuration = 0.5;
 const breakPoint = "768px";
 
 const fadeInSmall = keyframes`
