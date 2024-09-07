@@ -4,6 +4,7 @@ import { DropDown } from "../components/dropDown/DropDown";
 import { GuideType } from "../models/guide";
 import React, { useMemo, useState } from "react";
 import { Module } from "../utils/types";
+import { Container } from "./style";
 
 type Guides = (GuideType & { individualGuideLink: string })[];
 
@@ -30,7 +31,7 @@ export const Guides = ({
   }, [modules]);
 
   return (
-    <>
+    <Container>
       <DropDown
         title="Modules"
         options={options}
@@ -42,7 +43,7 @@ export const Guides = ({
       />
 
       <GuidesClient fetchedGuides={filteredGuides} />
-    </>
+    </Container>
   );
 };
 

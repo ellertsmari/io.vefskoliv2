@@ -12,7 +12,7 @@ export const LayoutGrid = styled.div`
   padding: 1rem;
   gap: 1rem;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   grid-auto-rows: min-content;
 
   @media (min-width: ${breakpoint}) {

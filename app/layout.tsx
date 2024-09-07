@@ -9,11 +9,11 @@ import {
   NavbarContainer,
   Main,
 } from "./globalStyles/layout";
-import { Navbar } from "./components/navbar/Navbar";
 import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
 import LoginPage from "./login/page";
 import { SessionProvider } from "./providers/SessionProvider";
+import { Navbar } from "./components/navbar/navbar";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 

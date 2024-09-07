@@ -2,109 +2,109 @@
 import styled, { keyframes } from "styled-components";
 
 const radius = "8px";
+const minHeightSmall = "42px";
+const minHeightLarge = "54px";
+const maxHeight = "500px";
+export const animationDuration = 1;
+const breakPoint = "768px";
 
-const fadeIn = keyframes`
+const fadeInSmall = keyframes`
   0% {
-    max-height: 40px;
+    max-height: ${minHeightSmall};
   }
   100% {
-    max-height: 500px; 
+    max-height: ${maxHeight}; 
   }
 `;
 
-const fadeOut = keyframes`
+const fadeInLarge = keyframes`
   0% {
-    max-height: 500px;
-    border: solid 1px var(--theme-module3-100);
+    max-height: ${minHeightLarge};
   }
   100% {
-    max-height: 0;
-    border: none;
+    max-height: ${maxHeight}; 
   }
 `;
 
-export const DropDownContainer = styled.div`
+const fadeOutSmall = keyframes`
+  0% {
+    max-height: ${maxHeight};
+  }
+  100% {
+    max-height: ${minHeightSmall};
+  }
+`;
+
+const fadeOutLarge = keyframes`
+  0% {
+    max-height: ${maxHeight};
+  }
+  100% {
+    max-height: ${minHeightLarge};
+  }
+`;
+
+export const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 1rem;
-  height: 80px;
-`;
-
-export const AccordianContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  height: 42px;
+  height: fit-content;
   width: 100%;
-  max-width: 240px;
-  position: absolute;
-`;
-
-export const Accordian = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.5rem 3rem;
   position: relative;
-  width: 100%;
-
-  @media (min-width: 768px) {
-    padding: 0.8rem 1rem;
-  }
-`;
-interface AccordianTitleProps {
-  expanded?: "yes" | "no";
-}
-
-export const AccordianTitle = styled(Accordian)<AccordianTitleProps>`
-  border-radius: ${radius};
-  height: 42px;
-  background-color: var(--theme-module3-100);
-  color: white;
-  gap: 1rem;
-
-  @media (min-width: 768px) {
-    height: 60px;
-  }
-
-  ${(props) =>
-    props.expanded === "yes" && `border-radius: ${radius} ${radius} 0 0;`}
 `;
 
-AccordianTitle.defaultProps = {
-  expanded: "no",
-};
-
-export const AccordianText = styled.p`
-  @media (min-width: 768px) {
-    font-size: 1.5rem;
-  }
-`;
-
-interface AccordianExpandedProps {
+interface DropDownContainerProps {
   isOpen: boolean;
 }
 
-export const AccordianExpanded = styled.div<AccordianExpandedProps>`
+export const DropDownContainer = styled.div<DropDownContainerProps>`
   display: flex;
-  position: absolute;
-  width: 100%;
-  border-radius: ${radius};
-  overflow: hidden;
-  top: 0;
-  left: 0;
   flex-direction: column;
-  background-color: white;
-  border: solid 1px var(--theme-module3-100);
-  border-top: none;
-  color: var(--primary-black-60);
-  padding: 0;
-  text-align: center;
+  align-items: center;
+  position: absolute;
+  margin: 10px;
+  min-width: 200px;
+  top: 0;
+  z-index: 1;
+  border-radius: ${radius};
+  border: 1px solid var(--theme-module3-100);
   height: auto;
-  border: ${(props) =>
-    props.isOpen ? "solid 1px var(--theme-module3-100)" : "none"};
-  max-height: ${(props) => (props.isOpen ? "500px" : 0)};
-  animation: ${(props) => (props.isOpen ? fadeIn : fadeOut)} 0.5s ease-in-out;
+  overflow: hidden;
+  max-height: ${(props) => (props.isOpen ? maxHeight : minHeightSmall)};
+  animation: ${(props) => (props.isOpen ? fadeInSmall : fadeOutSmall)}
+    ${animationDuration}s ease-in-out;
+
+  @media (min-width: ${breakPoint}) {
+    max-height: ${(props) => (props.isOpen ? maxHeight : minHeightLarge)};
+    animation: ${(props) => (props.isOpen ? fadeInLarge : fadeOutLarge)}
+      ${animationDuration}s ease-in-out;
+    min-width: 240px;
+  }
+`;
+
+interface AccordianProps {
+  title?: boolean;
+}
+
+export const Accordian = styled.div<AccordianProps>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 2rem;
+  gap: 1rem;
+  height: fit-content;
+  color: ${(props) => (props.title ? "white" : "black")};
+  background-color: ${(props) =>
+    props.title ? "var(--theme-module3-100)" : "white"};
+  // background-color: $ var(--theme-module3-100);
+  width: 100%;
+`;
+
+export const AccordianText = styled.p`
+  @media (min-width: 768px) {
+    font-size: 1.2rem;
+  }
 `;
 
 export const AccordianOptionContainer = styled(Accordian)`
