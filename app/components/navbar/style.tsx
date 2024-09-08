@@ -1,6 +1,5 @@
 "use client";
 import styled from "styled-components";
-import { OpenTrayButtonProps } from "./MobileNav";
 
 const breakpoint = "650px";
 
@@ -60,13 +59,13 @@ export const MobileNav = styled(Nav)`
   }
 `;
 
-export const OpenTrayButtonStyle = styled.button<OpenTrayButtonProps>`
+export const OpenTrayButton = styled.button<{ $opened?: boolean }>`
   width: 100%;
   padding: 10px;
   background-color: var(--primary-white);
 
-  ${({ opened }) =>
-    opened
+  ${(props) =>
+    props.$opened
       ? `
   border: none;
   background-color: var(--theme-module3-100);

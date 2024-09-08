@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowDown } from "../../arrowDown";
 import {
   Accordian,
@@ -57,8 +57,8 @@ export const DropDown = ({ title, options, currentOption }: DropDownProps) => {
 
   return (
     <Container>
-      <DropDownContainer isOpen={isOpen}>
-        <Accordian onClick={handleOnClick} title>
+      <DropDownContainer $isOpen={isOpen}>
+        <Accordian onClick={handleOnClick} $title>
           <AccordianText>
             {currentOption ? currentOption.toUpperCase() : title.toUpperCase()}
           </AccordianText>

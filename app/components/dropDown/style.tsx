@@ -5,7 +5,7 @@ const radius = "8px";
 const minHeightSmall = "42px";
 const minHeightLarge = "54px";
 const maxHeight = "500px";
-export const animationDuration = 0.5;
+export const animationDuration = 0.2;
 const breakPoint = "768px";
 
 const fadeInSmall = keyframes`
@@ -54,11 +54,7 @@ export const Container = styled.div`
   position: relative;
 `;
 
-interface DropDownContainerProps {
-  isOpen: boolean;
-}
-
-export const DropDownContainer = styled.div<DropDownContainerProps>`
+export const DropDownContainer = styled.div<{ $isOpen: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -71,33 +67,28 @@ export const DropDownContainer = styled.div<DropDownContainerProps>`
   border: 1px solid var(--theme-module3-100);
   height: auto;
   overflow: hidden;
-  max-height: ${(props) => (props.isOpen ? maxHeight : minHeightSmall)};
-  animation: ${(props) => (props.isOpen ? fadeInSmall : fadeOutSmall)}
+  max-height: ${(props) => (props.$isOpen ? maxHeight : minHeightSmall)};
+  animation: ${(props) => (props.$isOpen ? fadeInSmall : fadeOutSmall)}
     ${animationDuration}s ease-in-out;
 
   @media (min-width: ${breakPoint}) {
-    max-height: ${(props) => (props.isOpen ? maxHeight : minHeightLarge)};
-    animation: ${(props) => (props.isOpen ? fadeInLarge : fadeOutLarge)}
+    max-height: ${(props) => (props.$isOpen ? maxHeight : minHeightLarge)};
+    animation: ${(props) => (props.$isOpen ? fadeInLarge : fadeOutLarge)}
       ${animationDuration}s ease-in-out;
     min-width: 240px;
   }
 `;
 
-interface AccordianProps {
-  title?: boolean;
-}
-
-export const Accordian = styled.div<AccordianProps>`
+export const Accordian = styled.div<{ $title?: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 5px 2rem;
   gap: 1rem;
   height: fit-content;
-  color: ${(props) => (props.title ? "white" : "black")};
+  color: ${(props) => (props.$title ? "white" : "black")};
   background-color: ${(props) =>
-    props.title ? "var(--theme-module3-100)" : "white"};
-  // background-color: $ var(--theme-module3-100);
+    props.$title ? "var(--theme-module3-100)" : "white"};
   width: 100%;
 `;
 
