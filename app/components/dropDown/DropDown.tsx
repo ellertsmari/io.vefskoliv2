@@ -11,26 +11,27 @@ import {
 } from "./style";
 import { ArrowUp } from "../../arrowUp";
 
-interface DropDownProps {
-  title: string;
+interface DropdownProps {
   options: { optionName: string; onClick?: () => void }[];
-  currentOption: string | undefined;
+  title: string;
+  initialOption?: string;
 }
 
-export const DropDown = ({ title, options, currentOption }: DropDownProps) => {
+export const Dropdown = ({ options, title, initialOption }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentOption, setCurrentOption] = useState(initialOption ?? title);
   const [showOptions, setShowOptions] = useState(false);
 
-  const handleOnClick = () => {
+  const handleOnClick = (optionName: string) => {
     if (isOpen) {
-      setIsOpen(false);
       setTimeout(() => {
         setShowOptions(false);
       }, animationDuration * 1000);
     } else {
       setShowOptions(true);
-      setIsOpen(true);
     }
+    setIsOpen(!isOpen);
+    setCurrentOption(optionName);
   };
 
   const Options = useMemo(() => {
@@ -40,14 +41,12 @@ export const DropDown = ({ title, options, currentOption }: DropDownProps) => {
       return (
         <AccordianOptionContainer
           key={index}
-          onClick={
-            onClick
-              ? () => {
-                  onClick();
-                  handleOnClick();
-                }
-              : () => handleOnClick()
-          }
+          onClick={() => {
+            handleOnClick(optionName);
+            if (onClick) {
+              onClick();
+            }
+          }}
         >
           <AccordianText>{optionName}</AccordianText>
         </AccordianOptionContainer>
@@ -58,10 +57,8 @@ export const DropDown = ({ title, options, currentOption }: DropDownProps) => {
   return (
     <Container>
       <DropDownContainer $isOpen={isOpen}>
-        <Accordian onClick={handleOnClick} $title>
-          <AccordianText>
-            {currentOption ? currentOption.toUpperCase() : title.toUpperCase()}
-          </AccordianText>
+        <Accordian onClick={() => handleOnClick(title)} $title>
+          <AccordianText>{currentOption.toUpperCase()}</AccordianText>
           {isOpen ? <ArrowUp /> : <ArrowDown />}
         </Accordian>
         {showOptions && Options}

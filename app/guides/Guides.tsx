@@ -1,6 +1,6 @@
 "use client";
 import GuidesClient from "./guidesClient";
-import { DropDown } from "../components/dropDown/DropDown";
+import { Dropdown } from "../components/dropdown/Dropdown";
 import { GuideType } from "../models/guide";
 import React, { useMemo, useState } from "react";
 import { Module } from "../utils/types";
@@ -32,15 +32,7 @@ export const Guides = ({
 
   return (
     <Container>
-      <DropDown
-        title="Modules"
-        options={options}
-        currentOption={
-          selectedModule || selectedModule === 0
-            ? "Module " + selectedModule
-            : "All Modules"
-        }
-      />
+      <Dropdown options={options} title={"All Modules"} />
 
       <GuidesClient fetchedGuides={filteredGuides} />
     </Container>
