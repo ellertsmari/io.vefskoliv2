@@ -1,19 +1,63 @@
 import { Guides, exportedForTesting } from "../../app/guides/Guides";
 import { GuideType } from "../../app/models/guide";
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
+
+jest.mock(
+  "../../app/guides/guidesClient",
+  () =>
+    ({ fetchedGuides }: { fetchedGuides: Guides }) =>
+      <div>{fetchedGuides.map((guide) => guide.module.title).join(", ")}</div>
+);
 
 const { fetchModules, filterGuides, createOptions } = exportedForTesting;
 
 type Guides = (GuideType & { individualGuideLink: string })[];
 
 describe("Guides", () => {
-  test("renders", async () => {
+  test("changes guides shown based on dropdown selection", async () => {
     const fetchedGuides = [
       { module: { title: "1 Module" }, individualGuideLink: "link1" },
       { module: { title: "2 Module" }, individualGuideLink: "link2" },
     ] as Guides;
 
-    render(<Guides fetchedGuides={fetchedGuides} />);
+    const { getByText, queryByText } = render(
+      <Guides fetchedGuides={fetchedGuides} />
+    );
+
+    // Check if alla guides are shown initially
+    expect(getByText("1 Module, 2 Module")).toBeDefined();
+
+    // Select "Module 1" from the dropdown
+    fireEvent.click(getByText("ALL MODULES"));
+    fireEvent.click(getByText("Module 1"));
+
+    // Check if only the guide for "Module 1" is shown
+    await waitFor(() => {
+      expect(getByText("1 Module")).toBeDefined();
+      expect(queryByText("2 Module")).toBeNull();
+    });
+
+    // Select "All" from the dropdown
+    fireEvent.click(getByText("Module 1"));
+    fireEvent.click(getByText("All"));
+
+    // Check if all guides are shown again
+    expect(getByText("1 Module, 2 Module")).toBeDefined();
+  });
+
+  test("renders correctly when no guides are provided", () => {
+    const fetchedGuides = [] as Guides;
+
+    const { getByText, queryByText } = render(
+      <Guides fetchedGuides={fetchedGuides} />
+    );
+
+    // Check if dropdown with "All Modules" is shown
+    expect(getByText("ALL MODULES")).toBeDefined();
+
+    // Check if no guides are rendered
+    expect(queryByText("1 Module")).toBeNull();
+    expect(queryByText("2 Module")).toBeNull();
   });
 });
 
