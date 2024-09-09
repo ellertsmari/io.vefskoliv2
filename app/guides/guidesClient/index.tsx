@@ -1,7 +1,7 @@
 import { GuideType } from "../../models/guide";
 import GuideCard from "../../components/guideCard";
 
-import { Grid } from "../style";
+import { GuideContainer } from "../style";
 
 type Props = {
   fetchedGuides: (GuideType & { individualGuideLink: string })[];
@@ -9,19 +9,17 @@ type Props = {
 
 const GuidesClient = ({ fetchedGuides }: Props) => {
   return (
-    <Grid>
-      <>
-        {fetchedGuides.map((guide, index) => (
-          <GuideCard
-            forReturn={guide.individualGuideLink}
-            key={guide.individualGuideLink}
-            guideNr={index + 1}
-            name={guide.title}
-            status="Guide not Returned"
-          />
-        ))}
-      </>
-    </Grid>
+    <GuideContainer>
+      {fetchedGuides.map((guide, index) => (
+        <GuideCard
+          forReturn={guide.individualGuideLink}
+          key={guide.individualGuideLink}
+          guideNr={index + 1}
+          name={guide.title}
+          status="Guide not Returned"
+        />
+      ))}
+    </GuideContainer>
   );
 };
 

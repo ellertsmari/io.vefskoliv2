@@ -10,6 +10,7 @@ import { Types } from "mongoose";
 import { GuideType } from "../models/guide";
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "../models/guide";
+import { Module } from "./types";
 
 export const signOut = s; //needs to be in actions.ts so that it can be called on the client side
 export async function authenticate(

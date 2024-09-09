@@ -1,11 +1,11 @@
 import { getGuides } from "./query";
 import { UserWithIdType } from "../models/user";
 
-import GuidesClient from "./guidesClient";
 import { GuideType } from "../models/guide";
 import { auth } from "../../auth";
+import { Guides } from "./Guides";
 
-const Guides = async () => {
+const GuidesPage = async () => {
   const session = (await auth()) as unknown as UserWithIdType;
   if (!session) return null;
 
@@ -15,7 +15,7 @@ const Guides = async () => {
     individualGuideLink: `guides/${(guide as any)._id}`,
   }));
 
-  return <GuidesClient fetchedGuides={JSON.parse(JSON.stringify(link))} />;
+  return <Guides fetchedGuides={JSON.parse(JSON.stringify(link))} />;
 };
 
-export default Guides;
+export default GuidesPage;
