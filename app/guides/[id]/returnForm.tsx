@@ -1,37 +1,36 @@
-"use client"
+import Modal from "components/modal/modal";
+import Button from "globalStyles/buttons/default";
+import Input from "globalStyles/input";
 
-import Modal from "../../components/modal/modal";
-import Button  from "../../globalStyles/buttons/default";
-import ExitButton from "../../globalStyles/buttons/exit";
-import Input from "../../globalStyles/input";
-
-import { Form, ModalContent } from "./style";
-
-import { useState } from "react";
+import { Form } from "./style";
 
 const ReturnForm = () => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  return <Modal modalTrigger={ReturnButton} modalContent={FormContent} />;
+};
 
-    return (
-        <>
-        <Button onClick={() => setIsModalOpen(!isModalOpen)} style="default">RETURN</Button>
-        {isModalOpen && (
-            <Modal onClick={() => setIsModalOpen(!isModalOpen)} shouldShow={isModalOpen}>
-                <ModalContent>
-                    <ExitButton onClick={() => setIsModalOpen(!isModalOpen)}/>
-                    <Form>
-                        <Input type="text" label="Github or Figma URL"></Input>
-                        <Input type="text" label="Live version or prototype(Figma)"></Input>
-                        <Input type="text" label="Image that suits your project (optional)"></Input>
-                        <Input type="text" label="Project title"></Input>
-                        <Input type="textarea" label="Short project description"></Input>
-                        <Button style="default">SUBMIT</Button>
-                    </Form>
-                </ModalContent>
-            </Modal>
-        )}
-        </>
-    )
-}
+const ReturnButton = <Button style="default">RETURN</Button>;
+
+const FormContent = (
+  <Form>
+    <Input type="text" label="Github or Figma URL" id={"link-to-work"}></Input>
+    <Input
+      type="text"
+      label="Live version or prototype(Figma)"
+      id={"link-to-live"}
+    ></Input>
+    <Input
+      type="text"
+      label="Image that suits your project (optional)"
+      id={"image-of-project"}
+    ></Input>
+    <Input type="text" label="Project title" id={"title"}></Input>
+    <Input
+      type="textarea"
+      label="Short project description"
+      id={"description"}
+    ></Input>
+    <Button style="default">SUBMIT</Button>
+  </Form>
+);
 
 export default ReturnForm;

@@ -13,7 +13,7 @@ type Props = {
 
 const DefaultButton = ({ onClick, children, style, disabled }: Props) => {
   return (
-    <Button onClick={onClick} styletype={style} disabled={disabled}>
+    <Button onClick={onClick} $styletype={style} disabled={disabled}>
       {children}
     </Button>
   );

@@ -1,3 +1,4 @@
+"use client";
 import { Wrapper, Label, ReusableInput, ReusableTextarea } from "./style";
 
 type InputProps = {

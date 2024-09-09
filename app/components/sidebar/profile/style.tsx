@@ -11,21 +11,27 @@ export const ProfileWrapper = styled.div`
 `;
 
 export const ProfileImageContainer = styled.div`
-  width: 142px;
-  height: 142px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   overflow: hidden;
   border: 1px solid var(--theme-module3-100);
   cursor: pointer;
   transition: 0.3s ease-in-out;
-
+  justify-content: center;
+  display: flex;
   &:hover {
     filter: brightness(0.8);
   }
 `;
 
+export const ProfileInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
 export const ProfileImage = styled(Image)`
-  width: 142px;
+  width: 60px;
   height: auto;
   background-color: var(--primary-white);
 `;
@@ -37,23 +43,10 @@ export const ProfileName = styled.h2`
 
 //Modal styles
 
-export const ModalContent = styled.div`
+export const ImageAndLogout = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  background-color: var(--primary-white);
-  width: 439px;
-  padding: 16px;
-  gap: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--theme-module3-100);
-  z-index: 11;
-`;
-
-export const ExitAndLogoutWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
+  gap: 8px;
   align-items: center;
 `;
 
@@ -62,7 +55,7 @@ export const LogoutButton = styled.div`
   border: none;
   cursor: pointer;
   transition: 0.1s ease-in-out;
-  align-self: flex-end;
+  align-self: center;
   flex-direction: row;
   display: flex;
   gap: 8px;
@@ -79,7 +72,8 @@ export const LogoutIcon = styled(Image)`
 
 export const ProfileDetails = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
 `;
