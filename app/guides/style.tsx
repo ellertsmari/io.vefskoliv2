@@ -2,10 +2,17 @@
 
 import styled from "styled-components";
 
-export const Grid = styled.div`
+export const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const GuideContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: center;
   gap: 32px;
   padding: 32px;
+  width: 100%;
 `;

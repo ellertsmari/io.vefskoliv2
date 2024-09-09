@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { NavbarButton, OpenTrayButtonStyle, MobileNav } from "./style";
+import { NavbarButton, MobileNav, OpenTrayButton } from "./style";
 
 export const MobileNavbar = () => {
   const [isNavOpen, setIsNavOpen] = useState<boolean>(false);
@@ -11,7 +11,7 @@ export const MobileNavbar = () => {
 
   return isNavOpen ? (
     <MobileNav style={{ border: "solid 1px var(--theme-module3-100)" }}>
-      <OpenTrayButton onClick={handleOpenNav} opened>
+      <OpenTrayButton onClick={handleOpenNav} $opened>
         CLOSE NAVIGATION
       </OpenTrayButton>
 
@@ -26,23 +26,5 @@ export const MobileNavbar = () => {
     <MobileNav>
       <OpenTrayButton onClick={handleOpenNav}>OPEN NAVIGATION</OpenTrayButton>
     </MobileNav>
-  );
-};
-
-export interface OpenTrayButtonProps {
-  opened?: boolean;
-  children: React.ReactNode;
-  onClick: () => void;
-}
-
-const OpenTrayButton = ({
-  opened = false,
-  children,
-  onClick,
-}: OpenTrayButtonProps) => {
-  return (
-    <OpenTrayButtonStyle opened={opened} onClick={onClick}>
-      {children}
-    </OpenTrayButtonStyle>
   );
 };

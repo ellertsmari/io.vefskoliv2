@@ -13,11 +13,12 @@ const guideClassSchema = new Schema({
 
 const guideModuleSchema = new Schema({
   title: { type: Schema.Types.String, required: true },
+  number: { type: Schema.Types.Number, required: true },
 });
 
 const guideThemeIdeaSchema = new Schema({
   title: { type: Schema.Types.String, required: true },
-  description: { type: Schema.Types.String, required: true},
+  description: { type: Schema.Types.String, required: true },
 });
 
 const guideKnowledgeSchema = new Schema({
@@ -34,20 +35,20 @@ const guideResourceSchema = new Schema({
 });
 
 const guideSchema = new Schema({
-  category:     { type: Schema.Types.String,    required: true },
-  references:   { type: [guideReferenceSchema], required: true },
-  title:        { type: Schema.Types.String,    required: true },
-  description:  { type: Schema.Types.String,    required: true },
-  knowledge:    { type: [guideKnowledgeSchema], required: true },
-  skills:       { type: [guideSkillSchema],     required: true },
-  resources:    { type: [guideResourceSchema],  required: true },
-  createdAt:    { type: Schema.Types.Date,      required: true },
-  updatedAt:    { type: Schema.Types.Date,      required: true },
-  themeIdea:    { type: guideThemeIdeaSchema,   required: true },
-  topicsList:   { type: Schema.Types.String,    required: true },
-  module:       { type: guideModuleSchema,      required: true },
-  classes:      { type: [guideClassSchema],     required: true },
-  order:        { type: Schema.Types.Number,    required: true },
+  category: { type: Schema.Types.String, required: true },
+  references: { type: [guideReferenceSchema], required: true },
+  title: { type: Schema.Types.String, required: true },
+  description: { type: Schema.Types.String, required: true },
+  knowledge: { type: [guideKnowledgeSchema], required: true },
+  skills: { type: [guideSkillSchema], required: true },
+  resources: { type: [guideResourceSchema], required: true },
+  createdAt: { type: Schema.Types.Date, required: true },
+  updatedAt: { type: Schema.Types.Date, required: true },
+  themeIdea: { type: guideThemeIdeaSchema, required: true },
+  topicsList: { type: Schema.Types.String, required: true },
+  module: { type: guideModuleSchema, required: true },
+  classes: { type: [guideClassSchema], required: true },
+  order: { type: Schema.Types.Number, required: true },
 });
 
 export type GuideType = InferSchemaType<typeof guideSchema>;

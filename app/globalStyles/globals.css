@@ -2,47 +2,50 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box; /* Firefox, other Gecko */
+  box-sizing: border-box; /* Opera/IE 8+ */
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
-  background-color: #F0F0FD;
+  font-family: "Poppins", sans-serif;
+  background-color: #f0f0fd;
 }
 
 /* Color Palette Definitions */
 :root {
   /* Primary Colors */
-  --primary-white: #FFFFFF;
+  --primary-white: #ffffff;
   --primary-black-100: #000000; /* 100% */
   --primary-black-60: #666666; /* 60% */
-  --primary-black-30: #B3B3B3; /* 30% */
-  --primary-black-10: #E6E6E6; /* 10% */
+  --primary-black-30: #b3b3b3; /* 30% */
+  --primary-black-10: #e6e6e6; /* 10% */
 
   /* Theme Colors */
-  --theme-module3-100: #6563EB; /* 100% */
-  --theme-module3-60: #A3A1F3; /* 60% */
-  --theme-module3-30: #D1D1F9; /* 30% */
-  --theme-module3-10: #F0F0FD;  /* 10% */
-  --theme-module3-hover: #2C2B76;  /* hover */
+  --theme-module3-100: #6563eb; /* 100% */
+  --theme-module3-60: #a3a1f3; /* 60% */
+  --theme-module3-30: #d1d1f9; /* 30% */
+  --theme-module3-10: #f0f0fd; /* 10% */
+  --theme-module3-hover: #2c2b76; /* hover */
 
   /* Error Message Colors */
-  --error-success-100: #84CF6E; /* 100% */
-  --error-success-60: #B5E2A8;  /* 60% */
-  --error-success-30: #DBF1D4;  /* 30% */
-  --error-success-10: #F3FBF1;  /* 10% */
+  --error-success-100: #84cf6e; /* 100% */
+  --error-success-60: #b5e2a8; /* 60% */
+  --error-success-30: #dbf1d4; /* 30% */
+  --error-success-10: #f3fbf1; /* 10% */
 
-  --error-failure-100: #F55F5B; /* 100% */
-  --error-failure-60: #F99F9D;  /* 60% */
-  --error-failure-30: #FCCFCE;  /* 30% */
-  --error-failure-10: #FEEFEF;  /* 10% */
+  --error-failure-100: #f55f5b; /* 100% */
+  --error-failure-60: #f99f9d; /* 60% */
+  --error-failure-30: #fccfce; /* 30% */
+  --error-failure-10: #feefef; /* 10% */
 
-  --error-warning-100: #FEA65B; /* 100% */
-  --error-warning-60: #FECA9D;  /* 60% */
-  --error-warning-30: #FFE5CE;  /* 30% */
-  --error-warning-10: #FFF7EF;  /* 10% */
+  --error-warning-100: #fea65b; /* 100% */
+  --error-warning-60: #feca9d; /* 60% */
+  --error-warning-30: #ffe5ce; /* 30% */
+  --error-warning-10: #fff7ef; /* 10% */
 
-  --error-notification-100: #5AA7FB;  /* 100% */
-  --error-notification-60: #9CCAFC; /* 60% */
-  --error-notification-30: #CEE5FE; /* 30% */
-  --error-notification-10: #EFF7FF; /* 10% */
+  --error-notification-100: #5aa7fb; /* 100% */
+  --error-notification-60: #9ccafc; /* 60% */
+  --error-notification-30: #cee5fe; /* 30% */
+  --error-notification-10: #eff7ff; /* 10% */
 }
