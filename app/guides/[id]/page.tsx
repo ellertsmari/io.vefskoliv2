@@ -36,7 +36,6 @@ const Guide = async ({ params }: { params: { id: string } }) => {
     title,
     description,
     themeIdea,
-    topicsList,
     knowledge,
     skills,
     resources,
@@ -68,7 +67,6 @@ const Guide = async ({ params }: { params: { id: string } }) => {
                       <KnowledgeAndSkills>
                         <BlackSubTitle>KNOWLEDGE</BlackSubTitle>
                         {knowledge.map((knowledge, index) => {
-                          console.log("knowledge", knowledge);
                           return (
                             <MarkdownReader key={index}>
                               {String(knowledge.knowledge)}

@@ -1,47 +1,52 @@
-"use client"
+"use client";
 
-import ReviewModal from "../reviewModal";
-import { CardWrapper, Info, Name, GuideNr, Status, StatusWrapper, StyledLink, InfoWrapper, Review } from "./style";
-import { useState } from "react";
+import Modal from "components/modal/modal";
+import {
+  CardWrapper,
+  Info,
+  Name,
+  GuideNr,
+  Status,
+  StatusWrapper,
+  StyledLink,
+  InfoWrapper,
+  Review,
+} from "./style";
 
 type GuideCardProps = {
-    guideNr: number;
-    name: string;
-    status: string;
-    forReturn: string;
-}
+  guideNr: number;
+  name: string;
+  status: string;
+  forReturn: string;
+};
 
-const GuideCard = ({guideNr, name, status, forReturn} : GuideCardProps) => {
-    const [openReviewForm, setOpenReviewForm] = useState(false);
+const GuideCard = ({ guideNr, name, status, forReturn }: GuideCardProps) => {
+  const ModalTrigger = (
+    <StatusWrapper>
+      <Review>
+        <Status>{status}</Status>
+      </Review>
+    </StatusWrapper>
+  );
 
-    return (
-        <>
-        <CardWrapper>
-            <InfoWrapper>
-                <StyledLink href={forReturn}>
-                    <Info>
-                    <GuideNr>GUIDE {guideNr}</GuideNr>
-                    <Name>{name}</Name>
-                    </Info>
-                </StyledLink>
-            </InfoWrapper>
-            
-            
-            <StatusWrapper>
-            <Review onClick={() => setOpenReviewForm(!openReviewForm)}>
-                <Status>
-                    {status}
-                </Status>
-                </Review>
-            </StatusWrapper>
-        </CardWrapper>
-        {/* This is a modal for review from */}
-        {openReviewForm && (
-            <ReviewModal shouldShow={openReviewForm} onClose={() => setOpenReviewForm(false)}/>
-        )}
-        </>
+  // todo: implement review modal
+  const ModalContent = <div>PLACEHOLDER</div>;
 
-     );
-}
- 
+  return (
+    <>
+      <CardWrapper>
+        <InfoWrapper>
+          <StyledLink href={forReturn}>
+            <Info>
+              <GuideNr>GUIDE {guideNr}</GuideNr>
+              <Name>{name}</Name>
+            </Info>
+          </StyledLink>
+        </InfoWrapper>
+        <Modal modalTrigger={ModalTrigger} modalContent={ModalContent} />
+      </CardWrapper>
+    </>
+  );
+};
+
 export default GuideCard;

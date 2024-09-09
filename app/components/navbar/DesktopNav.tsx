@@ -12,9 +12,10 @@ export const DesktopNavbar = () => {
 
   const buttons = links.map((link, index) => {
     return (
-      <DesktopNavbarButton href={link.href}>{link.label}</DesktopNavbarButton>
+      <DesktopNavbarButton key={index} href={link.href}>
+        {link.label}
+      </DesktopNavbarButton>
     );
   });
-  console.log(buttons);
   return <DesktopNav>{buttons}</DesktopNav>;
 };
