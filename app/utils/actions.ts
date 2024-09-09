@@ -6,6 +6,10 @@ import bcrypt from "bcrypt";
 import { signIn, signOut as s, getUser } from "../../auth";
 import { AuthError } from "next-auth";
 import { OptionalUserInfo, User } from "../models/user";
+import { Types } from "mongoose";
+import { GuideType } from "../models/guide";
+import { connectToDatabase } from "./mongoose-connector";
+import { Guide } from "../models/guide";
 
 export const signOut = s; //needs to be in actions.ts so that it can be called on the client side
 export async function authenticate(
@@ -96,3 +100,15 @@ export async function updateUserInfo(email: string, info: OptionalUserInfo) {
   const data = await response.json();
   return data;
 }
+
+export const getGuide = async (id: string) => {
+  if (!Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  const objectId = new Types.ObjectId(id);
+  await connectToDatabase();
+  const guide: (GuideType & { _id: string }) | null = await Guide.findOne({
+    _id: objectId,
+  });
+  return guide;
+};
