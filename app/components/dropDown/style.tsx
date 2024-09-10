@@ -45,27 +45,30 @@ const fadeOutLarge = keyframes`
 `;
 
 export const Container = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  height: fit-content;
-  width: 100%;
+  min-height: ${minHeightSmall};
   position: relative;
+  width: 200px;
+  height: auto;
+  min-width: 200px;
+  @media (min-width: ${breakPoint}) {
+    min-height: ${minHeightLarge};
+    min-width: 240px;
+  }
 `;
 
-export const DropDownContainer = styled.div<{ $isOpen: boolean }>`
+export const DropDownContainer = styled.div<{
+  $isOpen: boolean;
+  $zIndex?: number;
+}>`
   display: flex;
   flex-direction: column;
   align-items: center;
   position: absolute;
-  margin: 10px;
-  min-width: 200px;
+  z-index: ${(props) => props.$zIndex ?? 1};
   top: 0;
-  z-index: 1;
   border-radius: ${radius};
   border: 1px solid var(--theme-module3-100);
-  height: auto;
+  width: 100%;
   overflow: hidden;
   max-height: ${(props) => (props.$isOpen ? maxHeight : minHeightSmall)};
   animation: ${(props) => (props.$isOpen ? fadeInSmall : fadeOutSmall)}
@@ -75,7 +78,6 @@ export const DropDownContainer = styled.div<{ $isOpen: boolean }>`
     max-height: ${(props) => (props.$isOpen ? maxHeight : minHeightLarge)};
     animation: ${(props) => (props.$isOpen ? fadeInLarge : fadeOutLarge)}
       ${animationDuration}s ease-in-out;
-    min-width: 240px;
   }
 `;
 

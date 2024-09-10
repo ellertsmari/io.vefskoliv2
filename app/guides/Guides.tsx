@@ -1,10 +1,10 @@
 "use client";
 import GuidesClient from "./guidesClient";
-import { Dropdown } from "../components/dropDown/DropDown";
 import { GuideType } from "../models/guide";
 import React, { useMemo, useState } from "react";
 import { Module } from "../utils/types";
 import { Container } from "./style";
+import { Dropdown } from "components/dropdown/Dropdown";
 
 type Guides = (GuideType & { individualGuideLink: string })[];
 
@@ -32,8 +32,16 @@ export const Guides = ({
 
   return (
     <Container>
-      <Dropdown options={options} title={"All Modules"} />
-
+      <Dropdown
+        options={options}
+        title={"All Modules"}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: "1rem",
+        }}
+      />
       <GuidesClient fetchedGuides={filteredGuides} />
     </Container>
   );
