@@ -14,10 +14,11 @@ const ModalContext = createContext({
 
 interface ModalContextProps {
   children: React.ReactNode;
+  state?: [boolean, Dispatch<SetStateAction<boolean>>];
 }
 
-export const ModalProvider = ({ children }: ModalContextProps) => {
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+export const ModalProvider = ({ children, state }: ModalContextProps) => {
+  const [isModalOpen, setIsModalOpen] = state || useState<boolean>(false);
 
   return (
     <ModalContext.Provider value={{ isModalOpen, setIsModalOpen }}>

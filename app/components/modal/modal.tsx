@@ -7,14 +7,16 @@ type Props = {
   modalTrigger: ReactElement<ButtonHTMLAttributes<HTMLButtonElement>, string>;
   modalContent: React.ReactNode;
   hideExitButton?: boolean;
+  state?: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 };
 const Modal = ({
   modalTrigger,
   modalContent,
   hideExitButton = false,
+  state,
 }: Props) => {
   return (
-    <ModalProvider>
+    <ModalProvider state={state}>
       <ModalTrigger trigger={modalTrigger} />
       <ModalContent content={modalContent} hideExitButton={hideExitButton} />
     </ModalProvider>
