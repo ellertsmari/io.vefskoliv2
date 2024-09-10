@@ -1,6 +1,6 @@
 "use client";
 import GuidesClient from "./guidesClient";
-import { Dropdown } from "../components/dropdown/Dropdown";
+import { Dropdown } from "../components/dropDown/DropDown";
 import { GuideType } from "../models/guide";
 import React, { useMemo, useState } from "react";
 import { Module } from "../utils/types";
