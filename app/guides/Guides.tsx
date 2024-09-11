@@ -1,17 +1,15 @@
 "use client";
 import GuidesClient from "./guidesClient";
-import { Dropdown } from "../components/dropDown/DropDown";
-import { GuideType } from "../models/guide";
 import React, { useMemo, useState } from "react";
 import { Module } from "../utils/types";
 import { Container } from "./style";
-
-type Guides = (GuideType & { individualGuideLink: string })[];
+import { Dropdown } from "components/dropdown/Dropdown";
+import { GuideInfoWithLink } from "./query";
 
 export const Guides = ({
   fetchedGuides,
 }: {
-  fetchedGuides: (GuideType & { individualGuideLink: string })[];
+  fetchedGuides: GuideInfoWithLink[];
 }) => {
   const [selectedModule, setSelectedModule] = useState<number | undefined>(
     undefined
@@ -39,7 +37,7 @@ export const Guides = ({
   );
 };
 
-const fetchModules = (fetchedGuides: Guides) => {
+const fetchModules = (fetchedGuides: GuideInfoWithLink[]) => {
   return fetchedGuides
     .reduce((acc: Module[], guideToCheck) => {
       if (
@@ -62,7 +60,7 @@ const fetchModules = (fetchedGuides: Guides) => {
 // Currently, we are assuming that the module title is a number
 const filterGuides = (
   selectedModule: number | undefined,
-  fetchedGuides: Guides
+  fetchedGuides: GuideInfoWithLink[]
 ) => {
   if (selectedModule === undefined) return fetchedGuides;
   return fetchedGuides.filter((guide) => {

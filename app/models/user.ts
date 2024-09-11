@@ -24,7 +24,7 @@ export interface OptionalUserInfo {
   avatarUrl?: string;
 }
 
-type UserInfo = RequiredUserInfo & OptionalUserInfo;
+export type UserInfo = RequiredUserInfo & OptionalUserInfo;
 
 interface UserMethods {
   updateUserInfo: (
@@ -59,6 +59,7 @@ userSchema.method(
 
 export type UserType = InferSchemaType<typeof userSchema> & {
   isLoggedIn?: boolean;
+  _id: Types.ObjectId;
 };
 export type UserWithIdType = UserType & { id: Types.ObjectId } & UserMethods;
 export type UserDocument = UserType & Document & UserMethods;

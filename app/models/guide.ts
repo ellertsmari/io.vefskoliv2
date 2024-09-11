@@ -1,4 +1,11 @@
-import { Document, InferSchemaType, Schema, model, models } from "mongoose";
+import {
+  Document,
+  InferSchemaType,
+  Schema,
+  Types,
+  model,
+  models,
+} from "mongoose";
 
 const guideReferenceSchema = new Schema({
   type: { type: Schema.Types.String, required: true },
@@ -51,7 +58,11 @@ const guideSchema = new Schema({
   order: { type: Schema.Types.Number, required: true },
 });
 
-export type GuideType = InferSchemaType<typeof guideSchema>;
+export type GuideType = InferSchemaType<typeof guideSchema> & {
+  _id: Types.ObjectId;
+};
+
+export type ModuleType = InferSchemaType<typeof guideModuleSchema>;
 
 type GuideDocument = GuideType & Document;
 export const Guide = models.Guide || model<GuideDocument>("Guide", guideSchema);
