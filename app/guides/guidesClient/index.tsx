@@ -8,17 +8,12 @@ type Props = {
 };
 
 const GuidesClient = ({ fetchedGuides }: Props) => {
+  console.log(fetchedGuides);
   return (
     <GuideContainer>
-      {fetchedGuides.map((guide, index) => (
-        <GuideCard
-          forReturn={guide.individualGuideLink}
-          key={guide.individualGuideLink}
-          guideNr={index + 1}
-          name={guide.title}
-          status="Guide not Returned"
-        />
-      ))}
+      {fetchedGuides.map((guide, index) => {
+        return <GuideCard guide={guide} key={index} />;
+      })}
     </GuideContainer>
   );
 };

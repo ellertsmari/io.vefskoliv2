@@ -4,8 +4,6 @@ import { useModal } from "./ModalProvider";
 import { ButtonWrapper, ContentWrapper, ModalWrapper } from "./style";
 import { useEffect } from "react";
 
-const body = document.querySelector("body");
-
 export const ModalContent = ({
   content,
   hideExitButton = false,
@@ -16,10 +14,13 @@ export const ModalContent = ({
   const { isModalOpen, setIsModalOpen } = useModal();
 
   useEffect(() => {
-    if (isModalOpen) {
-      body!.style.overflow = "hidden";
-    } else {
-      body!.style.overflow = "auto";
+    if (typeof document !== "undefined") {
+      const body = document.querySelector("body");
+      if (isModalOpen) {
+        body!.style.overflow = "hidden";
+      } else {
+        body!.style.overflow = "auto";
+      }
     }
   }, [isModalOpen]);
 

@@ -1,11 +1,11 @@
 import { GuideInfo, GuideInfoWithLink, getGuides } from "./query";
-import { UserWithIdType } from "../models/user";
+import { UserDocument, UserWithIdType } from "../models/user";
 
 import { auth } from "../../auth";
 import { Guides } from "./Guides";
 
 const GuidesPage = async () => {
-  const session = (await auth()) as unknown as UserWithIdType;
+  const session = (await auth()) as unknown as UserDocument;
   if (!session) return null;
 
   const fetchingGuides: GuideInfo[] = (await getGuides(session)) || [];

@@ -12,34 +12,30 @@ import {
   InfoWrapper,
   Review,
 } from "./style";
+import { GuideInfoWithLink } from "../../guides/query";
 
-type GuideCardProps = {
-  guideNr: number;
-  name: string;
-  status: string;
-  forReturn: string;
-};
-
-const GuideCard = ({ guideNr, name, status, forReturn }: GuideCardProps) => {
+const GuideCard = ({ guide }: { guide: GuideInfoWithLink }) => {
   const ModalTrigger = (
     <StatusWrapper>
       <Review>
-        <Status>{status}</Status>
+        <Status>
+          {guide.returnsSubmitted ? "Guide returned" : "Guide not returned"}
+        </Status>
       </Review>
     </StatusWrapper>
   );
 
   // todo: implement review modal
   const ModalContent = <div>PLACEHOLDER</div>;
-
+  console.log(guide);
   return (
     <>
       <CardWrapper>
         <InfoWrapper>
-          <StyledLink href={forReturn}>
+          <StyledLink href={guide.individualGuideLink}>
             <Info>
-              <GuideNr>GUIDE {guideNr}</GuideNr>
-              <Name>{name}</Name>
+              <GuideNr>{`GUIDE ${guide.order}`}</GuideNr>
+              <Name>{guide.title}</Name>
             </Info>
           </StyledLink>
         </InfoWrapper>
