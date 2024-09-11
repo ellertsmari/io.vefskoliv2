@@ -5,8 +5,8 @@ import bcrypt from "bcrypt";
 
 import { signIn, signOut as s, getUser } from "../../auth";
 import { AuthError } from "next-auth";
-import { OptionalUserInfo, User } from "../models/user";
-import { Types } from "mongoose";
+import { OptionalUserInfo, User, UserDocument } from "../models/user";
+import { FilterQuery, Types } from "mongoose";
 import { GuideType } from "../models/guide";
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "../models/guide";
@@ -112,4 +112,11 @@ export const getGuide = async (id: string) => {
     _id: objectId,
   });
   return guide;
+};
+
+export const getUsers = async (filter: FilterQuery<any>) => {
+  await connectToDatabase();
+  const users = await User.find(filter);
+
+  return JSON.parse(JSON.stringify(users)) as UserDocument[];
 };

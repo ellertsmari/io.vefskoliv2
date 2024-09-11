@@ -1,5 +1,6 @@
 "use client";
 import GuidesClient from "./guidesClient";
+
 import React, { useMemo, useState } from "react";
 import { Module } from "../utils/types";
 import { Container } from "./style";
@@ -30,8 +31,16 @@ export const Guides = ({
 
   return (
     <Container>
-      <Dropdown options={options} title={"All Modules"} />
-
+      <Dropdown
+        options={options}
+        title={"All Modules"}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: "1rem",
+        }}
+      />
       <GuidesClient fetchedGuides={filteredGuides} />
     </Container>
   );

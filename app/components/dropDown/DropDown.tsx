@@ -15,9 +15,17 @@ interface DropdownProps {
   options: { optionName: string; onClick?: () => void }[];
   title: string;
   initialOption?: string;
+  style?: React.CSSProperties;
+  zIndex?: number;
 }
 
-export const Dropdown = ({ options, title, initialOption }: DropdownProps) => {
+export const Dropdown = ({
+  options,
+  title,
+  initialOption,
+  style,
+  zIndex,
+}: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentOption, setCurrentOption] = useState(initialOption ?? title);
   const [showOptions, setShowOptions] = useState(false);
@@ -55,8 +63,8 @@ export const Dropdown = ({ options, title, initialOption }: DropdownProps) => {
   }, [options, isOpen]);
 
   return (
-    <Container>
-      <DropDownContainer $isOpen={isOpen}>
+    <Container style={style}>
+      <DropDownContainer $isOpen={isOpen} $zIndex={zIndex}>
         <Accordian onClick={() => handleOnClick(title)} $title>
           <AccordianText>{currentOption.toUpperCase()}</AccordianText>
           {isOpen ? <ArrowUp /> : <ArrowDown />}

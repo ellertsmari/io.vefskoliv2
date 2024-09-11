@@ -1,13 +1,10 @@
 import {
-  Title,
-  SubTitle,
   Wrapper,
   Border,
   Container,
   Main,
   Side,
   Content,
-  BlackSubTitle,
   Requirements,
   KnowledgeAndSkills,
   ReturnWrapper,
@@ -18,6 +15,7 @@ import {
 import MarkdownReader from "../../components/markdown/reader";
 import ReturnForm from "./returnForm";
 import { getGuide } from "../../utils/actions";
+import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
 
 //displaying the guide here
 const Guide = async ({ params }: { params: { id: string } }) => {
