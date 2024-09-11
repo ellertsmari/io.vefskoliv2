@@ -1,10 +1,10 @@
-import { GuideType } from "../../models/guide";
 import GuideCard from "../../components/guideCard";
 
 import { GuideContainer } from "../style";
+import { GuideInfoWithLink } from "../query";
 
 type Props = {
-  fetchedGuides: (GuideType & { individualGuideLink: string })[];
+  fetchedGuides: GuideInfoWithLink[];
 };
 
 const GuidesClient = ({ fetchedGuides }: Props) => {

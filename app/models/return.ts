@@ -1,4 +1,11 @@
-import { Document, Schema, model, models, InferSchemaType, Types} from "mongoose";
+import {
+  Document,
+  Schema,
+  model,
+  models,
+  InferSchemaType,
+  Types,
+} from "mongoose";
 
 const returnSchema = new Schema({
   projectUrl: { type: Schema.Types.String, required: true },
@@ -6,13 +13,16 @@ const returnSchema = new Schema({
   pictureUrl: { type: Schema.Types.String, required: false },
   projectName: { type: Schema.Types.String, required: false },
   comment: { type: Schema.Types.String, required: false },
-  owner: { type: Schema.Types.ObjectId, required: true, ref:"User" },
+  owner: { type: Schema.Types.ObjectId, required: true, ref: "User" },
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
-  reviewedAt: { type: Schema.Types.Date, required: false},
-  guide:{ type: Schema.Types.ObjectId, required: true, ref:"Guide" },
+  reviewedAt: { type: Schema.Types.Date, required: false },
+  guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide" },
 });
 
-export type ReturnType = InferSchemaType<typeof returnSchema>
+export type ReturnType = InferSchemaType<typeof returnSchema> & {
+  _id: Types.ObjectId;
+};
 
 type ReturnDocument = ReturnType & Document;
-export const Return = models.Return || model<ReturnDocument>("Return", returnSchema);
+export const Return =
+  models.Return || model<ReturnDocument>("Return", returnSchema);
