@@ -23,6 +23,6 @@ export type ReturnType = InferSchemaType<typeof returnSchema> & {
   _id: Types.ObjectId;
 };
 
-type ReturnDocument = ReturnType & Document;
+export type ReturnDocument = ReturnType & Document;
 export const Return =
   models.Return || model<ReturnDocument>("Return", returnSchema);

@@ -2,10 +2,9 @@
 import GuidesClient from "./guidesClient";
 
 import React, { useMemo, useState } from "react";
-import { Module } from "../utils/types";
 import { Container } from "./style";
 import { Dropdown } from "components/dropdown/Dropdown";
-import { GuideInfoWithLink } from "./query";
+import { GuideInfoWithLink, Module } from "./types";
 
 export const Guides = ({
   fetchedGuides,
