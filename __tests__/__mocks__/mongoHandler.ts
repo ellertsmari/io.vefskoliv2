@@ -9,9 +9,10 @@ import {
   Review,
   ReviewedFeedbackDocument,
   ReviewedFeedbackType,
+  Vote,
 } from "../../app/models/review";
 import { Return, ReturnDocument, ReturnType } from "../../app/models/return";
-import { Guide, GuideType } from "../../app/models/guide";
+import { Guide, GuideDocument, GuideType } from "../../app/models/guide";
 
 jest.mock("../../app/utils/mongoose-connector", () => ({
   connectToDatabase: jest.fn(),
@@ -60,7 +61,7 @@ export const createDummyUser = async (
   return await User.create(dummyUser);
 };
 
-export const createDummyGuide = async (): Promise<GuideType> => {
+export const createDummyGuide = async (): Promise<GuideDocument> => {
   const dummyGuide: Partial<GuideType> = {
     category: faker.lorem.word(),
     title: faker.lorem.sentence(),
@@ -84,7 +85,7 @@ export const createDummyGuide = async (): Promise<GuideType> => {
 
 export const createDummyReturn = async (
   user?: UserDocument,
-  guide?: GuideType
+  guide?: GuideDocument
 ): Promise<ReturnDocument> => {
   const dummyReturn: Partial<ReturnType> = {
     projectUrl: faker.internet.url(),
@@ -102,7 +103,7 @@ export const createDummyReturn = async (
 
 export const createDummyFeedback = async (
   owner?: UserDocument,
-  guide?: GuideType,
+  guide?: GuideDocument,
   userReturn?: ReturnType,
   fail?: boolean
 ): Promise<FeedbackDocument> => {
@@ -117,7 +118,7 @@ export const createDummyFeedback = async (
     return: userReturn?._id ?? new mongoose.Types.ObjectId(),
     owner: owner?._id ?? new mongoose.Types.ObjectId(),
     comment: faker.lorem.sentence(),
-    vote: fail ? "no pass" : "pass",
+    vote: fail ? Vote.NO_PASS : Vote.PASS,
     createdAt: new Date(),
   };
 
@@ -126,21 +127,18 @@ export const createDummyFeedback = async (
 
 export const createDummyReview = async (
   owner?: UserDocument,
-  guide?: GuideType,
+  guide?: GuideDocument,
   userReturn?: ReturnType,
-  reviewer?: UserDocument
+  reviewer?: UserDocument,
+  grade?: number
 ): Promise<ReviewedFeedbackDocument> => {
-  const votes: ("no pass" | "pass" | "recommend to gallery")[] = [
-    "no pass",
-    "pass",
-    "recommend to gallery",
-  ];
+  const votes = [Vote.NO_PASS, Vote.PASS, Vote.RECOMMEND_TO_GALLERY];
 
   const dummyReview: Partial<ReviewedFeedbackType> = {
     guide: guide?._id ?? new mongoose.Types.ObjectId(),
     return: userReturn?._id ?? new mongoose.Types.ObjectId(),
     reviewer: reviewer?._id ?? new mongoose.Types.ObjectId(),
-    grade: faker.number.int(10),
+    grade: grade ?? faker.number.int(10),
     owner: owner?._id ?? new mongoose.Types.ObjectId(),
     comment: faker.lorem.sentence(),
     vote: votes[Math.floor(Math.random() * votes.length)],

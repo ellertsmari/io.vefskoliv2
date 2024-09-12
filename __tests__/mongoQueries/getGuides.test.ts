@@ -7,9 +7,10 @@ import {
   createDummyReturn,
   createDummyReview,
   createDummyUser,
-} from "./mongoHandler";
-import { GuideInfo, getGuides } from "../../app/guides/query";
+} from "../__mocks__/mongoHandler";
+import { getGuides } from "../../app/guides/query";
 import { Types } from "mongoose";
+import { GuideInfo } from "../../app/guides/types";
 
 // for type checking
 function isGuideInfo(obj: any): obj is GuideInfo {
@@ -55,13 +56,13 @@ describe("getGuides", () => {
     if (guides) {
       expect(guides[0]).toMatchObject({
         _id: expect.any(Types.ObjectId),
-        title: guide.title,
-        description: guide.description,
-        category: guide.category,
-        order: guide.order,
+        title: guides[0].title,
+        description: guides[0].description,
+        category: guides[0].category,
+        order: guides[0].order,
         module: {
-          title: guide.module.title,
-          number: guide.module.number,
+          title: guides[0].module.title,
+          number: guides[0].module.number,
         },
       });
       expect(guides[0].returnsSubmitted).toEqual(

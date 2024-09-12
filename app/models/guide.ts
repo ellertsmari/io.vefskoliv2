@@ -64,5 +64,5 @@ export type GuideType = InferSchemaType<typeof guideSchema> & {
 
 export type ModuleType = InferSchemaType<typeof guideModuleSchema>;
 
-type GuideDocument = GuideType & Document;
+export type GuideDocument = GuideType & Document;
 export const Guide = models.Guide || model<GuideDocument>("Guide", guideSchema);

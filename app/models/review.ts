@@ -7,6 +7,12 @@ import {
   Types,
 } from "mongoose";
 
+export enum Vote {
+  NO_PASS = "no pass",
+  PASS = "pass",
+  RECOMMEND_TO_GALLERY = "recommend to gallery",
+}
+
 const reviewSchema = new Schema({
   guide: { type: Schema.Types.ObjectId, required: false, ref: "Guide" },
   return: { type: Schema.Types.ObjectId, required: true, ref: "Return" },
@@ -16,7 +22,7 @@ const reviewSchema = new Schema({
   vote: {
     type: Schema.Types.String,
     required: true,
-    enum: ["no pass", "pass", "recommend to gallery"],
+    enum: Object.values(Vote),
   },
   comment: { type: Schema.Types.String, required: true },
 

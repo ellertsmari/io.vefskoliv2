@@ -1,38 +1,9 @@
 import { connectToDatabase } from "../utils/mongoose-connector";
-import { Guide, ModuleType } from "../models/guide";
+import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
 import { UserDocument } from "../models/user";
-import { ReturnType } from "../models/return";
-import { FeedbackDocument, ReviewedFeedbackDocument } from "../models/review";
-import { PipelineStage, Types } from "mongoose";
-
-export type GuideInfo = {
-  _id: Types.ObjectId;
-  title: string;
-  description: string;
-  category: string;
-  order: number;
-  module: ModuleType;
-
-  // this user's project returns
-  returnsSubmitted: ReturnType[];
-  feedbackReceived: FeedbackDocument[];
-
-  // giving feedback on others' returns
-  availableForFeedback: ReturnType[];
-  feedbackGiven: FeedbackDocument[];
-
-  // reviews received by others on feedback given by this user
-  reviewsReceived: ReviewedFeedbackDocument[];
-
-  // reviewing others' feedback
-  reviewsGiven: ReviewedFeedbackDocument[];
-  availableToReview: ReturnType[];
-};
-
-export type GuideInfoWithLink = GuideInfo & {
-  individualGuideLink: string;
-};
+import { PipelineStage } from "mongoose";
+import { GuideInfo } from "./types";
 
 export async function getGuides(
   user: UserDocument | null
