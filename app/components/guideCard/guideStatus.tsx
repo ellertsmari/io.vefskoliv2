@@ -2,26 +2,25 @@
 
 // For each guide we have these "states"
 
-// Return statues
-// - Guide not returned
-// - Guide returned and not reviewed
-// - Guide returned and passed
-// - Guide returned and failed
-
-enum ReturnStatus {
+export enum ReturnStatus {
   NOT_RETURNED = "Guide not returned",
-  RETURNED_NOT_REVIEWED = "Guide returned and not reviewed",
+  RETURNED_AWAITING_REVIEW = "Guide returned and awaiting review",
   RETURNED_PASSED = "Guide returned and passed",
   RETURNED_FAILED = "Guide returned and failed",
 }
 
-enum ReviewStatus {
-  NO_REVIEW = "Review not given",
-  ONE_REVIEW = "1 Review given",
-  TWO_OR_MORE_REVIEWS = "2 or more Reviews given",
+export enum FeedbackToGiveStatus {
+  NO_FEEDBACK_TO_GIVE = "No feedback to give",
+  FEEDBACK_TO_GIVE = "Feedback to give",
 }
 
-// Review statues
-// - Review not given
-// - 1 Review given
-// - 2 or more Reviews given
+export enum ReviewsReceivedStatus {
+  NO_REVIEW = "No reviews received",
+  ONE_REVIEW = "1 Review received",
+  TWO_OR_MORE_REVIEWS = "Reviews received",
+}
+
+export const enum ReviewsToGiveStatus {
+  NO_REVIEWS_TO_GIVE = "No reviews to give",
+  REVIEWS_TO_GIVE = "Reviews to give",
+}

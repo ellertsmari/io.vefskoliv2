@@ -14,17 +14,11 @@ import { Types } from "mongoose";
 // for type checking
 function isGuideInfo(obj: any): obj is GuideInfo {
   return (
-    typeof obj.returnStatus === "string" &&
     Array.isArray(obj.returnsSubmitted) &&
     Array.isArray(obj.feedbackReceived) &&
-    typeof obj.feedbackToGiveStatus === "string" &&
     Array.isArray(obj.availableForFeedback) &&
     Array.isArray(obj.feedbackGiven) &&
-    typeof obj.feedbackGivenCount === "number" &&
-    typeof obj.reviewsReceivedStatus === "string" &&
     Array.isArray(obj.reviewsReceived) &&
-    Array.isArray(obj.reviewsReceivedGrades) &&
-    typeof obj.reviewsToGiveStatus === "string" &&
     Array.isArray(obj.reviewsGiven) &&
     Array.isArray(obj.availableToReview) &&
     obj._id instanceof Types.ObjectId
@@ -69,12 +63,6 @@ describe("getGuides", () => {
           title: guide.module.title,
           number: guide.module.number,
         },
-        returnStatus: expect.any(String),
-        feedbackToGiveStatus: expect.any(String),
-        feedbackGivenCount: expect.any(Number),
-        reviewsReceivedStatus: expect.stringContaining("Reviews received"), // in practice users wouldnt review their own returns
-        reviewsReceivedGrades: expect.arrayContaining([review.grade]),
-        reviewsToGiveStatus: expect.any(String),
       });
       expect(guides[0].returnsSubmitted).toEqual(
         expect.arrayContaining([
@@ -85,9 +73,7 @@ describe("getGuides", () => {
       expect(guides[0].reviewsReceived).toEqual(
         expect.arrayContaining([expect.objectContaining(review.toObject())])
       );
-      expect(guides[0].reviewsReceivedGrades).toEqual(
-        expect.arrayContaining([review.grade])
-      );
+
       expect(guides[0].reviewsGiven).toEqual(
         expect.arrayContaining([
           expect.objectContaining(review2.toObject()),
@@ -143,29 +129,5 @@ describe("getGuides", () => {
     const guides = await getGuides(null);
 
     expect(guides).toBeNull();
-  });
-  it("sets the correct returnStatus", async () => {
-    const user = await createDummyUser();
-
-    const guide = await createDummyGuide();
-
-    const userReturn = await createDummyReturn(user, guide);
-
-    const guides = await getGuides(user);
-
-    if (guides) {
-      expect(guides[0].returnStatus).toEqual("Returned");
-    }
-  });
-  it("sets the correct returnStatus when no returns are submitted", async () => {
-    const user = await createDummyUser();
-
-    const guide = await createDummyGuide();
-
-    const guides = await getGuides(user);
-
-    if (guides) {
-      expect(guides[0].returnStatus).toEqual("Not returned");
-    }
   });
 });

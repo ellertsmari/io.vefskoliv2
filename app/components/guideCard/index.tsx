@@ -27,7 +27,6 @@ const GuideCard = ({ guide }: { guide: GuideInfoWithLink }) => {
 
   // todo: implement review modal
   const ModalContent = <div>PLACEHOLDER</div>;
-  console.log(guide);
   return (
     <>
       <CardWrapper>

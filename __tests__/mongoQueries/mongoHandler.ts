@@ -103,7 +103,8 @@ export const createDummyReturn = async (
 export const createDummyFeedback = async (
   owner?: UserDocument,
   guide?: GuideType,
-  userReturn?: ReturnType
+  userReturn?: ReturnType,
+  fail?: boolean
 ): Promise<FeedbackDocument> => {
   const votes: ("no pass" | "pass" | "recommend to gallery")[] = [
     "no pass",
@@ -116,7 +117,7 @@ export const createDummyFeedback = async (
     return: userReturn?._id ?? new mongoose.Types.ObjectId(),
     owner: owner?._id ?? new mongoose.Types.ObjectId(),
     comment: faker.lorem.sentence(),
-    vote: votes[Math.floor(Math.random() * votes.length)],
+    vote: fail ? "no pass" : "pass",
     createdAt: new Date(),
   };
 
