@@ -11,13 +11,13 @@ jest.mock(
 
 const { fetchModules, filterGuides, createOptions } = exportedForTesting;
 
-type Guides = (GuideType & { individualGuideLink: string })[];
+type Guides = (GuideType & { link: string })[];
 
 describe("Guides", () => {
   test("changes guides shown based on dropdown selection", async () => {
     const fetchedGuides = [
-      { module: { title: "1 Module" }, individualGuideLink: "link1" },
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
+      { module: { title: "1 Module" }, link: "link1" },
+      { module: { title: "2 Module" }, link: "link2" },
     ] as Guides;
 
     const { getByText, queryByText } = render(
@@ -64,9 +64,9 @@ describe("Guides", () => {
 describe("fetchModules", () => {
   it("should return the correct modules", () => {
     const fetchedGuides = [
-      { module: { title: "1 Module" }, individualGuideLink: "link1" },
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
-      { module: { title: "1 Module" }, individualGuideLink: "link3" },
+      { module: { title: "1 Module" }, link: "link1" },
+      { module: { title: "2 Module" }, link: "link2" },
+      { module: { title: "1 Module" }, link: "link3" },
     ] as Guides;
 
     const result = fetchModules(fetchedGuides);
@@ -87,8 +87,8 @@ describe("fetchModules", () => {
 
   it("should handle guides with non-numeric module titles", () => {
     const fetchedGuides = [
-      { module: { title: "Module A" }, individualGuideLink: "link1" },
-      { module: { title: "Module B" }, individualGuideLink: "link2" },
+      { module: { title: "Module A" }, link: "link1" },
+      { module: { title: "Module B" }, link: "link2" },
     ] as Guides;
 
     // Act
@@ -102,8 +102,8 @@ describe("fetchModules", () => {
 
   it("should only store first result encountered when 2 modules with the same number but different titles", () => {
     const fetchedGuides = [
-      { module: { title: "1 Module A" }, individualGuideLink: "link1" },
-      { module: { title: "1 Module B" }, individualGuideLink: "link2" },
+      { module: { title: "1 Module A" }, link: "link1" },
+      { module: { title: "1 Module B" }, link: "link2" },
     ] as Guides;
 
     const result = fetchModules(fetchedGuides);
@@ -116,24 +116,24 @@ describe("filterGuides", () => {
   it("should return the correct guides", () => {
     const selectedModule = 1;
     const fetchedGuides = [
-      { module: { title: "1 Module" }, individualGuideLink: "link1" },
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
-      { module: { title: "1 Module" }, individualGuideLink: "link3" },
+      { module: { title: "1 Module" }, link: "link1" },
+      { module: { title: "2 Module" }, link: "link2" },
+      { module: { title: "1 Module" }, link: "link3" },
     ] as Guides;
 
     const result = filterGuides(selectedModule, fetchedGuides);
 
     expect(result).toEqual([
-      { module: { title: "1 Module" }, individualGuideLink: "link1" },
-      { module: { title: "1 Module" }, individualGuideLink: "link3" },
+      { module: { title: "1 Module" }, link: "link1" },
+      { module: { title: "1 Module" }, link: "link3" },
     ]);
   });
 
   it("should return all guides when selectedModule is undefined", () => {
     const selectedModule = undefined;
     const fetchedGuides = [
-      { module: { title: "1 Module" }, individualGuideLink: "link1" },
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
+      { module: { title: "1 Module" }, link: "link1" },
+      { module: { title: "2 Module" }, link: "link2" },
     ] as Guides;
 
     const result = filterGuides(selectedModule, fetchedGuides);
@@ -144,8 +144,8 @@ describe("filterGuides", () => {
   it("should return an empty array when no guides match the selected module", () => {
     const selectedModule = 3;
     const fetchedGuides = [
-      { module: { title: "1 Module" }, individualGuideLink: "link1" },
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
+      { module: { title: "1 Module" }, link: "link1" },
+      { module: { title: "2 Module" }, link: "link2" },
     ] as Guides;
 
     const result = filterGuides(selectedModule, fetchedGuides);
@@ -156,8 +156,8 @@ describe("filterGuides", () => {
   it("should return an empty array when selectedModule is not a number", () => {
     const selectedModule = "not a number";
     const fetchedGuides = [
-      { module: { title: "1 Module" }, individualGuideLink: "link1" },
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
+      { module: { title: "1 Module" }, link: "link1" },
+      { module: { title: "2 Module" }, link: "link2" },
     ] as Guides;
 
     const result = filterGuides(selectedModule as any, fetchedGuides);
@@ -168,15 +168,13 @@ describe("filterGuides", () => {
   it("should not return a module when the number is not the first character", () => {
     const selectedModule = 2;
     const fetchedGuides = [
-      { module: { title: "Module 2" }, individualGuideLink: "link1" },
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
+      { module: { title: "Module 2" }, link: "link1" },
+      { module: { title: "2 Module" }, link: "link2" },
     ] as Guides;
 
     const result = filterGuides(selectedModule, fetchedGuides);
 
-    expect(result).toEqual([
-      { module: { title: "2 Module" }, individualGuideLink: "link2" },
-    ]);
+    expect(result).toEqual([{ module: { title: "2 Module" }, link: "link2" }]);
   });
 });
 

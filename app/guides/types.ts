@@ -1,10 +1,6 @@
 import { Types } from "mongoose";
 import { ModuleType } from "../models/guide";
-import {
-  FeedbackDocument,
-  Review,
-  ReviewedFeedbackDocument,
-} from "../models/review";
+import { FeedbackDocument, GradedFeedbackDocument } from "../models/review";
 import { ReturnDocument, ReturnType } from "../models/return";
 
 export type GuideInfo = {
@@ -23,12 +19,12 @@ export type GuideInfo = {
   availableForFeedback: ReturnDocument[];
   feedbackGiven: FeedbackDocument[];
 
-  // reviews received by others on feedback given by this user
-  reviewsReceived: ReviewedFeedbackDocument[];
+  // grades received by others on feedback given by this user
+  gradesReceived: GradedFeedbackDocument[];
 
-  // reviewing others' feedback
-  reviewsGiven: ReviewedFeedbackDocument[];
-  availableToReview: ReturnType[];
+  // grading others' feedback
+  gradesGiven: GradedFeedbackDocument[];
+  availableToGrade: ReturnType[];
 };
 
 export type Module = {
@@ -37,29 +33,30 @@ export type Module = {
 };
 
 export type GuideInfoWithLink = GuideInfo & {
-  individualGuideLink: string;
+  link: string;
 };
 
 export enum ReturnStatus {
   NOT_RETURNED = "Not Returned",
   AWAITING_FEEDBACK = "Awaiting feedback",
   PASSED = "Passed",
+  HALL_OF_FAME = "In Hall of Fame",
   FAILED = "Failed",
 }
 
 export enum FeedbackStatus {
-  AWAITING_PROJECTS = "Awaiting projects to review",
+  AWAITING_PROJECTS = "Awaiting projects to grade",
   NEED_TO_PROVIDE_FEEDBACK = "Need to provide feedback",
   FEEDBACK_GIVEN = "Feedback given",
 }
 
 export enum ReviewsReceivedStatus {
   AWAITING_REVIEWS = "Awaiting reviews from others",
-  REVIEWS_RECEIVED = "Reviews received",
+  GRADES_RECEIVED = "Grades received",
 }
 
 export enum ReviewsGivenStatus {
-  AWAITING_FEEDBACK = "Awaiting feedback to review",
+  AWAITING_FEEDBACK = "Awaiting feedback to grade",
   NEED_TO_REVIEW = "Need to review",
-  REVIEWS_GIVEN = "Reviews given",
+  GRADES_GIVEN = "Grades given",
 }

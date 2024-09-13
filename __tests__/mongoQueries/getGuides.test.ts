@@ -19,9 +19,9 @@ function isGuideInfo(obj: any): obj is GuideInfo {
     Array.isArray(obj.feedbackReceived) &&
     Array.isArray(obj.availableForFeedback) &&
     Array.isArray(obj.feedbackGiven) &&
-    Array.isArray(obj.reviewsReceived) &&
-    Array.isArray(obj.reviewsGiven) &&
-    Array.isArray(obj.availableToReview) &&
+    Array.isArray(obj.gradesReceived) &&
+    Array.isArray(obj.gradesGiven) &&
+    Array.isArray(obj.availableToGrade) &&
     obj._id instanceof Types.ObjectId
   );
 }
@@ -71,17 +71,17 @@ describe("getGuides", () => {
           expect.objectContaining(userReturn3.toObject()),
         ])
       );
-      expect(guides[0].reviewsReceived).toEqual(
+      expect(guides[0].gradesReceived).toEqual(
         expect.arrayContaining([expect.objectContaining(review.toObject())])
       );
 
-      expect(guides[0].reviewsGiven).toEqual(
+      expect(guides[0].gradesGiven).toEqual(
         expect.arrayContaining([
           expect.objectContaining(review2.toObject()),
           expect.objectContaining(review3.toObject()),
         ])
       );
-      expect(guides[0].availableToReview).toEqual(
+      expect(guides[0].availableToGrade).toEqual(
         expect.arrayContaining([
           expect.objectContaining(feedback.toObject()),
           expect.objectContaining(feedback2.toObject()),

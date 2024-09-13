@@ -12,9 +12,15 @@ import {
   InfoWrapper,
   Review,
 } from "./style";
-import { GuideInfoWithLink } from "../../guides/query";
+import { GuideInfoWithLink } from "../../guides/types";
 
-const GuideCard = ({ guide }: { guide: GuideInfoWithLink }) => {
+const GuideCard = ({
+  guide,
+  order,
+}: {
+  guide: GuideInfoWithLink;
+  order?: number;
+}) => {
   const ModalTrigger = (
     <StatusWrapper>
       <Review>
@@ -31,9 +37,11 @@ const GuideCard = ({ guide }: { guide: GuideInfoWithLink }) => {
     <>
       <CardWrapper>
         <InfoWrapper>
-          <StyledLink href={guide.individualGuideLink}>
+          <StyledLink href={guide.link}>
             <Info>
-              <GuideNr>{`GUIDE ${guide.order}`}</GuideNr>
+              <GuideNr>
+                {order ? `GUIDE ${order}` : `MODULE ${guide.module.title[0]}`}
+              </GuideNr>
               <Name>{guide.title}</Name>
             </Info>
           </StyledLink>

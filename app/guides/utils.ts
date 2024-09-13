@@ -2,7 +2,7 @@
 import { ReturnDocument } from "../models/return";
 import {
   FeedbackDocument,
-  ReviewedFeedbackDocument,
+  GradedFeedbackDocument,
   Vote,
 } from "../models/review";
 import {
@@ -10,6 +10,8 @@ import {
   FeedbackStatus,
   ReviewsReceivedStatus,
   ReviewsGivenStatus,
+  GuideInfoWithLink,
+  Module,
 } from "./types";
 
 export const calculateReturnStatus = (
@@ -35,12 +37,20 @@ export const calculateReturnStatus = (
   if (
     feedbackOnLatestSubmission.filter(
       (feedback) => feedback.vote === Vote.NO_PASS
-    ).length > 0
+    ).length > 1
   ) {
     return ReturnStatus.FAILED;
   }
   if (feedbackOnLatestSubmission.length < 2) {
     return ReturnStatus.AWAITING_FEEDBACK;
+  }
+
+  if (
+    feedbackOnLatestSubmission.filter(
+      (feedback) => feedback.vote === Vote.RECOMMEND_TO_GALLERY
+    ).length > 0
+  ) {
+    return ReturnStatus.HALL_OF_FAME;
   }
 
   return ReturnStatus.PASSED;
@@ -60,21 +70,21 @@ export const calculateFeedbackStatus = (
 };
 
 export const calculateReviewsReceivedStatus = (
-  reviewsReceived: ReviewedFeedbackDocument[]
+  gradesReceived: GradedFeedbackDocument[]
 ): ReviewsReceivedStatus => {
-  if (reviewsReceived.length < 2) {
+  if (gradesReceived.length < 2) {
     return ReviewsReceivedStatus.AWAITING_REVIEWS;
   }
-  return ReviewsReceivedStatus.REVIEWS_RECEIVED;
+  return ReviewsReceivedStatus.GRADES_RECEIVED;
 };
 
 export const calculateReviewScore = (
-  reviewsReceived: ReviewedFeedbackDocument[]
+  gradesReceived: GradedFeedbackDocument[]
 ): number | undefined => {
-  if (reviewsReceived.length < 2) {
+  if (gradesReceived.length < 2) {
     return undefined;
   }
-  const highestTwoReviews = reviewsReceived
+  const highestTwoReviews = gradesReceived
     .sort((a, b) => b.grade - a.grade)
     .slice(0, 2);
 
@@ -82,15 +92,60 @@ export const calculateReviewScore = (
 };
 
 export const calculateReviewGivenStatus = (
-  reviewsGiven: ReviewedFeedbackDocument[],
-  availableToReview: ReturnDocument[]
+  gradesGiven: GradedFeedbackDocument[],
+  availableToGrade: ReturnDocument[]
 ): ReviewsGivenStatus => {
-  if (reviewsGiven.length >= 2) {
-    return ReviewsGivenStatus.REVIEWS_GIVEN;
+  if (gradesGiven.length >= 2) {
+    return ReviewsGivenStatus.GRADES_GIVEN;
   }
-  if (availableToReview.length > 0) {
+  if (availableToGrade.length > 0) {
     return ReviewsGivenStatus.NEED_TO_REVIEW;
   }
 
   return ReviewsGivenStatus.AWAITING_FEEDBACK;
+};
+
+export const fetchModules = (fetchedGuides: GuideInfoWithLink[]) => {
+  return fetchedGuides
+    .reduce((acc: Module[], guideToCheck) => {
+      if (
+        !acc.some(
+          (existingGuide) =>
+            (+guideToCheck.module.title[0] as number) === existingGuide.number
+        )
+      ) {
+        acc.push({
+          title: guideToCheck.module.title,
+          number: +guideToCheck.module.title[0] as number,
+        });
+      }
+      return acc;
+    }, [] as { title: string; number: number }[])
+    .sort((a, b) => a.number - b.number);
+};
+
+// Not ideal but improving this would require a refactor of the data model as we don't store number explicitly
+// Currently, we are assuming that the module title is a number
+export const filterGuides = (
+  selectedModule: number | undefined,
+  fetchedGuides: GuideInfoWithLink[]
+) => {
+  if (selectedModule === undefined) return fetchedGuides;
+  return fetchedGuides.filter((guide) => {
+    if (guide.module.title[0] === "" + selectedModule) return guide;
+  });
+};
+
+export const createOptions = (
+  modules: Module[],
+  setSelectedModule: React.Dispatch<number | undefined>
+) => {
+  return [
+    { optionName: "All", onClick: () => setSelectedModule(undefined) },
+  ].concat(
+    modules.map((module) => ({
+      optionName: "Module " + module.number,
+      onClick: () => setSelectedModule(module.number),
+    }))
+  );
 };

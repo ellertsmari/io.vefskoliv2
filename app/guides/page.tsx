@@ -1,8 +1,9 @@
-import { GuideInfo, GuideInfoWithLink, getGuides } from "./query";
-import { UserDocument, UserWithIdType } from "../models/user";
+import { getGuides } from "./query";
+import { UserDocument } from "../models/user";
 
 import { auth } from "../../auth";
 import { Guides } from "./Guides";
+import { GuideInfo, GuideInfoWithLink } from "./types";
 
 const GuidesPage = async () => {
   const session = (await auth()) as unknown as UserDocument;
@@ -11,7 +12,7 @@ const GuidesPage = async () => {
   const fetchingGuides: GuideInfo[] = (await getGuides(session)) || [];
   const link: GuideInfoWithLink[] = fetchingGuides.map((guide) => ({
     ...guide,
-    individualGuideLink: `guides/${guide._id}`,
+    link: `guides/${guide._id}`,
   }));
 
   return <Guides fetchedGuides={JSON.parse(JSON.stringify(link))} />;
