@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDown } from "../../arrowDown";
 import {
   Accordian,
@@ -30,7 +30,13 @@ export const Dropdown = ({
   const [currentOption, setCurrentOption] = useState(initialOption ?? title);
   const [showOptions, setShowOptions] = useState(false);
 
-  const handleOnClick = (optionName: string) => {
+  useEffect(() => {
+    console.log("currentOption", currentOption);
+    console.log("isOpen", isOpen);
+    console.log("showOptions", showOptions);
+  }, [currentOption, isOpen, showOptions]);
+
+  const handleOnClick = (optionName: string, isTitleClicked?: boolean) => {
     if (isOpen) {
       setTimeout(() => {
         setShowOptions(false);
@@ -39,7 +45,9 @@ export const Dropdown = ({
       setShowOptions(true);
     }
     setIsOpen(!isOpen);
-    setCurrentOption(optionName);
+    isTitleClicked && showOptions && options[0].onClick
+      ? (setCurrentOption(title), options[0].onClick())
+      : setCurrentOption(optionName);
   };
 
   const Options = useMemo(() => {
@@ -65,7 +73,7 @@ export const Dropdown = ({
   return (
     <Container style={style}>
       <DropDownContainer $isOpen={isOpen} $zIndex={zIndex}>
-        <Accordian onClick={() => handleOnClick(title)} $title>
+        <Accordian onClick={() => handleOnClick(title, true)} $title>
           <AccordianText>{currentOption.toUpperCase()}</AccordianText>
           {isOpen ? <ArrowUp /> : <ArrowDown />}
         </Accordian>
