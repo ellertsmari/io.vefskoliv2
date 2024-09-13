@@ -32,7 +32,10 @@ export const Guides = ({
     <Container>
       <Dropdown
         options={options}
-        title={"All Modules"}
+        titleOption={{
+          optionName: "All Modules",
+          onClick: () => setSelectedModule(undefined),
+        }}
         style={{
           display: "flex",
           justifyContent: "center",
@@ -80,14 +83,10 @@ const createOptions = (
   modules: Module[],
   setSelectedModule: React.Dispatch<number | undefined>
 ) => {
-  return [
-    { optionName: "All", onClick: () => setSelectedModule(undefined) },
-  ].concat(
-    modules.map((module) => ({
-      optionName: "Module " + module.number,
-      onClick: () => setSelectedModule(module.number),
-    }))
-  );
+  return modules.map((module) => ({
+    optionName: "Module " + module.number,
+    onClick: () => setSelectedModule(module.number),
+  }));
 };
 
 export const exportedForTesting = {
