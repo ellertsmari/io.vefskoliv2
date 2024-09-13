@@ -5,7 +5,7 @@ import {
   createDummyFeedback,
   createDummyGuide,
   createDummyReturn,
-  createDummyReview,
+  createDummyGrade,
   createDummyUser,
 } from "../__mocks__/mongoHandler";
 import { getGuides } from "../../app/guides/query";
@@ -43,9 +43,9 @@ describe("getGuides", () => {
     const userReturn2 = await createDummyReturn(undefined, guide);
     const userReturn3 = await createDummyReturn(user, guide);
 
-    const review = await createDummyReview(user, guide, userReturn, reviewer);
-    const review2 = await createDummyReview(undefined, guide, userReturn, user);
-    const review3 = await createDummyReview(undefined, guide, userReturn, user);
+    const review = await createDummyGrade(user, guide, userReturn);
+    const review2 = await createDummyGrade(undefined, guide, userReturn);
+    const review3 = await createDummyGrade(undefined, guide, userReturn);
 
     const feedback = await createDummyFeedback(undefined, guide, userReturn);
     const feedback2 = await createDummyFeedback(undefined, guide, userReturn);
@@ -108,7 +108,7 @@ describe("getGuides", () => {
 
     const userReturn = await createDummyReturn(user, guide);
 
-    const review = await createDummyReview(user, guide, userReturn);
+    const review = await createDummyGrade(user, guide, userReturn);
 
     const guides = await getGuides(user);
 

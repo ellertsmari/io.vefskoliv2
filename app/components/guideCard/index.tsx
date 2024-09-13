@@ -10,27 +10,16 @@ import {
   StatusWrapper,
   StyledLink,
   InfoWrapper,
-  Review,
 } from "./style";
-import { GuideInfoWithLink } from "../../guides/types";
+import { ExtendedGuideInfo } from "../../guides/types";
 
 const GuideCard = ({
   guide,
   order,
 }: {
-  guide: GuideInfoWithLink;
+  guide: ExtendedGuideInfo;
   order?: number;
 }) => {
-  const ModalTrigger = (
-    <StatusWrapper>
-      <Review>
-        <Status>
-          {guide.returnsSubmitted ? "Guide returned" : "Guide not returned"}
-        </Status>
-      </Review>
-    </StatusWrapper>
-  );
-
   // todo: implement review modal
   const ModalContent = <div>PLACEHOLDER</div>;
   return (
@@ -46,10 +35,21 @@ const GuideCard = ({
             </Info>
           </StyledLink>
         </InfoWrapper>
-        <Modal modalTrigger={ModalTrigger} modalContent={ModalContent} />
+        <Modal
+          modalTrigger={StatusContainer(guide.returnStatus.toString())}
+          modalContent={ModalContent}
+        />
       </CardWrapper>
     </>
   );
 };
 
 export default GuideCard;
+
+const StatusContainer = (info: string) => {
+  return (
+    <StatusWrapper>
+      <Status>{info}</Status>
+    </StatusWrapper>
+  );
+};

@@ -24,16 +24,23 @@ export type GuideInfo = {
 
   // grading others' feedback
   gradesGiven: GradedFeedbackDocument[];
-  availableToGrade: ReturnType[];
+  availableToGrade: ReturnDocument[];
 };
+
+export type GuideWithLink = GuideInfo & { link: string };
 
 export type Module = {
   title: string;
   number: number;
 };
 
-export type GuideInfoWithLink = GuideInfo & {
+export type ExtendedGuideInfo = GuideWithLink & {
   link: string;
+  returnStatus: ReturnStatus;
+  feedbackStatus: FeedbackStatus;
+  reviewsReceivedStatus: ReviewsReceivedStatus;
+  reviewScore: number | undefined;
+  reviewGivenStatus: ReviewsGivenStatus;
 };
 
 export enum ReturnStatus {
