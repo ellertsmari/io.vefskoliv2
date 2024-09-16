@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { ModuleType } from "../models/guide";
 import { FeedbackDocument, GradedFeedbackDocument } from "../models/review";
-import { ReturnDocument, ReturnType } from "../models/return";
+import { ReturnDocument } from "../models/return";
 
 export type GuideInfo = {
   _id: Types.ObjectId;
@@ -52,18 +52,18 @@ export enum ReturnStatus {
 }
 
 export enum FeedbackStatus {
-  AWAITING_PROJECTS = "Awaiting projects to grade",
+  AWAITING_PROJECTS = "Awaiting projects to give feedback",
   NEED_TO_PROVIDE_FEEDBACK = "Need to provide feedback",
   FEEDBACK_GIVEN = "Feedback given",
-}
-
-export enum GradesReceivedStatus {
-  AWAITING_GRADES = "Awaiting grades",
-  GRADES_RECEIVED = "Grades received",
 }
 
 export enum GradesGivenStatus {
   AWAITING_FEEDBACK = "Awaiting feedback to grade",
   NEED_TO_GRADE = "Need to grade",
   GRADES_GIVEN = "Grades given",
+}
+
+export enum GradesReceivedStatus {
+  AWAITING_GRADES = "Awaiting grades",
+  GRADES_RECEIVED = "Grades received",
 }

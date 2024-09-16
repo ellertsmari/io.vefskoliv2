@@ -1,17 +1,20 @@
-"use client";
-
-import Modal from "components/modal/modal";
 import {
   CardWrapper,
   Info,
   Name,
   GuideNr,
-  Status,
-  StatusWrapper,
   StyledLink,
   InfoWrapper,
+  StatusStyle,
 } from "./style";
-import { ExtendedGuideInfo } from "../../guides/types";
+import {
+  ExtendedGuideInfo,
+  FeedbackStatus,
+  GradesGivenStatus,
+  GradesReceivedStatus,
+  ReturnStatus,
+} from "../../guides/types";
+import { Statuses } from "./Statuses";
 
 const GuideCard = ({
   guide,
@@ -20,12 +23,10 @@ const GuideCard = ({
   guide: ExtendedGuideInfo;
   order?: number;
 }) => {
-  // todo: implement review modal
-  const ModalContent = <div>PLACEHOLDER</div>;
   return (
     <>
       <CardWrapper>
-        <InfoWrapper>
+        <InfoWrapper $style={getInfoWrapperStyle(guide)}>
           <StyledLink href={guide.link}>
             <Info>
               <GuideNr>
@@ -35,21 +36,35 @@ const GuideCard = ({
             </Info>
           </StyledLink>
         </InfoWrapper>
-        <Modal
-          modalTrigger={StatusContainer(guide.returnStatus.toString())}
-          modalContent={ModalContent}
-        />
+        <Statuses guide={guide} />
       </CardWrapper>
     </>
   );
 };
 
-export default GuideCard;
+const getInfoWrapperStyle = (guide: ExtendedGuideInfo): StatusStyle => {
+  const isGradesGiven =
+    guide.gradesGivenStatus === GradesGivenStatus.GRADES_GIVEN;
+  const isGradesReceived =
+    guide.gradesReceivedStatus === GradesReceivedStatus.GRADES_RECEIVED;
+  const isFeedbackGiven =
+    guide.feedbackStatus === FeedbackStatus.FEEDBACK_GIVEN;
 
-const StatusContainer = (info: string) => {
-  return (
-    <StatusWrapper>
-      <Status>{info}</Status>
-    </StatusWrapper>
-  );
+  if (isGradesGiven && isGradesReceived && isFeedbackGiven) {
+    if (guide.returnStatus === ReturnStatus.PASSED) {
+      return StatusStyle.green;
+    } else if (guide.returnStatus === ReturnStatus.HALL_OF_FAME) {
+      return StatusStyle.star;
+    }
+  }
+
+  return StatusStyle.normal;
 };
+
+// ...
+
+export const exportForTesting = {
+  getInfoWrapperStyle,
+};
+
+export default GuideCard;

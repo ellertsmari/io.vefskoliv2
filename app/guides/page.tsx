@@ -3,7 +3,7 @@ import { UserDocument } from "../models/user";
 
 import { auth } from "../../auth";
 import { Guides } from "./Guides";
-import { GuideInfo, GuideWithLink } from "./types";
+import { GuideInfo } from "./types";
 
 const GuidesPage = async () => {
   const session = (await auth()) as unknown as UserDocument;
