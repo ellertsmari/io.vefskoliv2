@@ -240,7 +240,7 @@ export async function getGuides(
       availableForFeedback: 1,
       feedbackGiven: 1,
 
-      // reviews received by others on feedback given by this user
+      // grades received by others on feedback given by this user
       gradesReceived: 1,
 
       // reviewing others' feedback

@@ -2,15 +2,15 @@
 import {
   FeedbackStatus,
   ReturnStatus,
-  ReviewsGivenStatus,
-  ReviewsReceivedStatus,
+  GradesGivenStatus,
+  GradesReceivedStatus,
 } from "../../app/guides/types";
 import {
   calculateFeedbackStatus,
   calculateReturnStatus,
-  calculateReviewsGivenStatus,
-  calculateReviewsReceivedStatus,
-  calculateReviewScore,
+  calculateGradesGivenStatus,
+  calculateGradesReceivedStatus,
+  calculateGrade,
 } from "../../app/guides/utils";
 import {
   clearDatabase,
@@ -160,15 +160,15 @@ describe("status calculations", () => {
     });
   });
 
-  describe("calculateReviewsReceivedStatus", () => {
+  describe("calculateGradesReceivedStatus", () => {
     afterEach(async () => await clearDatabase());
 
-    it("should return AWAITING_REVIEWS if less than 2 reviews are received", async () => {
+    it("should return AWAITING_GRADES if less than 2 reviews are received", async () => {
       const review1 = await createDummyGrade();
 
-      const result = await calculateReviewsReceivedStatus([review1]);
+      const result = await calculateGradesReceivedStatus([review1]);
 
-      expect(result).toBe(ReviewsReceivedStatus.AWAITING_REVIEWS);
+      expect(result).toBe(GradesReceivedStatus.AWAITING_GRADES);
     });
 
     it("should return REVIEWS_RECEIVED if at least 2 reviews are received", async () => {
@@ -176,22 +176,22 @@ describe("status calculations", () => {
 
       const review2 = await createDummyGrade();
 
-      const result = await calculateReviewsReceivedStatus([review1, review2]);
-      expect(result).toBe(ReviewsReceivedStatus.GRADES_RECEIVED);
+      const result = await calculateGradesReceivedStatus([review1, review2]);
+      expect(result).toBe(GradesReceivedStatus.GRADES_RECEIVED);
     });
   });
 
-  describe("calculateReviewScore", () => {
+  describe("calculateGrade", () => {
     afterEach(async () => await clearDatabase());
 
     it("should return undefined if no reviews are received", async () => {
-      const result = await calculateReviewScore([]);
+      const result = await calculateGrade([]);
       expect(result).toBeUndefined();
     });
 
     it("should return undefined if 1 review is received", async () => {
       const review1 = await createDummyGrade();
-      const result = await calculateReviewScore([review1]);
+      const result = await calculateGrade([review1]);
       expect(result).toBeUndefined();
     });
 
@@ -215,23 +215,23 @@ describe("status calculations", () => {
         6
       );
 
-      const result = await calculateReviewScore([review1, review2, review3]);
+      const result = await calculateGrade([review1, review2, review3]);
       expect(result).toBe((review2.grade + review3.grade) / 2);
     });
   });
 
-  describe("calculateReviewsGivenStatus", () => {
+  describe("calculateGradesGivenStatus", () => {
     afterEach(async () => await clearDatabase());
 
     it("should return AWAITING_FEEDBACK if no reviews are given and no projects are available", async () => {
-      const result = await calculateReviewsGivenStatus([], []);
-      expect(result).toBe(ReviewsGivenStatus.AWAITING_FEEDBACK);
+      const result = await calculateGradesGivenStatus([], []);
+      expect(result).toBe(GradesGivenStatus.AWAITING_FEEDBACK);
     });
 
-    it("should return NEED_TO_REVIEW if no reviews are given and projects are available", async () => {
+    it("should return NEED_TO_GRADE if no reviews are given and projects are available", async () => {
       const return1 = await createDummyReturn();
-      const result = await calculateReviewsGivenStatus([], [return1]);
-      expect(result).toBe(ReviewsGivenStatus.NEED_TO_REVIEW);
+      const result = await calculateGradesGivenStatus([], [return1]);
+      expect(result).toBe(GradesGivenStatus.NEED_TO_GRADE);
     });
 
     it("should return REVIEWS_GIVEN if at least 2 reviews are given", async () => {
@@ -239,11 +239,11 @@ describe("status calculations", () => {
       const review2 = await createDummyGrade();
       const return1 = await createDummyReturn();
 
-      const result = await calculateReviewsGivenStatus(
+      const result = await calculateGradesGivenStatus(
         [review1, review2],
         [return1]
       );
-      expect(result).toBe(ReviewsGivenStatus.GRADES_GIVEN);
+      expect(result).toBe(GradesGivenStatus.GRADES_GIVEN);
     });
   });
 });

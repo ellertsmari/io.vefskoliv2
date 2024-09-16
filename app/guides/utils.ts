@@ -8,8 +8,8 @@ import {
 import {
   ReturnStatus,
   FeedbackStatus,
-  ReviewsReceivedStatus,
-  ReviewsGivenStatus,
+  GradesReceivedStatus,
+  GradesGivenStatus,
   ExtendedGuideInfo,
   GuideInfo,
 } from "./types";
@@ -27,11 +27,11 @@ export const extendGuides = async (
         guide.feedbackGiven,
         guide.availableForFeedback
       );
-      const reviewsReceivedStatus = await calculateReviewsReceivedStatus(
+      const gradesReceivedStatus = await calculateGradesReceivedStatus(
         guide.gradesReceived
       );
-      const reviewScore = await calculateReviewScore(guide.gradesReceived);
-      const reviewGivenStatus = await calculateReviewsGivenStatus(
+      const grade = await calculateGrade(guide.gradesReceived);
+      const gradesGivenStatus = await calculateGradesGivenStatus(
         guide.gradesGiven,
         guide.availableToGrade
       );
@@ -41,9 +41,9 @@ export const extendGuides = async (
         link: `/guides/${guide._id}`,
         returnStatus,
         feedbackStatus,
-        reviewsReceivedStatus,
-        reviewScore,
-        reviewGivenStatus,
+        gradesReceivedStatus,
+        grade,
+        gradesGivenStatus,
       };
 
       return extendedGuide;
@@ -106,38 +106,38 @@ export const calculateFeedbackStatus = async (
   return FeedbackStatus.FEEDBACK_GIVEN;
 };
 
-export const calculateReviewsReceivedStatus = async (
+export const calculateGradesReceivedStatus = async (
   gradesReceived: GradedFeedbackDocument[]
-): Promise<ReviewsReceivedStatus> => {
+): Promise<GradesReceivedStatus> => {
   if (gradesReceived.length < 2) {
-    return ReviewsReceivedStatus.AWAITING_REVIEWS;
+    return GradesReceivedStatus.AWAITING_GRADES;
   }
-  return ReviewsReceivedStatus.GRADES_RECEIVED;
+  return GradesReceivedStatus.GRADES_RECEIVED;
 };
 
-export const calculateReviewScore = async (
+export const calculateGrade = async (
   gradesReceived: GradedFeedbackDocument[]
 ): Promise<number | undefined> => {
   if (gradesReceived.length < 2) {
     return undefined;
   }
-  const highestTwoReviews = gradesReceived
+  const highestTwoGrades = gradesReceived
     .sort((a, b) => b.grade - a.grade)
     .slice(0, 2);
 
-  return (highestTwoReviews[0].grade + highestTwoReviews[1].grade) / 2;
+  return (highestTwoGrades[0].grade + highestTwoGrades[1].grade) / 2;
 };
 
-export const calculateReviewsGivenStatus = async (
+export const calculateGradesGivenStatus = async (
   gradesGiven: GradedFeedbackDocument[],
   availableToGrade: ReturnDocument[]
-): Promise<ReviewsGivenStatus> => {
+): Promise<GradesGivenStatus> => {
   if (gradesGiven.length >= 2) {
-    return ReviewsGivenStatus.GRADES_GIVEN;
+    return GradesGivenStatus.GRADES_GIVEN;
   }
   if (availableToGrade.length > 0) {
-    return ReviewsGivenStatus.NEED_TO_REVIEW;
+    return GradesGivenStatus.NEED_TO_GRADE;
   }
 
-  return ReviewsGivenStatus.AWAITING_FEEDBACK;
+  return GradesGivenStatus.AWAITING_FEEDBACK;
 };

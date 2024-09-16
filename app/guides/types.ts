@@ -38,9 +38,9 @@ export type ExtendedGuideInfo = GuideWithLink & {
   link: string;
   returnStatus: ReturnStatus;
   feedbackStatus: FeedbackStatus;
-  reviewsReceivedStatus: ReviewsReceivedStatus;
-  reviewScore: number | undefined;
-  reviewGivenStatus: ReviewsGivenStatus;
+  gradesReceivedStatus: GradesReceivedStatus;
+  grade: number | undefined;
+  gradesGivenStatus: GradesGivenStatus;
 };
 
 export enum ReturnStatus {
@@ -57,13 +57,13 @@ export enum FeedbackStatus {
   FEEDBACK_GIVEN = "Feedback given",
 }
 
-export enum ReviewsReceivedStatus {
-  AWAITING_REVIEWS = "Awaiting reviews from others",
+export enum GradesReceivedStatus {
+  AWAITING_GRADES = "Awaiting grades",
   GRADES_RECEIVED = "Grades received",
 }
 
-export enum ReviewsGivenStatus {
+export enum GradesGivenStatus {
   AWAITING_FEEDBACK = "Awaiting feedback to grade",
-  NEED_TO_REVIEW = "Need to review",
+  NEED_TO_GRADE = "Need to grade",
   GRADES_GIVEN = "Grades given",
 }
