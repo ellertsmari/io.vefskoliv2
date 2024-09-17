@@ -85,9 +85,9 @@ const getNotificationOrGradeStyle = (
     grade,
   } = guide;
   // if not returned, don't show anything
-  // if (returnStatus === ReturnStatus.NOT_RETURNED) {
-  //   return null;
-  // }
+  if (returnStatus === ReturnStatus.NOT_RETURNED) {
+    return null;
+  }
 
   // notify if action needs to be taken first
   if (gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) {
