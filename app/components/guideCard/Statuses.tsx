@@ -85,20 +85,20 @@ const getNotificationOrGradeStyle = (
     grade,
   } = guide;
   // if not returned, don't show anything
-  if (returnStatus === ReturnStatus.NOT_RETURNED) {
-    return null;
-  }
+  // if (returnStatus === ReturnStatus.NOT_RETURNED) {
+  //   return null;
+  // }
 
   // notify if action needs to be taken first
-  if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {
-    return {
-      info: feedbackStatus.toString(),
-      style: StatusStyle.blue,
-    };
-  }
   if (gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) {
     return {
       info: gradesGivenStatus.toString(),
+      style: StatusStyle.blue,
+    };
+  }
+  if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {
+    return {
+      info: feedbackStatus.toString(),
       style: StatusStyle.blue,
     };
   }
