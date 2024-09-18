@@ -42,6 +42,7 @@ export const ReturnFormSchema = z.object({
     .min(2, { message: "Please enter a valid description" })
     .trim(),
   guideId: z.string().trim(),
+  imageOfProject: z.string().trim(),
 });
 
 export type ReturnFormState =

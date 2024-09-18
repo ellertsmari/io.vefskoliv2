@@ -153,6 +153,7 @@ describe("server actions", () => {
       formData.append("liveVersion", liveVersion);
       formData.append("projectName", projectName);
       formData.append("comment", comment);
+      formData.append("imageOfProject", "");
       formData.append("guideId", guideId.toString());
 
       const result = await returnGuide(state, formData);

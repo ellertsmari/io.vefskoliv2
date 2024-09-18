@@ -3,7 +3,13 @@ import Modal from "components/modal/modal";
 import Button from "globalStyles/buttons/default";
 
 import { Form } from "./style";
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { returnGuide } from "../../utils/actions";
 import { useGuide } from "../../providers/GuideProvider";
 import { FormInputWithError } from "components/formInputWithError/FormInputWithError";
@@ -37,9 +43,12 @@ const ReturnForm = () => {
       if (formRef.current) {
         const formData = new FormData(formRef.current);
         formData.append("guideId", guide._id.toString());
-        formAction(formData);
+        startTransition(() => {
+          formAction(formData);
+        });
       }
     };
+
     return (
       <Form ref={formRef}>
         <FormInputWithError

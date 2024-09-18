@@ -14,7 +14,7 @@ import {
 } from "./style";
 
 import MarkdownReader from "../../components/markdown/reader";
-import ReturnForm from "./returnForm";
+import ReturnForm from "./ReturnForm";
 import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
 import { useGuide } from "../../providers/GuideProvider";
 

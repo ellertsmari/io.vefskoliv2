@@ -13,7 +13,7 @@ import { signIn, signOut as s, getUser, auth } from "../../auth";
 import { AuthError } from "next-auth";
 import { OptionalUserInfo, User, UserDocument } from "../models/user";
 import { FilterQuery, Types } from "mongoose";
-import { GuideDocument, GuideType } from "../models/guide";
+import { GuideDocument } from "../models/guide";
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "../models/guide";
 import { Return } from "../models/return";
@@ -45,8 +45,8 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
     projectName: formData.get("projectName"),
     comment: formData.get("comment"),
     guideId: formData.get("guideId"),
+    imageOfProject: formData.get("imageOfProject"),
   });
-
   if (!validatedFields.success) {
     return {
       success: false,
@@ -54,11 +54,16 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
     };
   }
 
-  const { projectUrl, projectName, comment, liveVersion, guideId } =
-    validatedFields.data;
+  const {
+    projectUrl,
+    projectName,
+    comment,
+    liveVersion,
+    guideId,
+    imageOfProject,
+  } = validatedFields.data;
 
   const session = await auth();
-
   if (!session?.user) {
     return {
       success: false,
@@ -66,7 +71,6 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
     };
   }
   const { user } = session;
-
   try {
     // await connectToDatabase();
     const theReturn = await Return.create({
@@ -76,6 +80,7 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
       liveVersion,
       owner: user.id,
       guide: new ObjectId(guideId),
+      imageOfProject: imageOfProject,
     });
     return {
       success: true,
