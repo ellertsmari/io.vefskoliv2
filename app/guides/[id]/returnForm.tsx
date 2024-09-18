@@ -1,36 +1,122 @@
+"use client";
 import Modal from "components/modal/modal";
 import Button from "globalStyles/buttons/default";
-import Input from "globalStyles/input";
 
 import { Form } from "./style";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { returnGuide } from "../../utils/actions";
+import { useGuide } from "../../providers/GuideProvider";
+import { FormInputWithError } from "components/formInputWithError/FormInputWithError";
 
 const ReturnForm = () => {
-  return <Modal modalTrigger={ReturnButton} modalContent={FormContent} />;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const ReturnButton = <Button style="default">RETURN</Button>;
+
+  const FormContent = () => {
+    const [state, formAction, isPending] = useActionState(
+      returnGuide,
+      undefined
+    );
+    const guide = useGuide();
+
+    const formRef = useRef<HTMLFormElement>(null);
+
+    useEffect(() => {
+      if (state?.success) {
+        setIsModalOpen(false);
+      }
+    }, [state?.success]);
+
+    if (!guide) {
+      return null;
+    }
+
+    const handleSubmit = (event: React.FormEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      if (formRef.current) {
+        const formData = new FormData(formRef.current);
+        formData.append("guideId", guide._id.toString());
+        formAction(formData);
+      }
+    };
+    return (
+      <Form ref={formRef}>
+        <FormInputWithError
+          id={"projectUrl"}
+          type={"text"}
+          name={"projectUrl"}
+          label={"Github or Figma URL"}
+          required={true}
+          disabled={isPending}
+          error={
+            state?.errors?.projectUrl && !isPending
+              ? state.errors.projectUrl[0]
+              : undefined
+          }
+        />
+        <FormInputWithError
+          id={"liveVersion"}
+          type={"text"}
+          name={"liveVersion"}
+          label={"Live version or prototype(Figma)"}
+          required={true}
+          disabled={isPending}
+          error={
+            state?.errors?.liveVersion && !isPending
+              ? state.errors.liveVersion[0]
+              : undefined
+          }
+        />
+        <FormInputWithError
+          id={"imageOfProject"}
+          type={"text"}
+          name={"imageOfProject"}
+          label={"Image that suits your project (optional)"}
+          required={false}
+          disabled={false}
+        />
+        <FormInputWithError
+          id={"projectName"}
+          type={"text"}
+          name={"projectName"}
+          label={"Project title"}
+          required={true}
+          disabled={false}
+          error={
+            state?.errors?.projectName && !isPending
+              ? state.errors.projectName[0]
+              : undefined
+          }
+        />
+        <FormInputWithError
+          id={"comment"}
+          type={"textarea"}
+          name={"comment"}
+          label={"Short project description"}
+          required={true}
+          disabled={false}
+          error={
+            state?.errors?.comment && !isPending
+              ? state.errors.comment[0]
+              : undefined
+          }
+        />
+
+        <Button style="default" onClick={handleSubmit}>
+          SUBMIT
+        </Button>
+      </Form>
+    );
+  };
+
+  return (
+    <Modal
+      modalTrigger={ReturnButton}
+      modalContent={FormContent()}
+      state={[isModalOpen, setIsModalOpen]}
+    />
+  );
 };
-
-const ReturnButton = <Button style="default">RETURN</Button>;
-
-const FormContent = (
-  <Form>
-    <Input type="text" label="Github or Figma URL" id={"link-to-work"}></Input>
-    <Input
-      type="text"
-      label="Live version or prototype(Figma)"
-      id={"link-to-live"}
-    ></Input>
-    <Input
-      type="text"
-      label="Image that suits your project (optional)"
-      id={"image-of-project"}
-    ></Input>
-    <Input type="text" label="Project title" id={"title"}></Input>
-    <Input
-      type="textarea"
-      label="Short project description"
-      id={"description"}
-    ></Input>
-    <Button style="default">SUBMIT</Button>
-  </Form>
-);
 
 export default ReturnForm;

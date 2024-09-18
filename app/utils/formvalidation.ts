@@ -16,12 +16,41 @@ export const SignupFormSchema = z.object({
     .trim(),
 });
 
-export type FormState =
+export type SignupFormState =
   | {
       errors?: {
         name?: string[];
         email?: string[];
         password?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+export const ReturnFormSchema = z.object({
+  projectUrl: z.string().min(2, { message: "Please enter a valid URL" }).trim(),
+  liveVersion: z
+    .string()
+    .min(2, { message: "Please enter a valid URL" })
+    .trim(),
+  projectName: z
+    .string()
+    .min(2, { message: "Please enter a valid project name" })
+    .trim(),
+  comment: z
+    .string()
+    .min(2, { message: "Please enter a valid description" })
+    .trim(),
+  guideId: z.string().trim(),
+});
+
+export type ReturnFormState =
+  | {
+      errors?: {
+        projectUrl?: string[];
+        liveVersion?: string[];
+        projectName?: string[];
+        comment?: string[];
       };
       message?: string;
     }

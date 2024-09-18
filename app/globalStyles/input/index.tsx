@@ -1,4 +1,5 @@
 "use client";
+import styled from "styled-components";
 import { Wrapper, Label, ReusableInput, ReusableTextarea } from "./style";
 
 type InputProps = {
@@ -19,5 +20,10 @@ const Input = ({ label, id, ...props }: InputProps) => {
     </Wrapper>
   );
 };
+
+export const ErrorMessage = styled.p`
+  color: var(--error-failure-100);
+  font-size: 14px;
+`;
 
 export default Input;

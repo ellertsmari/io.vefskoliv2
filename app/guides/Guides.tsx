@@ -1,11 +1,12 @@
 "use client";
 import GuidesClient from "./guidesClient";
 
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Container } from "./style";
 import { Dropdown } from "components/dropdown/Dropdown";
 import { ExtendedGuideInfo, GuideInfo, Module } from "./types";
 import { extendGuides } from "./utils";
+import { useSession } from "../providers/SessionProvider";
 
 export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
   const [extendedGuides, setExtendedGuides] = useState<ExtendedGuideInfo[]>([]);

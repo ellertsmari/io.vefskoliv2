@@ -1,17 +1,17 @@
+"use server";
 import { connectToDatabase } from "../utils/mongoose-connector";
 import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
-import { UserDocument } from "../models/user";
 import { PipelineStage } from "mongoose";
 import { GuideInfo } from "./types";
 
 export async function getGuides(
-  user: UserDocument | null
+  userIdString: string
 ): Promise<GuideInfo[] | null> {
-  if (!user) return null;
+  if (!userIdString) return null;
   await connectToDatabase();
 
-  const userId = new ObjectId(user._id);
+  const userId = new ObjectId(userIdString);
 
   // grab user's submitted returns
   const lookupReturnsSubmitted: PipelineStage = {

@@ -85,9 +85,9 @@ const getNotificationOrGradeStyle = (
     grade,
   } = guide;
   // if not returned, don't show anything
-  if (returnStatus === ReturnStatus.NOT_RETURNED) {
-    return null;
-  }
+  // if (returnStatus === ReturnStatus.NOT_RETURNED) {
+  //   return null;
+  // }
 
   // notify if action needs to be taken first
   if (gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) {
@@ -103,17 +103,17 @@ const getNotificationOrGradeStyle = (
     };
   }
 
-  // tell user they are waiting on others
-  if (
-    feedbackStatus === FeedbackStatus.AWAITING_PROJECTS ||
-    gradesGivenStatus === GradesGivenStatus.AWAITING_FEEDBACK ||
-    gradesReceivedStatus === GradesReceivedStatus.AWAITING_GRADES
-  ) {
-    return {
-      info: "Waiting on others",
-      style: StatusStyle.grey,
-    };
-  }
+  // // tell user they are waiting on others
+  // if (
+  //   feedbackStatus === FeedbackStatus.AWAITING_PROJECTS ||
+  //   gradesGivenStatus === GradesGivenStatus.AWAITING_FEEDBACK ||
+  //   gradesReceivedStatus === GradesReceivedStatus.AWAITING_GRADES
+  // ) {
+  //   return {
+  //     info: "Waiting on others",
+  //     style: StatusStyle.grey,
+  //   };
+  // }
 
   // show grade if all is done
   if (gradesReceivedStatus === GradesReceivedStatus.GRADES_RECEIVED) {

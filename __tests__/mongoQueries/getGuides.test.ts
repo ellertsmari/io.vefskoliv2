@@ -35,7 +35,6 @@ describe("getGuides", () => {
 
   it("gets returns correct data", async () => {
     const user = await createDummyUser();
-    const reviewer = await createDummyUser(); // create a user to be the reviewer
 
     const guide = await createDummyGuide();
 
@@ -51,7 +50,7 @@ describe("getGuides", () => {
     const feedback2 = await createDummyFeedback(undefined, guide, userReturn);
     const feedback3 = await createDummyFeedback(user, guide, userReturn);
 
-    const guides = await getGuides(user);
+    const guides = await getGuides(user._id.toString());
 
     if (guides) {
       expect(guides[0]).toMatchObject({
@@ -110,7 +109,7 @@ describe("getGuides", () => {
 
     const review = await createDummyGrade(user, guide, userReturn);
 
-    const guides = await getGuides(user);
+    const guides = await getGuides(user._id.toString());
 
     expect(guides).not.toBeNull();
 
@@ -121,14 +120,9 @@ describe("getGuides", () => {
   it("returns empty array when there are no guides", async () => {
     const user = await createDummyUser();
 
-    const guides = await getGuides(user);
+    const guides = await getGuides(user._id.toString());
 
     expect(guides).not.toBeNull();
     expect(guides).toEqual([]);
-  });
-  it("returns null when user is null", async () => {
-    const guides = await getGuides(null);
-
-    expect(guides).toBeNull();
   });
 });

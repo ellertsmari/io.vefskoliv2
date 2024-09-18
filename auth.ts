@@ -13,7 +13,6 @@ export async function getUser(email: string): Promise<UserDocument | null> {
     const user: UserDocument | null = await User.findOne({ email });
     return user;
   } catch (error) {
-    console.error("Failed to fetch user:", error);
     throw new Error("Failed to fetch user.");
   }
 }
