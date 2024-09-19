@@ -5,6 +5,7 @@ import React, { useMemo, useState } from "react";
 import { Container } from "./style";
 import { Dropdown } from "components/dropdown/Dropdown";
 import { GuideInfoWithLink, Module } from "./types";
+import { set } from "mongoose";
 
 export const Guides = ({
   fetchedGuides,
@@ -43,7 +44,10 @@ export const Guides = ({
           marginTop: "1rem",
         }}
       />
-      <GuidesClient fetchedGuides={filteredGuides} />
+      <GuidesClient
+        fetchedGuides={filteredGuides}
+        useGuideOrder={!!selectedModule}
+      />
     </Container>
   );
 };

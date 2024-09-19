@@ -5,13 +5,20 @@ import { GuideInfoWithLink } from "../types";
 
 type Props = {
   fetchedGuides: GuideInfoWithLink[];
+  useGuideOrder: boolean;
 };
 
-const GuidesClient = ({ fetchedGuides }: Props) => {
+const GuidesClient = ({ fetchedGuides, useGuideOrder }: Props) => {
   return (
     <GuideContainer>
       {fetchedGuides.map((guide, index) => {
-        return <GuideCard guide={guide} key={index} />;
+        return (
+          <GuideCard
+            guide={guide}
+            key={index}
+            order={useGuideOrder ? index + 1 : undefined}
+          />
+        );
       })}
     </GuideContainer>
   );

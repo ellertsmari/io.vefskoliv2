@@ -7,7 +7,7 @@ import {
   FeedbackDocument,
   FeedbackType,
   Review,
-  ReviewedFeedbackDocument,
+  GradedFeedbackDocument,
   ReviewedFeedbackType,
   Vote,
 } from "../../app/models/review";
@@ -131,7 +131,7 @@ export const createDummyReview = async (
   userReturn?: ReturnType,
   reviewer?: UserDocument,
   grade?: number
-): Promise<ReviewedFeedbackDocument> => {
+): Promise<GradedFeedbackDocument> => {
   const votes = [Vote.NO_PASS, Vote.PASS, Vote.RECOMMEND_TO_GALLERY];
 
   const dummyReview: Partial<ReviewedFeedbackType> = {

@@ -97,29 +97,38 @@ export async function getGuides(
     },
   };
 
-  // grab reviews given by user
-  const lookupReviewsGiven: PipelineStage = {
+  // grab grades given by user
+  const lookupGradesGiven: PipelineStage = {
     $lookup: {
       from: "reviews",
       let: { guideId: "$_id" },
       pipeline: [
         {
+          $lookup: {
+            from: "returns",
+            localField: "return",
+            foreignField: "_id",
+            as: "associatedReturn",
+          },
+        },
+        { $unwind: "$associatedReturn" },
+        {
           $match: {
             $expr: {
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
-                { $eq: ["$reviewer", userId] },
+                { $eq: ["$associatedReturn.owner", userId] },
               ],
             },
           },
         },
       ],
-      as: "reviewsGiven",
+      as: "gradesGiven",
     },
   };
 
   // grab feedback available for reviewing by user
-  const lookupAvailableToReview: PipelineStage = {
+  const lookupAvailableToGrade: PipelineStage = {
     $lookup: {
       from: "reviews",
       let: { guideId: "$_id" },
@@ -136,7 +145,7 @@ export async function getGuides(
           },
         },
       ],
-      as: "availableToReview",
+      as: "availableToGrade",
     },
   };
 
@@ -176,8 +185,8 @@ export async function getGuides(
     },
   };
 
-  // grab reviews received from others
-  const lookupReviewsReceived: PipelineStage = {
+  // grab grades received from others
+  const lookupGradesReceived: PipelineStage = {
     $lookup: {
       from: "reviews",
       let: { guideId: "$_id" },
@@ -208,7 +217,7 @@ export async function getGuides(
           },
         },
       ],
-      as: "reviewsReceived",
+      as: "gradesReceived",
     },
   };
 
@@ -232,11 +241,11 @@ export async function getGuides(
       feedbackGiven: 1,
 
       // reviews received by others on feedback given by this user
-      reviewsReceived: 1,
+      gradesReceived: 1,
 
       // reviewing others' feedback
-      reviewsGiven: 1,
-      availableToReview: 1,
+      gradesGiven: 1,
+      availableToGrade: 1,
     },
   };
 
@@ -245,15 +254,15 @@ export async function getGuides(
       lookupReturnsSubmitted,
       lookupFeedbackGiven,
       lookupAvailableForFeedback,
-      lookupReviewsGiven,
-      lookupAvailableToReview,
+      lookupGradesGiven,
+      lookupAvailableToGrade,
       lookupFeedbackReceived,
-      lookupReviewsReceived,
+      lookupGradesReceived,
 
       defineProject,
       {
         $sort: {
-          order: 1, // Ascending order by order
+          order: 1,
         },
       },
     ] as PipelineStage[]).exec();

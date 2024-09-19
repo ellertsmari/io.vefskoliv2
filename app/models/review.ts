@@ -30,8 +30,6 @@ const reviewSchema = new Schema({
   updatedAt: { type: Schema.Types.Date, required: false },
   commentAnswer: { type: Schema.Types.String, required: false },
 
-  // the reviewer is the user who reviewed the feedback and gave a grade
-  reviewer: { type: Schema.Types.ObjectId, required: false, ref: "User" },
   grade: { type: Schema.Types.Number, required: false },
 });
 
@@ -40,16 +38,13 @@ export type FeedbackType = InferSchemaType<typeof reviewSchema> & {
 };
 
 // after someone has reviewed the feedback it becomes a reviewed feedback
-export type ReviewedFeedbackType = FeedbackType & {
-  reviewer: Types.ObjectId;
+export type GradedFeedbackType = FeedbackType & {
   grade: number;
 };
 
 export type FeedbackDocument = FeedbackType & Document;
 
-export type ReviewedFeedbackDocument = FeedbackDocument & {
-  reviewer: Types.ObjectId;
-  grade: number;
-};
+export type GradedFeedbackDocument = GradedFeedbackType & Document;
+
 export const Review =
   models.Review || model<FeedbackDocument>("Review", reviewSchema);
