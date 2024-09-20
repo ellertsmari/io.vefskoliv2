@@ -11,23 +11,26 @@ import {
 } from "./style";
 import { ArrowUp } from "../../arrowUp";
 
+export type DropdownOption = {
+  optionName: string;
+  onClick: () => void;
+};
+
 interface DropdownProps {
-  options: { optionName: string; onClick?: () => void }[];
-  title: string;
-  initialOption?: string;
+  options: DropdownOption[];
+  titleOption: DropdownOption;
   style?: React.CSSProperties;
   zIndex?: number;
 }
 
 export const Dropdown = ({
   options,
-  title,
-  initialOption,
+  titleOption,
   style,
   zIndex,
 }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentOption, setCurrentOption] = useState(initialOption ?? title);
+  const [currentOption, setCurrentOption] = useState(titleOption.optionName);
   const [showOptions, setShowOptions] = useState(false);
 
   const handleOnClick = (optionName: string) => {
@@ -39,6 +42,7 @@ export const Dropdown = ({
       setShowOptions(true);
     }
     setIsOpen(!isOpen);
+
     setCurrentOption(optionName);
   };
 
@@ -51,9 +55,7 @@ export const Dropdown = ({
           key={index}
           onClick={() => {
             handleOnClick(optionName);
-            if (onClick) {
-              onClick();
-            }
+            onClick();
           }}
         >
           <AccordianText>{optionName}</AccordianText>
@@ -65,7 +67,13 @@ export const Dropdown = ({
   return (
     <Container style={style}>
       <DropDownContainer $isOpen={isOpen} $zIndex={zIndex}>
-        <Accordian onClick={() => handleOnClick(title)} $title>
+        <Accordian
+          onClick={() => {
+            handleOnClick(titleOption.optionName);
+            showOptions && titleOption.onClick();
+          }}
+          $title
+        >
           <AccordianText>{currentOption.toUpperCase()}</AccordianText>
           {isOpen ? <ArrowUp /> : <ArrowDown />}
         </Accordian>
