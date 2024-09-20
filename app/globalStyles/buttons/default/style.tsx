@@ -1,5 +1,7 @@
 import styled from "styled-components";
 
+const BREAKPOINT = "680px";
+
 export const Button = styled.button<{ $styletype: "default" | "outlined" }>`
   background-color: ${(props) =>
     props.$styletype === "default"
@@ -15,8 +17,7 @@ export const Button = styled.button<{ $styletype: "default" | "outlined" }>`
       : "var(--theme-module3-100)"};
   border-radius: 8px;
   font-size: 12px;
-  padding: ${(props) =>
-    props.$styletype === "default" ? "8px 24px" : "8px 48px"};
+  padding: 4px 12px;
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -28,5 +29,10 @@ export const Button = styled.button<{ $styletype: "default" | "outlined" }>`
       props.$styletype === "default"
         ? "var(--theme-module3-hover)"
         : "var(--primary-black-10)"};
+  }
+
+  @media (min-width: ${BREAKPOINT}) {
+    padding: 8px 12px;
+    font-size: 14px;
   }
 `;

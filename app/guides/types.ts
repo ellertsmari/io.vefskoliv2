@@ -3,6 +3,10 @@ import { ModuleType } from "../models/guide";
 import { FeedbackDocument, GradedFeedbackDocument } from "../models/review";
 import { ReturnDocument } from "../models/return";
 
+export type FeedbackDocumentWithReturn = FeedbackDocument & {
+  associatedReturn?: ReturnDocument;
+};
+
 export type GuideInfo = {
   _id: Types.ObjectId;
   title: string;
@@ -17,7 +21,7 @@ export type GuideInfo = {
 
   // giving feedback on others' returns
   availableForFeedback: ReturnDocument[];
-  feedbackGiven: FeedbackDocument[];
+  feedbackGiven: FeedbackDocumentWithReturn[];
 
   // grades received by others on feedback given by this user
   gradesReceived: GradedFeedbackDocument[];

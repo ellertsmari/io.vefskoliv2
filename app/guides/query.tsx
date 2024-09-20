@@ -50,6 +50,15 @@ export async function getGuides(
             },
           },
         },
+        {
+          $lookup: {
+            from: "returns",
+            localField: "return",
+            foreignField: "_id",
+            as: "associatedReturn",
+          },
+        },
+        { $unwind: "$associatedReturn" },
       ],
       as: "feedbackGiven",
     },

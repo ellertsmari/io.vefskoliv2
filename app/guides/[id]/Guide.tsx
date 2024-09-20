@@ -17,9 +17,10 @@ import MarkdownReader from "../../components/markdown/reader";
 import ReturnForm from "./ReturnForm";
 import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
 import { useGuide } from "../../providers/GuideProvider";
+import { GuideType } from "../../models/guide";
 
 export const Guide = () => {
-  const guide = useGuide();
+  const guide = useGuide() as GuideType;
 
   if (!guide) {
     return <h1>Guide not found</h1>;

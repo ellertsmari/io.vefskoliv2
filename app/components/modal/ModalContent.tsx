@@ -32,16 +32,14 @@ export const ModalContent = ({
         }}
         data-testid="modal-wrapper"
       >
-        <div onClick={(e) => e.stopPropagation()}>
-          <ContentWrapper>
-            {!hideExitButton && (
-              <ButtonWrapper>
-                <ExitButton onClick={() => setIsModalOpen(false)} />
-              </ButtonWrapper>
-            )}
-            {content}
-          </ContentWrapper>
-        </div>
+        <ContentWrapper onClick={(e) => e.stopPropagation()}>
+          {!hideExitButton && (
+            <ButtonWrapper>
+              <ExitButton onClick={() => setIsModalOpen(false)} />
+            </ButtonWrapper>
+          )}
+          {content}
+        </ContentWrapper>
       </ModalWrapper>
     )
   );
