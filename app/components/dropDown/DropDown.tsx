@@ -4,7 +4,6 @@ import { ArrowDown } from "../../arrowDown";
 import {
   Accordian,
   AccordianOptionContainer,
-  AccordianText,
   Container,
   DropDownContainer,
   animationDuration,
@@ -56,7 +55,7 @@ export const Dropdown = ({
             }
           }}
         >
-          <AccordianText>{optionName}</AccordianText>
+          <p>{optionName}</p>
         </AccordianOptionContainer>
       );
     });
@@ -66,7 +65,7 @@ export const Dropdown = ({
     <Container style={style}>
       <DropDownContainer $isOpen={isOpen} $zIndex={zIndex}>
         <Accordian onClick={() => handleOnClick(title)} $title>
-          <AccordianText>{currentOption.toUpperCase()}</AccordianText>
+          <p>{currentOption.toUpperCase()}</p>
           {isOpen ? <ArrowUp /> : <ArrowDown />}
         </Accordian>
         {showOptions && Options}

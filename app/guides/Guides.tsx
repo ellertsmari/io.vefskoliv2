@@ -2,7 +2,7 @@
 import GuidesClient from "./guidesClient";
 
 import React, { useMemo, useState } from "react";
-import { Container } from "./style";
+import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "components/dropDown/DropDown";
 import { GuideInfoWithLink, Module } from "./types";
 
@@ -30,16 +30,9 @@ export const Guides = ({
 
   return (
     <Container>
-      <Dropdown
-        options={options}
-        title={"All Modules"}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          margin: "32px",
-        }}
-      />
+      <GuideDropdownContainer>
+        <Dropdown options={options} title={"All Modules"} />
+      </GuideDropdownContainer>
       <GuidesClient fetchedGuides={filteredGuides} />
     </Container>
   );
