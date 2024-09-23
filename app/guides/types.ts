@@ -49,21 +49,21 @@ export type ExtendedGuideInfo = GuideWithLink & {
 
 export enum ReturnStatus {
   NOT_RETURNED = "Not Returned",
-  AWAITING_FEEDBACK = "Awaiting feedback",
-  PASSED = "Passed",
-  HALL_OF_FAME = "In Hall of Fame",
-  FAILED = "Failed",
+  AWAITING_FEEDBACK = "AWAITING FEEDBACK",
+  PASSED = "PASSED",
+  HALL_OF_FAME = "HALL OF FAME",
+  FAILED = "FAILED",
 }
 
 export enum FeedbackStatus {
   AWAITING_PROJECTS = "Awaiting projects to give feedback",
-  NEED_TO_PROVIDE_FEEDBACK = "Need to provide feedback",
+  NEED_TO_PROVIDE_FEEDBACK = "GIVE FEEDBACK",
   FEEDBACK_GIVEN = "Feedback given",
 }
 
 export enum GradesGivenStatus {
   AWAITING_FEEDBACK = "Awaiting feedback to grade",
-  NEED_TO_GRADE = "Need to grade",
+  NEED_TO_GRADE = "GIVE GRADE",
   GRADES_GIVEN = "Grades given",
 }
 

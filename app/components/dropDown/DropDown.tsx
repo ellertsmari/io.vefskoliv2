@@ -74,7 +74,7 @@ export const Dropdown = ({
           }}
           $title
         >
-          <AccordianText>{currentOption.toUpperCase()}</AccordianText>
+          <AccordianText>{currentOption?.toUpperCase()}</AccordianText>
           {isOpen ? <ArrowUp /> : <ArrowDown />}
         </Accordian>
         {showOptions && Options}

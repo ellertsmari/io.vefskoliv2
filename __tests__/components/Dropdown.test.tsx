@@ -11,7 +11,13 @@ describe("DropDown", () => {
 
   it("should render correctly", async () => {
     const { getByText, queryByText } = render(
-      <Dropdown options={options} title={title} />
+      <Dropdown
+        options={options}
+        titleOption={{
+          optionName: title,
+          onClick: jest.fn(),
+        }}
+      />
     );
 
     // check if initial render is correct
@@ -41,7 +47,13 @@ describe("DropDown", () => {
   it("should render with initial option", async () => {
     const initialOption = options[1].optionName;
     const { getByText, queryByText } = render(
-      <Dropdown options={options} title={title} initialOption={initialOption} />
+      <Dropdown
+        options={options}
+        titleOption={{
+          optionName: initialOption,
+          onClick: jest.fn(),
+        }}
+      />
     );
 
     expect(getByText(initialOption.toUpperCase())).toBeTruthy();
@@ -68,7 +80,13 @@ describe("DropDown", () => {
 
   it("should open and close the dropdown when the title is clicked", async () => {
     const { getByText, queryByText } = render(
-      <Dropdown options={options} title={title} />
+      <Dropdown
+        options={options}
+        titleOption={{
+          optionName: title,
+          onClick: jest.fn(),
+        }}
+      />
     );
 
     // check if dropdown is closed initially
@@ -97,7 +115,13 @@ describe("DropDown", () => {
 
   it("should render correctly when no options are provided", async () => {
     const { getByText, queryByText } = render(
-      <Dropdown options={[]} title={title} />
+      <Dropdown
+        options={[]}
+        titleOption={{
+          optionName: title,
+          onClick: jest.fn(),
+        }}
+      />
     );
 
     // check if title is rendered
