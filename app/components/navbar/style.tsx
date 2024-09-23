@@ -1,7 +1,7 @@
 "use client";
 import styled from "styled-components";
 
-const breakpoint = "650px";
+const breakpoint = "1191px";
 
 export const NavbarButton = styled.a`
   width: 100%;
@@ -19,7 +19,7 @@ export const NavbarButton = styled.a`
 
 export const DesktopNavbarButton = styled(NavbarButton)`
   display: none;
-  width: auto;
+  width: 128px;
   @media (min-width: ${breakpoint}) {
     display: block;
     background-color: var(--primary-white);
@@ -37,7 +37,6 @@ export const Nav = styled.div`
   flex-direction: column;
   align-items: center;
   width: 100%;
-  justify-content: space-around;
   overflow: hidden;
   border-radius: 8px;
 `;
@@ -46,7 +45,7 @@ export const DesktopNav = styled(Nav)`
   display: none;
   @media (min-width: ${breakpoint}) {
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: space-between;
     display: flex;
     gap: 5px;
   }

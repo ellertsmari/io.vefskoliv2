@@ -8,11 +8,18 @@ export const ProfileWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  width: fit-content;
+`;
+
+export const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 export const ProfileImageContainer = styled.div`
-  width: 60px;
-  height: 60px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   overflow: hidden;
   border: 1px solid var(--theme-module3-100);
@@ -20,6 +27,8 @@ export const ProfileImageContainer = styled.div`
   transition: 0.3s ease-in-out;
   justify-content: center;
   display: flex;
+  align-items: flex-end;
+  background-color: var(--primary-white);
   &:hover {
     filter: brightness(0.8);
   }
@@ -28,12 +37,12 @@ export const ProfileImageContainer = styled.div`
 export const ProfileInfo = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
 `;
 
 export const ProfileImage = styled(Image)`
-  width: 60px;
+  width: 100px;
   height: auto;
-  background-color: var(--primary-white);
 `;
 
 export const ProfileName = styled.h2`
@@ -43,7 +52,7 @@ export const ProfileName = styled.h2`
 
 //Modal styles
 
-export const ImageAndLogout = styled.div`
+export const Logout = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -72,7 +81,7 @@ export const LogoutIcon = styled(Image)`
 
 export const ProfileDetails = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
@@ -80,6 +89,7 @@ export const ProfileDetails = styled.div`
 
 export const AdditionalInfo = styled.p`
   font-size: 14px;
+  text-transform: uppercase;
   color: var(--theme-module3-100);
 `;
 

@@ -3,7 +3,7 @@ import GuidesClient from "./guidesClient";
 
 import React, { useMemo, useState } from "react";
 import { Container } from "./style";
-import { Dropdown } from "components/dropdown/Dropdown";
+import { Dropdown } from "components/dropDown/DropDown";
 import { GuideInfoWithLink, Module } from "./types";
 
 export const Guides = ({
@@ -37,7 +37,7 @@ export const Guides = ({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          marginTop: "1rem",
+          margin: "32px",
         }}
       />
       <GuidesClient fetchedGuides={filteredGuides} />
