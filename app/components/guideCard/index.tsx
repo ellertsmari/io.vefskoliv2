@@ -1,55 +1,103 @@
-"use client";
-
 import Modal from "components/modal/modal";
 import {
-  CardWrapper,
-  Info,
-  Name,
-  GuideNr,
-  Status,
-  StatusWrapper,
-  StyledLink,
-  InfoWrapper,
-  Review,
-} from "./style";
-import { GuideInfoWithLink } from "../../guides/types";
+  ExtendedGuideInfo,
+  FeedbackStatus,
+  GradesGivenStatus,
+  ReturnStatus,
+} from "../../guides/types";
+import { GuideProvider } from "../../providers/GuideProvider";
+import { Card } from "./Card";
+import { CardWrapper, InfoWrapper } from "./style";
+import { GuideModal } from "./GuideModal";
+import { NotificationIconContainer } from "components/toggle/style";
+import { NotificationIcon } from "../../assets/NotificationIcon";
 
 const GuideCard = ({
   guide,
   order,
 }: {
-  guide: GuideInfoWithLink;
+  guide: ExtendedGuideInfo;
   order?: number;
 }) => {
-  const ModalTrigger = (
-    <StatusWrapper>
-      <Review>
-        <Status>
-          {guide.returnsSubmitted ? "Guide returned" : "Guide not returned"}
-        </Status>
-      </Review>
-    </StatusWrapper>
-  );
+  const { returnStatus, feedbackStatus, gradesGivenStatus, grade } = guide;
+  const link =
+    guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
 
-  // todo: implement review modal
-  const ModalContent = <div>PLACEHOLDER</div>;
   return (
-    <>
+    <GuideProvider guide={guide}>
       <CardWrapper>
-        <InfoWrapper>
-          <StyledLink href={guide.link}>
-            <Info>
-              <GuideNr>
-                {order ? `GUIDE ${order}` : `MODULE ${guide.module.title[0]}`}
-              </GuideNr>
-              <Name>{guide.title}</Name>
-            </Info>
-          </StyledLink>
+        <InfoWrapper
+          $borderStyle={calculateBorderStyle(
+            returnStatus,
+            feedbackStatus,
+            gradesGivenStatus
+          )}
+        >
+          {link ? (
+            <Card
+              moduleTitle={guide.module.title[0]}
+              guideTitle={guide.title}
+              link={link}
+              order={order}
+              returnStatus={returnStatus}
+              feedbackStatus={feedbackStatus}
+              gradesGivenStatus={gradesGivenStatus}
+              grade={grade}
+            />
+          ) : (
+            <>
+              {(feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK ||
+                gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) && (
+                <NotificationIconContainer aria-label={`Notification icon`}>
+                  <NotificationIcon />
+                </NotificationIconContainer>
+              )}
+              <Modal
+                modalTrigger={
+                  <Card
+                    moduleTitle={guide.module.title[0]}
+                    guideTitle={guide.title}
+                    order={order}
+                    returnStatus={returnStatus}
+                    feedbackStatus={feedbackStatus}
+                    gradesGivenStatus={gradesGivenStatus}
+                    grade={grade}
+                  />
+                }
+                modalContent={<GuideModal />}
+              />
+            </>
+          )}
         </InfoWrapper>
-        <Modal modalTrigger={ModalTrigger} modalContent={ModalContent} />
       </CardWrapper>
-    </>
+    </GuideProvider>
   );
+};
+
+const calculateBorderStyle = (
+  returnStatus: ReturnStatus,
+  feedbackStatus: FeedbackStatus,
+  gradesGivenStatus: GradesGivenStatus
+) => {
+  if (returnStatus === ReturnStatus.NOT_RETURNED) {
+    return undefined;
+  }
+
+  if (
+    feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK ||
+    gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE
+  ) {
+    return "border-color: var(--error-warning-100);";
+  }
+  if (returnStatus === ReturnStatus.PASSED) {
+    return "border-color: var(--error-success-100); background-color: var(--error-success-10)";
+  }
+  if (returnStatus === ReturnStatus.FAILED) {
+    return "border-color: var(--error-failure-100); background-color: var(--error-failure-10)";
+  }
+  if (returnStatus === ReturnStatus.HALL_OF_FAME) {
+    return "background-color: var(--theme-module3-10); border-width: 3px;";
+  }
 };
 
 export default GuideCard;

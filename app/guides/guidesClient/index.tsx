@@ -1,14 +1,15 @@
 import GuideCard from "../../components/guideCard";
 
 import { GuideContainer } from "../style";
-import { GuideInfoWithLink } from "../types";
+import { ExtendedGuideInfo } from "../types";
 
 type Props = {
-  fetchedGuides: GuideInfoWithLink[];
+  fetchedGuides: ExtendedGuideInfo[];
   useGuideOrder: boolean;
 };
 
 const GuidesClient = ({ fetchedGuides, useGuideOrder }: Props) => {
+  console.log(fetchedGuides);
   return (
     <GuideContainer>
       {fetchedGuides.map((guide, index) => {

@@ -40,7 +40,14 @@ export const UserInfoCards = ({
         }}
       >
         <InfoSubtitle>{title}</InfoSubtitle>
-        <Dropdown options={options} title={title} zIndex={zIndex} />
+        <Dropdown
+          options={options}
+          titleOption={{
+            optionName: title,
+            onClick: () => setSelectedUser(null),
+          }}
+          zIndex={zIndex}
+        />
       </div>
       {selectedUser && <Info user={selectedUser} />}
     </UserInfoCardWrapper>

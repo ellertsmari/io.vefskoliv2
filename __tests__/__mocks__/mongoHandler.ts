@@ -8,11 +8,12 @@ import {
   FeedbackType,
   Review,
   GradedFeedbackDocument,
-  ReviewedFeedbackType,
+  GradedFeedbackType,
   Vote,
 } from "../../app/models/review";
 import { Return, ReturnDocument, ReturnType } from "../../app/models/return";
 import { Guide, GuideDocument, GuideType } from "../../app/models/guide";
+import { GuideInfo } from "../../app/guides/types";
 
 jest.mock("../../app/utils/mongoose-connector", () => ({
   connectToDatabase: jest.fn(),
@@ -74,7 +75,7 @@ export const createDummyGuide = async (): Promise<GuideDocument> => {
     },
     topicsList: faker.lorem.words(),
     module: {
-      title: faker.lorem.sentence(),
+      title: Math.floor(Math.random() * 10) + faker.lorem.sentence(),
       number: faker.number.int(10),
     },
     order: faker.number.int(50),
@@ -107,12 +108,6 @@ export const createDummyFeedback = async (
   userReturn?: ReturnType,
   fail?: boolean
 ): Promise<FeedbackDocument> => {
-  const votes: ("no pass" | "pass" | "recommend to gallery")[] = [
-    "no pass",
-    "pass",
-    "recommend to gallery",
-  ];
-
   const dummyReview: Partial<FeedbackType> = {
     guide: guide?._id ?? new mongoose.Types.ObjectId(),
     return: userReturn?._id ?? new mongoose.Types.ObjectId(),
@@ -125,19 +120,17 @@ export const createDummyFeedback = async (
   return await Review.create(dummyReview);
 };
 
-export const createDummyReview = async (
+export const createDummyGrade = async (
   owner?: UserDocument,
   guide?: GuideDocument,
   userReturn?: ReturnType,
-  reviewer?: UserDocument,
   grade?: number
 ): Promise<GradedFeedbackDocument> => {
   const votes = [Vote.NO_PASS, Vote.PASS, Vote.RECOMMEND_TO_GALLERY];
 
-  const dummyReview: Partial<ReviewedFeedbackType> = {
+  const dummyReview: Partial<GradedFeedbackType> = {
     guide: guide?._id ?? new mongoose.Types.ObjectId(),
     return: userReturn?._id ?? new mongoose.Types.ObjectId(),
-    reviewer: reviewer?._id ?? new mongoose.Types.ObjectId(),
     grade: grade ?? faker.number.int(10),
     owner: owner?._id ?? new mongoose.Types.ObjectId(),
     comment: faker.lorem.sentence(),
@@ -146,4 +139,40 @@ export const createDummyReview = async (
   };
 
   return await Review.create(dummyReview);
+};
+
+export const createDummyFetchedGuides = async (
+  user: UserDocument,
+  count: number
+): Promise<GuideInfo[]> => {
+  const guides = [];
+  for (let i = 0; i < count; i++) {
+    const guide = await createDummyGuide();
+    const fetchedGuide: GuideInfo = {
+      _id: guide._id,
+      title: guide.title,
+      description: guide.description,
+      category: guide.category,
+      order: 0,
+      module: guide.module,
+      returnsSubmitted:
+        Math.random() > 0.5 ? [await createDummyReturn(user, guide)] : [],
+      feedbackReceived:
+        Math.random() > 0.5
+          ? [await createDummyFeedback(undefined, guide)]
+          : [],
+      availableForFeedback:
+        Math.random() > 0.5 ? [await createDummyReturn(undefined, guide)] : [],
+      feedbackGiven:
+        Math.random() > 0.5 ? [await createDummyFeedback(user, guide)] : [],
+      gradesReceived:
+        Math.random() > 0.5 ? [await createDummyGrade(user, guide)] : [],
+      gradesGiven:
+        Math.random() > 0.5 ? [await createDummyGrade(undefined, guide)] : [],
+      availableToGrade:
+        Math.random() > 0.5 ? [await createDummyReturn(undefined, guide)] : [],
+    };
+    guides.push(fetchedGuide);
+  }
+  return guides;
 };

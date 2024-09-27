@@ -8,21 +8,58 @@ import {
 import {
   ReturnStatus,
   FeedbackStatus,
-  ReviewsReceivedStatus,
-  ReviewsGivenStatus,
-  GuideInfoWithLink,
-  Module,
+  GradesReceivedStatus,
+  GradesGivenStatus,
+  ExtendedGuideInfo,
+  GuideInfo,
 } from "./types";
 
-export const calculateReturnStatus = (
-  returnedGuides: ReturnDocument[],
+export const extendGuides = async (
+  guides: GuideInfo[]
+): Promise<ExtendedGuideInfo[]> => {
+  return Promise.all(
+    guides.map(async (guide) => {
+      const returnStatus = await calculateReturnStatus(
+        guide.returnsSubmitted,
+        guide.feedbackReceived
+      );
+      const feedbackStatus = await calculateFeedbackStatus(
+        guide.feedbackGiven,
+        guide.availableForFeedback
+      );
+      const gradesReceivedStatus = await calculateGradesReceivedStatus(
+        guide.gradesReceived
+      );
+      const grade = await calculateGrade(guide.gradesReceived);
+      const gradesGivenStatus = await calculateGradesGivenStatus(
+        guide.gradesGiven,
+        guide.availableToGrade
+      );
+
+      const extendedGuide = {
+        ...guide,
+        link: `/guides/${guide._id}`,
+        returnStatus,
+        feedbackStatus,
+        gradesReceivedStatus,
+        grade,
+        gradesGivenStatus,
+      };
+
+      return extendedGuide;
+    })
+  );
+};
+
+export const calculateReturnStatus = async (
+  returnsSubmitted: ReturnDocument[],
   feedbackReceived: FeedbackDocument[]
-): ReturnStatus => {
-  if (returnedGuides.length === 0) {
+): Promise<ReturnStatus> => {
+  if (returnsSubmitted.length === 0) {
     return ReturnStatus.NOT_RETURNED;
   }
 
-  const latestSubmission = returnedGuides.reduce(
+  const latestSubmission = returnsSubmitted.reduce(
     (latestSubmission, submission) => {
       if (submission.createdAt > latestSubmission.createdAt) {
         return submission;
@@ -56,10 +93,10 @@ export const calculateReturnStatus = (
   return ReturnStatus.PASSED;
 };
 
-export const calculateFeedbackStatus = (
+export const calculateFeedbackStatus = async (
   feedbackGiven: FeedbackDocument[],
   availableForFeedback: ReturnDocument[]
-): FeedbackStatus => {
+): Promise<FeedbackStatus> => {
   if (feedbackGiven.length < 2 && availableForFeedback.length === 0) {
     return FeedbackStatus.AWAITING_PROJECTS;
   }
@@ -69,83 +106,38 @@ export const calculateFeedbackStatus = (
   return FeedbackStatus.FEEDBACK_GIVEN;
 };
 
-export const calculateReviewsReceivedStatus = (
+export const calculateGradesReceivedStatus = async (
   gradesReceived: GradedFeedbackDocument[]
-): ReviewsReceivedStatus => {
+): Promise<GradesReceivedStatus> => {
   if (gradesReceived.length < 2) {
-    return ReviewsReceivedStatus.AWAITING_REVIEWS;
+    return GradesReceivedStatus.AWAITING_GRADES;
   }
-  return ReviewsReceivedStatus.GRADES_RECEIVED;
+  return GradesReceivedStatus.GRADES_RECEIVED;
 };
 
-export const calculateReviewScore = (
+export const calculateGrade = async (
   gradesReceived: GradedFeedbackDocument[]
-): number | undefined => {
+): Promise<number | undefined> => {
   if (gradesReceived.length < 2) {
     return undefined;
   }
-  const highestTwoReviews = gradesReceived
+  const highestTwoGrades = gradesReceived
     .sort((a, b) => b.grade - a.grade)
     .slice(0, 2);
 
-  return (highestTwoReviews[0].grade + highestTwoReviews[1].grade) / 2;
+  return (highestTwoGrades[0].grade + highestTwoGrades[1].grade) / 2;
 };
 
-export const calculateReviewGivenStatus = (
+export const calculateGradesGivenStatus = async (
   gradesGiven: GradedFeedbackDocument[],
   availableToGrade: ReturnDocument[]
-): ReviewsGivenStatus => {
+): Promise<GradesGivenStatus> => {
   if (gradesGiven.length >= 2) {
-    return ReviewsGivenStatus.GRADES_GIVEN;
+    return GradesGivenStatus.GRADES_GIVEN;
   }
   if (availableToGrade.length > 0) {
-    return ReviewsGivenStatus.NEED_TO_REVIEW;
+    return GradesGivenStatus.NEED_TO_GRADE;
   }
 
-  return ReviewsGivenStatus.AWAITING_FEEDBACK;
-};
-
-export const fetchModules = (fetchedGuides: GuideInfoWithLink[]) => {
-  return fetchedGuides
-    .reduce((acc: Module[], guideToCheck) => {
-      if (
-        !acc.some(
-          (existingGuide) =>
-            (+guideToCheck.module.title[0] as number) === existingGuide.number
-        )
-      ) {
-        acc.push({
-          title: guideToCheck.module.title,
-          number: +guideToCheck.module.title[0] as number,
-        });
-      }
-      return acc;
-    }, [] as { title: string; number: number }[])
-    .sort((a, b) => a.number - b.number);
-};
-
-// Not ideal but improving this would require a refactor of the data model as we don't store number explicitly
-// Currently, we are assuming that the module title is a number
-export const filterGuides = (
-  selectedModule: number | undefined,
-  fetchedGuides: GuideInfoWithLink[]
-) => {
-  if (selectedModule === undefined) return fetchedGuides;
-  return fetchedGuides.filter((guide) => {
-    if (guide.module.title[0] === "" + selectedModule) return guide;
-  });
-};
-
-export const createOptions = (
-  modules: Module[],
-  setSelectedModule: React.Dispatch<number | undefined>
-) => {
-  return [
-    { optionName: "All", onClick: () => setSelectedModule(undefined) },
-  ].concat(
-    modules.map((module) => ({
-      optionName: "Module " + module.number,
-      onClick: () => setSelectedModule(module.number),
-    }))
-  );
+  return GradesGivenStatus.AWAITING_FEEDBACK;
 };

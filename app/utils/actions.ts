@@ -1,15 +1,22 @@
 "use server";
 
-import { SignupFormSchema, FormState } from "../utils/formvalidation";
+import {
+  ReturnFormSchema,
+  ReturnFormState,
+  SignupFormSchema,
+  SignupFormState,
+} from "../utils/formvalidation";
 import bcrypt from "bcrypt";
+import { ObjectId } from "mongodb";
 
-import { signIn, signOut as s, getUser } from "../../auth";
+import { signIn, signOut as s, getUser, auth } from "../../auth";
 import { AuthError } from "next-auth";
 import { OptionalUserInfo, User, UserDocument } from "../models/user";
 import { FilterQuery, Types } from "mongoose";
-import { GuideType } from "../models/guide";
+import { GuideDocument } from "../models/guide";
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "../models/guide";
+import { Return } from "../models/return";
 
 export const signOut = s; //needs to be in actions.ts so that it can be called on the client side
 export async function authenticate(
@@ -31,7 +38,63 @@ export async function authenticate(
   }
 }
 
-export async function signUp(state: FormState, formData: FormData) {
+export async function returnGuide(state: ReturnFormState, formData: FormData) {
+  const validatedFields = ReturnFormSchema.safeParse({
+    projectUrl: formData.get("projectUrl"),
+    liveVersion: formData.get("liveVersion"),
+    projectName: formData.get("projectName"),
+    comment: formData.get("comment"),
+    guideId: formData.get("guideId"),
+    imageOfProject: formData.get("imageOfProject"),
+  });
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const {
+    projectUrl,
+    projectName,
+    comment,
+    liveVersion,
+    guideId,
+    imageOfProject,
+  } = validatedFields.data;
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      message: "You must be logged in to submit a return",
+    };
+  }
+  const { user } = session;
+  try {
+    // await connectToDatabase();
+    const theReturn = await Return.create({
+      projectUrl,
+      projectName,
+      comment,
+      liveVersion,
+      owner: user.id,
+      guide: new ObjectId(guideId),
+      imageOfProject: imageOfProject,
+    });
+    return {
+      success: true,
+      message: "Return submitted successfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: "Failed to submit return",
+    };
+  }
+}
+
+export async function signUp(state: SignupFormState, formData: FormData) {
   // Validate form fields
   const validatedFields = SignupFormSchema.safeParse({
     firstName: formData.get("firstName"),
@@ -107,7 +170,7 @@ export const getGuide = async (id: string) => {
   }
   const objectId = new Types.ObjectId(id);
   await connectToDatabase();
-  const guide: (GuideType & { _id: string }) | null = await Guide.findOne({
+  const guide: GuideDocument | null = await Guide.findOne({
     _id: objectId,
   });
   return guide;

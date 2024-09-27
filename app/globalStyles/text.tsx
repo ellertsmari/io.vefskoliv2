@@ -12,6 +12,11 @@ export const BlackSubTitle = styled(SubTitle)`
 `;
 
 export const Title = styled.h1`
-  font-size: 24px;
-  grid-area: main;
+    grid-area: main;
+    font-weight: 400;
+  }
+`;
+
+export const SmallText = styled.p`
+  font-size: 12px;
 `;

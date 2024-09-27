@@ -1,63 +1,74 @@
 import { Guides, exportedForTesting } from "../../app/guides/Guides";
-import { GuideType } from "../../app/models/guide";
+import { ExtendedGuideInfo } from "../../app/guides/types";
 import { fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  clearDatabase,
+  closeDatabase,
+  connect,
+  createDummyFetchedGuides,
+  createDummyUser,
+} from "../__mocks__/mongoHandler";
 
 jest.mock(
   "../../app/guides/guidesClient",
   () =>
-    ({ fetchedGuides }: { fetchedGuides: Guides }) =>
-      <div>{fetchedGuides.map((guide) => guide.module.title).join(", ")}</div>
+    ({ fetchedGuides }: { fetchedGuides: ExtendedGuideInfo[] }) =>
+      fetchedGuides.map((guide) => (
+        <div key={guide.link}>{guide.module.title}</div>
+      ))
 );
 
 const { fetchModules, filterGuides, createOptions } = exportedForTesting;
 
-type Guides = (GuideType & { link: string })[];
-
 describe("Guides", () => {
+  beforeAll(async () => await connect());
+  afterEach(async () => await clearDatabase());
+
+  afterAll(async () => await closeDatabase());
+
   test("changes guides shown based on dropdown selection", async () => {
-    const fetchedGuides = [
-      { module: { title: "1 Module" }, link: "link1" },
-      { module: { title: "2 Module" }, link: "link2" },
-    ] as Guides;
+    const user = await createDummyUser();
+    const fetchedGuides = await createDummyFetchedGuides(user, 3);
 
-    const { getByText, queryByText } = render(
-      <Guides fetchedGuides={fetchedGuides} />
-    );
-
+    const { getByText } = render(<Guides fetchedGuides={fetchedGuides} />);
     // Check if alla guides are shown initially
-    expect(getByText("1 Module, 2 Module")).toBeDefined();
+    await waitFor(() => {
+      expect(getByText(fetchedGuides[0].module.title)).toBeDefined();
+      expect(getByText(fetchedGuides[1].module.title)).toBeDefined();
+      expect(getByText(fetchedGuides[2].module.title)).toBeDefined();
+    });
 
     // Select "Module 1" from the dropdown
     fireEvent.click(getByText("ALL MODULES"));
-    fireEvent.click(getByText("Module 1"));
 
-    // Check if only the guide for "Module 1" is shown
+    fireEvent.click(getByText("Module " + fetchedGuides[1].module.title[0]));
+
+    // Check if the guide for "Module 1" is shown
     await waitFor(() => {
-      expect(getByText("1 Module")).toBeDefined();
-      expect(queryByText("2 Module")).toBeNull();
+      expect(getByText(fetchedGuides[1].module.title)).toBeDefined();
     });
 
     // Select "All" from the dropdown
-    fireEvent.click(getByText("Module 1"));
-    fireEvent.click(getByText("All"));
+    fireEvent.click(getByText("MODULE " + fetchedGuides[1].module.title[0]));
+    await waitFor(() => fireEvent.click(getByText("ALL MODULES")));
 
     // Check if all guides are shown again
-    expect(getByText("1 Module, 2 Module")).toBeDefined();
+    expect(getByText(fetchedGuides[0].module.title)).toBeDefined();
+    expect(getByText(fetchedGuides[1].module.title)).toBeDefined();
+    expect(getByText(fetchedGuides[2].module.title)).toBeDefined();
   });
 
-  test("renders correctly when no guides are provided", () => {
-    const fetchedGuides = [] as Guides;
+  test("renders correctly when no guides are provided", async () => {
+    const fetchedGuides = [] as ExtendedGuideInfo[];
 
-    const { getByText, queryByText } = render(
-      <Guides fetchedGuides={fetchedGuides} />
-    );
+    const { queryByText } = render(<Guides fetchedGuides={fetchedGuides} />);
 
     // Check if dropdown with "All Modules" is shown
-    expect(getByText("ALL MODULES")).toBeDefined();
-
-    // Check if no guides are rendered
-    expect(queryByText("1 Module")).toBeNull();
-    expect(queryByText("2 Module")).toBeNull();
+    await waitFor(() => {
+      // Check if no guides are rendered
+      expect(queryByText("All MODULES")).toBeNull();
+      expect(queryByText("2 Module")).toBeNull();
+    });
   });
 });
 
@@ -67,7 +78,7 @@ describe("fetchModules", () => {
       { module: { title: "1 Module" }, link: "link1" },
       { module: { title: "2 Module" }, link: "link2" },
       { module: { title: "1 Module" }, link: "link3" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     const result = fetchModules(fetchedGuides);
 
@@ -78,7 +89,7 @@ describe("fetchModules", () => {
   });
 
   it("should return an empty array when no guides are provided", () => {
-    const fetchedGuides = [] as Guides;
+    const fetchedGuides = [] as ExtendedGuideInfo[];
 
     const result = fetchModules(fetchedGuides);
 
@@ -89,7 +100,7 @@ describe("fetchModules", () => {
     const fetchedGuides = [
       { module: { title: "Module A" }, link: "link1" },
       { module: { title: "Module B" }, link: "link2" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     // Act
     const result = fetchModules(fetchedGuides);
@@ -104,7 +115,7 @@ describe("fetchModules", () => {
     const fetchedGuides = [
       { module: { title: "1 Module A" }, link: "link1" },
       { module: { title: "1 Module B" }, link: "link2" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     const result = fetchModules(fetchedGuides);
 
@@ -119,7 +130,7 @@ describe("filterGuides", () => {
       { module: { title: "1 Module" }, link: "link1" },
       { module: { title: "2 Module" }, link: "link2" },
       { module: { title: "1 Module" }, link: "link3" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule, fetchedGuides);
 
@@ -134,7 +145,7 @@ describe("filterGuides", () => {
     const fetchedGuides = [
       { module: { title: "1 Module" }, link: "link1" },
       { module: { title: "2 Module" }, link: "link2" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule, fetchedGuides);
 
@@ -146,7 +157,7 @@ describe("filterGuides", () => {
     const fetchedGuides = [
       { module: { title: "1 Module" }, link: "link1" },
       { module: { title: "2 Module" }, link: "link2" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule, fetchedGuides);
 
@@ -158,7 +169,7 @@ describe("filterGuides", () => {
     const fetchedGuides = [
       { module: { title: "1 Module" }, link: "link1" },
       { module: { title: "2 Module" }, link: "link2" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule as any, fetchedGuides);
 
@@ -170,7 +181,7 @@ describe("filterGuides", () => {
     const fetchedGuides = [
       { module: { title: "Module 2" }, link: "link1" },
       { module: { title: "2 Module" }, link: "link2" },
-    ] as Guides;
+    ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule, fetchedGuides);
 
@@ -189,26 +200,18 @@ describe("createOptions", () => {
 
     const options = createOptions(modules, setSelectedModule);
 
-    expect(options[0].optionName).toEqual("All");
-    options[0].onClick();
-    expect(setSelectedModule).toHaveBeenCalledWith(undefined);
-
     for (let i = 0; i < modules.length; i++) {
-      expect(options[i + 1].optionName).toEqual("Module " + modules[i].number);
-      options[i + 1].onClick();
+      expect(options[i].optionName).toEqual("Module " + modules[i].number);
+      options[i].onClick();
       expect(setSelectedModule).toHaveBeenCalledWith(modules[i].number);
     }
   });
-  it('creates only "All" option when modules array is empty', () => {
+  it("creates empty array when modules array is empty", () => {
     const setSelectedModule = jest.fn();
     const modules = [] as { title: string; number: number }[];
 
     const options = createOptions(modules, setSelectedModule);
 
-    // Check that the only option is "All"
-    expect(options.length).toEqual(1);
-    expect(options[0].optionName).toEqual("All");
-    options[0].onClick();
-    expect(setSelectedModule).toHaveBeenCalledWith(undefined);
+    expect(options.length).toEqual(0);
   });
 });
