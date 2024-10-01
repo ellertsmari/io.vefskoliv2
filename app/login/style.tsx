@@ -73,8 +73,3 @@ export const SuccessToast = styled(Toast)`
 export const ErrorInput = styled(Input)`
   border: 1px solid var(--error-failure-100);
 `;
-
-export const ErrorMessage = styled.p`
-  color: var(--error-failure-100);
-  font-size: 14px;
-`;

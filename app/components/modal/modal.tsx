@@ -1,10 +1,9 @@
 import { ModalProvider } from "./ModalProvider";
 import { ModalTrigger } from "./ModalTrigger";
-import { ButtonHTMLAttributes, ReactElement } from "react";
 import { ModalContent } from "./ModalContent";
 
 type Props = {
-  modalTrigger: ReactElement<ButtonHTMLAttributes<HTMLButtonElement>, string>;
+  modalTrigger: React.ReactElement;
   modalContent: React.ReactNode;
   hideExitButton?: boolean;
   state?: [boolean, React.Dispatch<React.SetStateAction<boolean>>];

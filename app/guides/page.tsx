@@ -1,21 +1,17 @@
 import { getGuides } from "./query";
-import { UserDocument } from "../models/user";
 
 import { auth } from "../../auth";
 import { Guides } from "./Guides";
-import { GuideInfo, GuideInfoWithLink } from "./types";
+import { GuideInfo } from "./types";
+import { Session } from "next-auth";
 
 const GuidesPage = async () => {
-  const session = (await auth()) as unknown as UserDocument;
-  if (!session) return null;
+  const session: Session | null = await auth();
+  if (!session?.user?.id) return null;
 
-  const fetchingGuides: GuideInfo[] = (await getGuides(session)) || [];
-  const link: GuideInfoWithLink[] = fetchingGuides.map((guide) => ({
-    ...guide,
-    link: `guides/${guide._id}`,
-  }));
+  const fetchedGuides: GuideInfo[] = (await getGuides(session.user.id)) || [];
 
-  return <Guides fetchedGuides={JSON.parse(JSON.stringify(link))} />;
+  return <Guides fetchedGuides={JSON.parse(JSON.stringify(fetchedGuides))} />;
 };
 
 export default GuidesPage;

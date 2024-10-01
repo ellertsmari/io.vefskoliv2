@@ -3,7 +3,7 @@
 import { use, useActionState, useEffect, useRef } from "react";
 import { signUp } from "../utils/actions";
 import DefaultButton from "../globalStyles/buttons/default";
-import Input from "../globalStyles/input";
+import Input, { ErrorMessage } from "../globalStyles/input";
 import {
   Container,
   Form,
@@ -12,7 +12,6 @@ import {
   InputWrapper,
   ButtonWrapper,
   SuccessToast,
-  ErrorMessage,
   ErrorToast,
 } from "../login/style";
 import LogoSvg from "../../public/logo.svg";

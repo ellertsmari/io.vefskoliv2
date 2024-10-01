@@ -1,17 +1,17 @@
+"use server";
 import { connectToDatabase } from "../utils/mongoose-connector";
 import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
-import { UserDocument } from "../models/user";
 import { PipelineStage } from "mongoose";
 import { GuideInfo } from "./types";
 
 export async function getGuides(
-  user: UserDocument | null
+  userIdString: string
 ): Promise<GuideInfo[] | null> {
-  if (!user) return null;
+  if (!userIdString) return null;
   await connectToDatabase();
 
-  const userId = new ObjectId(user._id);
+  const userId = new ObjectId(userIdString);
 
   // grab user's submitted returns
   const lookupReturnsSubmitted: PipelineStage = {
@@ -50,6 +50,15 @@ export async function getGuides(
             },
           },
         },
+        {
+          $lookup: {
+            from: "returns",
+            localField: "return",
+            foreignField: "_id",
+            as: "associatedReturn",
+          },
+        },
+        { $unwind: "$associatedReturn" },
       ],
       as: "feedbackGiven",
     },
@@ -240,7 +249,7 @@ export async function getGuides(
       availableForFeedback: 1,
       feedbackGiven: 1,
 
-      // reviews received by others on feedback given by this user
+      // grades received by others on feedback given by this user
       gradesReceived: 1,
 
       // reviewing others' feedback

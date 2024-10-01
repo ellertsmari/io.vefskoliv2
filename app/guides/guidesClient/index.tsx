@@ -1,10 +1,10 @@
 import GuideCard from "../../components/guideCard";
 
 import { GuideContainer } from "../style";
-import { GuideInfoWithLink } from "../types";
+import { ExtendedGuideInfo } from "../types";
 
 type Props = {
-  fetchedGuides: GuideInfoWithLink[];
+  fetchedGuides: ExtendedGuideInfo[];
   useGuideOrder: boolean;
 };
 

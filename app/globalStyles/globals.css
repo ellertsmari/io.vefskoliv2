@@ -12,6 +12,24 @@ body {
   background-color: #f0f0fd;
 }
 
+div,
+p,
+li {
+  font-size: 14px;
+
+  @media screen and (min-width: 480px) {
+    font-size: 16px;
+  }
+}
+
+h1 {
+  font-size: 18px;
+
+  @media screen and (min-width: 480px) {
+    font-size: 24px;
+  }
+}
+
 /* Color Palette Definitions */
 :root {
   /* Primary Colors */
@@ -43,9 +61,4 @@ body {
   --error-warning-60: #feca9d; /* 60% */
   --error-warning-30: #ffe5ce; /* 30% */
   --error-warning-10: #fff7ef; /* 10% */
-
-  --error-notification-100: #5aa7fb; /* 100% */
-  --error-notification-60: #9ccafc; /* 60% */
-  --error-notification-30: #cee5fe; /* 30% */
-  --error-notification-10: #eff7ff; /* 10% */
 }

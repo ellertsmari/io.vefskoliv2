@@ -9,10 +9,10 @@ import {
 
 const returnSchema = new Schema({
   projectUrl: { type: Schema.Types.String, required: true },
-  liveVersion: { type: Schema.Types.String, required: false },
+  liveVersion: { type: Schema.Types.String, required: true },
   pictureUrl: { type: Schema.Types.String, required: false },
-  projectName: { type: Schema.Types.String, required: false },
-  comment: { type: Schema.Types.String, required: false },
+  projectName: { type: Schema.Types.String, required: true },
+  comment: { type: Schema.Types.String, required: true },
   owner: { type: Schema.Types.ObjectId, required: true, ref: "User" },
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
   reviewedAt: { type: Schema.Types.Date, required: false },

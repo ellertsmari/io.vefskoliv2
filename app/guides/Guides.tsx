@@ -1,34 +1,36 @@
 "use client";
 import GuidesClient from "./guidesClient";
 
-import React, { useMemo, useState } from "react";
-import { Container, GuideDropdownContainer } from "./style";
-import { Dropdown } from "components/dropDown/DropDown";
-import { GuideInfoWithLink, Module } from "./types";
-import { set } from "mongoose";
+import React, { useEffect, useState } from "react";
+import { Container } from "./style";
+import { Dropdown } from "../components/dropDown/DropDown";
+import { ExtendedGuideInfo, GuideInfo, Module } from "./types";
+import { extendGuides } from "./utils";
 
-export const Guides = ({
-  fetchedGuides,
-}: {
-  fetchedGuides: GuideInfoWithLink[];
-}) => {
+
+export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
+  const [extendedGuides, setExtendedGuides] = useState<ExtendedGuideInfo[]>([]);
   const [selectedModule, setSelectedModule] = useState<number | undefined>(
     undefined
   );
 
+  if (fetchedGuides.length < 1) return null;
+
+  useEffect(() => {
+    const getExtendedGuides = async () => {
+      setExtendedGuides(await extendGuides(fetchedGuides));
+    };
+    getExtendedGuides();
+  }, []);
+
+  if (extendedGuides.length < 1) return null;
+
   // Get all modules from fetchedGuides and sort them
-  const modules: Module[] = useMemo(() => {
-    return fetchModules(fetchedGuides);
-  }, [fetchedGuides]);
+  const modules: Module[] = fetchModules(extendedGuides);
 
-  const filteredGuides = useMemo(() => {
-    return filterGuides(selectedModule, fetchedGuides);
-  }, [fetchedGuides, selectedModule, modules]);
+  const filteredGuides = filterGuides(selectedModule, extendedGuides);
 
-  const options = useMemo(() => {
-    return createOptions(modules, setSelectedModule);
-  }, [modules]);
-
+  const options = createOptions(modules, setSelectedModule);
   return (
     <Container>
       <Dropdown
@@ -52,8 +54,8 @@ export const Guides = ({
   );
 };
 
-const fetchModules = (fetchedGuides: GuideInfoWithLink[]) => {
-  return fetchedGuides
+const fetchModules = (extendedGuides: ExtendedGuideInfo[]) => {
+  return extendedGuides
     .reduce((acc: Module[], guideToCheck) => {
       if (
         !acc.some(
@@ -75,10 +77,10 @@ const fetchModules = (fetchedGuides: GuideInfoWithLink[]) => {
 // Currently, we are assuming that the module title is a number
 const filterGuides = (
   selectedModule: number | undefined,
-  fetchedGuides: GuideInfoWithLink[]
+  extendedGuides: ExtendedGuideInfo[]
 ) => {
-  if (selectedModule === undefined) return fetchedGuides;
-  return fetchedGuides.filter((guide) => {
+  if (selectedModule === undefined) return extendedGuides;
+  return extendedGuides.filter((guide) => {
     if (guide.module.title[0] === "" + selectedModule) return guide;
   });
 };

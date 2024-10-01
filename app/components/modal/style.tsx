@@ -17,8 +17,8 @@ export const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   background-color: var(--primary-white);
-  max-width: 590px;
   max-width: 90vw;
+  width: 100%;
   padding: 32px;
   gap: 32px;
   border-radius: 8px;

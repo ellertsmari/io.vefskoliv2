@@ -5,7 +5,7 @@ export const DesktopNavbar = () => {
     { href: "/", label: "HOME" },
     { href: "/guides", label: "GUIDES" },
     { href: "/resources", label: "RESOURCES" },
-    { href: "/halloffame", label: "HALL OF FAME" },
+    { href: "/halloffame", label: "H O F" },
     { href: "/people", label: "PEOPLE" },
     { href: "/calendar", label: "CALENDAR" },
   ];
