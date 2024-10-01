@@ -11,7 +11,8 @@ import {
   AdditionalInfo,
   ButtonWrapper,
   ProfileInfo,
-  ImageAndLogout,
+  Logout,
+  Wrapper
 } from "./style";
 import { SetStateAction, useState } from "react";
 import Modal from "../../modal/modal";
@@ -44,7 +45,7 @@ export const Profile = () => {
   );
 
   return (
-    <div>
+    <Wrapper>
       {user ? (
         <Modal
           modalTrigger={ProfilePicture}
@@ -53,7 +54,7 @@ export const Profile = () => {
       ) : (
         <div>loading...</div>
       )}
-    </div>
+    </Wrapper>
   );
 };
 
@@ -77,27 +78,25 @@ const EditProfileScreen = (user: UserDocument) => {
   return (
     <>
       <ProfileDetails>
+        <ProfileImageContainer>
+          <ProfileImage
+            src={user.avatarUrl ? user.avatarUrl : ProfilePic}
+            alt="student picture"
+          />
+        </ProfileImageContainer>
         <ProfileInfo>
           <ProfileName style={{ fontSize: "16px" }}>{user.name}</ProfileName>
           <AdditionalInfo>{user.role}</AdditionalInfo>
-          <AdditionalInfo style={{ color: "var(--primary-black-100)" }}>
+          <AdditionalInfo style={{ color: "var(--primary-black-100)", textTransform:"none" }}>
             {user.email}
           </AdditionalInfo>
         </ProfileInfo>
-        <ImageAndLogout>
-          <ProfileImageContainer>
-            <ProfileImage
-              src={user.avatarUrl ? user.avatarUrl : ProfilePic}
-              alt="student picture"
-              width={60}
-              height={60}
-            />
-          </ProfileImageContainer>
+        <Logout>
           <LogoutButton onClick={async () => await signOut()}>
-            <p>LOGOUT</p>
+            <p style={{fontSize:"12px"}}>LOGOUT</p>
             <LogoutIcon alt="logout button" src={logouticon} />
           </LogoutButton>
-        </ImageAndLogout>
+        </Logout>
       </ProfileDetails>
       <Form>
         <Input
