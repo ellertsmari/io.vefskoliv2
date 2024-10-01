@@ -16,10 +16,10 @@ export const LayoutGrid = styled.div`
   grid-auto-rows: min-content;
 
   @media (min-width: ${breakpoint}) {
-    grid-template-columns: minmax(0, 200px) auto;
+    grid-template-columns: minmax(0, 350px) auto;
     grid-template-rows: auto 15fr;
     grid-template-areas:
-      "navbar navbar"
+      "sidebar navbar"
       "sidebar main";
   }
 `;
