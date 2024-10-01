@@ -2,8 +2,8 @@
 import GuidesClient from "./guidesClient";
 
 import React, { useMemo, useState } from "react";
-import { Container } from "./style";
-import { Dropdown } from "components/dropdown/Dropdown";
+import { Container, GuideDropdownContainer } from "./style";
+import { Dropdown } from "components/dropDown/DropDown";
 import { GuideInfoWithLink, Module } from "./types";
 import { set } from "mongoose";
 
