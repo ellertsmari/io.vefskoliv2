@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { OptionalUserInfo, UserDocument } from "../../models/user";
-import { Dropdown } from "components/dropDown/DropDown";
+import { Dropdown } from "components/dropdown/dropdown";
 import { InfoSubtitle, InfoWrapper, UserInfoCardWrapper } from "./style";
 import { SubTitle } from "globalStyles/text";
 import React from "react";
