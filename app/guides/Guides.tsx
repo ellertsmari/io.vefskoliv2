@@ -3,7 +3,7 @@ import GuidesClient from "./guidesClient";
 
 import React, { useEffect, useState } from "react";
 import { Container } from "./style";
-import { Dropdown } from "../components/dropDown/DropDown";
+import { Dropdown } from "../components/dropdown/dropdown";
 import { ExtendedGuideInfo, GuideInfo, Module } from "./types";
 import { extendGuides } from "./utils";
 
@@ -44,6 +44,7 @@ export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
           justifyContent: "center",
           alignItems: "center",
           marginTop: "1rem",
+          marginLeft: "6rem"
         }}
       />
       <GuidesClient
