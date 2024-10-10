@@ -2,7 +2,7 @@ import { SmallText, Title } from "globalStyles/text";
 import { useGuide } from "../../providers/GuideProvider";
 import {
   ColouredCircle,
-  ReturnStatus,
+  ReturnStatusContainer,
   Header,
   TitleContainer,
   ModalWrapper,
@@ -22,12 +22,12 @@ export const GuideModal = () => {
         <TitleContainer>
           <Title>{title}</Title>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <ReturnStatus>
+            <ReturnStatusContainer>
               <ColouredCircle
                 $backgroundColor={calculateReturnStyle(returnStatus)}
               />
               <SmallText>{returnStatus}</SmallText>
-            </ReturnStatus>
+            </ReturnStatusContainer>
             <LinkNoWrap href={link} target="_blank">
               <Button $styletype="outlined">VIEW THIS GUIDE</Button>
             </LinkNoWrap>

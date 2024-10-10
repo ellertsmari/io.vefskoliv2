@@ -9,6 +9,7 @@ type Props = {
 };
 
 const GuidesClient = ({ fetchedGuides, useGuideOrder }: Props) => {
+  console.log(fetchedGuides);
   return (
     <GuideContainer>
       {fetchedGuides.map((guide, index) => {

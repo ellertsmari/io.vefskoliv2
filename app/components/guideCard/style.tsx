@@ -14,25 +14,29 @@ export const CardWrapper = styled.div`
   gap: 4px;
 `;
 
-export const InfoWrapper = styled.div`
+export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`
   display: flex;
   flex-direction: column;
   border: 1px solid var(--theme-module3-100);
   align-items: center;
   gap: 16px;
   width: 190px;
-  height: 160px;
-  border-radius: 8px 8px 0 0;
-  overflow: hidden;
+  height: 200px;
+  border-radius: 8px;
+
+  position: relative;
+
+  ${(props) => props.$borderStyle}
 `;
 
 export const Info = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
+  height: 100%;
   align-items: center;
   gap: 8px;
-  padding-top: 25px;
+  padding: 20px 0;
 `;
 
 export const GuideNr = styled.h2`
@@ -43,10 +47,11 @@ export const GuideNr = styled.h2`
 export const Name = styled.p`
   font-size: 12px;
   width: 155px;
+  font-weight: 400;
   text-align: center;
 `;
 
-export const ReturnStatus = styled.div`
+export const ReturnStatusContainer = styled.div`
   display: flex;
   gap: 4px;
   align-items: center;
