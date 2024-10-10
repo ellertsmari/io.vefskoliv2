@@ -18,7 +18,7 @@ export const MobileNavbar = () => {
       <NavbarButton href="/">HOME</NavbarButton>
       <NavbarButton href="/guides">GUIDES</NavbarButton>
       <NavbarButton href="/resources">RESOURCES</NavbarButton>
-      <NavbarButton href="/halloffame">HALL OF FAME</NavbarButton>
+      <NavbarButton href="/halloffame">H O F</NavbarButton>
       <NavbarButton href="/people">PEOPLE</NavbarButton>
       <NavbarButton href="/calendar">CALENDAR</NavbarButton>
     </MobileNav>

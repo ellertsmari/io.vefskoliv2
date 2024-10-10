@@ -51,8 +51,7 @@ export const Container = styled.div`
   height: auto;
   min-width: 200px;
   @media (min-width: ${breakPoint}) {
-    min-height: ${minHeightLarge};
-    min-width: 240px;
+    // min-height: ${minHeightLarge};
   }
 `;
 
@@ -92,12 +91,6 @@ export const Accordian = styled.div<{ $title?: boolean }>`
   background-color: ${(props) =>
     props.$title ? "var(--theme-module3-100)" : "white"};
   width: 100%;
-`;
-
-export const AccordianText = styled.p`
-  @media (min-width: 768px) {
-    font-size: 1.2rem;
-  }
 `;
 
 export const AccordianOptionContainer = styled(Accordian)`

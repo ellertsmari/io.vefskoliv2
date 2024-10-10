@@ -3,9 +3,10 @@ import GuidesClient from "./guidesClient";
 
 import React, { useEffect, useState } from "react";
 import { Container } from "./style";
-import { Dropdown } from "components/dropdown/Dropdown";
+import { Dropdown } from "../components/dropDown/DropDown";
 import { ExtendedGuideInfo, GuideInfo, Module } from "./types";
 import { extendGuides } from "./utils";
+
 
 export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
   const [extendedGuides, setExtendedGuides] = useState<ExtendedGuideInfo[]>([]);
