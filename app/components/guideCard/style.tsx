@@ -146,6 +146,7 @@ export const FeedbackContainer = styled.div`
   justify-content: center;
   align-items: center;
   gap: 32px;
+  // width: 800px;
 `;
 
 export const FeedbackInfoContainer = styled.div`
@@ -157,13 +158,6 @@ export const FeedbackInfoContainer = styled.div`
   @media (min-width: ${BREAKPOINT_DESKTOP}) {
     flex-direction: row;
   }
-`;
-
-export const WriteFeedbackContainer = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
 `;
 
 export const Border = styled.div`
@@ -184,29 +178,4 @@ export const ToggleContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   width: 100%;
-`;
-
-export const VotingContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  max-width: 400px;
-`;
-export const VoteContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100px;
-`;
-
-export const VoteIcon = styled.div`
-  display: flex;
-  border-width: 1px;
-  border-style: solid;
-  border-radius: 8px;
-  width: 100px;
-  height: 100px;
-  justify-content: center;
-  align-items: center;
 `;

@@ -1,8 +1,6 @@
 "use server";
 
 import {
-  FeedbackFormSchema,
-  FeedbackFormState,
   ReturnFormSchema,
   ReturnFormState,
   SignupFormSchema,
@@ -19,7 +17,6 @@ import { GuideDocument } from "../models/guide";
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "../models/guide";
 import { Return } from "../models/return";
-import { Review, Vote } from "../models/review";
 
 export const signOut = s; //needs to be in actions.ts so that it can be called on the client side
 export async function authenticate(
@@ -67,7 +64,6 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
   } = validatedFields.data;
 
   const session = await auth();
-
   if (!session?.user) {
     return {
       success: false,
@@ -76,7 +72,8 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
   }
   const { user } = session;
   try {
-    await Return.create({
+    // await connectToDatabase();
+    const theReturn = await Return.create({
       projectUrl,
       projectName,
       comment,
@@ -85,7 +82,6 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
       guide: new ObjectId(guideId),
       imageOfProject: imageOfProject,
     });
-
     return {
       success: true,
       message: "Return submitted successfully",
@@ -94,60 +90,6 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
     return {
       success: false,
       message: "Failed to submit return",
-    };
-  }
-}
-
-export type FeedbackDataType = {
-  vote: Vote | undefined;
-  comment: string | undefined;
-  returnId: string | undefined;
-};
-
-export async function returnFeedback(
-  state: FeedbackFormState,
-  data: FeedbackDataType
-) {
-  const validatedFields = FeedbackFormSchema.safeParse({
-    vote: data.vote,
-    comment: data.comment,
-    returnId: data.returnId,
-  });
-
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  const { vote, comment, returnId } = validatedFields.data;
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return {
-      success: false,
-      message: "You must be logged in to submit a return",
-    };
-  }
-  const { user } = session;
-  try {
-    await Review.create({
-      vote,
-      comment,
-      owner: user.id,
-      return: new ObjectId(returnId),
-    });
-
-    return {
-      success: true,
-      message: "Return feedback submitted successfully",
-    };
-  } catch (e) {
-    return {
-      success: false,
-      message: "Failed to submit return feedback",
     };
   }
 }

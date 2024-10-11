@@ -1,10 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useGuide } from "../../app/providers/GuideProvider";
+import { GuideProvider, useGuide } from "../../app/providers/GuideProvider";
 import { FeedbackOverview } from "components/guideCard/FeedbackOverview";
+import MarkdownReader from "components/markdown/reader";
+import { createDummyFeedback } from "../__mocks__/mongoHandler";
 import { FeedbackDocumentWithReturn } from "../../app/guides/types";
+import { Types } from "mongoose";
 import { ReturnDocument } from "../../app/models/return";
+import { create } from "domain";
 import { FeedbackDocument } from "../../app/models/review";
-import { ReturnOverview } from "components/guideCard/ReturnOverview";
+import { after, mock } from "node:test";
 
 jest.mock("../../app/providers/GuideProvider");
 
@@ -58,20 +62,13 @@ function createMockFeedbacksWithReturn(
   return feedbacks;
 }
 
-const returnsSubmitted = ["a return"];
-
 describe("Feedback", () => {
   afterEach(() => {
     jest.resetAllMocks();
   });
   it("renders without crashing", () => {
-    (useGuide as jest.Mock).mockReturnValue({
-      feedbackGiven: [],
-      feedbackReceived: [],
-      returnsSubmitted,
-    });
-
     render(<FeedbackOverview />);
+    expect(screen.getByText("No feedback yet.")).toBeDefined();
   });
 
   it("renders feedback", () => {
@@ -81,7 +78,6 @@ describe("Feedback", () => {
     (useGuide as jest.Mock).mockReturnValue({
       feedbackGiven: mockFeedbackGiven,
       feedbackReceived: mockFeedbackReceived,
-      returnsSubmitted,
     });
 
     const { getByText, debug } = render(<FeedbackOverview />);
@@ -110,14 +106,26 @@ describe("Feedback", () => {
     );
   });
 
-  it('toggles between "given" and "received" correctly', () => {
+  it("renders feedback with no return", () => {
+    const mockFeedbackGiven = createMockFeedbacks(3);
+    const mockFeedbackReceived = createMockFeedbacks(3);
+
+    (useGuide as jest.Mock).mockReturnValue({
+      feedbackGiven: mockFeedbackGiven,
+      feedbackReceived: mockFeedbackReceived,
+    });
+
+    const { getByText } = render(<FeedbackOverview />);
+    expect(getByText("Nothing to show")).toBeDefined();
+  });
+
+  test('toggle between "given" and "received" feedback works correctly', () => {
     const mockFeedbackGiven = createMockFeedbacksWithReturn(3);
     const mockFeedbackReceived = createMockFeedbacksWithReturn(3, "received");
 
     (useGuide as jest.Mock).mockReturnValue({
       feedbackGiven: mockFeedbackGiven,
       feedbackReceived: mockFeedbackReceived,
-      returnsSubmitted,
     });
 
     const { getByRole, getByText, queryByText, debug } = render(
@@ -144,14 +152,13 @@ describe("Feedback", () => {
     expect(firstFeedbackGiven).toBeNull();
   });
 
-  it("OptionNavigator changes the displayed feedback when a different option is selected", () => {
+  test("OptionNavigator changes the displayed feedback when a different option is selected", () => {
     const mockFeedbackGiven = createMockFeedbacksWithReturn(3);
     const mockFeedbackReceived = createMockFeedbacksWithReturn(3, "received");
 
     (useGuide as jest.Mock).mockReturnValue({
       feedbackGiven: mockFeedbackGiven,
       feedbackReceived: mockFeedbackReceived,
-      returnsSubmitted,
     });
 
     const { getByText, queryByText } = render(<FeedbackOverview />);

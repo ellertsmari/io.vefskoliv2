@@ -8,30 +8,13 @@ import {
   ModalWrapper,
   LinkNoWrap,
 } from "./style";
-import {
-  ExtendedGuideInfo,
-  FeedbackStatus,
-  GradesGivenStatus,
-} from "../../guides/types";
+import { ExtendedGuideInfo } from "../../guides/types";
 import { calculateReturnStyle } from "./utils";
 import { Button } from "globalStyles/buttons/default/style";
 import { FeedbackOverview } from "./FeedbackOverview";
-import { GiveFeedbackView } from "./GiveFeedbackView";
 
 export const GuideModal = () => {
-  const { link, returnStatus, title, gradesGivenStatus, feedbackStatus } =
-    useGuide() as ExtendedGuideInfo;
-
-  const RenderedContent = () => {
-    if (gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) {
-      // return <GiveGradeView />
-      return <div>TODO - Have to give a grade</div>;
-    }
-    if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {
-      return <GiveFeedbackView />;
-    }
-    return <FeedbackOverview />;
-  };
+  const { link, returnStatus, title } = useGuide() as ExtendedGuideInfo;
 
   return (
     <ModalWrapper>
@@ -51,7 +34,7 @@ export const GuideModal = () => {
           </div>
         </TitleContainer>
       </Header>
-      <RenderedContent />
+      <FeedbackOverview />
     </ModalWrapper>
   );
 };

@@ -48,7 +48,9 @@ const GuideCard = ({
             <>
               {(feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK ||
                 gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) && (
-                <Notification />
+                <NotificationIconContainer aria-label={`Notification icon`}>
+                  <NotificationIcon />
+                </NotificationIconContainer>
               )}
               <Modal
                 modalTrigger={
@@ -69,16 +71,6 @@ const GuideCard = ({
         </InfoWrapper>
       </CardWrapper>
     </GuideProvider>
-  );
-};
-
-const Notification = () => {
-  return (
-    <>
-      <NotificationIconContainer aria-label={`Notification icon`}>
-        <NotificationIcon />
-      </NotificationIconContainer>
-    </>
   );
 };
 
