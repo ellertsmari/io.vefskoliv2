@@ -47,4 +47,4 @@ export type FeedbackDocument = FeedbackType & Document;
 export type GradedFeedbackDocument = GradedFeedbackType & Document;
 
 export const Review =
-  models.Review || model<FeedbackDocument>("Review", reviewSchema);
+  models?.Review || model<FeedbackDocument>("Review", reviewSchema);

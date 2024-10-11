@@ -1,0 +1,23 @@
+.w-md-editor-toolbar {
+  background-color: var(--theme-module3-100);
+  color: white;
+  border: none;
+}
+
+.w-md-editor-toolbar ul button {
+  color: white;
+}
+.w-md-editor-toolbar ul button:hover {
+  color: white;
+}
+
+.w-md-editor-toolbar li.active > button {
+  color: white;
+  background-color: rgba(175, 184, 193, 0.4);
+}
+
+.w-md-editor.wmde-markdown-var {
+  border-color: var(--theme-module3-100);
+  border: 1px solid var(--theme-module3-100);
+  box-shadow: none;
+}

@@ -5,11 +5,11 @@ import {
   ReturnStatus,
 } from "../../guides/types";
 import { Grade, IconContainer, Status, StatusesWrapper } from "./style";
-import { GreenTick } from "../../assets/greenTick";
 import { PurpleStar } from "../../assets/PurpleStar";
 import { RedCross } from "../../assets/RedCross";
 import { Bell } from "../../assets/Bell";
 import { Hourglass } from "../../assets/Hourglass";
+import { GreenTick } from "../../assets/GreenTick";
 
 export const Statuses = ({
   returnStatus,
