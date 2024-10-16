@@ -63,7 +63,7 @@ export const DropDownContainer = styled.div<{
   flex-direction: column;
   align-items: center;
   position: absolute;
-  z-index: ${(props) => props.$zIndex ?? 1};
+  z-index: ${(props) => props.$zIndex ?? 2};
   top: 0;
   border-radius: ${radius};
   border: 1px solid var(--theme-module3-100);
