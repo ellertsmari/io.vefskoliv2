@@ -1,4 +1,4 @@
-import { NotificationIcon } from "../../assets/NotificationIcon";
+import { NotificationIcon } from "../../assets/Icons";
 import { NotificationIconContainer, Option, ToggleContainer } from "./style";
 
 export type ToggleOption = [

@@ -5,24 +5,23 @@ import {
   ProfileName,
   ProfileWrapper,
   LogoutButton,
-  LogoutIcon,
   Form,
   ProfileDetails,
   AdditionalInfo,
   ButtonWrapper,
   ProfileInfo,
   Logout,
-  Wrapper
+  Wrapper,
 } from "./style";
 import { SetStateAction, useState } from "react";
 import Modal from "../../modal/modal";
 import Input from "../../../globalStyles/input";
-import logouticon from "../../../assets/logout.svg";
 import DefaultButton from "../../../globalStyles/buttons/default";
 import { signOut, updateUserInfo } from "../../../utils/actions";
-import ProfilePic from "./Defaultuser.svg";
+import { DefaultUserIcon } from "../../../assets/Icons";
 import { UserDocument } from "../../../models/user";
 import { useSession } from "../../../providers/SessionProvider";
+import { LogoutIcon } from "../../../assets/Icons";
 
 export const Profile = () => {
   //getting the user from session
@@ -30,26 +29,22 @@ export const Profile = () => {
   //fix unknown later
   const user = session?.user as unknown as UserDocument;
 
-  const ProfilePicture = (
-    <ProfileWrapper>
-      <ProfileImageContainer>
-        <ProfileImage
-          width={145}
-          height={145}
-          src={user?.avatarUrl ? user.avatarUrl : ProfilePic}
-          alt="student picture"
-        />
-      </ProfileImageContainer>
-      <ProfileName>{user.name}</ProfileName>
-    </ProfileWrapper>
-  );
+  const ProfilePictureContainer = () => {
+    return (
+      <ProfileWrapper>
+        <ProfilePicture url={user.avatarUrl} />
+
+        <ProfileName>{user.name}</ProfileName>
+      </ProfileWrapper>
+    );
+  };
 
   return (
     <Wrapper>
       {user ? (
         <Modal
-          modalTrigger={ProfilePicture}
-          modalContent={EditProfileScreen(user)}
+          modalTrigger={<ProfilePictureContainer />}
+          modalContent={<EditProfileScreen user={user} />}
         />
       ) : (
         <div>loading...</div>
@@ -58,7 +53,7 @@ export const Profile = () => {
   );
 };
 
-const EditProfileScreen = (user: UserDocument) => {
+const EditProfileScreen = ({ user }: { user: UserDocument }) => {
   const [background, setBackground] = useState(user?.background || "");
   const [careerGoals, setCareerGoals] = useState(user?.careerGoals || "");
   const [interests, setInterests] = useState(user?.interests || "");
@@ -78,23 +73,23 @@ const EditProfileScreen = (user: UserDocument) => {
   return (
     <>
       <ProfileDetails>
-        <ProfileImageContainer>
-          <ProfileImage
-            src={user.avatarUrl ? user.avatarUrl : ProfilePic}
-            alt="student picture"
-          />
-        </ProfileImageContainer>
+        <ProfilePicture url={user.avatarUrl} />
         <ProfileInfo>
           <ProfileName style={{ fontSize: "16px" }}>{user.name}</ProfileName>
           <AdditionalInfo>{user.role}</AdditionalInfo>
-          <AdditionalInfo style={{ color: "var(--primary-black-100)", textTransform:"none" }}>
+          <AdditionalInfo
+            style={{ color: "var(--primary-black-100)", textTransform: "none" }}
+          >
             {user.email}
           </AdditionalInfo>
         </ProfileInfo>
         <Logout>
-          <LogoutButton onClick={async () => await signOut()}>
-            <p style={{fontSize:"12px"}}>LOGOUT</p>
-            <LogoutIcon alt="logout button" src={logouticon} />
+          <LogoutButton
+            onClick={async () => await signOut()}
+            aria-label="logout button"
+          >
+            <p style={{ fontSize: "12px" }}>LOGOUT</p>
+            <LogoutIcon />
           </LogoutButton>
         </Logout>
       </ProfileDetails>
@@ -144,5 +139,22 @@ const EditProfileScreen = (user: UserDocument) => {
         <DefaultButton style="outlined">CHANGE PASSWORD</DefaultButton>
       </ButtonWrapper>
     </>
+  );
+};
+
+const ProfilePicture = ({ url }: { url?: string | null | undefined }) => {
+  return (
+    <ProfileImageContainer>
+      {url ? (
+        <ProfileImage
+          width={100}
+          height={100}
+          src={url}
+          alt="student picture"
+        />
+      ) : (
+        <DefaultUserIcon />
+      )}
+    </ProfileImageContainer>
   );
 };
