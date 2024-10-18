@@ -10,7 +10,7 @@ import { Card } from "./Card";
 import { CardWrapper, InfoWrapper } from "./style";
 import { GuideModal } from "./GuideModal";
 import { NotificationIconContainer } from "components/toggle/style";
-import { NotificationIcon } from "../../assets/NotificationIcon";
+import { NotificationIcon } from "../../assets/Icons";
 
 const GuideCard = ({
   guide,
