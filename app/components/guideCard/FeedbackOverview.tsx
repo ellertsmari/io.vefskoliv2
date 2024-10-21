@@ -16,6 +16,7 @@ import { Toggle } from "components/toggle/Toggle";
 import { OptionNavigator } from "components/optionNavigator/OptionNavigator";
 import { useGuide } from "../../providers/GuideProvider";
 import { ReturnOverview } from "./ReturnOverview";
+import { Grade } from "./Grade";
 
 export const FeedbackOverview = () => {
   const guide = useGuide() as ExtendedGuideInfo;
@@ -36,10 +37,26 @@ export const FeedbackOverview = () => {
     availableToGrade,
   } = guide;
 
-  const theReturn = returnsSubmitted[0];
+  const theFeedback =
+    showGivenOrReceived === "given"
+      ? feedbackGiven[selectedGivenIndex]
+      : feedbackReceived[selectedReceivedIndex];
+
   if (!showGivenOrReceived) {
+    console.log("no feedback");
+    const theReturn = returnsSubmitted[0];
     return <ReturnOverview theReturn={theReturn} />;
   }
+
+  console.log("feedback with no grade", theFeedback && !theFeedback.grade);
+  console.log("showGivenOrReceived", showGivenOrReceived === "received");
+  console.log(
+    "gradeable",
+    showGivenOrReceived === "received" && theFeedback && !theFeedback.grade
+  );
+  const gradeable =
+    showGivenOrReceived === "received" && theFeedback && !theFeedback.grade;
+
   return (
     <FeedbackContainer>
       <ToggleContainer>
@@ -62,6 +79,7 @@ export const FeedbackOverview = () => {
               ? feedbackGiven[selectedGivenIndex]
               : feedbackReceived[selectedReceivedIndex]
           }
+          gradeable={gradeable}
         />
         <ContentAndNavigatorContainer>
           <FeedbackContent

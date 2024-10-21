@@ -8,14 +8,18 @@ import {
   ReturnButton,
   Link,
 } from "./style";
+import { Grade } from "./Grade";
 
 export const ReturnOverview = ({
   theFeedback,
   theReturn,
+  gradeable = false,
 }: {
   theFeedback?: FeedbackDocumentWithReturn;
   theReturn?: ReturnDocument;
+  gradeable?: boolean;
 }) => {
+  console.log("gradeable in return overview", gradeable);
   if (theFeedback && theReturn)
     throw new Error(
       "ReturnOverview can only have one of the two props: theFeedback or theReturn"
@@ -45,8 +49,7 @@ export const ReturnOverview = ({
       </InfoContainer>
       {theFeedback && (
         <InfoContainer>
-          <SubTitle>GRADE</SubTitle>
-          {theFeedback.grade ?? "Not graded yet"}
+          <Grade grade={theFeedback.grade} gradeable={gradeable} />
         </InfoContainer>
       )}
     </OverviewWrapper>
