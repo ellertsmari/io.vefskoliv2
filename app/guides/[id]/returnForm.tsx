@@ -30,7 +30,8 @@ const ReturnForm = () => {
 
     useEffect(() => {
       if (state?.success) {
-        setIsModalOpen(false);
+        // lazy way to force state update as we have no DB listeners setup yet
+        window.location.replace("/guides");
       }
     }, [state?.success]);
 
@@ -111,7 +112,6 @@ const ReturnForm = () => {
               : undefined
           }
         />
-
         <Button style="default" onClick={handleSubmit}>
           SUBMIT
         </Button>

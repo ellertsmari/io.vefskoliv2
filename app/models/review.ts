@@ -14,7 +14,7 @@ export enum Vote {
 }
 
 const reviewSchema = new Schema({
-  guide: { type: Schema.Types.ObjectId, required: false, ref: "Guide" },
+  guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide" },
   return: { type: Schema.Types.ObjectId, required: true, ref: "Return" },
 
   // the owner is the user who submitted the feedback and gave a vote and comment
@@ -33,7 +33,9 @@ const reviewSchema = new Schema({
   grade: { type: Schema.Types.Number, required: false },
 });
 
-export type FeedbackType = InferSchemaType<typeof reviewSchema> & {
+export type FeedbackType = InferSchemaType<typeof reviewSchema>;
+
+export type FeedbackTypeWithId = FeedbackType & {
   _id: Types.ObjectId;
 };
 

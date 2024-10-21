@@ -29,7 +29,12 @@ export const FeedbackOverview = () => {
   const [selectedGivenIndex, setSelectedGivenIndex] = useState<number>(0);
   const [selectedReceivedIndex, setSelectedReceivedIndex] = useState<number>(0);
 
-  const { feedbackGiven, feedbackReceived, returnsSubmitted } = guide;
+  const {
+    feedbackGiven,
+    feedbackReceived,
+    returnsSubmitted,
+    availableToGrade,
+  } = guide;
 
   const theReturn = returnsSubmitted[0];
   if (!showGivenOrReceived) {
@@ -42,7 +47,11 @@ export const FeedbackOverview = () => {
           currentSelection={showGivenOrReceived}
           options={[
             ["given", () => setShowGivenOrReceived("given")],
-            ["received", () => setShowGivenOrReceived("received")],
+            [
+              "received",
+              () => setShowGivenOrReceived("received"),
+              availableToGrade?.length > 0,
+            ],
           ]}
         />
       </ToggleContainer>

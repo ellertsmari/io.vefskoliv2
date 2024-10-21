@@ -24,6 +24,7 @@ const GuideCard = ({
   order?: number;
 }) => {
   const { returnStatus, feedbackStatus, gradesGivenStatus, grade } = guide;
+
   const link =
     guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
 

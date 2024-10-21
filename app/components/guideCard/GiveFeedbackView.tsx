@@ -9,7 +9,7 @@ import {
 } from "./style";
 import { SubTitle } from "globalStyles/text";
 import MarkdownEditor from "components/markdown/editor";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "../../providers/GuideProvider";
 import { ExtendedGuideInfo } from "../../guides/types";
@@ -39,6 +39,7 @@ export const GiveFeedbackView = () => {
         vote,
         comment,
         returnId: theReturn._id.toString(),
+        guideId: theReturn.guide.toString(),
       });
     }
   };
@@ -50,21 +51,21 @@ export const GiveFeedbackView = () => {
     }
   }, [state?.success]);
 
+  const handleSetVote = useCallback((vote: Vote) => setVote(vote), []);
+  const handleSetComment = useCallback(
+    (comment: string) => setComment(comment),
+    []
+  );
+
   return (
     <FeedbackInfoContainer>
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <VoteSelector
-          selectedVote={vote}
-          setVote={(vote: Vote) => setVote(vote)}
-        />
+        <VoteSelector selectedVote={vote} setVote={handleSetVote} />
         <ReturnOverview theReturn={theReturn} />
       </div>
       <WriteFeedbackContainer>
         <SubTitle>WRITE A REVIEW</SubTitle>
-        <MarkdownEditor
-          value={comment}
-          setValue={(string: string) => setComment(string)}
-        />
+        <MarkdownEditor value={comment} setValue={handleSetComment} />
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button
             $styletype={canSubmit ? "default" : "outlined"}
