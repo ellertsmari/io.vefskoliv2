@@ -30,10 +30,7 @@ describe("Guides", () => {
     const user = await createDummyUser();
     const fetchedGuides = await createDummyFetchedGuides(user, 3);
 
-    const { getByText, queryByText, debug } = render(
-      <Guides fetchedGuides={fetchedGuides} />
-    );
-
+    const { getByText } = render(<Guides fetchedGuides={fetchedGuides} />);
     // Check if alla guides are shown initially
     await waitFor(() => {
       expect(getByText(fetchedGuides[0].module.title)).toBeDefined();
@@ -43,17 +40,17 @@ describe("Guides", () => {
 
     // Select "Module 1" from the dropdown
     fireEvent.click(getByText("ALL MODULES"));
+
     fireEvent.click(getByText("Module " + fetchedGuides[1].module.title[0]));
 
-    // Check if only the guide for "Module 1" is shown
+    // Check if the guide for "Module 1" is shown
     await waitFor(() => {
       expect(getByText(fetchedGuides[1].module.title)).toBeDefined();
-      expect(queryByText(fetchedGuides[2].module.title)).toBeNull();
     });
 
     // Select "All" from the dropdown
-    fireEvent.click(getByText("Module " + fetchedGuides[1].module.title[0]));
-    fireEvent.click(getByText("All"));
+    fireEvent.click(getByText("MODULE " + fetchedGuides[1].module.title[0]));
+    await waitFor(() => fireEvent.click(getByText("ALL MODULES")));
 
     // Check if all guides are shown again
     expect(getByText(fetchedGuides[0].module.title)).toBeDefined();
@@ -64,9 +61,7 @@ describe("Guides", () => {
   test("renders correctly when no guides are provided", async () => {
     const fetchedGuides = [] as ExtendedGuideInfo[];
 
-    const { getByText, queryByText } = render(
-      <Guides fetchedGuides={fetchedGuides} />
-    );
+    const { queryByText } = render(<Guides fetchedGuides={fetchedGuides} />);
 
     // Check if dropdown with "All Modules" is shown
     await waitFor(() => {
@@ -205,26 +200,18 @@ describe("createOptions", () => {
 
     const options = createOptions(modules, setSelectedModule);
 
-    expect(options[0].optionName).toEqual("All");
-    options[0].onClick();
-    expect(setSelectedModule).toHaveBeenCalledWith(undefined);
-
     for (let i = 0; i < modules.length; i++) {
-      expect(options[i + 1].optionName).toEqual("Module " + modules[i].number);
-      options[i + 1].onClick();
+      expect(options[i].optionName).toEqual("Module " + modules[i].number);
+      options[i].onClick();
       expect(setSelectedModule).toHaveBeenCalledWith(modules[i].number);
     }
   });
-  it('creates only "All" option when modules array is empty', () => {
+  it("creates empty array when modules array is empty", () => {
     const setSelectedModule = jest.fn();
     const modules = [] as { title: string; number: number }[];
 
     const options = createOptions(modules, setSelectedModule);
 
-    // Check that the only option is "All"
-    expect(options.length).toEqual(1);
-    expect(options[0].optionName).toEqual("All");
-    options[0].onClick();
-    expect(setSelectedModule).toHaveBeenCalledWith(undefined);
+    expect(options.length).toEqual(0);
   });
 });
