@@ -8,6 +8,8 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.5rem 1.5rem;
 `;
 
 export const GuideContainer = styled.div`
@@ -15,13 +17,12 @@ export const GuideContainer = styled.div`
   flex-wrap: wrap;
   justify-content: center;
   gap: 32px;
-  padding: 32px;
+  // padding: 0 32px;
   width: 100%;
 `;
 
 export const GuideDropdownContainer = styled.div`
   display: flex;
-  padding: 32px 32px 0 32px;
   align-items: center;
   width: 100%;
   justify-content: center;

@@ -2,11 +2,10 @@
 import GuidesClient from "./guidesClient";
 
 import React, { useEffect, useState } from "react";
-import { Container } from "./style";
+import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "../components/dropdown/dropdown";
 import { ExtendedGuideInfo, GuideInfo, Module } from "./types";
 import { extendGuides } from "./utils";
-
 
 export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
   const [extendedGuides, setExtendedGuides] = useState<ExtendedGuideInfo[]>([]);
@@ -33,20 +32,22 @@ export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
   const options = createOptions(modules, setSelectedModule);
   return (
     <Container>
-      <Dropdown
-        options={options}
-        titleOption={{
-          optionName: "All Modules",
-          onClick: () => setSelectedModule(undefined),
-        }}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginTop: "1rem",
-          marginLeft: "6rem"
-        }}
-      />
+      <GuideDropdownContainer>
+        <Dropdown
+          options={options}
+          titleOption={{
+            optionName: "All Modules",
+            onClick: () => setSelectedModule(undefined),
+          }}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            // marginTop: "1rem",
+            // marginLeft: "6rem",
+          }}
+        />
+      </GuideDropdownContainer>
       <GuidesClient
         fetchedGuides={filteredGuides}
         useGuideOrder={!!selectedModule}

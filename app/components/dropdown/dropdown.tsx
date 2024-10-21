@@ -74,7 +74,12 @@ export const Dropdown = ({
         >
           <p>{currentOption.toUpperCase()}</p>
 
-          <Arrow direction={isOpen ? "up" : "down"} />
+          <Arrow
+            direction={isOpen ? "up" : "down"}
+            width={18}
+            height={18}
+            color={"var(--primary-white)"}
+          />
         </Accordian>
         {showOptions && Options}
       </DropDownContainer>

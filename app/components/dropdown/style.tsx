@@ -84,7 +84,7 @@ export const Accordian = styled.div<{ $title?: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 5px 2rem;
+  padding: 5px 1rem;
   gap: 1rem;
   height: fit-content;
   color: ${(props) => (props.$title ? "white" : "black")};
