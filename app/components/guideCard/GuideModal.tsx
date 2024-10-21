@@ -17,8 +17,6 @@ import { GiveFeedbackView } from "./GiveFeedbackView";
 export const GuideModal = () => {
   const { link, returnStatus, title, gradesGivenStatus, feedbackStatus } =
     useGuide() as ExtendedGuideInfo;
-  const guide = useGuide() as ExtendedGuideInfo;
-  console.log("guide inside GuideModal is ", guide);
 
   const RenderedContent = () => {
     if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {

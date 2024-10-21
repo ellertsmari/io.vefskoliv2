@@ -77,7 +77,6 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
     };
   }
   const { user } = session;
-  console.log("user returning guide is", user.id, user.email);
   try {
     const theReturn = await Return.create({
       projectUrl,

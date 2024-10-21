@@ -200,12 +200,12 @@ export async function getGuides(
             from: "returns",
             localField: "return",
             foreignField: "_id",
-            as: "returnData",
+            as: "associatedReturn",
           },
         },
         // Unwind the array, so we can easily access the owner field
         {
-          $unwind: "$returnData",
+          $unwind: "$associatedReturn",
         },
         // Filter by guide and owner
         {
@@ -214,7 +214,7 @@ export async function getGuides(
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
                 { $ne: ["$owner", userId] },
-                { $eq: ["$returnData.owner", userId] },
+                { $eq: ["$associatedReturn.owner", userId] },
               ],
             },
           },
@@ -273,7 +273,6 @@ export async function getGuides(
       availableToGrade: 1,
     },
   };
-  console.log("calling query");
   try {
     return await Guide.aggregate([
       lookupReturnsSubmitted,
