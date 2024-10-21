@@ -3,15 +3,14 @@ import GuideCard from "../../components/guideCard";
 import { GuideContainer } from "../style";
 import { ExtendedGuideInfo } from "../types";
 
-type Props = {
-  fetchedGuides: ExtendedGuideInfo[];
+type GuidesClientProps = {
+  guides: ExtendedGuideInfo[];
   useGuideOrder: boolean;
 };
-
-const GuidesClient = ({ fetchedGuides, useGuideOrder }: Props) => {
+const GuidesClient = ({ guides, useGuideOrder }: GuidesClientProps) => {
   return (
     <GuideContainer>
-      {fetchedGuides.map((guide, index) => {
+      {guides.map((guide, index) => {
         return (
           <GuideCard
             guide={guide}

@@ -1,36 +1,28 @@
 "use client";
 import GuidesClient from "./guidesClient";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Container } from "./style";
 import { Dropdown } from "../components/dropdown/dropdown";
-import { ExtendedGuideInfo, GuideInfo, Module } from "./types";
-import { extendGuides } from "./utils";
+import { ExtendedGuideInfo, Module } from "./types";
 
-
-export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
-  const [extendedGuides, setExtendedGuides] = useState<ExtendedGuideInfo[]>([]);
+export const Guides = ({
+  extendedGuides,
+  modules,
+}: {
+  extendedGuides: ExtendedGuideInfo[];
+  modules: Module[];
+}) => {
   const [selectedModule, setSelectedModule] = useState<number | undefined>(
     undefined
   );
 
-  if (fetchedGuides.length < 1) return null;
-
-  useEffect(() => {
-    const getExtendedGuides = async () => {
-      setExtendedGuides(await extendGuides(fetchedGuides));
-    };
-    getExtendedGuides();
-  }, []);
-
-  if (extendedGuides.length < 1) return null;
-
-  // Get all modules from fetchedGuides and sort them
-  const modules: Module[] = fetchModules(extendedGuides);
+  if (!extendedGuides || !modules) return null;
 
   const filteredGuides = filterGuides(selectedModule, extendedGuides);
 
   const options = createOptions(modules, setSelectedModule);
+
   return (
     <Container>
       <Dropdown
@@ -44,46 +36,12 @@ export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
           justifyContent: "center",
           alignItems: "center",
           marginTop: "1rem",
-          marginLeft: "6rem"
+          marginLeft: "6rem",
         }}
       />
-      <GuidesClient
-        fetchedGuides={filteredGuides}
-        useGuideOrder={!!selectedModule}
-      />
+      <GuidesClient guides={filteredGuides} useGuideOrder={!!selectedModule} />
     </Container>
   );
-};
-
-const fetchModules = (extendedGuides: ExtendedGuideInfo[]) => {
-  return extendedGuides
-    .reduce((acc: Module[], guideToCheck) => {
-      if (
-        !acc.some(
-          (existingGuide) =>
-            (+guideToCheck.module.title[0] as number) === existingGuide.number
-        )
-      ) {
-        acc.push({
-          title: guideToCheck.module.title,
-          number: +guideToCheck.module.title[0] as number,
-        });
-      }
-      return acc;
-    }, [] as { title: string; number: number }[])
-    .sort((a, b) => a.number - b.number);
-};
-
-// Not ideal but improving this would require a refactor of the data model as we don't store number explicitly
-// Currently, we are assuming that the module title is a number
-const filterGuides = (
-  selectedModule: number | undefined,
-  extendedGuides: ExtendedGuideInfo[]
-) => {
-  if (selectedModule === undefined) return extendedGuides;
-  return extendedGuides.filter((guide) => {
-    if (guide.module.title[0] === "" + selectedModule) return guide;
-  });
 };
 
 const createOptions = (
@@ -96,8 +54,17 @@ const createOptions = (
   }));
 };
 
+const filterGuides = (
+  selectedModule: number | undefined,
+  extendedGuides: ExtendedGuideInfo[]
+) => {
+  if (selectedModule === undefined) return extendedGuides;
+  return extendedGuides.filter((guide) => {
+    if (guide.module.title[0] === "" + selectedModule) return guide;
+  });
+};
+
 export const exportedForTesting = {
-  fetchModules,
-  filterGuides,
   createOptions,
+  filterGuides,
 };

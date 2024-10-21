@@ -8,9 +8,13 @@ import {
 import { GuideProvider } from "../../providers/GuideProvider";
 import { Card } from "./Card";
 import { CardWrapper, InfoWrapper } from "./style";
-import { GuideModal } from "./GuideModal";
 import { NotificationIconContainer } from "components/toggle/style";
 import { NotificationIcon } from "../../assets/NotificationIcon";
+import { Suspense, lazy } from "react";
+
+const GuideModal = lazy(() =>
+  import("./GuideModal").then((mod) => ({ default: mod.GuideModal }))
+);
 
 const GuideCard = ({
   guide,
@@ -62,7 +66,11 @@ const GuideCard = ({
                     grade={grade}
                   />
                 }
-                modalContent={<GuideModal />}
+                modalContent={
+                  <Suspense fallback={<div>loading</div>}>
+                    <GuideModal />
+                  </Suspense>
+                }
               />
             </>
           )}

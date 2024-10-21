@@ -13,7 +13,8 @@ import {
 } from "../../app/models/review";
 import { Return, ReturnDocument, ReturnType } from "../../app/models/return";
 import { Guide, GuideDocument, GuideType } from "../../app/models/guide";
-import { GuideInfo } from "../../app/guides/types";
+import { GuideInfo, Module } from "../../app/guides/types";
+import { extendGuides } from "../../app/guides/utils";
 
 jest.mock("../../app/utils/mongoose-connector", () => ({
   connectToDatabase: jest.fn(),
@@ -82,6 +83,18 @@ export const createDummyGuide = async (): Promise<GuideDocument> => {
   };
 
   return await Guide.create(dummyGuide);
+};
+
+export const createDummyModules = (count: number): Module[] => {
+  const modules = [];
+  for (let i = 0; i < count; i++) {
+    const module = {
+      title: i + faker.lorem.sentence(),
+      number: i,
+    };
+    modules.push(module);
+  }
+  return modules;
 };
 
 export const createDummyReturn = async (
@@ -175,4 +188,13 @@ export const createDummyFetchedGuides = async (
     guides.push(fetchedGuide);
   }
   return guides;
+};
+
+export const createDummyExtendedGuides = async (
+  user: UserDocument,
+  count: number
+) => {
+  const dummyGuides = await createDummyFetchedGuides(user, count);
+  const dummyExtendedGuides = await extendGuides(dummyGuides);
+  return dummyExtendedGuides;
 };
