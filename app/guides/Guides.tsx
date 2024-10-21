@@ -39,13 +39,6 @@ export const Guides = ({ fetchedGuides }: { fetchedGuides: GuideInfo[] }) => {
             optionName: "All Modules",
             onClick: () => setSelectedModule(undefined),
           }}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            // marginTop: "1rem",
-            // marginLeft: "6rem",
-          }}
         />
       </GuideDropdownContainer>
       <GuidesClient

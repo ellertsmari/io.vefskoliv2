@@ -15,9 +15,8 @@ export const Container = styled.div`
 export const GuideContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 32px;
-  // padding: 0 32px;
+  justify-content: space-around;
+  gap: 0.75rem;
   width: 100%;
 `;
 
