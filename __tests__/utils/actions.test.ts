@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import {
   FeedbackDataType,
   returnFeedback,
+  returnGrade,
   returnGuide,
   signUp,
 } from "../../app/utils/actions";
@@ -15,6 +16,7 @@ import {
 } from "../__mocks__/mongoHandler";
 import { Types } from "mongoose";
 import { Review, Vote } from "../../app/models/review";
+import { object } from "zod";
 
 jest.mock("bcrypt");
 jest.mock("../../auth", () => ({
@@ -169,6 +171,7 @@ describe("server actions", () => {
       });
 
       const theReturn = await Return.findOne({ owner: returnUserId });
+
       expect(theReturn).toMatchObject({
         projectUrl,
         liveVersion,
@@ -198,18 +201,15 @@ describe("server actions", () => {
   describe("returnFeedback", () => {
     beforeAll(async () => await connect());
     afterAll(async () => await closeDatabase());
-    afterEach(async () => {
+    beforeEach(async () => {
       await clearDatabase();
       jest.clearAllMocks();
     });
 
     const returnId = new Types.ObjectId().toString();
+    const guideId = new Types.ObjectId().toString();
 
     const feedbackUserId = new Types.ObjectId();
-
-    (auth as jest.Mock).mockResolvedValue({
-      user: { id: feedbackUserId },
-    });
 
     it("should return feedback", async () => {
       const vote = Vote.PASS;
@@ -218,10 +218,14 @@ describe("server actions", () => {
         vote,
         comment,
         returnId,
+        guideId,
       };
 
       Review.create = jest.fn();
 
+      (auth as jest.Mock).mockResolvedValueOnce({
+        user: { id: feedbackUserId },
+      });
       const result = await returnFeedback({}, input);
 
       expect(Review.create).toHaveBeenCalledWith({
@@ -229,6 +233,7 @@ describe("server actions", () => {
         comment,
         owner: feedbackUserId,
         return: new Types.ObjectId(returnId),
+        guide: new Types.ObjectId(guideId),
       });
 
       expect(result).toEqual({
@@ -245,6 +250,7 @@ describe("server actions", () => {
         vote: undefined,
         comment: undefined,
         returnId: undefined,
+        guideId: undefined,
       };
 
       const result = await returnFeedback({}, input);
@@ -260,16 +266,79 @@ describe("server actions", () => {
         vote,
         comment,
         returnId,
+        guideId: new Types.ObjectId().toString(),
       };
 
       Review.create = jest.fn().mockRejectedValue(new Error("Database error"));
 
       const result = await returnFeedback({}, input);
 
-      expect(result).toEqual({
-        success: false,
-        message: "Failed to submit return feedback",
+      expect(result).toEqual(expect.objectContaining({ success: false }));
+    });
+  });
+
+  describe("returnGrade", () => {
+    beforeAll(async () => await connect());
+    afterAll(async () => await closeDatabase());
+    beforeEach(async () => {
+      await clearDatabase();
+      jest.clearAllMocks();
+    });
+
+    const reviewId = new Types.ObjectId().toString();
+    const grade = 5;
+
+    const gradeUserId = new Types.ObjectId();
+
+    it("should return a grade", async () => {
+      const input = {
+        reviewId,
+        grade,
+      };
+
+      Review.updateOne = jest.fn();
+      (auth as jest.Mock).mockResolvedValueOnce({
+        user: { id: gradeUserId },
       });
+      const result = await returnGrade({}, input);
+
+      expect(Review.updateOne).toHaveBeenCalledWith(
+        { _id: new Types.ObjectId(reviewId) },
+        { grade }
+      );
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: true,
+        })
+      );
+    });
+
+    it("should return an error if form validation fails", async () => {
+      const input = {
+        reviewId: undefined,
+        grade: undefined,
+      };
+
+      const result = await returnGrade({}, input);
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+    });
+
+    it("should return an error if grade submission fails", async () => {
+      const input = {
+        reviewId,
+        grade,
+      };
+
+      Review.updateOne = jest
+        .fn()
+        .mockRejectedValue(new Error("Database error"));
+
+      const result = await returnGrade({}, input);
+
+      expect(result).toEqual(expect.objectContaining({ success: false }));
     });
   });
 });

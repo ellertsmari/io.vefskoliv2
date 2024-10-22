@@ -63,7 +63,11 @@ export const FeedbackFormSchema = z.object({
     message: "Vote type is invalid",
   }),
   returnId: z.string().min(2, { message: "Please append a returnId" }).trim(),
-  comment: z.string().min(2, { message: "Please enter valid feedback" }).trim(),
+  guideId: z.string().min(2, { message: "Please append a guideId" }).trim(),
+  comment: z
+    .string()
+    .min(2, { message: "Please provide valid feedback" })
+    .trim(),
 });
 
 export type FeedbackFormState =
@@ -72,6 +76,26 @@ export type FeedbackFormState =
         returnId?: string[];
         vote?: string[];
         comment?: string[];
+        guideId?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+export const GradeFormSchema = z.object({
+  grade: z
+    .number()
+    .int()
+    .min(0, { message: "Grade must be at least 0" })
+    .max(10, { message: "Grade must be at most 10" }),
+  reviewId: z.string().min(2, { message: "Please append a reviewId" }).trim(),
+});
+
+export type GradeFormState =
+  | {
+      errors?: {
+        reviewId?: string[];
+        grade?: string[];
       };
       message?: string;
     }

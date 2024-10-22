@@ -113,6 +113,17 @@ export async function getGuides(
       let: { guideId: "$_id" },
       pipeline: [
         {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$guide", "$$guideId"] },
+                { $ne: ["$owner", userId] },
+                { $ne: [{ $ifNull: ["$grade", null] }, null] }, // check if grade is not null
+              ],
+            },
+          },
+        },
+        {
           $lookup: {
             from: "returns",
             localField: "return",
@@ -148,11 +159,30 @@ export async function getGuides(
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
                 { $ne: ["$owner", userId] },
-                { $ne: ["$reviewer", userId] },
+                { $eq: [{ $ifNull: ["$grade", null] }, null] }, // check grade is null
               ],
             },
           },
         },
+        // {
+        //   $lookup: {
+        //     from: "returns",
+        //     localField: "return",
+        //     foreignField: "_id",
+        //     as: "associatedReturn",
+        //   },
+        // },
+        // { $unwind: "$associatedReturn" },
+        // {
+        //   $match: {
+        //     $expr: {
+        //       $and: [
+        //         { $eq: ["$guide", "$$guideId"] },
+        //         { $eq: ["$associatedReturn.owner", userId] },
+        //       ],
+        //     },
+        //   },
+        // },
       ],
       as: "availableToGrade",
     },
@@ -170,12 +200,12 @@ export async function getGuides(
             from: "returns",
             localField: "return",
             foreignField: "_id",
-            as: "returnData",
+            as: "associatedReturn",
           },
         },
         // Unwind the array, so we can easily access the owner field
         {
-          $unwind: "$returnData",
+          $unwind: "$associatedReturn",
         },
         // Filter by guide and owner
         {
@@ -184,7 +214,7 @@ export async function getGuides(
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
                 { $ne: ["$owner", userId] },
-                { $eq: ["$returnData.owner", userId] },
+                { $eq: ["$associatedReturn.owner", userId] },
               ],
             },
           },
@@ -200,27 +230,13 @@ export async function getGuides(
       from: "reviews",
       let: { guideId: "$_id" },
       pipeline: [
-        // First, perform a lookup on the Return collection
-        {
-          $lookup: {
-            from: "returns",
-            localField: "return",
-            foreignField: "_id",
-            as: "returnData",
-          },
-        },
-        // Unwind the array, so we can easily access the owner field
-        {
-          $unwind: "$returnData",
-        },
-        // Filter by guide and owner
         {
           $match: {
             $expr: {
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
                 { $eq: ["$owner", userId] },
-                { $ne: ["$reviewer", userId] },
+                { $ne: [{ $ifNull: ["$grade", null] }, null] }, // check if grade is not null
               ],
             },
           },
@@ -257,7 +273,6 @@ export async function getGuides(
       availableToGrade: 1,
     },
   };
-
   try {
     return await Guide.aggregate([
       lookupReturnsSubmitted,

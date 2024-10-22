@@ -1,5 +1,5 @@
 import { SubTitle } from "globalStyles/text";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ExtendedGuideInfo,
   FeedbackDocumentWithReturn,
@@ -29,12 +29,26 @@ export const FeedbackOverview = () => {
   const [selectedGivenIndex, setSelectedGivenIndex] = useState<number>(0);
   const [selectedReceivedIndex, setSelectedReceivedIndex] = useState<number>(0);
 
-  const { feedbackGiven, feedbackReceived, returnsSubmitted } = guide;
+  const {
+    feedbackGiven,
+    feedbackReceived,
+    returnsSubmitted,
+    availableToGrade,
+  } = guide;
 
-  const theReturn = returnsSubmitted[0];
+  const theFeedback =
+    showGivenOrReceived === "given"
+      ? feedbackGiven[selectedGivenIndex]
+      : feedbackReceived[selectedReceivedIndex];
+
   if (!showGivenOrReceived) {
+    const theReturn = returnsSubmitted[0];
     return <ReturnOverview theReturn={theReturn} />;
   }
+
+  const gradeable =
+    showGivenOrReceived === "received" && theFeedback && !theFeedback.grade;
+
   return (
     <FeedbackContainer>
       <ToggleContainer>
@@ -42,7 +56,11 @@ export const FeedbackOverview = () => {
           currentSelection={showGivenOrReceived}
           options={[
             ["given", () => setShowGivenOrReceived("given")],
-            ["received", () => setShowGivenOrReceived("received")],
+            [
+              "received",
+              () => setShowGivenOrReceived("received"),
+              availableToGrade?.length > 0,
+            ],
           ]}
         />
       </ToggleContainer>
@@ -53,6 +71,7 @@ export const FeedbackOverview = () => {
               ? feedbackGiven[selectedGivenIndex]
               : feedbackReceived[selectedReceivedIndex]
           }
+          gradeable={gradeable}
         />
         <ContentAndNavigatorContainer>
           <FeedbackContent
