@@ -16,9 +16,8 @@ import { ExtendedGuideInfo } from "../../guides/types";
 import { returnFeedback } from "../../utils/actions";
 import { Vote } from "../../models/review";
 import { StyleColors } from "globalStyles/colors";
-import { PurpleStar } from "../../assets/PurpleStar";
-import { RedCross } from "../../assets/RedCross";
-import { GreenTick } from "../../assets/GreenTick";
+import { RedCross, GreenTick, PurpleStar } from "../../assets/Icons"
+
 
 export const GiveFeedbackView = () => {
   const [comment, setComment] = useState<string>("");
