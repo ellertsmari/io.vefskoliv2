@@ -9,7 +9,7 @@ import { GuideProvider } from "../../providers/GuideProvider";
 import { Card } from "./Card";
 import { CardWrapper, InfoWrapper } from "./style";
 import { NotificationIconContainer } from "components/toggle/style";
-import { NotificationIcon } from "../../assets/NotificationIcon";
+import { NotificationIcon } from "../../assets/Icons";
 import { Suspense, lazy } from "react";
 
 const GuideModal = lazy(() =>
