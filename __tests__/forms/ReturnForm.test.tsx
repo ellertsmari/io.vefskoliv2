@@ -52,6 +52,16 @@ describe("ReturnForm", () => {
   });
 
   it("submits form", async () => {
+    // Mock window.location.replace
+    const replaceMock = jest.fn();
+    Object.defineProperty(window, "location", {
+      value: {
+        ...window.location,
+        replace: replaceMock,
+      },
+      writable: true,
+    });
+
     (auth as jest.Mock).mockResolvedValueOnce({
       user: { id: new ObjectId("123456789012345678901234") },
     });
@@ -115,9 +125,6 @@ describe("ReturnForm", () => {
       );
     });
 
-    // check modal is closed
-    await waitFor(() =>
-      expect(queryByLabelText("Github or Figma URL")).toBeNull()
-    );
+    expect(replaceMock).toHaveBeenCalledWith("/guides");
   });
 });

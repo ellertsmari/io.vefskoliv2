@@ -8,9 +8,14 @@ import {
 import { GuideProvider } from "../../providers/GuideProvider";
 import { Card } from "./Card";
 import { CardWrapper, InfoWrapper } from "./style";
-import { GuideModal } from "./GuideModal";
 import { NotificationIconContainer } from "components/toggle/style";
-import { NotificationIcon } from "../../assets/Icons";
+import { NotificationIcon } from "../../assets/NotificationIcon";
+import { Suspense, lazy } from "react";
+
+const GuideModal = lazy(() =>
+  import("./GuideModal").then((mod) => ({ default: mod.GuideModal }))
+);
+
 
 const GuideCard = ({
   guide,
@@ -20,6 +25,7 @@ const GuideCard = ({
   order?: number;
 }) => {
   const { returnStatus, feedbackStatus, gradesGivenStatus, grade } = guide;
+
   const link =
     guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
 
@@ -48,9 +54,7 @@ const GuideCard = ({
             <>
               {(feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK ||
                 gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) && (
-                <NotificationIconContainer aria-label={`Notification icon`}>
-                  <NotificationIcon />
-                </NotificationIconContainer>
+                <Notification />
               )}
               <Modal
                 modalTrigger={
@@ -64,13 +68,27 @@ const GuideCard = ({
                     grade={grade}
                   />
                 }
-                modalContent={<GuideModal />}
+                modalContent={
+                  <Suspense fallback={<div>loading</div>}>
+                    <GuideModal />
+                  </Suspense>
+                }
               />
             </>
           )}
         </InfoWrapper>
       </CardWrapper>
     </GuideProvider>
+  );
+};
+
+const Notification = () => {
+  return (
+    <>
+      <NotificationIconContainer aria-label={`Notification icon`}>
+        <NotificationIcon />
+      </NotificationIconContainer>
+    </>
   );
 };
 

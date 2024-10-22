@@ -28,7 +28,7 @@ export type GuideInfo = {
 
   // grading others' feedback
   gradesGiven: GradedFeedbackDocument[];
-  availableToGrade: ReturnDocument[];
+  availableToGrade: FeedbackDocument[];
 };
 
 export type GuideWithLink = GuideInfo & { link: string };

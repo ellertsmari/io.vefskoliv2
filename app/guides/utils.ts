@@ -12,6 +12,7 @@ import {
   GradesGivenStatus,
   ExtendedGuideInfo,
   GuideInfo,
+  Module,
 } from "./types";
 
 export const extendGuides = async (
@@ -140,4 +141,23 @@ export const calculateGradesGivenStatus = async (
   }
 
   return GradesGivenStatus.AWAITING_FEEDBACK;
+};
+
+export const fetchModules = (extendedGuides: ExtendedGuideInfo[]) => {
+  return extendedGuides
+    .reduce((acc: Module[], guideToCheck) => {
+      if (
+        !acc.some(
+          (existingGuide) =>
+            (+guideToCheck.module.title[0] as number) === existingGuide.number
+        )
+      ) {
+        acc.push({
+          title: guideToCheck.module.title,
+          number: +guideToCheck.module.title[0] as number,
+        });
+      }
+      return acc;
+    }, [] as { title: string; number: number }[])
+    .sort((a, b) => a.number - b.number);
 };

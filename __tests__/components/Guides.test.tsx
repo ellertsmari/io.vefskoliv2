@@ -5,20 +5,20 @@ import {
   clearDatabase,
   closeDatabase,
   connect,
-  createDummyFetchedGuides,
+  createDummyExtendedGuides,
+  createDummyModules,
   createDummyUser,
 } from "../__mocks__/mongoHandler";
+import { fetchModules } from "../../app/guides/utils";
 
 jest.mock(
   "../../app/guides/guidesClient",
   () =>
-    ({ fetchedGuides }: { fetchedGuides: ExtendedGuideInfo[] }) =>
-      fetchedGuides.map((guide) => (
-        <div key={guide.link}>{guide.module.title}</div>
-      ))
+    ({ guides }: { guides: ExtendedGuideInfo[] }) =>
+      guides.map((guide) => <div key={guide.link}>{guide.module.title}</div>)
 );
 
-const { fetchModules, filterGuides, createOptions } = exportedForTesting;
+const { filterGuides, createOptions } = exportedForTesting;
 
 describe("Guides", () => {
   beforeAll(async () => await connect());
@@ -28,40 +28,47 @@ describe("Guides", () => {
 
   test("changes guides shown based on dropdown selection", async () => {
     const user = await createDummyUser();
-    const fetchedGuides = await createDummyFetchedGuides(user, 3);
+    const extendedGuides = await createDummyExtendedGuides(user, 3);
 
-    const { getByText } = render(<Guides fetchedGuides={fetchedGuides} />);
+    const { getByText, debug } = render(
+      <Guides
+        extendedGuides={extendedGuides}
+        modules={createDummyModules(10)}
+      />
+    );
     // Check if alla guides are shown initially
     await waitFor(() => {
-      expect(getByText(fetchedGuides[0].module.title)).toBeDefined();
-      expect(getByText(fetchedGuides[1].module.title)).toBeDefined();
-      expect(getByText(fetchedGuides[2].module.title)).toBeDefined();
+      expect(getByText(extendedGuides[0].module.title)).toBeDefined();
+      expect(getByText(extendedGuides[1].module.title)).toBeDefined();
+      expect(getByText(extendedGuides[2].module.title)).toBeDefined();
     });
 
     // Select "Module 1" from the dropdown
     fireEvent.click(getByText("ALL MODULES"));
 
-    fireEvent.click(getByText("Module " + fetchedGuides[1].module.title[0]));
+    fireEvent.click(getByText("Module " + extendedGuides[1].module.title[0]));
 
     // Check if the guide for "Module 1" is shown
     await waitFor(() => {
-      expect(getByText(fetchedGuides[1].module.title)).toBeDefined();
+      expect(getByText(extendedGuides[1].module.title)).toBeDefined();
     });
 
     // Select "All" from the dropdown
-    fireEvent.click(getByText("MODULE " + fetchedGuides[1].module.title[0]));
+    fireEvent.click(getByText("MODULE " + extendedGuides[1].module.title[0]));
     await waitFor(() => fireEvent.click(getByText("ALL MODULES")));
 
     // Check if all guides are shown again
-    expect(getByText(fetchedGuides[0].module.title)).toBeDefined();
-    expect(getByText(fetchedGuides[1].module.title)).toBeDefined();
-    expect(getByText(fetchedGuides[2].module.title)).toBeDefined();
+    expect(getByText(extendedGuides[0].module.title)).toBeDefined();
+    expect(getByText(extendedGuides[1].module.title)).toBeDefined();
+    expect(getByText(extendedGuides[2].module.title)).toBeDefined();
   });
 
   test("renders correctly when no guides are provided", async () => {
-    const fetchedGuides = [] as ExtendedGuideInfo[];
+    const guides = [] as ExtendedGuideInfo[];
 
-    const { queryByText } = render(<Guides fetchedGuides={fetchedGuides} />);
+    const { queryByText } = render(
+      <Guides extendedGuides={guides} modules={[]} />
+    );
 
     // Check if dropdown with "All Modules" is shown
     await waitFor(() => {

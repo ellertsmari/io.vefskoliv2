@@ -5,6 +5,7 @@ import {
   ReturnStatus,
 } from "../../guides/types";
 import { Grade, IconContainer, Status, StatusesWrapper } from "./style";
+
 import {
   Bell,
   GreenTick,
@@ -12,6 +13,7 @@ import {
   RedCross,
   Hourglass,
 } from "../../assets/Icons";
+
 
 export const Statuses = ({
   returnStatus,

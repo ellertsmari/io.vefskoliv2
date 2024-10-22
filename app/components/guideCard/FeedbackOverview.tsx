@@ -6,21 +6,16 @@ import {
 } from "../../guides/types";
 import {
   FeedbackContainer,
-  OverviewWrapper,
-  InfoContainer,
-  Link,
-  ReturnButton,
-  ReturnLinksWrapper,
   Border,
   FeedbackInfoContainer,
   ContentAndNavigatorContainer,
   ToggleContainer,
 } from "./style";
 import MarkdownReader from "components/markdown/reader";
-import { ReturnDocument } from "../../models/return";
 import { Toggle } from "components/toggle/Toggle";
 import { OptionNavigator } from "components/optionNavigator/OptionNavigator";
 import { useGuide } from "../../providers/GuideProvider";
+import { ReturnOverview } from "./ReturnOverview";
 
 export const FeedbackOverview = () => {
   const guide = useGuide() as ExtendedGuideInfo;
@@ -34,11 +29,25 @@ export const FeedbackOverview = () => {
   const [selectedGivenIndex, setSelectedGivenIndex] = useState<number>(0);
   const [selectedReceivedIndex, setSelectedReceivedIndex] = useState<number>(0);
 
+  const {
+    feedbackGiven,
+    feedbackReceived,
+    returnsSubmitted,
+    availableToGrade,
+  } = guide;
+
+  const theFeedback =
+    showGivenOrReceived === "given"
+      ? feedbackGiven[selectedGivenIndex]
+      : feedbackReceived[selectedReceivedIndex];
+
   if (!showGivenOrReceived) {
-    return <>No feedback yet.</>;
+    const theReturn = returnsSubmitted[0];
+    return <ReturnOverview theReturn={theReturn} />;
   }
 
-  const { feedbackGiven, feedbackReceived } = guide;
+  const gradeable =
+    showGivenOrReceived === "received" && theFeedback && !theFeedback.grade;
 
   return (
     <FeedbackContainer>
@@ -47,17 +56,22 @@ export const FeedbackOverview = () => {
           currentSelection={showGivenOrReceived}
           options={[
             ["given", () => setShowGivenOrReceived("given")],
-            ["received", () => setShowGivenOrReceived("received")],
+            [
+              "received",
+              () => setShowGivenOrReceived("received"),
+              availableToGrade?.length > 0,
+            ],
           ]}
         />
       </ToggleContainer>
       <FeedbackInfoContainer>
-        <OverviewContent
+        <ReturnOverview
           theFeedback={
             showGivenOrReceived === "given"
               ? feedbackGiven[selectedGivenIndex]
               : feedbackReceived[selectedReceivedIndex]
           }
+          gradeable={gradeable}
         />
         <ContentAndNavigatorContainer>
           <FeedbackContent
@@ -113,55 +127,5 @@ const FeedbackContent = ({
         </MarkdownReader>
       </Border>
     </div>
-  );
-};
-
-const OverviewContent = ({
-  theFeedback,
-}: {
-  theFeedback: FeedbackDocumentWithReturn | null;
-}) => {
-  const theReturn = theFeedback?.associatedReturn;
-
-  if (!theFeedback || !theReturn) {
-    return <>Nothing to show</>;
-  }
-
-  return (
-    <OverviewWrapper>
-      <InfoContainer>
-        <SubTitle>Your Return</SubTitle>
-        <ReturnLinks theReturn={theReturn} />
-      </InfoContainer>
-      <InfoContainer>
-        <SubTitle>Project Title</SubTitle>
-        {theReturn.projectName}
-      </InfoContainer>
-      <InfoContainer>
-        <SubTitle>Project Comment</SubTitle>
-        {theReturn.comment}
-      </InfoContainer>
-      <InfoContainer>
-        <SubTitle>Grade</SubTitle>
-        {theFeedback.grade ?? "Not graded yet"}
-      </InfoContainer>
-    </OverviewWrapper>
-  );
-};
-
-const ReturnLinks = ({ theReturn }: { theReturn: ReturnDocument }) => {
-  return (
-    <>
-      <ReturnLinksWrapper>
-        <Link href={theReturn.projectUrl} target="_blank">
-          <ReturnButton $styletype="outlined">Github or Figma URL</ReturnButton>
-        </Link>
-        <Link href={theReturn.liveVersion} target="_blank">
-          <ReturnButton $styletype="outlined">
-            <div>Live version or prototype (Figma)</div>
-          </ReturnButton>
-        </Link>
-      </ReturnLinksWrapper>
-    </>
   );
 };
