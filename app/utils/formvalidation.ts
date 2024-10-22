@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Vote } from "../models/review";
 
 export const SignupFormSchema = z.object({
   firstName: z
@@ -51,6 +52,25 @@ export type ReturnFormState =
         projectUrl?: string[];
         liveVersion?: string[];
         projectName?: string[];
+        comment?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+export const FeedbackFormSchema = z.object({
+  vote: z.nativeEnum(Vote).refine((val) => Object.values(Vote).includes(val), {
+    message: "Vote type is invalid",
+  }),
+  returnId: z.string().min(2, { message: "Please append a returnId" }).trim(),
+  comment: z.string().min(2, { message: "Please enter valid feedback" }).trim(),
+});
+
+export type FeedbackFormState =
+  | {
+      errors?: {
+        returnId?: string[];
+        vote?: string[];
         comment?: string[];
       };
       message?: string;
