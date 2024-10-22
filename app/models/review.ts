@@ -40,11 +40,11 @@ export type FeedbackTypeWithId = FeedbackType & {
 };
 
 // after someone has reviewed the feedback it becomes a reviewed feedback
-export type GradedFeedbackType = FeedbackType & {
+export type GradedFeedbackType = FeedbackTypeWithId & {
   grade: number;
 };
 
-export type FeedbackDocument = FeedbackType & Document;
+export type FeedbackDocument = FeedbackTypeWithId & Document;
 
 export type GradedFeedbackDocument = GradedFeedbackType & Document;
 

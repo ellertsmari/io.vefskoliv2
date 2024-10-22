@@ -1,54 +1,128 @@
 import { SmallText } from "globalStyles/text";
 import styled from "styled-components";
 
-export const SliderContainer = styled.div`
+export const Container = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.5rem;
 `;
 
-export const SliderTrack = styled.div`
+export const SliderContainer = styled.div`
+  position: relative;
+  height: 12px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const SliderTrack = styled.input<{
+  $selectable?: boolean;
+  $sliderPercentage: number;
+}>`
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Style the track  */
+  &::-webkit-slider-runnable-track {
+    background: linear-gradient(
+      to right,
+      ${({ $selectable }) =>
+          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-30)"}
+        ${(props) => props.$sliderPercentage + "%"},
+      var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
+    );
+    height: 3px;
+    border-radius: 8px;
+    width: 100%;
+  }
+
+  &::-moz-range-track {
+    background: linear-gradient(
+      to right,
+      ${({ $selectable }) =>
+          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-30)"}
+        ${(props) => props.$sliderPercentage + "%"},
+      var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
+    );
+    height: 3px;
+    border-radius: 5px;
+  }
+
+  &::-ms-track {
+    border-color: transparent;
+    background: linear-gradient(
+      to right,
+      ${({ $selectable }) =>
+          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-30)"}
+        ${(props) => props.$sliderPercentage + "%"},
+      var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
+    );
+    border-radius: 8px;
+    height: 3px;
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: ${({ $selectable }) =>
+      $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-60)"};
+    cursor: pointer;
+    margin-top: -4px;
+  }
+
+  &::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: ${({ $selectable }) =>
+      $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-60)"};
+    cursor: pointer;
+  }
+
+  &::-ms-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: ${({ $selectable }) =>
+      $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-60)"};
+    cursor: pointer;
+  }
+
   width: 100%;
   height: 3px;
-  padding: 0 6px;
-  background-color: var(--theme-module3-30);
-  border-radius: 5px;
-  position: relative;
+  padding-right: 1rem;
 `;
 
-export const SliderThumb = styled.div<{ $Left?: string }>`
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background-color: ${({ $Left }) =>
-    $Left ? "var(--theme-module3-100)" : "var(--theme-module3-60)"};
-  border-radius: 50%;
-  top: 50%;
-  left: ${({ $Left }) => $Left ?? "50%"};
-  transform: translateY(-50%);
-  cursor: pointer;
-`;
-
-export const ValueContainer = styled.div`
+export const ValueContainer = styled.ul`
   display: flex;
   align-items: center;
   justify-content: space-between;
 `;
 
-export const OptionValue = styled.p<{ $selected?: boolean }>`
+export const OptionValue = styled.label<{ $selected?: boolean }>`
+  list-style: none;
   color: ${({ $selected }) =>
     $selected ? "var(--theme-module3-100)" : undefined};
   font-size: ${({ $selected }) => ($selected ? "1.25rem" : "1rem")};
   font-weight: ${({ $selected }) => ($selected ? "bold" : "normal")};
+  flex: 1;
 `;
 
 export const SliderHelpLink = styled.a`
-  //   color: var(--theme-module3-100);
   text-decoration-line: none;
   align-self: flex-end;
 `;
 
 export const SliderHelpLinkText = styled(SmallText)`
   color: var(--theme-module3-100);
+`;
+
+export const GradeSlider = styled.input`
+  color: blue;
+  width: 100%;
 `;

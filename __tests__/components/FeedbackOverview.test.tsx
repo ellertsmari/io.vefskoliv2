@@ -4,7 +4,11 @@ import { FeedbackOverview } from "components/guideCard/FeedbackOverview";
 import { FeedbackDocumentWithReturn } from "../../app/guides/types";
 import { ReturnDocument } from "../../app/models/return";
 import { FeedbackDocument } from "../../app/models/review";
-import { ReturnOverview } from "components/guideCard/ReturnOverview";
+import { Types } from "mongoose";
+
+jest.mock("../../app/utils/actions", () => ({
+  returnGuide: jest.fn(),
+}));
 
 jest.mock("../../app/providers/GuideProvider");
 
@@ -26,6 +30,7 @@ function createMockFeedbacks(
     const feedback: FeedbackDocumentWithReturn = {
       grade: i,
       comment: `Feedback ${givenOrReceived} comment${i}`,
+      _id: new Types.ObjectId(),
     } as FeedbackDocument;
 
     feedbacks.push(feedback);
@@ -85,11 +90,12 @@ describe("Feedback", () => {
     });
 
     const { getByText, debug } = render(<FeedbackOverview />);
+    if (!mockFeedbackGiven[0].associatedReturn) throw new Error("No return");
     expect(
-      getByText(mockFeedbackGiven[0].associatedReturn!.projectName)
+      getByText(mockFeedbackGiven[0].associatedReturn.projectName)
     ).toBeDefined();
     expect(
-      getByText(mockFeedbackGiven[0].associatedReturn!.comment)
+      getByText(mockFeedbackGiven[0].associatedReturn.comment)
     ).toBeDefined();
     expect(getByText(mockFeedbackGiven[0].comment)).toBeDefined();
 
@@ -120,28 +126,24 @@ describe("Feedback", () => {
       returnsSubmitted,
     });
 
-    const { getByRole, getByText, queryByText, debug } = render(
-      <FeedbackOverview />
-    );
+    const { getByRole, queryByText } = render(<FeedbackOverview />);
 
-    const firstFeedbackGiven = queryByText(mockFeedbackGiven[0].comment);
-    const firstFeedbackReceived = queryByText(mockFeedbackReceived[0].comment);
-
-    expect(firstFeedbackGiven).toBeNull();
-    expect(firstFeedbackReceived).toBeDefined();
+    // Initial state
+    expect(queryByText(mockFeedbackGiven[0].comment)).toBeNull();
+    expect(queryByText(mockFeedbackReceived[0].comment)).toBeDefined();
 
     const receivedToggle = getByRole("button", { name: /received/i });
     const givenToggle = getByRole("button", { name: /given/i });
 
+    // Toggle to "given"
     fireEvent.click(givenToggle);
+    expect(queryByText(mockFeedbackReceived[0].comment)).toBeNull();
+    expect(queryByText(mockFeedbackGiven[0].comment)).toBeDefined();
 
-    expect(firstFeedbackReceived).toBeDefined();
-    expect(firstFeedbackGiven).toBeNull();
-
+    // Toggle back to "received"
     fireEvent.click(receivedToggle);
-
-    expect(firstFeedbackReceived).toBeDefined();
-    expect(firstFeedbackGiven).toBeNull();
+    expect(queryByText(mockFeedbackReceived[0].comment)).toBeDefined();
+    expect(queryByText(mockFeedbackGiven[0].comment)).toBeNull();
   });
 
   it("OptionNavigator changes the displayed feedback when a different option is selected", () => {
