@@ -1,8 +1,8 @@
 "use client";
 import GuidesClient from "./guidesClient";
 
-import React, { useState } from "react";
-import { Container } from "./style";
+import { useState } from "react";
+import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "../components/dropdown/dropdown";
 import { ExtendedGuideInfo, Module } from "./types";
 
@@ -25,20 +25,15 @@ export const Guides = ({
 
   return (
     <Container>
-      <Dropdown
-        options={options}
-        titleOption={{
-          optionName: "All Modules",
-          onClick: () => setSelectedModule(undefined),
-        }}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginTop: "1rem",
-          marginLeft: "6rem",
-        }}
-      />
+      <GuideDropdownContainer>
+        <Dropdown
+          options={options}
+          titleOption={{
+            optionName: "All Modules",
+            onClick: () => setSelectedModule(undefined),
+          }}
+        />
+      </GuideDropdownContainer>
       <GuidesClient guides={filteredGuides} useGuideOrder={!!selectedModule} />
     </Container>
   );

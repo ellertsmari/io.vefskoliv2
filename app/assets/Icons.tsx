@@ -147,9 +147,13 @@ export const LogoutIcon = () => (
 export const Arrow = ({
   color = "var(--theme-module3-100)",
   direction = "left",
+  width = 24,
+  height = "auto",
 }: {
   color?: string;
   direction?: "up" | "down" | "left" | "right";
+  width?: number;
+  height?: number | "auto";
 }) => {
   const directions: { [key: string]: number } = {
     up: -90,
@@ -162,8 +166,8 @@ export const Arrow = ({
 
   return (
     <svg
-      width="100%"
-      height="100%"
+      width={width + ""}
+      height={height + ""}
       viewBox="0 0 16 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
