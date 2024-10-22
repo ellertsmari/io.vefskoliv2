@@ -3,6 +3,8 @@
 import {
   FeedbackFormSchema,
   FeedbackFormState,
+  GradeFormSchema,
+  GradeFormState,
   ReturnFormSchema,
   ReturnFormState,
   SignupFormSchema,
@@ -10,7 +12,7 @@ import {
 } from "../utils/formvalidation";
 import bcrypt from "bcrypt";
 import { ObjectId } from "mongodb";
-
+import type { FeedbackType } from "../models/review";
 import { signIn, signOut as s, getUser, auth } from "../../auth";
 import { AuthError } from "next-auth";
 import { OptionalUserInfo, User, UserDocument } from "../models/user";
@@ -76,7 +78,7 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
   }
   const { user } = session;
   try {
-    await Return.create({
+    const theReturn = await Return.create({
       projectUrl,
       projectName,
       comment,
@@ -102,6 +104,7 @@ export type FeedbackDataType = {
   vote: Vote | undefined;
   comment: string | undefined;
   returnId: string | undefined;
+  guideId: string | undefined;
 };
 
 export async function returnFeedback(
@@ -112,6 +115,7 @@ export async function returnFeedback(
     vote: data.vote,
     comment: data.comment,
     returnId: data.returnId,
+    guideId: data.guideId,
   });
 
   if (!validatedFields.success) {
@@ -132,13 +136,17 @@ export async function returnFeedback(
     };
   }
   const { user } = session;
+
+  const reviewData: Omit<FeedbackType, "createdAt"> = {
+    vote,
+    comment,
+    owner: new ObjectId(user.id),
+    return: new ObjectId(returnId),
+    guide: new ObjectId(data.guideId),
+  };
+
   try {
-    await Review.create({
-      vote,
-      comment,
-      owner: user.id,
-      return: new ObjectId(returnId),
-    });
+    const review = await Review.create(reviewData);
 
     return {
       success: true,
@@ -148,6 +156,49 @@ export async function returnFeedback(
     return {
       success: false,
       message: "Failed to submit return feedback",
+    };
+  }
+}
+
+export type GradeDataType = {
+  grade: number | undefined;
+  reviewId: string | undefined;
+};
+
+export async function returnGrade(state: GradeFormState, data: GradeDataType) {
+  const validatedFields = GradeFormSchema.safeParse({
+    grade: data.grade,
+    reviewId: data.reviewId,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { grade, reviewId } = validatedFields.data;
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message: "You must be logged in to give a grade",
+    };
+  }
+
+  try {
+    await Review.updateOne({ _id: new ObjectId(reviewId) }, { grade });
+
+    return {
+      success: true,
+      message: "Grade submitted successfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: "Failed to submit grade",
     };
   }
 }

@@ -8,13 +8,16 @@ import {
   ReturnButton,
   Link,
 } from "./style";
+import { Grade } from "../grade/Grade";
 
 export const ReturnOverview = ({
   theFeedback,
   theReturn,
+  gradeable = false,
 }: {
   theFeedback?: FeedbackDocumentWithReturn;
   theReturn?: ReturnDocument;
+  gradeable?: boolean;
 }) => {
   if (theFeedback && theReturn)
     throw new Error(
@@ -45,8 +48,11 @@ export const ReturnOverview = ({
       </InfoContainer>
       {theFeedback && (
         <InfoContainer>
-          <SubTitle>GRADE</SubTitle>
-          {theFeedback.grade ?? "Not graded yet"}
+          <Grade
+            grade={theFeedback.grade}
+            gradeable={gradeable}
+            reviewId={theFeedback._id.toString()}
+          />
         </InfoContainer>
       )}
     </OverviewWrapper>

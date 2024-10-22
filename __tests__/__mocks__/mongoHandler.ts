@@ -183,7 +183,9 @@ export const createDummyFetchedGuides = async (
       gradesGiven:
         Math.random() > 0.5 ? [await createDummyGrade(undefined, guide)] : [],
       availableToGrade:
-        Math.random() > 0.5 ? [await createDummyReturn(undefined, guide)] : [],
+        Math.random() > 0.5
+          ? [await createDummyFeedback(undefined, guide)]
+          : [],
     };
     guides.push(fetchedGuide);
   }
