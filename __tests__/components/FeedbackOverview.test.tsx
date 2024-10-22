@@ -5,6 +5,7 @@ import { FeedbackDocumentWithReturn } from "../../app/guides/types";
 import { ReturnDocument } from "../../app/models/return";
 import { FeedbackDocument } from "../../app/models/review";
 import { Types } from "mongoose";
+import { mock } from "node:test";
 
 jest.mock("../../app/utils/actions", () => ({
   returnGuide: jest.fn(),
@@ -182,5 +183,42 @@ describe("Feedback", () => {
     });
     fireEvent.click(NextButton);
     expect(getByText(mockFeedbackGiven[1].comment)).toBeDefined();
+  });
+
+  it("shows grade if feedback given and received a grade", () => {
+    const mockFeedbackGiven = createMockFeedbacksWithReturn(1);
+    const mockFeedbackReceived = createMockFeedbacksWithReturn(1, "received");
+    mockFeedbackGiven[0].grade = 5;
+
+    (useGuide as jest.Mock).mockReturnValue({
+      feedbackGiven: mockFeedbackGiven,
+      feedbackReceived: mockFeedbackReceived,
+      returnsSubmitted,
+    });
+
+    const { getByText, debug } = render(<FeedbackOverview />);
+
+    const givenToggle = screen.getByRole("button", { name: /given/i });
+    fireEvent.click(givenToggle);
+
+    expect(getByText("GRADE")).toBeDefined();
+  });
+
+  it("does not show grade if feedback given but not received a grade", () => {
+    const mockFeedbackGiven = createMockFeedbacksWithReturn(1);
+    const mockFeedbackReceived = createMockFeedbacksWithReturn(1, "received");
+
+    (useGuide as jest.Mock).mockReturnValue({
+      feedbackGiven: mockFeedbackGiven,
+      feedbackReceived: mockFeedbackReceived,
+      returnsSubmitted,
+    });
+
+    const { queryByText } = render(<FeedbackOverview />);
+
+    const receivedToggle = screen.getByRole("button", { name: /given/i });
+    fireEvent.click(receivedToggle);
+
+    expect(queryByText("GRADE")).toBeNull();
   });
 });

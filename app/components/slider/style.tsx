@@ -30,7 +30,7 @@ export const SliderTrack = styled.input<{
     background: linear-gradient(
       to right,
       ${({ $selectable }) =>
-          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-30)"}
+          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-60)"}
         ${(props) => props.$sliderPercentage + "%"},
       var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
     );
@@ -43,7 +43,7 @@ export const SliderTrack = styled.input<{
     background: linear-gradient(
       to right,
       ${({ $selectable }) =>
-          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-30)"}
+          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-60)"}
         ${(props) => props.$sliderPercentage + "%"},
       var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
     );
@@ -56,7 +56,7 @@ export const SliderTrack = styled.input<{
     background: linear-gradient(
       to right,
       ${({ $selectable }) =>
-          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-30)"}
+          $selectable ? "var(--theme-module3-100)" : "var(--theme-module3-60)"}
         ${(props) => props.$sliderPercentage + "%"},
       var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
     );
