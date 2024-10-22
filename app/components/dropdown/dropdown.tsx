@@ -1,6 +1,5 @@
 "use client";
 import { useMemo, useState } from "react";
-import { ArrowDown } from "../../arrowDown";
 import {
   Accordian,
   AccordianOptionContainer,
@@ -8,7 +7,7 @@ import {
   DropDownContainer,
   animationDuration,
 } from "./style";
-import { ArrowUp } from "../../arrowUp";
+import { Arrow } from "../../assets/Icons";
 
 export type DropdownOption = {
   optionName: string;
@@ -75,7 +74,7 @@ export const Dropdown = ({
         >
           <p>{currentOption.toUpperCase()}</p>
 
-          {isOpen ? <ArrowUp /> : <ArrowDown />}
+          <Arrow direction={isOpen ? "up" : "down"} />
         </Accordian>
         {showOptions && Options}
       </DropDownContainer>
