@@ -15,7 +15,7 @@ import { FeedbackOverview } from "./FeedbackOverview";
 import { GiveFeedbackView } from "./GiveFeedbackView";
 
 export const GuideModal = () => {
-  const { link, returnStatus, title, gradesGivenStatus, feedbackStatus } =
+  const { link, returnStatus, title, feedbackStatus } =
     useGuide() as ExtendedGuideInfo;
 
   const RenderedContent = () => {
