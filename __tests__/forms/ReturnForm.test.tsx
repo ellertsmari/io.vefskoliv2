@@ -8,7 +8,6 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { ObjectId } from "mongodb";
-import ReturnForm from "../../app/guides/[id]/ReturnForm";
 import {
   clearDatabase,
   closeDatabase,
@@ -16,6 +15,7 @@ import {
 } from "../__mocks__/mongoHandler";
 import { auth } from "../../auth";
 import { returnGuide } from "../../app/utils/actions";
+import ReturnForm from "../../app/guides/[id]/returnForm";
 jest.mock("../../auth", () => ({
   getUser: jest.fn(),
   signIn: jest.fn(),
@@ -41,6 +41,7 @@ describe("ReturnForm", () => {
   });
 
   afterAll(async () => await closeDatabase());
+
   it("renders", async () => {
     const { getByLabelText, getByText } = render(<ReturnForm />);
 

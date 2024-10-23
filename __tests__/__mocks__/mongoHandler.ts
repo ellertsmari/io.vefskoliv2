@@ -13,8 +13,9 @@ import {
 } from "../../app/models/review";
 import { Return, ReturnDocument, ReturnType } from "../../app/models/return";
 import { Guide, GuideDocument, GuideType } from "../../app/models/guide";
-import { GuideInfo, Module } from "../../app/guides/types";
+import { ExtendedGuideInfo, GuideInfo, Module } from "../../app/guides/types";
 import { extendGuides } from "../../app/guides/utils";
+import { create } from "domain";
 
 jest.mock("../../app/utils/mongoose-connector", () => ({
   connectToDatabase: jest.fn(),
@@ -99,7 +100,7 @@ export const createDummyModules = (count: number): Module[] => {
 
 export const createDummyReturn = async (
   user?: UserDocument,
-  guide?: GuideDocument
+  guide?: GuideDocument | ExtendedGuideInfo
 ): Promise<ReturnDocument> => {
   const dummyReturn: Partial<ReturnType> = {
     projectUrl: faker.internet.url(),
@@ -190,6 +191,99 @@ export const createDummyFetchedGuides = async (
     guides.push(fetchedGuide);
   }
   return guides;
+};
+
+export const createDummyFetchedGuidedWithNoReturn = async (
+  user: UserDocument
+) => {
+  const guide = await createDummyGuide();
+  const fetchedGuide: GuideInfo = {
+    _id: guide._id,
+    title: guide.title,
+    description: guide.description,
+    category: guide.category,
+    order: 0,
+    module: guide.module,
+    returnsSubmitted: [],
+    feedbackReceived: [],
+    availableForFeedback: [],
+    feedbackGiven: [],
+    gradesReceived: [],
+    gradesGiven: [],
+    availableToGrade: [],
+  };
+  const extendedGuide = await extendGuides([fetchedGuide]);
+  return extendedGuide[0];
+};
+
+type dummyGuideDetails = {
+  feedbackReceived?: number;
+  availableForFeedback?: number;
+  feedbackGiven?: number;
+  gradesReceived?: number;
+  gradesGiven?: number;
+  availableToGrade?: number;
+};
+
+export const createDummyFetchedGuideWithControl = async (
+  user: UserDocument,
+  dummyGuideDetails: dummyGuideDetails
+): Promise<ExtendedGuideInfo> => {
+  const guide = await createDummyGuide();
+
+  const userReturn = await createDummyReturn(user, guide);
+
+  const {
+    feedbackReceived,
+    availableForFeedback,
+    feedbackGiven,
+    gradesReceived,
+    gradesGiven,
+    availableToGrade,
+  } = dummyGuideDetails;
+
+  const feedbackReceivedPromises = Array.from({
+    length: feedbackReceived ?? 0,
+  }).map(() => createDummyFeedback(undefined, guide, userReturn));
+
+  const availableForFeedbackPromises = Array.from({
+    length: availableForFeedback ?? 0,
+  }).map(() => createDummyReturn(undefined, guide));
+
+  const feedbackGivenPromises = Array.from({
+    length: feedbackGiven ?? 0,
+  }).map(() => createDummyFeedback(user, guide));
+
+  const gradesReceivedPromises = Array.from({
+    length: gradesReceived ?? 0,
+  }).map(() => createDummyGrade(user, guide, userReturn));
+
+  const gradesGivenPromises = Array.from({
+    length: gradesGiven ?? 0,
+  }).map(() => createDummyGrade(undefined, guide));
+
+  const availableToGradePromises = Array.from({
+    length: availableToGrade ?? 0,
+  }).map(() => createDummyFeedback(undefined, guide));
+
+  const fetchedGuide: GuideInfo = {
+    _id: guide._id,
+    title: guide.title,
+    description: guide.description,
+    category: guide.category,
+    order: 0,
+    module: guide.module,
+    returnsSubmitted: [userReturn],
+    feedbackReceived: await Promise.all(feedbackReceivedPromises),
+    availableForFeedback: await Promise.all(availableForFeedbackPromises),
+    feedbackGiven: await Promise.all(feedbackGivenPromises),
+    gradesReceived: await Promise.all(gradesReceivedPromises),
+    gradesGiven: await Promise.all(gradesGivenPromises),
+    availableToGrade: await Promise.all(availableToGradePromises),
+  };
+
+  const extendedGuides = await extendGuides([fetchedGuide]);
+  return extendedGuides[0];
 };
 
 export const createDummyExtendedGuides = async (
