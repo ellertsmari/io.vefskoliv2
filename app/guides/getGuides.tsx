@@ -81,21 +81,6 @@ export async function getGuides(
           },
         },
         {
-          $lookup: {
-            from: "reviews",
-            localField: "_id", // return ID
-            foreignField: "return", // connecting return field in review schema
-            as: "associatedReviews",
-          },
-        },
-        {
-          $match: {
-            "associatedReviews.owner": {
-              $ne: userId,
-            },
-          },
-        },
-        {
           $sort: {
             reviewedAt: 1, // Ascending order by reviewedAt
             createdAt: 1, // Ascending order by createdAt
@@ -164,15 +149,15 @@ export async function getGuides(
             },
           },
         },
-        // {
-        //   $lookup: {
-        //     from: "returns",
-        //     localField: "return",
-        //     foreignField: "_id",
-        //     as: "associatedReturn",
-        //   },
-        // },
-        // { $unwind: "$associatedReturn" },
+        {
+          $lookup: {
+            from: "returns",
+            localField: "return",
+            foreignField: "_id",
+            as: "associatedReturn",
+          },
+        },
+        { $unwind: "$associatedReturn" },
         // {
         //   $match: {
         //     $expr: {
@@ -240,6 +225,19 @@ export async function getGuides(
               ],
             },
           },
+        },
+        // Perform a lookup on the Return collection
+        {
+          $lookup: {
+            from: "returns",
+            localField: "return",
+            foreignField: "_id",
+            as: "associatedReturn",
+          },
+        },
+        // Unwind the array, so we can easily access the owner field
+        {
+          $unwind: "$associatedReturn",
         },
       ],
       as: "gradesReceived",

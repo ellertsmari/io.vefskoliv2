@@ -13,9 +13,13 @@ import {
 } from "../../app/models/review";
 import { Return, ReturnDocument, ReturnType } from "../../app/models/return";
 import { Guide, GuideDocument, GuideType } from "../../app/models/guide";
-import { ExtendedGuideInfo, GuideInfo, Module } from "../../app/guides/types";
+import {
+  ExtendedGuideInfo,
+  FeedbackDocumentWithReturn,
+  GuideInfo,
+  Module,
+} from "../../app/guides/types";
 import { extendGuides } from "../../app/guides/utils";
-import { create } from "domain";
 
 jest.mock("../../app/utils/mongoose-connector", () => ({
   connectToDatabase: jest.fn(),
@@ -113,33 +117,65 @@ export const createDummyReturn = async (
     guide: guide?._id ?? new mongoose.Types.ObjectId(),
   };
 
-  return await Return.create(dummyReturn);
+  const result = await Return.create(dummyReturn);
+  if (!result) throw new Error("Failed to create dummy return");
+  return result;
 };
 
 export const createDummyFeedback = async (
   owner?: UserDocument,
   guide?: GuideDocument,
-  userReturn?: ReturnType,
+  userReturn?: ReturnDocument,
   fail?: boolean
 ): Promise<FeedbackDocument> => {
+  // Create a userReturn if not provided
+  if (!userReturn) {
+    userReturn = await createDummyReturn(undefined, guide);
+  }
+
+  // Ensure userReturn is defined before proceeding
+  if (!userReturn) throw new Error("No userReturn provided");
+
+  // Now we can safely create the dummy review
   const dummyReview: Partial<FeedbackType> = {
     guide: guide?._id ?? new mongoose.Types.ObjectId(),
-    return: userReturn?._id ?? new mongoose.Types.ObjectId(),
+    return: userReturn._id, // userReturn is guaranteed to be defined here
     owner: owner?._id ?? new mongoose.Types.ObjectId(),
     comment: faker.lorem.sentence(),
     vote: fail ? Vote.NO_PASS : Vote.PASS,
     createdAt: new Date(),
   };
 
-  return await Review.create(dummyReview);
+  const feedback = await Review.create(dummyReview);
+
+  return feedback; // Return the created feedback
+};
+
+export const createDummyFeedbackWithReturn = async (
+  owner?: UserDocument,
+  guide?: GuideDocument,
+  userReturn?: ReturnDocument,
+  fail?: boolean
+): Promise<FeedbackDocumentWithReturn> => {
+  const feedback = await createDummyFeedback(owner, guide, userReturn, fail);
+  const feedbackWithReturn = feedback.toObject();
+  feedbackWithReturn.associatedReturn = userReturn?.toObject();
+  return feedbackWithReturn;
 };
 
 export const createDummyGrade = async (
   owner?: UserDocument,
   guide?: GuideDocument,
-  userReturn?: ReturnType,
+  userReturn?: ReturnDocument,
   grade?: number
 ): Promise<GradedFeedbackDocument> => {
+  // Create a userReturn if not provided
+  if (!userReturn) {
+    userReturn = await createDummyReturn(undefined, guide);
+  }
+
+  // Ensure userReturn is defined before proceeding
+  if (!userReturn) throw new Error("No userReturn provided");
   const votes = [Vote.NO_PASS, Vote.PASS, Vote.RECOMMEND_TO_GALLERY];
 
   const dummyReview: Partial<GradedFeedbackType> = {
@@ -152,7 +188,16 @@ export const createDummyGrade = async (
     createdAt: new Date(),
   };
 
-  return await Review.create(dummyReview);
+  const result = await Review.create(dummyReview)
+    .then((feedback) => feedback.toObject())
+    .then((feedback) => {
+      feedback.associatedReturn = userReturn!.toObject();
+      return feedback;
+    });
+
+  if (!result) throw new Error("Failed to create dummy grade");
+
+  return result;
 };
 
 export const createDummyFetchedGuides = async (

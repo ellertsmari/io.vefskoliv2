@@ -3,14 +3,16 @@ import {
   closeDatabase,
   connect,
   createDummyFeedback,
+  createDummyFeedbackWithReturn,
   createDummyGuide,
   createDummyReturn,
   createDummyGrade,
   createDummyUser,
 } from "../__mocks__/mongoHandler";
-import { getGuides } from "../../app/guides/query";
+import { getGuides } from "../../app/guides/getGuides";
 import { Types } from "mongoose";
-import { GuideInfo } from "../../app/guides/types";
+import { FeedbackDocumentWithReturn, GuideInfo } from "../../app/guides/types";
+import { Review } from "../../app/models/review";
 
 // for type checking
 function isGuideInfo(obj: any): obj is GuideInfo {
@@ -50,11 +52,13 @@ describe("getGuides", () => {
 
     const guides = await getGuides(user._id.toString());
 
-    if (!guides) throw new Error("guides is null");
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    expect(guides[0].availableForFeedback).toEqual([
-      expect.objectContaining(otherUserReturn.toObject()),
-      expect.objectContaining(otherUserReturn2.toObject()),
+    if (!gottenGuide) throw new Error("gottenGuide is null");
+
+    expect(gottenGuide.availableForFeedback).toEqual([
+      otherUserReturn.toObject(),
+      otherUserReturn2.toObject(),
     ]);
   });
 
@@ -65,27 +69,35 @@ describe("getGuides", () => {
 
     const userReturn = await createDummyReturn(user, guide);
 
-    const feedbackGiven = await createDummyFeedback(user, guide, userReturn);
-    const feedbackGiven2 = await createDummyFeedback(user, guide, userReturn);
-    const feedbackGivenOnOtherGuide = await createDummyFeedback(
+    const feedbackGiven = await createDummyFeedbackWithReturn(
+      user,
+      guide,
+      userReturn
+    );
+
+    const feedbackGiven2 = await createDummyFeedbackWithReturn(
+      user,
+      guide,
+      userReturn
+    );
+
+    const feedbackGivenOnOtherGuide = await createDummyFeedbackWithReturn(
       user,
       undefined,
       userReturn
     );
-    const feedbackGivenByOtherUser = await createDummyFeedback(
+    const feedbackGivenByOtherUser = await createDummyFeedbackWithReturn(
       undefined,
       guide,
       userReturn
     );
 
     const guides = await getGuides(user._id.toString());
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    if (!guides) throw new Error("guides is null");
+    if (!gottenGuide) throw new Error("gottenGuide is null");
 
-    expect(guides[0].feedbackGiven).toEqual([
-      expect.objectContaining(feedbackGiven.toObject()),
-      expect.objectContaining(feedbackGiven2.toObject()),
-    ]);
+    expect(gottenGuide.feedbackGiven).toEqual([feedbackGiven, feedbackGiven2]);
   });
 
   it("returns gradesGiven", async () => {
@@ -107,12 +119,11 @@ describe("getGuides", () => {
 
     const guides = await getGuides(user._id.toString());
 
-    if (!guides) throw new Error("guides is null");
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    expect(guides[0].gradesGiven).toEqual([
-      expect.objectContaining(gradeGiven.toObject()),
-      expect.objectContaining(gradeGiven2.toObject()),
-    ]);
+    if (!gottenGuide) throw new Error("gottenGuide is null");
+
+    expect(gottenGuide.gradesGiven).toEqual([gradeGiven, gradeGiven2]);
   });
 
   it("returns gradesReceived", async () => {
@@ -135,11 +146,13 @@ describe("getGuides", () => {
     const otherGrade = await createDummyGrade(undefined, guide, undefined);
 
     const guides = await getGuides(user._id.toString());
-    if (!guides) throw new Error("guides is null");
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    expect(guides[0].gradesReceived).toEqual([
-      expect.objectContaining(grade.toObject()),
-      expect.objectContaining(grade2.toObject()),
+    if (!gottenGuide) throw new Error("gottenGuide is null");
+
+    expect(gottenGuide.gradesReceived).toEqual([
+      expect.objectContaining(grade),
+      expect.objectContaining(grade2),
     ]);
   });
 
@@ -150,22 +163,28 @@ describe("getGuides", () => {
 
     const userReturn = await createDummyReturn(user, guide);
 
-    const feedback = await createDummyFeedback(undefined, guide, userReturn);
-    const feedback2 = await createDummyFeedback(undefined, guide, userReturn);
-    const otherFeedback = await createDummyFeedback(
+    const feedback = await createDummyFeedbackWithReturn(
+      undefined,
+      guide,
+      userReturn
+    );
+    const feedback2 = await createDummyFeedbackWithReturn(
+      undefined,
+      guide,
+      userReturn
+    );
+    const otherFeedback = await createDummyFeedbackWithReturn(
       undefined,
       guide,
       undefined
     );
 
     const guides = await getGuides(user._id.toString());
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    if (!guides) throw new Error("guides is null");
+    if (!gottenGuide) throw new Error("gottenGuide is null");
 
-    expect(guides[0].feedbackReceived).toEqual([
-      expect.objectContaining(feedback.toObject()),
-      expect.objectContaining(feedback2.toObject()),
-    ]);
+    expect(gottenGuide.feedbackReceived).toEqual([feedback, feedback2]);
   });
 
   it("returns returnsSubmitted", async () => {
@@ -177,34 +196,39 @@ describe("getGuides", () => {
     const otherUserReturn = await createDummyReturn(undefined, guide);
 
     const guides = await getGuides(user._id.toString());
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    if (!guides) throw new Error("guides is null");
+    if (!gottenGuide) throw new Error("gottenGuide is null");
 
-    expect(guides[0].returnsSubmitted).toEqual([
-      expect.objectContaining(userReturn.toObject()),
-    ]);
+    expect(gottenGuide.returnsSubmitted).toEqual([userReturn.toObject()]);
   });
 
   it("returns availableToGrade", async () => {
     const user = await createDummyUser();
 
     const guide = await createDummyGuide();
+    const guide2 = await createDummyGuide();
 
     const userReturn = await createDummyReturn(user, guide);
+
     const otherUserReturn = await createDummyReturn(undefined, guide);
 
-    const feedbackReceived = await createDummyFeedback(
+    const feedbackReceived = await createDummyFeedbackWithReturn(
       undefined,
       guide,
       userReturn
     );
-    const feedbackReceived2 = await createDummyFeedback(
+    const feedbackReceived2 = await createDummyFeedbackWithReturn(
       undefined,
       guide,
       userReturn
     );
 
-    const feedbackGiven = await createDummyFeedback(user, guide, undefined);
+    const feedbackGiven = await createDummyFeedbackWithReturn(
+      user,
+      guide,
+      undefined
+    );
 
     const gradeReceived = await createDummyGrade(undefined, guide, userReturn);
     const gradeReceived2 = await createDummyGrade(undefined, guide, userReturn);
@@ -215,12 +239,13 @@ describe("getGuides", () => {
     );
 
     const guides = await getGuides(user._id.toString());
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    if (!guides) throw new Error("guides is null");
+    if (!gottenGuide) throw new Error("gottenGuide is null");
 
-    expect(guides[0].availableToGrade).toEqual([
-      expect.objectContaining(feedbackReceived.toObject()),
-      expect.objectContaining(feedbackReceived2.toObject()),
+    expect(gottenGuide.availableToGrade).toEqual([
+      feedbackReceived,
+      feedbackReceived2,
     ]);
   });
 
@@ -248,5 +273,107 @@ describe("getGuides", () => {
 
     expect(guides).not.toBeNull();
     expect(guides).toEqual([]);
+  });
+
+  it("returns all guide information together", async () => {
+    const user = await createDummyUser();
+    const guide = await createDummyGuide();
+
+    const userReturn = await createDummyReturn(user, guide);
+    const otherUserReturn = await createDummyReturn(undefined, guide);
+    const otherUserReturn2 = await createDummyReturn(undefined, guide);
+
+    const feedbackGiven = await createDummyFeedbackWithReturn(
+      user,
+      guide,
+      userReturn
+    );
+    const feedbackGiven2 = await createDummyFeedbackWithReturn(
+      user,
+      guide,
+      userReturn
+    );
+    const feedbackReceived = await createDummyFeedbackWithReturn(
+      undefined,
+      guide,
+      userReturn
+    );
+    const feedbackReceived2 = await createDummyFeedbackWithReturn(
+      undefined,
+      guide,
+      userReturn
+    );
+
+    const feedbackGivenAndGraded = await createDummyGrade(
+      user,
+      guide,
+      otherUserReturn
+    );
+    const feedbackGivenAndGraded2 = await createDummyGrade(
+      user,
+      guide,
+      otherUserReturn2
+    );
+    const feedbackReceivedAndGraded = await createDummyGrade(
+      undefined,
+      guide,
+      userReturn
+    );
+    const feedbackReceivedAndGraded2 = await createDummyGrade(
+      undefined,
+      guide,
+      userReturn
+    );
+
+    const guides = await getGuides(user._id.toString());
+    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+
+    if (!gottenGuide) throw new Error("gottenGuide is null");
+
+    const expectedFeedbackGiven = [
+      feedbackGiven,
+      feedbackGiven2,
+      feedbackGivenAndGraded,
+      feedbackGivenAndGraded2,
+    ];
+
+    const expectedFeedbackReceived = [
+      feedbackReceived,
+      feedbackReceived2,
+      feedbackReceivedAndGraded,
+      feedbackReceivedAndGraded2,
+    ];
+
+    const expectedGradesGiven = [
+      feedbackReceivedAndGraded,
+      feedbackReceivedAndGraded2,
+    ];
+
+    const expectedGradesReceived = [
+      feedbackGivenAndGraded,
+      feedbackGivenAndGraded2,
+    ];
+
+    const expectedAvailableForFeedback = [
+      otherUserReturn.toObject(),
+      otherUserReturn2.toObject(),
+    ];
+
+    const expectedAvailableToGrade = [feedbackReceived, feedbackReceived2];
+
+    const gottenGrades = await Review.find({
+      owner: user._id,
+      grade: { $exists: true },
+    });
+
+    expect(gottenGuide.returnsSubmitted).toEqual([userReturn.toObject()]);
+    expect(gottenGuide.availableForFeedback).toEqual(
+      expectedAvailableForFeedback
+    );
+    expect(gottenGuide.feedbackGiven).toEqual(expectedFeedbackGiven);
+    expect(gottenGuide.feedbackReceived).toEqual(expectedFeedbackReceived);
+    expect(gottenGuide.gradesGiven).toEqual(expectedGradesGiven);
+    expect(gottenGuide.availableToGrade).toEqual(expectedAvailableToGrade);
+    expect(gottenGuide.gradesReceived).toEqual(expectedGradesReceived);
   });
 });
