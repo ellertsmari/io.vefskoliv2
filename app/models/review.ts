@@ -10,7 +10,7 @@ import {
 export enum Vote {
   NO_PASS = "no pass",
   PASS = "pass",
-  RECOMMEND_TO_GALLERY = "recommend to gallery",
+  RECOMMEND_TO_GALLERY = "recommend to Hall of fame",
 }
 
 const reviewSchema = new Schema({
