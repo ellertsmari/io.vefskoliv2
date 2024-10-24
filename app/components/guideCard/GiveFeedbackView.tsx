@@ -9,15 +9,14 @@ import {
 } from "./style";
 import { SubTitle } from "globalStyles/text";
 import MarkdownEditor from "components/markdown/editor";
-import { useActionState, useCallback, useEffect, useState } from "react";
+import { use, useActionState, useCallback, useEffect, useState } from "react";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "../../providers/GuideProvider";
 import { ExtendedGuideInfo } from "../../guides/types";
 import { returnFeedback } from "../../utils/actions";
 import { Vote } from "../../models/review";
 import { StyleColors } from "globalStyles/colors";
-import { RedCross, GreenTick, PurpleStar } from "../../assets/Icons"
-
+import { RedCross, GreenTick, PurpleStar } from "../../assets/Icons";
 
 export const GiveFeedbackView = () => {
   const [comment, setComment] = useState<string>("");
@@ -26,8 +25,8 @@ export const GiveFeedbackView = () => {
     returnFeedback,
     undefined
   );
-
-  const { availableForFeedback } = useGuide() as ExtendedGuideInfo;
+  const { guide } = useGuide();
+  const { availableForFeedback } = guide;
   const theReturn = availableForFeedback[0];
   const canSubmit = comment.length >= 2;
 

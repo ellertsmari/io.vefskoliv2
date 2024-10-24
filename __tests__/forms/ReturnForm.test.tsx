@@ -1,12 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import {
-  fireEvent,
-  queryByLabelText,
-  render,
-  waitFor,
-} from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { ObjectId } from "mongodb";
 import {
   clearDatabase,
@@ -25,9 +20,6 @@ jest.mock("next-auth", () => ({
   AuthError: jest.fn().mockImplementation(), // Mock the AuthError class
 }));
 
-jest.mock("../../app/providers/GuideProvider", () => ({
-  useGuide: jest.fn().mockReturnValue({ _id: "123456789012345678901234" }),
-}));
 jest.mock("../../app/utils/actions", () => ({
   returnGuide: jest.fn(),
 }));
@@ -42,8 +34,12 @@ describe("ReturnForm", () => {
 
   afterAll(async () => await closeDatabase());
 
+  const guideId = "123456";
+
   it("renders", async () => {
-    const { getByLabelText, getByText } = render(<ReturnForm />);
+    const { getByLabelText, getByText } = render(
+      <ReturnForm guideId={guideId} />
+    );
 
     fireEvent.click(getByText("RETURN"));
 
@@ -77,7 +73,7 @@ describe("ReturnForm", () => {
     const projectName = "projectName";
 
     const { getByLabelText, getByText, queryByLabelText } = render(
-      <ReturnForm />
+      <ReturnForm guideId={guideId} />
     );
 
     fireEvent.click(getByText("RETURN"));
@@ -106,7 +102,7 @@ describe("ReturnForm", () => {
     expectedFormData.append("comment", comment);
     expectedFormData.append("projectName", projectName);
     expectedFormData.append("imageOfProject", "");
-    expectedFormData.append("guideId", "123456789012345678901234");
+    expectedFormData.append("guideId", guideId);
 
     const formatDataObject = (formData: FormData) => {
       const obj: { [key: string]: string } = {};

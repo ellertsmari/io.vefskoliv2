@@ -8,17 +8,16 @@ import {
   ModalWrapper,
   LinkNoWrap,
 } from "./style";
-import { ExtendedGuideInfo, FeedbackStatus } from "../../guides/types";
+import { FeedbackStatus } from "../../guides/types";
 import { calculateReturnStyle } from "./utils";
 import { Button } from "globalStyles/buttons/default/style";
 import { FeedbackOverview } from "./FeedbackOverview";
 import { GiveFeedbackView } from "./GiveFeedbackView";
 
 export const GuideModal = () => {
-  const { link, returnStatus, title, feedbackStatus } =
-    useGuide() as ExtendedGuideInfo;
-  const guide = useGuide() as ExtendedGuideInfo;
-  console.log("guide", guide);
+  const { guide } = useGuide();
+
+  const { link, returnStatus, title, feedbackStatus } = guide;
 
   const RenderedContent = () => {
     if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {

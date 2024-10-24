@@ -17,11 +17,7 @@ const GuidePage = async ({ params }: { params: { id: string } }) => {
     );
   }
 
-  return (
-    <GuideProvider guide={guide}>
-      <Guide />
-    </GuideProvider>
-  );
+  return <Guide guide={guide} />;
 };
 
 export default GuidePage;

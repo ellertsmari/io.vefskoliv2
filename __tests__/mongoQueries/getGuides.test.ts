@@ -13,6 +13,7 @@ import { getGuides } from "../../app/guides/getGuides";
 import { Types } from "mongoose";
 import { FeedbackDocumentWithReturn, GuideInfo } from "../../app/guides/types";
 import { Review } from "../../app/models/review";
+import { ReturnDocument } from "../../app/models/return";
 
 // for type checking
 function isGuideInfo(obj: any): obj is GuideInfo {
@@ -205,6 +206,7 @@ describe("getGuides", () => {
 
   it("returns availableToGrade", async () => {
     const user = await createDummyUser();
+    const user2 = await createDummyUser();
 
     const guide = await createDummyGuide();
     const guide2 = await createDummyGuide();
@@ -212,6 +214,7 @@ describe("getGuides", () => {
     const userReturn = await createDummyReturn(user, guide);
 
     const otherUserReturn = await createDummyReturn(undefined, guide);
+    const otherUserReturn2 = await createDummyReturn(user2, guide);
 
     const feedbackReceived = await createDummyFeedbackWithReturn(
       undefined,
@@ -222,6 +225,12 @@ describe("getGuides", () => {
       undefined,
       guide,
       userReturn
+    );
+
+    const feedbackReceivedByUser2 = await createDummyFeedbackWithReturn(
+      user,
+      guide,
+      otherUserReturn
     );
 
     const feedbackGiven = await createDummyFeedbackWithReturn(
@@ -236,6 +245,12 @@ describe("getGuides", () => {
       undefined,
       guide,
       otherUserReturn
+    );
+
+    const gradeReceivedByUser2 = await createDummyGrade(
+      undefined,
+      guide,
+      otherUserReturn2
     );
 
     const guides = await getGuides(user._id.toString());
@@ -277,11 +292,12 @@ describe("getGuides", () => {
 
   it("returns all guide information together", async () => {
     const user = await createDummyUser();
+    const user2 = await createDummyUser();
     const guide = await createDummyGuide();
 
     const userReturn = await createDummyReturn(user, guide);
-    const otherUserReturn = await createDummyReturn(undefined, guide);
-    const otherUserReturn2 = await createDummyReturn(undefined, guide);
+    const otherUserReturn = await createDummyReturn(user2, guide);
+    const otherUserReturn2 = await createDummyReturn(user2, guide);
 
     const feedbackGiven = await createDummyFeedbackWithReturn(
       user,
@@ -306,6 +322,12 @@ describe("getGuides", () => {
 
     const feedbackGivenAndGraded = await createDummyGrade(
       user,
+      guide,
+      otherUserReturn
+    );
+
+    const feedbackGivenAndGradedByUser2 = await createDummyGrade(
+      user2,
       guide,
       otherUserReturn
     );
@@ -354,10 +376,7 @@ describe("getGuides", () => {
       feedbackGivenAndGraded2,
     ];
 
-    const expectedAvailableForFeedback = [
-      otherUserReturn.toObject(),
-      otherUserReturn2.toObject(),
-    ];
+    const expectedAvailableForFeedback: ReturnDocument[] = [];
 
     const expectedAvailableToGrade = [feedbackReceived, feedbackReceived2];
 

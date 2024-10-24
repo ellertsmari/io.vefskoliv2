@@ -1,8 +1,9 @@
 import { SubTitle } from "globalStyles/text";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ExtendedGuideInfo,
   FeedbackDocumentWithReturn,
+  GradesGivenStatus,
 } from "../../guides/types";
 import {
   FeedbackContainer,
@@ -12,15 +13,21 @@ import {
   ToggleContainer,
 } from "./style";
 import MarkdownReader from "components/markdown/reader";
-import { Toggle } from "components/toggle/Toggle";
+import { Toggle, ToggleOption } from "components/toggle/Toggle";
 import { OptionNavigator } from "components/optionNavigator/OptionNavigator";
 import { useGuide } from "../../providers/GuideProvider";
 import { ReturnOverview } from "./ReturnOverview";
 
 export const FeedbackOverview = () => {
-  const guide = useGuide() as ExtendedGuideInfo;
-  const isFeedbackGiven = guide?.feedbackGiven?.length > 0;
-  const isFeedbackReceived = guide?.feedbackReceived?.length > 0;
+  const { guide } = useGuide();
+  const isFeedbackGiven = useMemo(
+    () => guide?.feedbackGiven?.length > 0,
+    [guide]
+  );
+  const isFeedbackReceived = useMemo(
+    () => guide?.feedbackReceived?.length > 0,
+    [guide]
+  );
 
   const [showGivenOrReceived, setShowGivenOrReceived] = useState<
     "given" | "received" | null
@@ -49,19 +56,28 @@ export const FeedbackOverview = () => {
   const gradeable =
     showGivenOrReceived === "received" && theFeedback && !theFeedback.grade;
 
+  const toggleOptions = useCallback(() => {
+    let options: ToggleOption[] = [];
+    if (isFeedbackGiven) {
+      options.push(["given", () => setShowGivenOrReceived("given")]);
+    }
+    if (isFeedbackReceived) {
+      options.push([
+        "received",
+        () => setShowGivenOrReceived("received"),
+        guide.gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE,
+      ]);
+    }
+
+    return options;
+  }, [isFeedbackGiven, isFeedbackReceived, availableToGrade]);
+
   return (
     <FeedbackContainer>
       <ToggleContainer>
         <Toggle
           currentSelection={showGivenOrReceived}
-          options={[
-            ["given", () => setShowGivenOrReceived("given")],
-            [
-              "received",
-              () => setShowGivenOrReceived("received"),
-              availableToGrade?.length > 0,
-            ],
-          ]}
+          options={toggleOptions()}
         />
       </ToggleContainer>
       <FeedbackInfoContainer>

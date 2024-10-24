@@ -7,6 +7,13 @@ jest.mock("../../app/utils/actions", () => ({
   returnGrade: jest.fn(),
 }));
 
+const mockUpdateGradeStatus = jest.fn();
+jest.mock("../../app/providers/GuideProvider", () => ({
+  useGuide: jest.fn(() => ({
+    updateGradeStatus: mockUpdateGradeStatus,
+  })),
+}));
+
 describe("Grade Component", () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -73,7 +80,10 @@ describe("Grade Component", () => {
   });
 
   test("submit button is removed after successful grade submission", async () => {
-    (returnGrade as jest.Mock).mockResolvedValueOnce({ success: true });
+    (returnGrade as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: {},
+    });
 
     const { getByText, queryByText } = render(
       <Grade grade={3} gradeable={true} reviewId="123" />
@@ -88,6 +98,25 @@ describe("Grade Component", () => {
         reviewId: "123",
       });
       expect(queryByText("SUBMIT GRADE")).toBeNull();
+    });
+  });
+
+  test("upgradeGrades is called with correct arguments after successful grade submission", async () => {
+    const mockData = { id: "123" };
+    (returnGrade as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: mockData,
+    });
+
+    const { getByText } = render(
+      <Grade grade={3} gradeable={true} reviewId="123" />
+    );
+
+    const submitButton = getByText("SUBMIT GRADE");
+
+    await waitFor(() => {
+      fireEvent.click(submitButton);
+      expect(mockUpdateGradeStatus).toHaveBeenCalledWith(mockData);
     });
   });
 });
