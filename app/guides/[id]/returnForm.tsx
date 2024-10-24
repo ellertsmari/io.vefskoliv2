@@ -11,10 +11,9 @@ import {
   useState,
 } from "react";
 import { returnGuide } from "../../utils/actions";
-import { useGuide } from "../../providers/GuideProvider";
 import { FormInputWithError } from "components/formInputWithError/FormInputWithError";
 
-const ReturnForm = () => {
+const ReturnForm = ({ guideId }: { guideId: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const ReturnButton = <Button style="default">RETURN</Button>;
@@ -24,7 +23,6 @@ const ReturnForm = () => {
       returnGuide,
       undefined
     );
-    const guide = useGuide();
 
     const formRef = useRef<HTMLFormElement>(null);
 
@@ -35,15 +33,13 @@ const ReturnForm = () => {
       }
     }, [state?.success]);
 
-    if (!guide) {
-      return null;
-    }
+    if (!guideId) return null;
 
     const handleSubmit = (event: React.FormEvent<HTMLButtonElement>) => {
       event.preventDefault();
       if (formRef.current) {
         const formData = new FormData(formRef.current);
-        formData.append("guideId", guide._id.toString());
+        formData.append("guideId", guideId);
         startTransition(() => {
           formAction(formData);
         });

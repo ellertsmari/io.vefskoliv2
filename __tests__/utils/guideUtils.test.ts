@@ -229,7 +229,7 @@ describe("status calculations", () => {
     });
 
     it("should return NEED_TO_GRADE if no reviews are given and projects are available", async () => {
-      const return1 = await createDummyReturn();
+      const return1 = await createDummyFeedback();
       const result = await calculateGradesGivenStatus([], [return1]);
       expect(result).toBe(GradesGivenStatus.NEED_TO_GRADE);
     });
@@ -237,7 +237,7 @@ describe("status calculations", () => {
     it("should return REVIEWS_GIVEN if at least 2 reviews are given", async () => {
       const review1 = await createDummyGrade();
       const review2 = await createDummyGrade();
-      const return1 = await createDummyReturn();
+      const return1 = await createDummyFeedback();
 
       const result = await calculateGradesGivenStatus(
         [review1, review2],

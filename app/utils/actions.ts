@@ -12,7 +12,7 @@ import {
 } from "../utils/formvalidation";
 import bcrypt from "bcrypt";
 import { ObjectId } from "mongodb";
-import type { FeedbackType } from "../models/review";
+import type { FeedbackType, GradedFeedbackDocument } from "../models/review";
 import { signIn, signOut as s, getUser, auth } from "../../auth";
 import { AuthError } from "next-auth";
 import { OptionalUserInfo, User, UserDocument } from "../models/user";
@@ -126,7 +126,6 @@ export async function returnFeedback(
   }
 
   const { vote, comment, returnId } = validatedFields.data;
-
   const session = await auth();
 
   if (!session?.user) {
@@ -191,8 +190,20 @@ export async function returnGrade(state: GradeFormState, data: GradeDataType) {
   try {
     await Review.updateOne({ _id: new ObjectId(reviewId) }, { grade });
 
+    const gradedDocument: GradedFeedbackDocument = (await Review.findById(
+      new ObjectId(reviewId)
+    )) as GradedFeedbackDocument;
+
+    if (!gradedDocument) {
+      return {
+        success: false,
+        message: "Failed to submit grade",
+      };
+    }
+
     return {
       success: true,
+      data: gradedDocument,
       message: "Grade submitted successfully",
     };
   } catch (e) {

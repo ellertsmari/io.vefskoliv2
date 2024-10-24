@@ -1,5 +1,5 @@
 "use server";
-import { getGuides } from "./query";
+import { getGuides } from "./getGuides";
 
 import { auth } from "../../auth";
 import { Guides } from "./Guides";

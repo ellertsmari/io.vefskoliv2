@@ -131,7 +131,7 @@ export const calculateGrade = async (
 
 export const calculateGradesGivenStatus = async (
   gradesGiven: GradedFeedbackDocument[],
-  availableToGrade: ReturnDocument[]
+  availableToGrade: FeedbackDocument[]
 ): Promise<GradesGivenStatus> => {
   if (gradesGiven.length >= 2) {
     return GradesGivenStatus.GRADES_GIVEN;

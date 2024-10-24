@@ -1,4 +1,4 @@
-import GuideCard from "../../components/guideCard";
+import GuideCard from "../../components/guideCard/GuideCard";
 
 import { GuideContainer } from "../style";
 import { ExtendedGuideInfo } from "../types";

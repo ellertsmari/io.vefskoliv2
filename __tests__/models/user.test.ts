@@ -1,16 +1,25 @@
 import mongoose from "mongoose";
 import { User, UserDocument } from "../../app/models/user";
-import { connectToDatabase } from "../../app/utils/mongoose-connector";
+import {
+  clearDatabase,
+  closeDatabase,
+  connect,
+} from "../__mocks__/mongoHandler";
 
 describe("User model", () => {
   beforeAll(async () => {
     // Connect to the database
-    await connectToDatabase();
+    await connect();
+  });
+
+  afterEach(async () => {
+    // Clear the database
+    await clearDatabase();
   });
 
   afterAll(async () => {
     // Disconnect from the database
-    await mongoose.disconnect();
+    await closeDatabase();
   });
 
   describe("updateUserInfo", () => {
