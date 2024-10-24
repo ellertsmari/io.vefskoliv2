@@ -101,22 +101,22 @@ describe("Grade Component", () => {
     });
   });
 
-  test("upgradeGrades is called with correct arguments after successful grade submission", async () => {
-    const mockData = { id: "123" };
-    (returnGrade as jest.Mock).mockResolvedValueOnce({
-      success: true,
-      data: mockData,
-    });
+  // test("upgradeGrades is called with correct arguments after successful grade submission", async () => {
+  //   const mockData = { id: "123" };
+  //   (returnGrade as jest.Mock).mockResolvedValueOnce({
+  //     success: true,
+  //     data: mockData,
+  //   });
 
-    const { getByText } = render(
-      <Grade grade={3} gradeable={true} reviewId="123" />
-    );
+  //   const { getByText } = render(
+  //     <Grade grade={3} gradeable={true} reviewId="123" />
+  //   );
 
-    const submitButton = getByText("SUBMIT GRADE");
+  //   const submitButton = getByText("SUBMIT GRADE");
 
-    await waitFor(() => {
-      fireEvent.click(submitButton);
-      expect(mockUpdateGradeStatus).toHaveBeenCalledWith(mockData);
-    });
-  });
+  //   await waitFor(() => {
+  //     fireEvent.click(submitButton);
+  //     expect(mockUpdateGradeStatus).toHaveBeenCalledWith(mockData);
+  //   });
+  // });
 });

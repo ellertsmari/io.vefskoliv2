@@ -26,10 +26,7 @@ export const Grade = ({
 
   useEffect(() => {
     if (state?.success && state.data) {
-      // bug here where updating the grade status causes a re-render which causes canGrade to be reset
-      updateGradeStatus();
       setCanGrade(false);
-      const newGradedDocument = state.data;
     }
   }, [state]);
 
