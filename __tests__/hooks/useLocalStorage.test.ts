@@ -1,24 +1,24 @@
 import { renderHook, act } from "@testing-library/react";
-import { useLocalStorage } from "../../app/hooks/useLocalStorage";
+import { useLocalState } from "../../app/hooks/useLocalState";
 
-describe("useLocalStorage", () => {
+describe("useLocalState", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
   it("should return default value if no value is stored", () => {
-    const { result } = renderHook(() => useLocalStorage("testKey", "default"));
+    const { result } = renderHook(() => useLocalState("testKey", "default"));
     expect(result.current[0]).toBe("default");
   });
 
   it("should return stored value if value is already stored", () => {
     localStorage.setItem("testKey", JSON.stringify("storedValue"));
-    const { result } = renderHook(() => useLocalStorage("testKey", "default"));
+    const { result } = renderHook(() => useLocalState("testKey", "default"));
     expect(result.current[0]).toBe("storedValue");
   });
 
   it("should update localStorage when value is set", () => {
-    const { result } = renderHook(() => useLocalStorage("testKey", "default"));
+    const { result } = renderHook(() => useLocalState("testKey", "default"));
     act(() => {
       result.current[1]("newValue");
     });
@@ -27,7 +27,7 @@ describe("useLocalStorage", () => {
 
   it("should remove item from localStorage when value is set to null", () => {
     localStorage.setItem("testKey", JSON.stringify("storedValue"));
-    const { result } = renderHook(() => useLocalStorage("testKey", "default"));
+    const { result } = renderHook(() => useLocalState("testKey", "default"));
     act(() => {
       result.current[1](null);
     });
@@ -35,9 +35,7 @@ describe("useLocalStorage", () => {
   });
 
   it("should handle number values", () => {
-    const { result } = renderHook(() =>
-      useLocalStorage<number>("testNumber", 0)
-    );
+    const { result } = renderHook(() => useLocalState<number>("testNumber", 0));
     expect(result.current[0]).toBe(0);
 
     act(() => {
@@ -50,7 +48,7 @@ describe("useLocalStorage", () => {
   it("should handle object values", () => {
     const defaultValue = { name: "John", age: 30 };
     const { result } = renderHook(() =>
-      useLocalStorage<{ name: string; age: number }>("testObject", defaultValue)
+      useLocalState<{ name: string; age: number }>("testObject", defaultValue)
     );
     expect(result.current[0]).toEqual(defaultValue);
 
@@ -65,7 +63,7 @@ describe("useLocalStorage", () => {
   it("should handle array values", () => {
     const defaultValue = [1, 2, 3];
     const { result } = renderHook(() =>
-      useLocalStorage<number[]>("testArray", defaultValue)
+      useLocalState<number[]>("testArray", defaultValue)
     );
     expect(result.current[0]).toEqual(defaultValue);
 

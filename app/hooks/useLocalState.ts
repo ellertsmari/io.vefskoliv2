@@ -14,11 +14,11 @@ import {
  * @returns {[T | null, Dispatch<SetStateAction<T | null>>]} A stateful value and a function to update it.
  *
  * @example
- * const [value, setValue] = useLocalStorage<string>("myKey", "default");
+ * const [value, setValue] = useLocalState<string>("myKey", "default");
  *
  * setValue("newValue");
  */
-export function useLocalStorage<T>(
+export function useLocalState<T>(
   key: string,
   defaultValue?: T
 ): [T | null, Dispatch<SetStateAction<T | null>>] {

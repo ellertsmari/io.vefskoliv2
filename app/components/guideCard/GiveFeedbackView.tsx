@@ -24,13 +24,13 @@ import { returnFeedback } from "../../utils/serverActions";
 import { Vote } from "../../models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "../../assets/Icons";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { useLocalState } from "../../hooks/useLocalState";
 import { removeLocalItem } from "../../utils/clientActions";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const LOCAL_STORAGE_KEY = useMemo(() => `feedback for ${guideTitle}`, []);
 
-  const [comment, setComment] = useLocalStorage<string>(LOCAL_STORAGE_KEY, "");
+  const [comment, setComment] = useLocalState<string>(LOCAL_STORAGE_KEY, "");
   const [vote, setVote] = useState<Vote | undefined>(undefined);
   const [state, formAction, isPending] = useActionState(
     returnFeedback,
@@ -56,7 +56,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
 
   useEffect(() => {
     if (state?.success) {
-      removeLocalItem(LOCAL_STORAGE_KEY);
+      setComment(null);
       window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
     }
   }, [state?.success]);
