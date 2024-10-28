@@ -28,8 +28,22 @@ export const Card = ({
   return (
     <StyledLink href={link}>
       <Info>
-        <GuideNr>{order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}</GuideNr>
-        <Name>{guideTitle}</Name>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "flex-start",
+            textAlign: "center",
+            gap: "0.25rem",
+          }}
+        >
+          <GuideNr>
+            {order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}
+          </GuideNr>
+          <Name>{guideTitle}</Name>
+        </div>
         <Statuses
           returnStatus={returnStatus}
           feedbackStatus={feedbackStatus}

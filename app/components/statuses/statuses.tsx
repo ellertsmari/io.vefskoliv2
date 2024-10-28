@@ -14,7 +14,6 @@ import {
   Hourglass,
 } from "../../assets/Icons";
 
-
 export const Statuses = ({
   returnStatus,
   feedbackStatus,
@@ -33,29 +32,29 @@ export const Statuses = ({
 
     if (gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) {
       return (
-        <>
+        <Status>
           <IconContainer>
             <Bell />
           </IconContainer>
           <SmallText>{GradesGivenStatus.NEED_TO_GRADE}</SmallText>
-        </>
+        </Status>
       );
     }
 
     if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {
       return (
-        <>
+        <Status>
           <IconContainer>
             <Bell />
           </IconContainer>
           <SmallText>{FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK}</SmallText>
-        </>
+        </Status>
       );
     }
 
     if (grade) {
       return (
-        <>
+        <Status>
           <IconContainer>
             <Bell />
           </IconContainer>
@@ -65,7 +64,7 @@ export const Statuses = ({
           ) : (
             <Grade $color="var(--theme-module3-100)">{grade}</Grade>
           )}
-        </>
+        </Status>
       );
     }
     return null;
@@ -81,9 +80,8 @@ export const Statuses = ({
           <SmallText>{returnStatus}</SmallText>
         )}
       </Status>
-      <Status>
-        <FeedbackAndGradeStatus />
-      </Status>
+
+      <FeedbackAndGradeStatus />
     </StatusesWrapper>
   );
 };

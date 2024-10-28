@@ -42,6 +42,7 @@ export const Info = styled.div`
 export const GuideNr = styled.h2`
   font-size: 16px;
   font-weight: 600;
+  align-self: center;
 `;
 
 export const Name = styled.p`
@@ -91,8 +92,9 @@ export const ColouredCircle = styled.div<{ $backgroundColor?: StyleColors }>`
   height: 12px;
 
   @media (min-width: ${BREAKPOINT}) {
-  width: 16px;
-  height: 16px;
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 export const OverviewWrapper = styled(Wrapper)`
