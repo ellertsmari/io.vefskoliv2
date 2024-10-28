@@ -13,7 +13,7 @@ import { use, useActionState, useCallback, useEffect, useState } from "react";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "../../providers/GuideProvider";
 import { ExtendedGuideInfo } from "../../../types/guideTypes";
-import { returnFeedback } from "../../utils/actions";
+import { returnFeedback } from "../../utils/serverActions";
 import { Vote } from "../../models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "../../assets/Icons";

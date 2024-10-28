@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
 import PeoplePage from "../app/people/page";
-import { getUsers } from "../app/utils/actions";
+import { getUsers } from "../app/utils/serverActions";
 
-jest.mock("../app/utils/actions", () => ({
+jest.mock("../app/utils/serverActions", () => ({
   getUsers: jest.fn(),
 }));
 

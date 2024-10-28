@@ -2,7 +2,7 @@ import { Slider } from "components/slider/Slider";
 import { SubTitle } from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { ButtonContainer, GradeContainer, SubmitButton } from "./style";
-import { returnGrade } from "../../utils/actions";
+import { returnGrade } from "../../utils/serverActions";
 import { useGuide } from "../../providers/GuideProvider";
 
 export const Grade = ({

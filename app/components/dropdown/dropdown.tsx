@@ -16,6 +16,7 @@ export type DropdownOption = {
 
 interface DropdownProps {
   options: DropdownOption[];
+  currentOption?: DropdownOption;
   titleOption: DropdownOption;
   style?: React.CSSProperties;
   zIndex?: number;
@@ -25,10 +26,13 @@ export const Dropdown = ({
   options,
   titleOption,
   style,
+  currentOption,
   zIndex,
 }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentOption, setCurrentOption] = useState(titleOption.optionName);
+  const [shownOption, setShownOption] = useState(
+    currentOption?.optionName ?? titleOption.optionName
+  );
   const [showOptions, setShowOptions] = useState(false);
 
   const handleOnClick = (optionName: string) => {
@@ -41,7 +45,7 @@ export const Dropdown = ({
     }
     setIsOpen(!isOpen);
 
-    setCurrentOption(optionName);
+    setShownOption(optionName);
   };
 
   const Options = useMemo(() => {
@@ -72,7 +76,7 @@ export const Dropdown = ({
           }}
           $title
         >
-          <p>{currentOption.toUpperCase()}</p>
+          <p>{shownOption.toUpperCase()}</p>
 
           <Arrow
             direction={isOpen ? "up" : "down"}

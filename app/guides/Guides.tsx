@@ -1,10 +1,12 @@
 "use client";
 import GuidesClient from "./guidesClient";
 
-import { useState } from "react";
 import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "../components/dropdown/dropdown";
 import { ExtendedGuideInfo, Module } from "../../types/guideTypes";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+
+const LOCAL_STORAGE_KEY = "selectedModule";
 
 export const Guides = ({
   extendedGuides,
@@ -13,9 +15,8 @@ export const Guides = ({
   extendedGuides: ExtendedGuideInfo[];
   modules: Module[];
 }) => {
-  const [selectedModule, setSelectedModule] = useState<number | undefined>(
-    undefined
-  );
+  const [selectedModule, setSelectedModule] =
+    useLocalStorage<number>(LOCAL_STORAGE_KEY);
 
   if (!extendedGuides || !modules) return null;
 
@@ -28,9 +29,12 @@ export const Guides = ({
       <GuideDropdownContainer>
         <Dropdown
           options={options}
+          currentOption={options.find(
+            (option) => option.optionName === "Module " + selectedModule
+          )}
           titleOption={{
             optionName: "All Modules",
-            onClick: () => setSelectedModule(undefined),
+            onClick: () => setSelectedModule(null),
           }}
         />
       </GuideDropdownContainer>
@@ -41,7 +45,7 @@ export const Guides = ({
 
 const createOptions = (
   modules: Module[],
-  setSelectedModule: React.Dispatch<number | undefined>
+  setSelectedModule: React.Dispatch<number | null>
 ) => {
   return modules.map((module) => ({
     optionName: "Module " + module.number,
@@ -50,10 +54,10 @@ const createOptions = (
 };
 
 const filterGuides = (
-  selectedModule: number | undefined,
+  selectedModule: number | null,
   extendedGuides: ExtendedGuideInfo[]
 ) => {
-  if (selectedModule === undefined) return extendedGuides;
+  if (!selectedModule) return extendedGuides;
   return extendedGuides.filter((guide) => {
     if (guide.module.title[0] === "" + selectedModule) return guide;
   });

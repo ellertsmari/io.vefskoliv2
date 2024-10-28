@@ -4,9 +4,9 @@
 
 import { render, fireEvent, waitFor } from "@testing-library/react";
 import RegisterForm from "../../app/components/RegisterForm";
-import { signUp } from "../../app/utils/actions";
+import { signUp } from "../../app/utils/serverActions";
 
-jest.mock("../../app/utils/actions", () => ({
+jest.mock("../../app/utils/serverActions", () => ({
   signUp: jest.fn(),
 }));
 
