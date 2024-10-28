@@ -21,7 +21,7 @@ export const GuideModal = () => {
 
   const RenderedContent = () => {
     if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {
-      return <GiveFeedbackView />;
+      return <GiveFeedbackView guideTitle={title} />;
     }
     return <FeedbackOverview />;
   };
