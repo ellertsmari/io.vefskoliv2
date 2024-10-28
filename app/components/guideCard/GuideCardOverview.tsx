@@ -2,7 +2,7 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../guides/types";
+} from "../../../types/guideTypes";
 import { GuideCardStatuses } from "../guideCardStatuses/GuideCardStatuses";
 import { StyledLink, Info, GuideNr, Name } from "./style";
 

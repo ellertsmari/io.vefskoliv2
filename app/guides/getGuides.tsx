@@ -3,7 +3,7 @@ import { connectToDatabase } from "../utils/mongoose-connector";
 import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
 import { PipelineStage } from "mongoose";
-import { GuideInfo } from "./types";
+import { GuideInfo } from "../../types/guideTypes";
 
 export async function getGuides(
   userIdString: string

@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useState } from "react";
 import React from "react";
-import { ExtendedGuideInfo } from "../guides/types";
+import { ExtendedGuideInfo } from "../../types/guideTypes";
 
 type GuideContextProps = {
   children: React.ReactNode | null;

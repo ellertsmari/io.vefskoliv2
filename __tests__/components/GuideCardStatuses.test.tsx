@@ -3,7 +3,7 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../app/guides/types";
+} from "../../types/guideTypes";
 import { GuideCardStatuses } from "components/guideCardStatuses/GuideCardStatuses";
 import { exportedForTesting } from "../../app/assets/Icons";
 

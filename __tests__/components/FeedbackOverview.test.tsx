@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useGuide } from "../../app/providers/GuideProvider";
 import { FeedbackOverview } from "components/guideCard/FeedbackOverview";
-import { FeedbackDocumentWithReturn } from "../../app/guides/types";
+import { FeedbackDocumentWithReturn } from "../../types/guideTypes";
 import { ReturnDocument } from "../../app/models/return";
 import { FeedbackDocument } from "../../app/models/review";
 import { Types } from "mongoose";

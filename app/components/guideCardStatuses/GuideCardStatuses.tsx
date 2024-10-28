@@ -3,7 +3,7 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../guides/types";
+} from "../../../types/guideTypes";
 import { Grade, IconContainer, Status, StatusesWrapper } from "./style";
 
 import {

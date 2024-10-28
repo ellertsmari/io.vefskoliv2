@@ -11,7 +11,7 @@ import {
 } from "../__mocks__/mongoHandler";
 import { getGuides } from "../../app/guides/getGuides";
 import { Types } from "mongoose";
-import { FeedbackDocumentWithReturn, GuideInfo } from "../../app/guides/types";
+import { FeedbackDocumentWithReturn, GuideInfo } from "../../types/guideTypes";
 import { Review } from "../../app/models/review";
 import { ReturnDocument } from "../../app/models/return";
 

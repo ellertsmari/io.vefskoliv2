@@ -12,7 +12,7 @@ import MarkdownEditor from "components/markdown/editor";
 import { use, useActionState, useCallback, useEffect, useState } from "react";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "../../providers/GuideProvider";
-import { ExtendedGuideInfo } from "../../guides/types";
+import { ExtendedGuideInfo } from "../../../types/guideTypes";
 import { returnFeedback } from "../../utils/actions";
 import { Vote } from "../../models/review";
 import { StyleColors } from "globalStyles/colors";

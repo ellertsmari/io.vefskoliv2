@@ -18,7 +18,7 @@ import {
   FeedbackDocumentWithReturn,
   GuideInfo,
   Module,
-} from "../../app/guides/types";
+} from "../../types/guideTypes";
 import { extendGuides } from "../../app/guides/utils";
 
 jest.mock("../../app/utils/mongoose-connector", () => ({

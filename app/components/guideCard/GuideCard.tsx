@@ -4,7 +4,7 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../guides/types";
+} from "../../../types/guideTypes";
 import { GuideProvider } from "../../providers/GuideProvider";
 import { GuideCardOverview } from "./GuideCardOverview";
 import { CardWrapper, InfoWrapper } from "./style";

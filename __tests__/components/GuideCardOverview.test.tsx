@@ -5,7 +5,7 @@ import {
   ReturnStatus,
   FeedbackStatus,
   GradesGivenStatus,
-} from "../../app/guides/types";
+} from "../../types/guideTypes";
 
 describe("GuideCardOverview", () => {
   it("renders the guide title", () => {

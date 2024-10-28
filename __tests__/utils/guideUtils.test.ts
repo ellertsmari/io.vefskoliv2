@@ -4,7 +4,7 @@ import {
   ReturnStatus,
   GradesGivenStatus,
   GradesReceivedStatus,
-} from "../../app/guides/types";
+} from "../../types/guideTypes";
 import {
   calculateFeedbackStatus,
   calculateReturnStatus,

@@ -13,7 +13,7 @@ import {
   ExtendedGuideInfo,
   GuideInfo,
   Module,
-} from "./types";
+} from "../../types/guideTypes";
 
 export const extendGuides = async (
   guides: GuideInfo[]

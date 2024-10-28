@@ -1,7 +1,7 @@
 import GuideCard from "../../components/guideCard/GuideCard";
 
 import { GuideContainer } from "../style";
-import { ExtendedGuideInfo } from "../types";
+import { ExtendedGuideInfo } from "../../../types/guideTypes";
 
 type GuidesClientProps = {
   guides: ExtendedGuideInfo[];

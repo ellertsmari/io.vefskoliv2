@@ -4,7 +4,7 @@ import {
   ExtendedGuideInfo,
   FeedbackDocumentWithReturn,
   GradesGivenStatus,
-} from "../../guides/types";
+} from "../../../types/guideTypes";
 import {
   FeedbackContainer,
   Border,

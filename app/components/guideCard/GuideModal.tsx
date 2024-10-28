@@ -8,7 +8,7 @@ import {
   ModalWrapper,
   LinkNoWrap,
 } from "./style";
-import { FeedbackStatus } from "../../guides/types";
+import { FeedbackStatus } from "../../../types/guideTypes";
 import { calculateReturnStyle } from "./utils";
 import { Button } from "globalStyles/buttons/default/style";
 import { FeedbackOverview } from "./FeedbackOverview";

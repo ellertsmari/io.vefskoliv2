@@ -1,5 +1,5 @@
 import { Guides, exportedForTesting } from "../../app/guides/Guides";
-import { ExtendedGuideInfo } from "../../app/guides/types";
+import { ExtendedGuideInfo } from "../../types/guideTypes";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import {
   clearDatabase,
