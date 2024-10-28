@@ -74,4 +74,64 @@ describe("useLocalState", () => {
     expect(localStorage.getItem("testArray")).toBe(JSON.stringify(newValue));
     expect(result.current[0]).toEqual(newValue);
   });
+
+  it("should handle custom serialization and deserialization functions", () => {
+    const serialize = (value: number) => value.toString();
+    const deserialize = (value: string) => parseInt(value, 10);
+    const { result } = renderHook(() =>
+      useLocalState<number>("testKey", 0, serialize, deserialize)
+    );
+
+    act(() => {
+      result.current[1](42);
+    });
+    expect(localStorage.getItem("testKey")).toBe("42");
+    expect(result.current[0]).toBe(42);
+  });
+
+  it("should handle custom serialization and deserialization functions for objects", () => {
+    const serialize = (value: { name: string; age: number }) =>
+      `${value.name}:${value.age}`;
+    const deserialize = (value: string) => {
+      const [name, age] = value.split(":");
+      return { name, age: parseInt(age, 10) };
+    };
+
+    const defaultValue = { name: "John", age: 30 };
+    const { result } = renderHook(() =>
+      useLocalState<{ name: string; age: number }>(
+        "testObject",
+        defaultValue,
+        serialize,
+        deserialize
+      )
+    );
+
+    const newValue = { name: "Jane", age: 25 };
+    act(() => {
+      result.current[1](newValue);
+    });
+    expect(localStorage.getItem("testObject")).toBe("Jane:25");
+    expect(result.current[0]).toEqual(newValue);
+  });
+
+  it("should update state when localStorage changes", () => {
+    const { result } = renderHook(() => useLocalState("testKey", "default"));
+
+    // Initial state should be the default value
+    expect(result.current[0]).toBe("default");
+
+    // Simulate localStorage change from another tab/window
+    act(() => {
+      localStorage.setItem("testKey", JSON.stringify("newValue"));
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "testKey",
+          newValue: JSON.stringify("newValue"),
+        })
+      );
+    });
+
+    expect(result.current[0]).toBe("newValue");
+  });
 });
