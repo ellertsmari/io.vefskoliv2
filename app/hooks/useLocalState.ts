@@ -24,7 +24,15 @@ export function useLocalState<T>(
 ): [T | null, Dispatch<SetStateAction<T | null>>] {
   const [storedValue, setStoredValue] = useState<T | null>(() => {
     const item = getLocalItem(key);
-    return item ? JSON.parse(item) : defaultValue ?? null;
+    if (item) {
+      try {
+        return JSON.parse(item);
+      } catch (error) {
+        console.warn(`Error parsing localStorage key "${key}":`, error);
+        removeLocalItem(key); // Clean up invalid data
+      }
+    }
+    return defaultValue ?? null;
   });
 
   useEffect(() => {
