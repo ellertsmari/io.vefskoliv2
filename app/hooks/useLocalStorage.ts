@@ -5,6 +5,19 @@ import {
   setLocalItem,
 } from "../utils/clientActions";
 
+/**
+ * Hook to manage state synchronized with localStorage.
+ *
+ * @template T - The type of the value to be stored.
+ * @param {string} key - The key under which the value is stored in localStorage.
+ * @param {T} [defaultValue] - The default value to use if no value is found in localStorage.
+ * @returns {[T | null, Dispatch<SetStateAction<T | null>>]} A stateful value and a function to update it.
+ *
+ * @example
+ * const [value, setValue] = useLocalStorage<string>("myKey", "default");
+ *
+ * setValue("newValue");
+ */
 export function useLocalStorage<T>(
   key: string,
   defaultValue?: T
