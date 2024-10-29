@@ -4,9 +4,9 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../guides/types";
+} from "../../../types/guideTypes";
 import { GuideProvider } from "../../providers/GuideProvider";
-import { Card } from "./Card";
+import { GuideCardOverview } from "./GuideCardOverview";
 import { CardWrapper, InfoWrapper } from "./style";
 import { NotificationIconContainer } from "components/toggle/style";
 import { NotificationIcon } from "../../assets/Icons";
@@ -15,7 +15,6 @@ import { Suspense, lazy } from "react";
 const GuideModal = lazy(() =>
   import("./GuideModal").then((mod) => ({ default: mod.GuideModal }))
 );
-
 
 const GuideCard = ({
   guide,
@@ -28,7 +27,6 @@ const GuideCard = ({
 
   const link =
     guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
-
   return (
     <GuideProvider guide={guide}>
       <CardWrapper>
@@ -40,7 +38,7 @@ const GuideCard = ({
           )}
         >
           {link ? (
-            <Card
+            <GuideCardOverview
               moduleTitle={guide.module.title[0]}
               guideTitle={guide.title}
               link={link}
@@ -58,7 +56,7 @@ const GuideCard = ({
               )}
               <Modal
                 modalTrigger={
-                  <Card
+                  <GuideCardOverview
                     moduleTitle={guide.module.title[0]}
                     guideTitle={guide.title}
                     order={order}
@@ -84,11 +82,9 @@ const GuideCard = ({
 
 const Notification = () => {
   return (
-    <>
-      <NotificationIconContainer aria-label={`Notification icon`}>
-        <NotificationIcon />
-      </NotificationIconContainer>
-    </>
+    <NotificationIconContainer>
+      <NotificationIcon />
+    </NotificationIconContainer>
   );
 };
 
@@ -114,7 +110,7 @@ const calculateBorderStyle = (
     return "border-color: var(--error-failure-100); background-color: var(--error-failure-10)";
   }
   if (returnStatus === ReturnStatus.HALL_OF_FAME) {
-    return "background-color: var(--theme-module3-10); border-width: 3px;";
+    return "border-color: var(--theme-module3-100); background-color: var(--theme-module3-10); border-width: 3px;";
   }
 };
 

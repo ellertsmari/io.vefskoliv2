@@ -16,12 +16,9 @@ import {
 import MarkdownReader from "../../components/markdown/reader";
 import ReturnForm from "./returnForm";
 import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
-import { useGuide } from "../../providers/GuideProvider";
 import { GuideType } from "../../models/guide";
 
-export const Guide = () => {
-  const guide = useGuide() as GuideType;
-
+export const Guide = ({ guide }: { guide: GuideType }) => {
   if (!guide) {
     return <h1>Guide not found</h1>;
   }
@@ -120,7 +117,7 @@ export const Guide = () => {
       </Content>
 
       <ReturnWrapper>
-        <ReturnForm />
+        <ReturnForm guideId={guide._id.toString()} />
       </ReturnWrapper>
     </Container>
   );

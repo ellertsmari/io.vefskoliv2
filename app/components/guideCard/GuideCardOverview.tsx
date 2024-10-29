@@ -2,11 +2,11 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../guides/types";
-import { Statuses } from "../statuses/statuses";
-import { StyledLink, Info, GuideNr, Name } from "./style";
+} from "../../../types/guideTypes";
+import { GuideCardStatuses } from "../guideCardStatuses/GuideCardStatuses";
+import { StyledLink, Info, GuideNr, Name, GuideDescription } from "./style";
 
-export const Card = ({
+export const GuideCardOverview = ({
   guideTitle,
   moduleTitle,
   order,
@@ -28,22 +28,12 @@ export const Card = ({
   return (
     <StyledLink href={link}>
       <Info>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "flex-start",
-            textAlign: "center",
-            gap: "0.25rem",
-          }}
-        >
+        <GuideDescription>
           <GuideNr>
             {order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}
           </GuideNr>
           <Name>{guideTitle}</Name>
-        </div>
+        </GuideDescription>
         <Statuses
           returnStatus={returnStatus}
           feedbackStatus={feedbackStatus}

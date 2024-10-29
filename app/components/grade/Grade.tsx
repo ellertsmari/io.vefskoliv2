@@ -3,6 +3,7 @@ import { SubTitle } from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { ButtonContainer, GradeContainer, SubmitButton } from "./style";
 import { returnGrade } from "../../utils/actions";
+import { useGuide } from "../../providers/GuideProvider";
 
 export const Grade = ({
   grade,
@@ -15,6 +16,7 @@ export const Grade = ({
 }) => {
   const [tempGrade, setTempGrade] = useState<number | null | undefined>(grade);
   const [canGrade, setCanGrade] = useState(gradeable);
+  const { updateGradeStatus } = useGuide();
 
   const [state, formAction, isPending] = useActionState(returnGrade, undefined);
 
@@ -23,7 +25,7 @@ export const Grade = ({
   };
 
   useEffect(() => {
-    if (state?.success) {
+    if (state?.success && state.data) {
       setCanGrade(false);
     }
   }, [state]);
