@@ -34,7 +34,7 @@ export const GuideCardOverview = ({
           </GuideNr>
           <Name>{guideTitle}</Name>
         </GuideDescription>
-        <Statuses
+        <GuideCardStatuses
           returnStatus={returnStatus}
           feedbackStatus={feedbackStatus}
           gradesGivenStatus={gradesGivenStatus}
