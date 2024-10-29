@@ -203,7 +203,7 @@ export async function returnGrade(state: GradeFormState, data: GradeDataType) {
 
     return {
       success: true,
-      data: gradedDocument,
+      data: gradedDocument.toObject(),
       message: "Grade submitted successfully",
     };
   } catch (e) {
