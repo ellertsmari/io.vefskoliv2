@@ -16,6 +16,7 @@ import { GiveFeedbackView } from "./GiveFeedbackView";
 
 export const GuideModal = () => {
   const { guide } = useGuide();
+  if (!guide) return null;
 
   const { link, returnStatus, title, feedbackStatus } = guide;
 

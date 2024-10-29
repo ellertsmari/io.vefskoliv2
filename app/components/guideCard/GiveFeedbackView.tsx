@@ -67,6 +67,8 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
     []
   );
 
+  if (!guide) return null;
+
   return (
     <FeedbackInfoContainer>
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
