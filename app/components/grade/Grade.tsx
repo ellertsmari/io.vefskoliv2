@@ -2,8 +2,9 @@ import { Slider } from "components/slider/Slider";
 import { SubTitle } from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { ButtonContainer, GradeContainer, SubmitButton } from "./style";
+
+
 import { returnGrade } from "../../utils/serverActions";
-import { useGuide } from "../../providers/GuideProvider";
 
 export const Grade = ({
   grade,
@@ -14,9 +15,8 @@ export const Grade = ({
   gradeable: boolean;
   reviewId?: string;
 }) => {
-  const [tempGrade, setTempGrade] = useState<number | null | undefined>(grade);
+  const [tempGrade, setTempGrade] = useState<number>(grade ?? 5);
   const [canGrade, setCanGrade] = useState(gradeable);
-  const { updateGradeStatus } = useGuide();
 
   const [state, formAction, isPending] = useActionState(returnGrade, undefined);
 
@@ -28,13 +28,11 @@ export const Grade = ({
     if (state?.success && state.data) {
       setCanGrade(false);
     }
-  }, [state]);
+  }, [state?.success]);
 
   const handleSubmit = () => {
     startTransition(async () => {
-      if (tempGrade) {
-        await formAction({ grade: tempGrade, reviewId });
-      }
+      await formAction({ grade: tempGrade, reviewId });
     });
   };
 
@@ -49,7 +47,7 @@ export const Grade = ({
       <SubTitle>GRADE</SubTitle>
       <Slider
         options={Array.from({ length: 11 }, (_, i) => i)}
-        value={tempGrade ?? 5}
+        value={tempGrade}
         selectable={canGrade}
         helpLink={"linkToGradingCriteria"}
         handleOnChange={handleOnGradeChange}
