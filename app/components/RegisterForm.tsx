@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useActionState, useEffect, useRef } from "react";
-import { signUp } from "../utils/actions";
+import { signUp } from "../utils/serverActions";
 import DefaultButton from "../globalStyles/buttons/default";
 import Input, { ErrorMessage } from "../globalStyles/input";
 import {

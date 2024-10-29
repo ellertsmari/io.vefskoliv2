@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef } from "react";
-import { authenticate } from "../utils/actions";
+import { authenticate } from "../utils/serverActions";
 import {
   Container,
   Form,

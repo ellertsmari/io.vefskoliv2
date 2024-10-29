@@ -6,7 +6,7 @@ import { ReturnDocument } from "../../app/models/return";
 import { FeedbackDocument } from "../../app/models/review";
 import { Types } from "mongoose";
 
-jest.mock("../../app/utils/actions", () => ({
+jest.mock("../../app/utils/serverActions", () => ({
   returnGuide: jest.fn(),
 }));
 

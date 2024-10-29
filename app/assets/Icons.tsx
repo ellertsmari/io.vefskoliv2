@@ -1,8 +1,8 @@
 const hourglassIconLabel = "Hourglass icon";
 export const Hourglass = () => (
   <svg
-    width="17"
-    height="24"
+    width="100%"
+    height="100%"
     viewBox="0 0 17 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"

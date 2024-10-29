@@ -4,7 +4,7 @@ import {
   ReturnStatus,
 } from "../../../types/guideTypes";
 import { GuideCardStatuses } from "../guideCardStatuses/GuideCardStatuses";
-import { StyledLink, Info, GuideNr, Name } from "./style";
+import { StyledLink, Info, GuideNr, Name, GuideDescription } from "./style";
 
 export const GuideCardOverview = ({
   guideTitle,
@@ -28,8 +28,12 @@ export const GuideCardOverview = ({
   return (
     <StyledLink href={link}>
       <Info>
-        <GuideNr>{order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}</GuideNr>
-        <Name>{guideTitle}</Name>
+        <GuideDescription>
+          <GuideNr>
+            {order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}
+          </GuideNr>
+          <Name>{guideTitle}</Name>
+        </GuideDescription>
         <GuideCardStatuses
           returnStatus={returnStatus}
           feedbackStatus={feedbackStatus}

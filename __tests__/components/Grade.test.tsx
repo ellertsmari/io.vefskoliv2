@@ -1,9 +1,9 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react";
 import { Grade } from "components/grade/Grade";
-import { returnGrade } from "../../app/utils/actions";
+import { returnGrade } from "../../app/utils/serverActions";
 
-jest.mock("../../app/utils/actions", () => ({
+jest.mock("../../app/utils/serverActions", () => ({
   returnGrade: jest.fn(),
 }));
 

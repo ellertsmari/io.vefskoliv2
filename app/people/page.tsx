@@ -1,6 +1,6 @@
 "use server";
 import { UserInfoCards } from "components/peopleCard/UserInfoCards";
-import { getUsers } from "../utils/actions";
+import { getUsers } from "../utils/serverActions";
 import { Container } from "./style";
 
 const PeoplePage = async () => {

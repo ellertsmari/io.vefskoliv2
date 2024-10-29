@@ -1,4 +1,4 @@
-import { getGuide } from "../../utils/actions";
+import { getGuide } from "../../utils/serverActions";
 import { GuideProvider } from "../../providers/GuideProvider";
 import { Guide } from "./Guide";
 import { GuideType } from "../../models/guide";

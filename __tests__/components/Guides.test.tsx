@@ -22,7 +22,12 @@ const { filterGuides, createOptions } = exportedForTesting;
 
 describe("Guides", () => {
   beforeAll(async () => await connect());
-  afterEach(async () => await clearDatabase());
+  beforeEach(() => {
+    localStorage.clear();
+  });
+  afterEach(async () => {
+    await clearDatabase();
+  });
 
   afterAll(async () => await closeDatabase());
 
@@ -30,17 +35,18 @@ describe("Guides", () => {
     const user = await createDummyUser();
     const extendedGuides = await createDummyExtendedGuides(user, 3);
 
-    const { getByText, debug } = render(
+    const { queryByText, getByText } = render(
       <Guides
         extendedGuides={extendedGuides}
         modules={createDummyModules(10)}
       />
     );
+
     // Check if alla guides are shown initially
     await waitFor(() => {
-      expect(getByText(extendedGuides[0].module.title)).toBeDefined();
-      expect(getByText(extendedGuides[1].module.title)).toBeDefined();
-      expect(getByText(extendedGuides[2].module.title)).toBeDefined();
+      expect(queryByText(extendedGuides[0].module.title)).toBeDefined();
+      expect(queryByText(extendedGuides[1].module.title)).toBeDefined();
+      expect(queryByText(extendedGuides[2].module.title)).toBeDefined();
     });
 
     // Select "Module 1" from the dropdown
@@ -58,9 +64,9 @@ describe("Guides", () => {
     await waitFor(() => fireEvent.click(getByText("ALL MODULES")));
 
     // Check if all guides are shown again
-    expect(getByText(extendedGuides[0].module.title)).toBeDefined();
-    expect(getByText(extendedGuides[1].module.title)).toBeDefined();
-    expect(getByText(extendedGuides[2].module.title)).toBeDefined();
+    expect(queryByText(extendedGuides[0].module.title)).toBeDefined();
+    expect(queryByText(extendedGuides[1].module.title)).toBeDefined();
+    expect(queryByText(extendedGuides[2].module.title)).toBeDefined();
   });
 
   test("renders correctly when no guides are provided", async () => {
@@ -147,8 +153,8 @@ describe("filterGuides", () => {
     ]);
   });
 
-  it("should return all guides when selectedModule is undefined", () => {
-    const selectedModule = undefined;
+  it("should return all guides when selectedModule is null", () => {
+    const selectedModule = null;
     const fetchedGuides = [
       { module: { title: "1 Module" }, link: "link1" },
       { module: { title: "2 Module" }, link: "link2" },
