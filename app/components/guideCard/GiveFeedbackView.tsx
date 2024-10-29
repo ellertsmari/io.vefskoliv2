@@ -9,26 +9,38 @@ import {
 } from "./style";
 import { SubTitle } from "globalStyles/text";
 import MarkdownEditor from "components/markdown/editor";
-import { use, useActionState, useCallback, useEffect, useState } from "react";
+import {
+  use,
+  useActionState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "../../providers/GuideProvider";
 import { ExtendedGuideInfo } from "../../../types/guideTypes";
-import { returnFeedback } from "../../utils/actions";
+import { returnFeedback } from "../../utils/serverActions";
 import { Vote } from "../../models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "../../assets/Icons";
+import { useLocalState } from "../../hooks/useLocalState";
+import { removeLocalItem } from "../../utils/clientActions";
 
-export const GiveFeedbackView = () => {
-  const [comment, setComment] = useState<string>("");
+export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
+  const LOCAL_STORAGE_KEY = useMemo(() => `feedback for ${guideTitle}`, []);
+
+  const [comment, setComment] = useLocalState<string>(LOCAL_STORAGE_KEY, "");
   const [vote, setVote] = useState<Vote | undefined>(undefined);
   const [state, formAction, isPending] = useActionState(
     returnFeedback,
     undefined
   );
+
   const { guide } = useGuide();
   const { availableForFeedback } = guide;
   const theReturn = availableForFeedback[0];
-  const canSubmit = comment.length >= 2;
+  const canSubmit = comment && comment.length >= 2;
 
   const handleSubmit = (event: React.FormEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -44,8 +56,8 @@ export const GiveFeedbackView = () => {
 
   useEffect(() => {
     if (state?.success) {
-      // lazy way to force state update as we have no DB listeners setup yet
-      window.location.reload();
+      setComment(null);
+      window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
     }
   }, [state?.success]);
 
@@ -63,7 +75,7 @@ export const GiveFeedbackView = () => {
       </div>
       <WriteFeedbackContainer>
         <SubTitle>WRITE A REVIEW</SubTitle>
-        <MarkdownEditor value={comment} setValue={handleSetComment} />
+        <MarkdownEditor value={comment || ""} setValue={handleSetComment} />
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button
             $styletype={canSubmit ? "default" : "outlined"}

@@ -17,7 +17,7 @@ import { SetStateAction, useState } from "react";
 import Modal from "../../modal/modal";
 import Input from "../../../globalStyles/input";
 import DefaultButton from "../../../globalStyles/buttons/default";
-import { signOut, updateUserInfo } from "../../../utils/actions";
+import { signOut, updateUserInfo } from "../../../utils/serverActions";
 import { DefaultUserIcon } from "../../../assets/Icons";
 import { UserDocument } from "../../../models/user";
 import { useSession } from "../../../providers/SessionProvider";

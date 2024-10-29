@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { returnGuide } from "../../utils/actions";
+import { returnGuide } from "../../utils/serverActions";
 import { FormInputWithError } from "components/formInputWithError/FormInputWithError";
 
 const ReturnForm = ({ guideId }: { guideId: string }) => {
