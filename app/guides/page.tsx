@@ -1,11 +1,11 @@
 "use server";
-import { getGuides } from "./query";
+import { getGuides } from "./getGuides";
 
 import { auth } from "../../auth";
 import { Guides } from "./Guides";
 import { Session } from "next-auth";
 import { extendGuides, fetchModules } from "./utils";
-import { Module } from "./types";
+import { Module } from "../../types/guideTypes";
 
 const GuidesPage = async () => {
   const session: Session | null = await auth();

@@ -1,5 +1,5 @@
 import { SubTitle } from "globalStyles/text";
-import { FeedbackDocumentWithReturn } from "../../guides/types";
+import { FeedbackDocumentWithReturn } from "../../../types/guideTypes";
 import { ReturnDocument } from "../../models/return";
 import {
   OverviewWrapper,

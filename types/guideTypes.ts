@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
-import { ModuleType } from "../models/guide";
-import { FeedbackDocument, GradedFeedbackDocument } from "../models/review";
-import { ReturnDocument } from "../models/return";
+import { ModuleType } from "../app/models/guide";
+import { FeedbackDocument, GradedFeedbackDocument } from "../app/models/review";
+import { ReturnDocument } from "../app/models/return";
 
 export type FeedbackDocumentWithReturn = FeedbackDocument & {
   associatedReturn?: ReturnDocument;

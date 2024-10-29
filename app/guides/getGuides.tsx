@@ -3,7 +3,7 @@ import { connectToDatabase } from "../utils/mongoose-connector";
 import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
 import { PipelineStage } from "mongoose";
-import { GuideInfo } from "./types";
+import { GuideInfo } from "../../types/guideTypes";
 
 export async function getGuides(
   userIdString: string
@@ -64,34 +64,34 @@ export async function getGuides(
     },
   };
 
-  // grab returns available for reviewing
+  // grab grades received from others
+  const addGradesReceived: PipelineStage = {
+    $addFields: {
+      gradesReceived: {
+        $filter: {
+          input: "$feedbackGiven",
+          as: "feedback",
+          cond: { $ne: [{ $ifNull: ["$$feedback.grade", null] }, null] }, // Filter where grade is null
+        },
+      },
+      as: "gradesReceived",
+    },
+  };
+
+  // grab returns available for reviewing by user
   const lookupAvailableForFeedback: PipelineStage = {
     $lookup: {
       from: "returns",
-      let: { guideId: "$_id" },
+      let: { guideId: "$_id", feedbackGivenReturns: "$feedbackGiven.return" },
       pipeline: [
         {
           $match: {
             $expr: {
               $and: [
-                { $eq: ["$guide", "$$guideId"] },
-                { $ne: ["$owner", userId] },
+                { $eq: ["$guide", "$$guideId"] }, // Ensure the guide matches
+                { $ne: ["$owner", userId] }, // Exclude returns from the user
+                { $not: { $in: ["$_id", "$$feedbackGivenReturns"] } }, // Exclude returns user has already given feedback on
               ],
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: "reviews",
-            localField: "_id", // return ID
-            foreignField: "return", // connecting return field in review schema
-            as: "associatedReviews",
-          },
-        },
-        {
-          $match: {
-            "associatedReviews.owner": {
-              $ne: userId,
             },
           },
         },
@@ -103,88 +103,6 @@ export async function getGuides(
         },
       ],
       as: "availableForFeedback",
-    },
-  };
-
-  // grab grades given by user
-  const lookupGradesGiven: PipelineStage = {
-    $lookup: {
-      from: "reviews",
-      let: { guideId: "$_id" },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$guide", "$$guideId"] },
-                { $ne: ["$owner", userId] },
-                { $ne: [{ $ifNull: ["$grade", null] }, null] }, // check if grade is not null
-              ],
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: "returns",
-            localField: "return",
-            foreignField: "_id",
-            as: "associatedReturn",
-          },
-        },
-        { $unwind: "$associatedReturn" },
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$guide", "$$guideId"] },
-                { $eq: ["$associatedReturn.owner", userId] },
-              ],
-            },
-          },
-        },
-      ],
-      as: "gradesGiven",
-    },
-  };
-
-  // grab feedback available for reviewing by user
-  const lookupAvailableToGrade: PipelineStage = {
-    $lookup: {
-      from: "reviews",
-      let: { guideId: "$_id" },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$guide", "$$guideId"] },
-                { $ne: ["$owner", userId] },
-                { $eq: [{ $ifNull: ["$grade", null] }, null] }, // check grade is null
-              ],
-            },
-          },
-        },
-        // {
-        //   $lookup: {
-        //     from: "returns",
-        //     localField: "return",
-        //     foreignField: "_id",
-        //     as: "associatedReturn",
-        //   },
-        // },
-        // { $unwind: "$associatedReturn" },
-        // {
-        //   $match: {
-        //     $expr: {
-        //       $and: [
-        //         { $eq: ["$guide", "$$guideId"] },
-        //         { $eq: ["$associatedReturn.owner", userId] },
-        //       ],
-        //     },
-        //   },
-        // },
-      ],
-      as: "availableToGrade",
     },
   };
 
@@ -224,25 +142,29 @@ export async function getGuides(
     },
   };
 
-  // grab grades received from others
-  const lookupGradesReceived: PipelineStage = {
-    $lookup: {
-      from: "reviews",
-      let: { guideId: "$_id" },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$guide", "$$guideId"] },
-                { $eq: ["$owner", userId] },
-                { $ne: [{ $ifNull: ["$grade", null] }, null] }, // check if grade is not null
-              ],
-            },
-          },
+  // grab feedback available for reviewing by user
+  const addAvailableToGrade: PipelineStage = {
+    $addFields: {
+      availableToGrade: {
+        $filter: {
+          input: "$feedbackReceived",
+          as: "feedback",
+          cond: { $eq: [{ $ifNull: ["$$feedback.grade", null] }, null] }, // Filter where grade is null
         },
-      ],
-      as: "gradesReceived",
+      },
+    },
+  };
+
+  // grab grades given by user
+  const addGradesGiven: PipelineStage = {
+    $addFields: {
+      gradesGiven: {
+        $filter: {
+          input: "$feedbackReceived",
+          as: "feedback",
+          cond: { $ne: [{ $ifNull: ["$$feedback.grade", null] }, null] }, // Filter where grade exists
+        },
+      },
     },
   };
 
@@ -277,11 +199,11 @@ export async function getGuides(
     return await Guide.aggregate([
       lookupReturnsSubmitted,
       lookupFeedbackGiven,
+      addGradesReceived,
       lookupAvailableForFeedback,
-      lookupGradesGiven,
-      lookupAvailableToGrade,
       lookupFeedbackReceived,
-      lookupGradesReceived,
+      addGradesGiven,
+      addAvailableToGrade,
 
       defineProject,
       {

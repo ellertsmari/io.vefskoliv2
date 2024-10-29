@@ -1,5 +1,5 @@
 import { StyleColors } from "globalStyles/colors";
-import { ReturnStatus } from "../../guides/types";
+import { ReturnStatus } from "../../../types/guideTypes";
 
 export const calculateReturnStyle = (returnStatus: ReturnStatus) => {
   if (returnStatus === ReturnStatus.PASSED) {

@@ -2,11 +2,11 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../guides/types";
-import { Statuses } from "../statuses/statuses";
+} from "../../../types/guideTypes";
+import { GuideCardStatuses } from "../guideCardStatuses/GuideCardStatuses";
 import { StyledLink, Info, GuideNr, Name } from "./style";
 
-export const Card = ({
+export const GuideCardOverview = ({
   guideTitle,
   moduleTitle,
   order,
@@ -30,7 +30,7 @@ export const Card = ({
       <Info>
         <GuideNr>{order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}</GuideNr>
         <Name>{guideTitle}</Name>
-        <Statuses
+        <GuideCardStatuses
           returnStatus={returnStatus}
           feedbackStatus={feedbackStatus}
           gradesGivenStatus={gradesGivenStatus}

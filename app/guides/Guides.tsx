@@ -4,7 +4,7 @@ import GuidesClient from "./guidesClient";
 import { useState } from "react";
 import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "../components/dropdown/dropdown";
-import { ExtendedGuideInfo, Module } from "./types";
+import { ExtendedGuideInfo, Module } from "../../types/guideTypes";
 
 export const Guides = ({
   extendedGuides,
