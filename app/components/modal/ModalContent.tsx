@@ -1,7 +1,7 @@
 "use client";
 import ExitButton from "globalStyles/buttons/exit";
 import { useModal } from "./ModalProvider";
-import { ButtonWrapper, ContentWrapper, ModalWrapper } from "./style";
+import { ButtonWrapper, Content, ContentWrapper, ModalWrapper } from "./style";
 import { useEffect } from "react";
 
 export const ModalContent = ({
@@ -38,7 +38,7 @@ export const ModalContent = ({
               <ExitButton onClick={() => setIsModalOpen(false)} />
             </ButtonWrapper>
           )}
-          {content}
+          <Content>{content}</Content>
         </ContentWrapper>
       </ModalWrapper>
     )
