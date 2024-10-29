@@ -91,8 +91,9 @@ export const ColouredCircle = styled.div<{ $backgroundColor?: StyleColors }>`
   height: 12px;
 
   @media (min-width: ${BREAKPOINT}) {
-  width: 16px;
-  height: 16px;
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 export const OverviewWrapper = styled(Wrapper)`

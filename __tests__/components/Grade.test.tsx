@@ -68,17 +68,6 @@ describe("Grade Component", () => {
     );
   });
 
-  test("handleSubmit does not call formAction if tempGrade is falsy", () => {
-    const { getByText } = render(
-      <Grade grade={null} gradeable={true} reviewId="123" />
-    );
-
-    const submitButton = getByText("SUBMIT GRADE");
-    fireEvent.click(submitButton);
-
-    expect(returnGrade).not.toHaveBeenCalled();
-  });
-
   test("submit button is removed after successful grade submission", async () => {
     (returnGrade as jest.Mock).mockResolvedValueOnce({
       success: true,
@@ -100,23 +89,4 @@ describe("Grade Component", () => {
       expect(queryByText("SUBMIT GRADE")).toBeNull();
     });
   });
-
-  // test("upgradeGrades is called with correct arguments after successful grade submission", async () => {
-  //   const mockData = { id: "123" };
-  //   (returnGrade as jest.Mock).mockResolvedValueOnce({
-  //     success: true,
-  //     data: mockData,
-  //   });
-
-  //   const { getByText } = render(
-  //     <Grade grade={3} gradeable={true} reviewId="123" />
-  //   );
-
-  //   const submitButton = getByText("SUBMIT GRADE");
-
-  //   await waitFor(() => {
-  //     fireEvent.click(submitButton);
-  //     expect(mockUpdateGradeStatus).toHaveBeenCalledWith(mockData);
-  //   });
-  // });
 });

@@ -52,6 +52,7 @@ export const ReturnOverview = ({
             grade={theFeedback.grade}
             gradeable={gradeable}
             reviewId={theFeedback._id.toString()}
+            key={theFeedback._id.toString()}
           />
         </InfoContainer>
       )}
