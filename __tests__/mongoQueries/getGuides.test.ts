@@ -9,11 +9,11 @@ import {
   createDummyGrade,
   createDummyUser,
 } from "../__mocks__/mongoHandler";
-import { getGuides } from "../../app/guides/getGuides";
 import { Types } from "mongoose";
-import { FeedbackDocumentWithReturn, GuideInfo } from "../../types/guideTypes";
+import { GuideInfo } from "../../types/guideTypes";
 import { Review } from "../../app/models/review";
 import { ReturnDocument } from "../../app/models/return";
+import { getGuides } from "serverActions/getGuides";
 
 // for type checking
 function isGuideInfo(obj: any): obj is GuideInfo {

@@ -22,7 +22,9 @@ export function useSessionState<T>(
   deserialize: (value: string) => T = JSON.parse
 ): [T | null, Dispatch<SetStateAction<T | null>>] {
   const [storedValue, setStoredValue] = useState<T | null>(() => {
+    console.log("useSessionState");
     const item = sessionStorage.getItem(key);
+    console.log(item);
     if (item) {
       try {
         return deserialize(item);

@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { UserDocument } from "./app/models/user";
 import { User } from "./app/models/user";
 import bcrypt from "bcrypt";
-import { connectToDatabase } from "./app/utils/mongoose-connector";
+import { connectToDatabase } from "./app/clientActions/mongoose-connector";
 
 export async function getUser(email: string): Promise<UserDocument | null> {
   try {

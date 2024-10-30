@@ -3,7 +3,7 @@ import {
   getLocalItem,
   removeLocalItem,
   setLocalItem,
-} from "../utils/clientActions";
+} from "utils/interactWithLocalStorage";
 
 /**
  * Hook to manage state synchronized with localStorage.
