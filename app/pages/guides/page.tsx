@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "../../../auth";
-import { Guides } from "../../components/guides/Guides";
+import { Guides } from "components/guides/Guides";
 import { Session } from "next-auth";
 import { extendGuides, fetchModules } from "utils/guideUtils";
 import { Module } from "types/guideTypes";

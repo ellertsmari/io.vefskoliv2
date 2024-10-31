@@ -1,8 +1,8 @@
 import { render, fireEvent } from "@testing-library/react";
-import { useModal } from "components/modal/ModalProvider";
-import { ModalTrigger } from "components/modal/ModalTrigger";
+import { useModal } from "UIcomponents/modal/ModalProvider";
+import { ModalTrigger } from "UIcomponents/modal/ModalTrigger";
 
-jest.mock("components/modal/ModalProvider");
+jest.mock("UIcomponents/modal/ModalProvider");
 
 test("calls setIsModalOpen with true when trigger is clicked", () => {
   const setIsModalOpen = jest.fn();

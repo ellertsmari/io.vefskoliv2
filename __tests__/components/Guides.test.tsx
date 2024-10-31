@@ -1,4 +1,4 @@
-import { Guides, exportedForTesting } from "components/guides/Guides";
+import { Guides, exportedForTesting } from "../../app/components/guides/Guides";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import {

@@ -12,9 +12,9 @@ import {
   ContentAndNavigatorContainer,
   ToggleContainer,
 } from "./style";
-import MarkdownReader from "components/markdown/reader";
-import { Toggle, ToggleOption } from "components/toggle/Toggle";
-import { OptionNavigator } from "components/optionNavigator/OptionNavigator";
+import MarkdownReader from "../../UIcomponents/markdown/reader";
+import { Toggle, ToggleOption } from "../../UIcomponents/toggle/Toggle";
+import { OptionNavigator } from "../../UIcomponents/optionNavigator/OptionNavigator";
 import { useGuide } from "../../providers/GuideProvider";
 import { ReturnOverview } from "./ReturnOverview";
 

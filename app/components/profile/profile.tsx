@@ -13,18 +13,16 @@ import {
   Logout,
   Wrapper,
 } from "./style";
-import { SetStateAction, use, useEffect, useState } from "react";
-import Modal from "../../modal/modal";
-import Input from "../../../globalStyles/input";
-import DefaultButton from "../../../globalStyles/buttons/default";
+import { useState } from "react";
+import Modal from "../../UIcomponents/modal/modal";
+import Input from "../../globalStyles/input";
+import DefaultButton from "../../globalStyles/buttons/default";
 import { DefaultUserIcon } from "assets/Icons";
-import { UserDocument, UserType } from "models/user";
+import { UserType } from "models/user";
 import { useSession } from "providers/SessionProvider";
 import { LogoutIcon } from "assets/Icons";
 import { signOut } from "serverActions/signOut";
 import { updateUserInfo } from "serverActions/updateUserInfo";
-import { useSessionState } from "hooks/useSessionState";
-import { set } from "mongoose";
 
 export const Profile = () => {
   //getting the user from session

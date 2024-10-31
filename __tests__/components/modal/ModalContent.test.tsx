@@ -4,10 +4,10 @@ import {
   render,
   waitFor,
 } from "@testing-library/react";
-import { useModal } from "components/modal/ModalProvider";
-import { ModalContent } from "components/modal/ModalContent";
+import { useModal } from "UIcomponents/modal/ModalProvider";
+import { ModalContent } from "UIcomponents/modal/ModalContent";
 
-jest.mock("components/modal/ModalProvider");
+jest.mock("UIcomponents/modal/ModalProvider");
 
 describe("ModalContent", () => {
   it("does not render content when isModalOpen is false", () => {

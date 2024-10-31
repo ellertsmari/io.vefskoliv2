@@ -2,7 +2,7 @@
 import GuidesClient from "./guidesClient";
 
 import { Container, GuideDropdownContainer } from "./style";
-import { Dropdown } from "components/dropdown/dropdown";
+import { Dropdown } from "UIcomponents/dropdown/dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
 import { useSessionState } from "hooks/useSessionState";
 

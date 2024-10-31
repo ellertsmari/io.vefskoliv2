@@ -8,7 +8,7 @@ import {
   WriteFeedbackContainer,
 } from "./style";
 import { SubTitle } from "globalStyles/text";
-import MarkdownEditor from "components/markdown/editor";
+import MarkdownEditor from "../../UIcomponents/markdown/editor";
 import {
   useActionState,
   useCallback,

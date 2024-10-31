@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useGuide } from "providers/GuideProvider";
-import { FeedbackOverview } from "components/guideCard/FeedbackOverview";
+import { FeedbackOverview } from "../../app/components/guideCard/FeedbackOverview";
 import { FeedbackDocumentWithReturn } from "types/guideTypes";
 import { ReturnDocument } from "models/return";
 import { FeedbackDocument } from "models/review";
@@ -10,9 +10,9 @@ jest.mock("serverActions/returnGuide", () => ({
   returnGuide: jest.fn(),
 }));
 
-jest.mock("../../app/providers/GuideProvider");
+jest.mock("providers/GuideProvider");
 
-jest.mock("components/markdown/reader", () => ({
+jest.mock("UIcomponents/markdown/reader", () => ({
   __esModule: true,
   default: ({ children }: any) => <div>{children}</div>,
 }));

@@ -1,9 +1,7 @@
 import { getGuide } from "serverActions/getGuide";
-import { GuideProvider } from "../../../providers/GuideProvider";
-import { Guide } from "./Guide";
-import { GuideType } from "../../../models/guide";
+import { Guide } from "components/guides/[id]/Guide";
+import { GuideType } from "models/guide";
 
-//displaying the guide here
 const GuidePage = async ({ params }: { params: { id: string } }) => {
   const guideJSON = await getGuide(params.id);
   const guide: GuideType = JSON.parse(JSON.stringify(guideJSON));

@@ -1,6 +1,6 @@
 "use client";
 
-import LoginOrRegister from "../../components/LoginOrRegister";
+import LoginOrRegister from "../../UIcomponents/LoginOrRegister";
 
 export default function LoginPage() {
   return <LoginOrRegister />;

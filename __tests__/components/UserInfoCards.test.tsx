@@ -1,6 +1,6 @@
-import { render, fireEvent, screen } from "@testing-library/react";
-import { UserInfoCards } from "components/peopleCard/UserInfoCards";
-import { UserDocument } from "../../app/models/user";
+import { render, fireEvent } from "@testing-library/react";
+import { UserInfoCards } from "../../app/components/userInfoCards/UserInfoCards";
+import { ShareableUserInfo } from "types/types";
 
 describe("UserInfoCards", () => {
   const background = "background info";
@@ -8,29 +8,24 @@ describe("UserInfoCards", () => {
   const interests = "interests info";
   const favoriteArtists = "favorite artists info";
 
-  const mockUsers = [
+  const mockUsers: ShareableUserInfo[] = [
     {
       name: "John Doe",
-      email: "john@example.com",
-      password: "password",
-      role: "user",
       background,
       careerGoals,
       interests,
       favoriteArtists,
       avatarUrl: "avatar url",
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
-  ] as UserDocument[];
+  ];
 
   it("renders without crashing", () => {
-    render(<UserInfoCards users={mockUsers} title="Test Title" />);
+    render(<UserInfoCards userInfo={mockUsers} title="Test Title" />);
   });
 
   it("displays user info when a user is selected", () => {
     const { getByText } = render(
-      <UserInfoCards users={mockUsers} title="Test Title" />
+      <UserInfoCards userInfo={mockUsers} title="Test Title" />
     );
 
     fireEvent.click(getByText("TEST TITLE"));
@@ -45,7 +40,7 @@ describe("UserInfoCards", () => {
 
   it("no longer displays user info when 'None' is selected", () => {
     const { getByText, queryByText } = render(
-      <UserInfoCards users={mockUsers} title="Test Title" />
+      <UserInfoCards userInfo={mockUsers} title="Test Title" />
     );
 
     fireEvent.click(getByText("TEST TITLE"));
