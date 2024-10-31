@@ -16,13 +16,18 @@ export interface RequiredUserInfo {
   createdAt: Date;
 }
 
-export interface OptionalUserInfo {
-  background?: string;
-  careerGoals?: string;
-  interests?: string;
-  favoriteArtists?: string;
-  avatarUrl?: string;
+export enum OptionalUserInfoKeys {
+  background = "background",
+  careerGoals = "careerGoals",
+  interests = "interests",
+  favoriteArtists = "favoriteArtists",
+  avatarUrl = "avatarUrl",
 }
+
+// Use mapped type to create OptionalUserInfo interface
+export type OptionalUserInfo = {
+  [key in OptionalUserInfoKeys]?: string;
+};
 
 export type UserInfo = RequiredUserInfo & OptionalUserInfo;
 

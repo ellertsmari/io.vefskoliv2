@@ -19,9 +19,9 @@ import {
   GuideInfo,
   Module,
 } from "../../types/guideTypes";
-import { extendGuides } from "../../app/guides/utils";
+import { extendGuides } from "utils/guideUtils";
 
-jest.mock("../../app/utils/mongoose-connector", () => ({
+jest.mock("clientActions/mongoose-connector", () => ({
   connectToDatabase: jest.fn(),
 }));
 

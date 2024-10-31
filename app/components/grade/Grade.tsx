@@ -3,8 +3,7 @@ import { SubTitle } from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { ButtonContainer, GradeContainer, SubmitButton } from "./style";
 
-
-import { returnGrade } from "../../utils/serverActions";
+import { returnGrade } from "serverActions/returnGrade";
 
 export const Grade = ({
   grade,

@@ -13,21 +13,24 @@ import {
   Logout,
   Wrapper,
 } from "./style";
-import { SetStateAction, useState } from "react";
+import { SetStateAction, use, useEffect, useState } from "react";
 import Modal from "../../modal/modal";
 import Input from "../../../globalStyles/input";
 import DefaultButton from "../../../globalStyles/buttons/default";
-import { signOut, updateUserInfo } from "../../../utils/serverActions";
-import { DefaultUserIcon } from "../../../assets/Icons";
-import { UserDocument } from "../../../models/user";
-import { useSession } from "../../../providers/SessionProvider";
-import { LogoutIcon } from "../../../assets/Icons";
+import { DefaultUserIcon } from "assets/Icons";
+import { UserDocument, UserType } from "models/user";
+import { useSession } from "providers/SessionProvider";
+import { LogoutIcon } from "assets/Icons";
+import { signOut } from "serverActions/signOut";
+import { updateUserInfo } from "serverActions/updateUserInfo";
+import { useSessionState } from "hooks/useSessionState";
+import { set } from "mongoose";
 
 export const Profile = () => {
   //getting the user from session
   const session = useSession();
   //fix unknown later
-  const user = session?.user as unknown as UserDocument;
+  const user = session?.user as UserType;
 
   const ProfilePictureContainer = () => {
     return (
@@ -53,22 +56,23 @@ export const Profile = () => {
   );
 };
 
-const EditProfileScreen = ({ user }: { user: UserDocument }) => {
-  const [background, setBackground] = useState(user?.background || "");
-  const [careerGoals, setCareerGoals] = useState(user?.careerGoals || "");
-  const [interests, setInterests] = useState(user?.interests || "");
-  const [favoriteArtists, setFavoriteArtists] = useState(
-    user?.favoriteArtists || ""
-  );
+const EditProfileScreen = ({ user }: { user: UserType }) => {
+  const [userInfo, setUserInfo] = useState({
+    background: user?.background || "",
+    careerGoals: user?.careerGoals || "",
+    interests: user?.interests || "",
+    favoriteArtists: user?.favoriteArtists || "",
+  });
+
+  if (!userInfo) {
+    return <div>loading...</div>;
+  }
 
   const onSave = async () => {
-    updateUserInfo(user.email, {
-      background,
-      careerGoals,
-      interests,
-      favoriteArtists,
-    });
+    await updateUserInfo(userInfo);
   };
+
+  const { background, careerGoals, interests, favoriteArtists } = userInfo;
 
   return (
     <>
@@ -98,18 +102,18 @@ const EditProfileScreen = ({ user }: { user: UserDocument }) => {
           type="text"
           id="background"
           value={background}
-          onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            setBackground(e.target.value)
-          }
+          onChange={(e: { target: { value: string } }) => {
+            setUserInfo({ ...userInfo, background: e.target.value });
+          }}
           label="BACKGROUND"
         />
         <Input
           type="text"
           id="careerGoals"
           value={careerGoals}
-          onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            setCareerGoals(e.target.value)
-          }
+          onChange={(e: { target: { value: string } }) => {
+            setUserInfo({ ...userInfo, careerGoals: e.target.value });
+          }}
           label="NEAR FUTURE CAREER GOALS"
         />
         <Input
@@ -117,8 +121,8 @@ const EditProfileScreen = ({ user }: { user: UserDocument }) => {
           id="interests"
           placeholder={user.interests}
           value={interests}
-          onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            setInterests(e.target.value)
+          onChange={(e: { target: { value: string } }) =>
+            setUserInfo({ ...userInfo, interests: e.target.value })
           }
           label="MAIN INTERESTS"
         />
@@ -126,8 +130,8 @@ const EditProfileScreen = ({ user }: { user: UserDocument }) => {
           type="text"
           id="favoriteArtists"
           value={favoriteArtists}
-          onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            setFavoriteArtists(e.target.value)
+          onChange={(e: { target: { value: string } }) =>
+            setUserInfo({ ...userInfo, favoriteArtists: e.target.value })
           }
           label="FAVORITE BAND/ARTIST"
         />

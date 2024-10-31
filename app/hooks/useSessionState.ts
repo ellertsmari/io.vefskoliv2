@@ -21,23 +21,42 @@ export function useSessionState<T>(
   serialize: (value: T) => string = JSON.stringify,
   deserialize: (value: string) => T = JSON.parse
 ): [T | null, Dispatch<SetStateAction<T | null>>] {
-  const [storedValue, setStoredValue] = useState<T | null>(() => {
+  const [storedValue, setStoredValue] = useState<T | null>(null);
+  const [rendering, setRendering] = useState(true);
+
+  // for updating the value in the session storage
+  useEffect(() => {
+    if (rendering) return;
+    const item = sessionStorage?.getItem(key);
+
+    if (sessionStorage && item !== storedValue) {
+      if (storedValue === null) {
+        sessionStorage.removeItem(key);
+      } else {
+        sessionStorage.setItem(key, serialize(storedValue));
+      }
+    }
+  }, [storedValue, key, serialize]);
+
+  // for setting initial value
+  useEffect(() => {
+    if (!sessionStorage) return;
+    setRendering(false);
+
     const item = sessionStorage.getItem(key);
-    if (item) {
+
+    if (item && item !== storedValue) {
       try {
-        return deserialize(item);
+        setStoredValue(deserialize(item));
+        return;
       } catch (error) {
         console.warn(`Error parsing sessionStorage key "${key}":`, error);
         sessionStorage.removeItem(key); // Clean up invalid data
       }
     }
-    return defaultValue ?? null;
-  });
 
-  useEffect(() => {
-    if (storedValue === null) sessionStorage.removeItem(key);
-    else sessionStorage.setItem(key, serialize(storedValue));
-  }, [storedValue, key, serialize]);
+    if (defaultValue !== undefined) setStoredValue(defaultValue);
+  }, [key, deserialize]);
 
   return [storedValue, setStoredValue];
 }

@@ -4,14 +4,14 @@ import {
   ReturnStatus,
   GradesGivenStatus,
   GradesReceivedStatus,
-} from "../../types/guideTypes";
+} from "types/guideTypes";
 import {
   calculateFeedbackStatus,
   calculateReturnStatus,
   calculateGradesGivenStatus,
   calculateGradesReceivedStatus,
   calculateGrade,
-} from "../../app/guides/utils";
+} from "utils/guideUtils";
 import {
   clearDatabase,
   closeDatabase,

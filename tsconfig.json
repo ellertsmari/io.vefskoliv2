@@ -20,7 +20,16 @@
     "paths": {
       "@/*": ["./src/*"],
       "components/*": ["./app/components/*"],
-      "globalStyles/*": ["./app/globalStyles/*"]
+      "globalStyles/*": ["./app/globalStyles/*"],
+      "hooks/*": ["./app/hooks/*"],
+      "pages/*": ["./app/pages/*"],
+      "serverActions/*": ["./app/serverActions/*"],
+      "clientActions/*": ["./app/clientActions/*"],
+      "assets/*": ["./app/assets/*"],
+      "models/*": ["./app/models/*"],
+      "providers/*": ["./app/providers/*"],
+      "types/*": ["./types/*"],
+      "utils/*": ["./app/utils/*"]
     },
     "target": "ES2017"
   },

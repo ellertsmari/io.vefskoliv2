@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef } from "react";
-import { authenticate } from "../utils/serverActions";
+import { authenticate } from "serverActions/authenticate";
 import {
   Container,
   Form,
@@ -10,7 +10,7 @@ import {
   Wrapper,
   Logo,
   ErrorToast,
-} from "../../app/login/style";
+} from "../pages/login/style";
 import Input from "../globalStyles/input";
 import DefaultButton from "../globalStyles/buttons/default";
 import LogoSvg from "../../public/logo.svg";

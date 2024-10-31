@@ -9,8 +9,8 @@ import {
   connect,
 } from "../__mocks__/mongoHandler";
 import { auth } from "../../auth";
-import { returnGuide } from "../../app/utils/serverActions";
-import ReturnForm from "../../app/guides/[id]/returnForm";
+import { returnGuide } from "serverActions/returnGuide";
+import ReturnForm from "../../app/components/guides/[id]/returnForm";
 jest.mock("../../auth", () => ({
   getUser: jest.fn(),
   signIn: jest.fn(),
@@ -20,7 +20,7 @@ jest.mock("next-auth", () => ({
   AuthError: jest.fn().mockImplementation(), // Mock the AuthError class
 }));
 
-jest.mock("../../app/utils/serverActions", () => ({
+jest.mock("serverActions/returnGuide", () => ({
   returnGuide: jest.fn(),
 }));
 

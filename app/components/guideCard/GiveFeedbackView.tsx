@@ -10,7 +10,6 @@ import {
 import { SubTitle } from "globalStyles/text";
 import MarkdownEditor from "components/markdown/editor";
 import {
-  use,
   useActionState,
   useCallback,
   useEffect,
@@ -18,14 +17,12 @@ import {
   useState,
 } from "react";
 import { Button } from "globalStyles/buttons/default/style";
-import { useGuide } from "../../providers/GuideProvider";
-import { ExtendedGuideInfo } from "../../../types/guideTypes";
-import { returnFeedback } from "../../utils/serverActions";
-import { Vote } from "../../models/review";
+import { useGuide } from "providers/GuideProvider";
+import { returnFeedback } from "serverActions/returnFeedback";
+import { Vote } from "models/review";
 import { StyleColors } from "globalStyles/colors";
-import { RedCross, GreenTick, PurpleStar } from "../../assets/Icons";
-import { useLocalState } from "../../hooks/useLocalState";
-import { removeLocalItem } from "../../utils/clientActions";
+import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
+import { useLocalState } from "hooks/useLocalState";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const LOCAL_STORAGE_KEY = useMemo(() => `feedback for ${guideTitle}`, []);

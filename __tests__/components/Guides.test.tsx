@@ -1,5 +1,5 @@
-import { Guides, exportedForTesting } from "../../app/guides/Guides";
-import { ExtendedGuideInfo } from "../../types/guideTypes";
+import { Guides, exportedForTesting } from "components/guides/Guides";
+import { ExtendedGuideInfo } from "types/guideTypes";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import {
   clearDatabase,
@@ -9,10 +9,10 @@ import {
   createDummyModules,
   createDummyUser,
 } from "../__mocks__/mongoHandler";
-import { fetchModules } from "../../app/guides/utils";
+import { fetchModules } from "utils/guideUtils";
 
 jest.mock(
-  "../../app/guides/guidesClient",
+  "components/guides/guidesClient",
   () =>
     ({ guides }: { guides: ExtendedGuideInfo[] }) =>
       guides.map((guide) => <div key={guide.link}>{guide.module.title}</div>)

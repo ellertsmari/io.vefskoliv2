@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useActionState, useEffect, useRef } from "react";
-import { signUp } from "../utils/serverActions";
+import { signUp } from "serverActions/signUp";
 import DefaultButton from "../globalStyles/buttons/default";
 import Input, { ErrorMessage } from "../globalStyles/input";
 import {
@@ -13,7 +13,7 @@ import {
   ButtonWrapper,
   SuccessToast,
   ErrorToast,
-} from "../login/style";
+} from "../pages/login/style";
 import LogoSvg from "../../public/logo.svg";
 
 export default function RegisterForm({
