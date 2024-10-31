@@ -57,24 +57,19 @@ export const Profile = () => {
 };
 
 const EditProfileScreen = ({ user }: { user: UserType }) => {
-  const [userInfo, setUserInfo] = useSessionState("userInfo", {
+  const [userInfo, setUserInfo] = useState({
     background: user?.background || "",
     careerGoals: user?.careerGoals || "",
     interests: user?.interests || "",
     favoriteArtists: user?.favoriteArtists || "",
   });
 
-  useEffect(() => {
-    console.log(userInfo);
-  }, [userInfo]);
-
   if (!userInfo) {
     return <div>loading...</div>;
   }
 
   const onSave = async () => {
-    await updateUserInfo(user._id, userInfo);
-    setUserInfo(null);
+    await updateUserInfo(userInfo);
   };
 
   const { background, careerGoals, interests, favoriteArtists } = userInfo;

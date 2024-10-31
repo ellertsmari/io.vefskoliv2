@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useSessionState } from "../../app/hooks/useSessionState";
 
 describe("useSessionState", () => {
@@ -17,12 +17,14 @@ describe("useSessionState", () => {
     expect(result.current[0]).toBe("storedValue");
   });
 
-  it("should update sessionStorage when value is set", () => {
+  it("should update sessionStorage when value is set", async () => {
     const { result } = renderHook(() => useSessionState("testKey", "default"));
     act(() => {
       result.current[1]("newValue");
     });
-    expect(sessionStorage.getItem("testKey")).toBe(JSON.stringify("newValue"));
+    await waitFor(() =>
+      expect(sessionStorage.getItem("testKey")).toBe(JSON.stringify("newValue"))
+    );
   });
 
   it("should remove item from sessionStorage when value is set to null", () => {

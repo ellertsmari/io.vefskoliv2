@@ -10,9 +10,9 @@ import {
   createDummyUser,
 } from "../__mocks__/mongoHandler";
 import { Types } from "mongoose";
-import { GuideInfo } from "../../types/guideTypes";
-import { Review } from "../../app/models/review";
-import { ReturnDocument } from "../../app/models/return";
+import { GuideInfo } from "types/guideTypes";
+import { Review } from "models/review";
+import { ReturnDocument } from "models/return";
 import { getGuides } from "serverActions/getGuides";
 
 // for type checking

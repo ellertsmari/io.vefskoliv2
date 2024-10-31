@@ -1,3 +1,5 @@
+"use client";
+import { set } from "mongoose";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   getLocalItem,
@@ -26,18 +28,40 @@ export function useLocalState<T>(
   serialize: (value: T) => string = JSON.stringify,
   deserialize: (value: string) => T = JSON.parse
 ): [T | null, Dispatch<SetStateAction<T | null>>] {
-  const [storedValue, setStoredValue] = useState<T | null>(() => {
-    const item = getLocalItem(key);
-    if (item) {
-      try {
-        return deserialize(item);
-      } catch (error) {
-        console.warn(`Error parsing localStorage key "${key}":`, error);
-        removeLocalItem(key); // Clean up invalid data
+  const [storedValue, setStoredValue] = useState<T | null>(null);
+  const [rendering, setRendering] = useState(true);
+
+  // for updating the value in the session storage
+  useEffect(() => {
+    if (rendering) return;
+    const item = localStorage?.getItem(key);
+    if (localStorage && item !== storedValue) {
+      if (storedValue === null) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, serialize(storedValue));
       }
     }
-    return defaultValue ?? null;
-  });
+  }, [storedValue, key, serialize]);
+
+  // for setting initial value
+  useEffect(() => {
+    if (!localStorage) return;
+    const item = localStorage?.getItem(key);
+
+    setRendering(false);
+    if (item && item !== storedValue) {
+      try {
+        setStoredValue(deserialize(item));
+        return;
+      } catch (error) {
+        console.warn(`Error parsing localStorage key "${key}":`, error);
+        localStorage.removeItem(key); // Clean up invalid data
+      }
+    }
+
+    if (defaultValue !== undefined) setStoredValue(defaultValue);
+  }, [key, deserialize]);
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -51,11 +75,6 @@ export function useLocalState<T>(
       window.removeEventListener("storage", handleStorageChange);
     };
   }, [key, deserialize]);
-
-  useEffect(() => {
-    if (storedValue === null) removeLocalItem(key);
-    else setLocalItem(key, serialize(storedValue));
-  }, [storedValue, key, serialize]);
 
   return [storedValue, setStoredValue];
 }
