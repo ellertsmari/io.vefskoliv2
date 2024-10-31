@@ -2,9 +2,9 @@
 import GuidesClient from "./guidesClient";
 
 import { Container, GuideDropdownContainer } from "./style";
-import { Dropdown } from "../../UIcomponents/dropdown/dropdown";
-import { ExtendedGuideInfo, Module } from "../../../types/guideTypes";
-import { useLocalState } from "../../hooks/useLocalState";
+import { Dropdown } from "UIcomponents/dropdown/dropdown";
+import { ExtendedGuideInfo, Module } from "types/guideTypes";
+import { useSessionState } from "hooks/useSessionState";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
 
@@ -16,7 +16,7 @@ export const Guides = ({
   modules: Module[];
 }) => {
   const [selectedModule, setSelectedModule] =
-    useLocalState<number>(LOCAL_STORAGE_KEY);
+    useSessionState<number>(LOCAL_STORAGE_KEY);
 
   if (!extendedGuides || !modules) return null;
 
