@@ -36,6 +36,7 @@ export const FeedbackOverview = () => {
   const [selectedGivenIndex, setSelectedGivenIndex] = useState<number>(0);
   const [selectedReceivedIndex, setSelectedReceivedIndex] = useState<number>(0);
 
+  if (!guide) return null;
   const {
     feedbackGiven,
     feedbackReceived,
