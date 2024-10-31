@@ -15,6 +15,7 @@ const config: Config = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^components/(.*)$": "<rootDir>/app/components/$1",
+    "^UIcomponents/(.*)$": "<rootDir>/app/UIcomponents/$1",
     "^globalStyles/(.*)$": "<rootDir>/app/globalStyles/$1",
     "^hooks/(.*)$": "<rootDir>/app/hooks/$1",
     "^pages/(.*)$": "<rootDir>/app/pages/$1",

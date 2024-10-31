@@ -1,6 +1,6 @@
 import { de } from "@faker-js/faker";
 import { render, fireEvent } from "@testing-library/react";
-import { OptionNavigator } from "components/optionNavigator/OptionNavigator";
+import { OptionNavigator } from "../../app/UIcomponents/optionNavigator/OptionNavigator";
 
 import { StyleColors } from "globalStyles/colors";
 

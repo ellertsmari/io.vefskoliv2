@@ -66,7 +66,7 @@ export type UserType = InferSchemaType<typeof userSchema> & {
   isLoggedIn?: boolean;
   _id: Types.ObjectId;
 };
-export type UserWithIdType = UserType & { id: Types.ObjectId } & UserMethods;
+export type UserWithIdType = UserType & { id: Types.ObjectId };
 export type UserDocument = UserType & Document & UserMethods;
 type UserModel = Model<UserInfo, {}, UserMethods>;
 

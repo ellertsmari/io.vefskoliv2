@@ -1,5 +1,5 @@
 "use server";
-import { UserInfoCards } from "components/peopleCard/UserInfoCards";
+import { UserInfoCards } from "../../components/userInfoCards/UserInfoCards";
 import { getUsers } from "serverActions/getUsers";
 import { Container } from "./style";
 
@@ -20,9 +20,9 @@ const PeoplePage = async () => {
       >
         <p>Select someone to learn more about them</p>
 
-        <UserInfoCards users={teachers} title="Teachers" zIndex={4} />
+        <UserInfoCards userInfo={teachers} title="Teachers" zIndex={4} />
 
-        <UserInfoCards users={students} title="Students" />
+        <UserInfoCards userInfo={students} title="Students" />
       </div>
     </Container>
   );

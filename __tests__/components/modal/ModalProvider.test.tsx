@@ -1,5 +1,8 @@
 import { act, render, renderHook, waitFor } from "@testing-library/react";
-import { ModalProvider, useModal } from "components/modal/ModalProvider";
+import {
+  ModalProvider,
+  useModal,
+} from "../../../app/UIcomponents/modal/ModalProvider";
 import React from "react";
 
 describe("ModalProvider", () => {

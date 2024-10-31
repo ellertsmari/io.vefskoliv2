@@ -1,5 +1,5 @@
 import { render, fireEvent } from "@testing-library/react";
-import { Toggle, ToggleOption } from "components/toggle/Toggle";
+import { Toggle, ToggleOption } from "../../app/UIcomponents/toggle/Toggle";
 
 describe("Toggle", () => {
   afterEach(() => {

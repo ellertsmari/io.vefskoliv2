@@ -1,5 +1,5 @@
 "use client";
-import Modal from "components/modal/modal";
+import Modal from "../../../UIcomponents/modal/modal";
 import Button from "globalStyles/buttons/default";
 
 import { Form } from "./style";
@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { returnGuide } from "serverActions/returnGuide";
-import { FormInputWithError } from "components/formInputWithError/FormInputWithError";
+import { FormInputWithError } from "../../../UIcomponents/formInputWithError/FormInputWithError";
 
 const ReturnForm = ({ guideId }: { guideId: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);

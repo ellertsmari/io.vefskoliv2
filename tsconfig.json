@@ -17,9 +17,11 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "components/*": ["./app/components/*"],
+      "UIcomponents/*": ["./app/UIcomponents/*"],
       "globalStyles/*": ["./app/globalStyles/*"],
       "hooks/*": ["./app/hooks/*"],
       "pages/*": ["./app/pages/*"],
@@ -33,6 +35,12 @@
     },
     "target": "ES2017"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/components/userInfoCards"
+  ],
   "exclude": ["node_modules"]
 }

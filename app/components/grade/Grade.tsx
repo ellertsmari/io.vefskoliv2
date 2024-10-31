@@ -1,4 +1,4 @@
-import { Slider } from "components/slider/Slider";
+import { Slider } from "../../UIcomponents/slider/Slider";
 import { SubTitle } from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { ButtonContainer, GradeContainer, SubmitButton } from "./style";

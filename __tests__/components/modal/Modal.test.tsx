@@ -1,5 +1,5 @@
 import { render, fireEvent } from "@testing-library/react";
-import Modal from "components/modal/modal";
+import Modal from "UIcomponents/modal/modal";
 import { useState } from "react";
 
 describe("Modal", () => {

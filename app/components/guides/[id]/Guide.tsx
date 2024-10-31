@@ -13,7 +13,7 @@ import {
   MaterialButton,
 } from "./style";
 
-import MarkdownReader from "../../markdown/reader";
+import MarkdownReader from "../../../UIcomponents/markdown/reader";
 import ReturnForm from "./returnForm";
 import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
 import { GuideType } from "../../../models/guide";

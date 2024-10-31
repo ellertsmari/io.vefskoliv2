@@ -50,7 +50,8 @@ export const clearDatabase = async (): Promise<void> => {
 };
 
 export const createDummyUser = async (
-  role: "user" | "teacher" = "user"
+  role: "user" | "teacher" = "user",
+  dummyUserInfo?: Partial<UserInfo>
 ): Promise<UserDocument> => {
   const dummyUser: UserInfo = {
     name: faker.person.firstName(),
@@ -63,6 +64,7 @@ export const createDummyUser = async (
     interests: faker.lorem.sentence(),
     favoriteArtists: faker.lorem.sentence(),
     avatarUrl: faker.image.url(),
+    ...dummyUserInfo,
   };
 
   return await User.create(dummyUser);

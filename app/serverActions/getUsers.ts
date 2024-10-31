@@ -1,11 +1,34 @@
 "use server";
-import { User, UserDocument } from "models/user";
+import { OptionalUserInfoKeys, User, UserWithIdType } from "models/user";
 import { FilterQuery } from "mongoose";
 import { connectToDatabase } from "../clientActions/mongoose-connector";
+import { ShareableUserInfo } from "types/types";
 
-export const getUsers = async (filter: FilterQuery<any>) => {
+export const getUsers = async (
+  filter: FilterQuery<any> = {}
+): Promise<ShareableUserInfo[]> => {
   await connectToDatabase();
-  const users = await User.find(filter);
+  const usersJSON = await User.find(filter);
+  const users = JSON.parse(JSON.stringify(usersJSON)) as UserWithIdType[];
 
-  return JSON.parse(JSON.stringify(users)) as UserDocument[];
+  const shareableUsers = users.map((userInfo) =>
+    calculateShareableInfo(userInfo)
+  );
+  return shareableUsers;
+};
+
+const calculateShareableInfo = (
+  userInfo: UserWithIdType
+): ShareableUserInfo => {
+  const shareableKeys = Object.keys(OptionalUserInfoKeys).concat(
+    "name"
+  ) as (keyof ShareableUserInfo)[];
+
+  const shareableInfo = shareableKeys.reduce((acc, key) => {
+    if (userInfo[key] && userInfo[key] !== undefined) {
+      acc[key] = userInfo[key] as string;
+    }
+    return acc;
+  }, {} as ShareableUserInfo);
+  return shareableInfo;
 };
