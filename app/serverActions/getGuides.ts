@@ -177,7 +177,7 @@ const addGradesGiven = (): PipelineStage => {
   };
 };
 
-export const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
+export const getGuidesPipelines = async (userId: ObjectId): Promise<PipelineStage[]> => {
   // define the final document structure
   const defineProject: PipelineStage = {
     $project: {

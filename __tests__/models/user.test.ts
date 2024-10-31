@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { User, UserDocument } from "../../app/models/user";
+import { User, UserDocument } from "models/user";
 import {
   clearDatabase,
   closeDatabase,
