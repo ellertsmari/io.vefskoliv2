@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { useLocalState } from "../../app/hooks/useLocalState";
+import { useLocalState } from "hooks/useLocalState";
 
 describe("useLocalState", () => {
   beforeEach(() => {

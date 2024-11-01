@@ -49,7 +49,7 @@ export function useLocalState<T>(
           setStoredValue(defaultValue);
           return;
         } catch (error) {
-          throw new Error("Default value cannot be serialized");
+          console.warn("Default value cannot be serialized. Setting to null.");
         }
       }
       setStoredValue(null);

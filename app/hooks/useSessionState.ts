@@ -9,10 +9,10 @@ import { useEffect, useState } from "react";
  * @param {T} [defaultValue] - The default value to use if no value is found in session storage.
  * @param {(value: T) => string} [serialize] - Optional custom serialization function.
  * @param {(value: string) => T} [deserialize] - Optional custom deserialization function.
- * @returns {[T | null, Dispatch<SetStateAction<T | null>>]} A stateful value and a function to update it.
+ * @returns {[T | null, Dispatch<SetStateAction<T | null>>,boolean]} A stateful value, a function to update it and a loading state.
  *
  * @example
- * const [value, setValue] = useSessionState<string>("myKey", "default");
+ * const [value, setValue, loadingValue] = useSessionState<string>("myKey", "default");
  *
  * setValue("newValue");
  */
@@ -48,7 +48,7 @@ export function useSessionState<T>(
           setStoredValue(defaultValue);
           return;
         } catch (error) {
-          throw new Error("Default value cannot be serialized");
+          console.warn("Default value cannot be serialized. Setting to null.");
         }
       }
       setStoredValue(null);

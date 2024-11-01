@@ -1,5 +1,5 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useSessionState } from "../../app/hooks/useSessionState";
+import { useSessionState } from "hooks/useSessionState";
 
 describe("useSessionState", () => {
   beforeEach(() => {
