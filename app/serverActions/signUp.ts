@@ -5,6 +5,17 @@ import { signIn, getUser } from "../../auth";
 import { User } from "../models/user";
 import { z } from "zod";
 
+type SignupFormState =
+  | {
+      errors?: {
+        name?: string[];
+        email?: string[];
+        password?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
 export async function signUp(state: SignupFormState, formData: FormData) {
   // Validate form fields
   const validatedFields = SignupFormSchema.safeParse({
@@ -58,7 +69,7 @@ export async function signUp(state: SignupFormState, formData: FormData) {
   };
 }
 
-export const SignupFormSchema = z.object({
+const SignupFormSchema = z.object({
   firstName: z
     .string()
     .min(2, { message: "First name must be at least 2 characters long." })
@@ -73,14 +84,3 @@ export const SignupFormSchema = z.object({
     .min(8, { message: "Your password must be at least 8 characters long" })
     .trim(),
 });
-
-export type SignupFormState =
-  | {
-      errors?: {
-        name?: string[];
-        email?: string[];
-        password?: string[];
-      };
-      message?: string;
-    }
-  | undefined;

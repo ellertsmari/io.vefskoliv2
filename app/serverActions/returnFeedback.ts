@@ -2,9 +2,28 @@
 
 import { z } from "zod";
 import { ObjectId } from "mongodb";
-import type { FeedbackType } from "models/review";
+import type { FeedbackDocument, FeedbackType } from "models/review";
 import { auth } from "../../auth";
 import { Review, Vote } from "models/review";
+
+type FeedbackDataType = {
+  vote: Vote | undefined;
+  comment: string | undefined;
+  returnId: string | undefined;
+  guideId: string | undefined;
+};
+
+type FeedbackFormState =
+  | {
+      errors?: {
+        returnId?: string[];
+        vote?: string[];
+        comment?: string[];
+        guideId?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
 
 export async function returnFeedback(
   state: FeedbackFormState,
@@ -44,10 +63,11 @@ export async function returnFeedback(
   };
 
   try {
-    const review = await Review.create(reviewData);
+    const review = (await Review.create(reviewData)) as FeedbackDocument;
 
     return {
       success: true,
+      data: review.toObject(),
       message: "Return feedback submitted successfully",
     };
   } catch (e) {
@@ -58,14 +78,7 @@ export async function returnFeedback(
   }
 }
 
-export type FeedbackDataType = {
-  vote: Vote | undefined;
-  comment: string | undefined;
-  returnId: string | undefined;
-  guideId: string | undefined;
-};
-
-export const FeedbackFormSchema = z.object({
+const FeedbackFormSchema = z.object({
   vote: z.nativeEnum(Vote).refine((val) => Object.values(Vote).includes(val), {
     message: "Vote type is invalid",
   }),
@@ -76,15 +89,3 @@ export const FeedbackFormSchema = z.object({
     .min(2, { message: "Please provide valid feedback" })
     .trim(),
 });
-
-export type FeedbackFormState =
-  | {
-      errors?: {
-        returnId?: string[];
-        vote?: string[];
-        comment?: string[];
-        guideId?: string[];
-      };
-      message?: string;
-    }
-  | undefined;
