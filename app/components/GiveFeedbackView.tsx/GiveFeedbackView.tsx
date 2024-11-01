@@ -1,12 +1,11 @@
-import { ReturnOverview } from "./ReturnOverview";
+import { ReturnOverview } from "../guideCard/ReturnOverview";
 
 import {
-  FeedbackInfoContainer,
   VoteContainer,
   VoteIcon,
   VotingContainer,
   WriteFeedbackContainer,
-} from "./style";
+} from "../guideCard/style";
 import { SubTitle } from "globalStyles/text";
 import MarkdownEditor from "../../UIcomponents/markdown/editor";
 import {
@@ -23,6 +22,7 @@ import { Vote } from "models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
 import { useLocalState } from "hooks/useLocalState";
+import { FeedbackInfoContainer } from "./style";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const LOCAL_STORAGE_KEY = useMemo(() => `feedback for ${guideTitle}`, []);

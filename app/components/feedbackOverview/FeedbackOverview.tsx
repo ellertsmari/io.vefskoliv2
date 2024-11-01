@@ -1,22 +1,22 @@
 import { SubTitle } from "globalStyles/text";
 import { useCallback, useMemo, useState } from "react";
 import {
-  ExtendedGuideInfo,
   FeedbackDocumentWithReturn,
   GradesGivenStatus,
-} from "../../../types/guideTypes";
+} from "types/guideTypes";
+import MarkdownReader from "UIcomponents/markdown/reader";
+import { Toggle, ToggleOption } from "UIcomponents/toggle/Toggle";
+import { OptionNavigator } from "UIcomponents/optionNavigator/OptionNavigator";
+import { useGuide } from "providers/GuideProvider";
+import { ReturnOverview } from "components/guideCard/ReturnOverview";
 import {
   FeedbackContainer,
-  Border,
   FeedbackInfoContainer,
   ContentAndNavigatorContainer,
   ToggleContainer,
+  CommentWrapper,
 } from "./style";
-import MarkdownReader from "../../UIcomponents/markdown/reader";
-import { Toggle, ToggleOption } from "../../UIcomponents/toggle/Toggle";
-import { OptionNavigator } from "../../UIcomponents/optionNavigator/OptionNavigator";
-import { useGuide } from "../../providers/GuideProvider";
-import { ReturnOverview } from "./ReturnOverview";
+import { Border } from "globalStyles/globalStyles";
 
 export const FeedbackOverview = () => {
   const { guide } = useGuide();
@@ -139,9 +139,11 @@ const FeedbackContent = ({
     <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
       <SubTitle>{subtitle}</SubTitle>
       <Border>
-        <MarkdownReader>
-          {currentFeedback?.comment ?? "No feedback yet"}
-        </MarkdownReader>
+        <CommentWrapper>
+          <MarkdownReader>
+            {currentFeedback?.comment ?? "No feedback yet"}
+          </MarkdownReader>
+        </CommentWrapper>
       </Border>
     </div>
   );

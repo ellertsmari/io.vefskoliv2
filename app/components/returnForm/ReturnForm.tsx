@@ -1,8 +1,7 @@
 "use client";
-import Modal from "../../../UIcomponents/modal/modal";
+import Modal from "UIcomponents/modal/modal";
 import Button from "globalStyles/buttons/default";
 
-import { Form } from "./style";
 import {
   startTransition,
   useActionState,
@@ -11,9 +10,10 @@ import {
   useState,
 } from "react";
 import { returnGuide } from "serverActions/returnGuide";
-import { FormInputWithError } from "../../../UIcomponents/formInputWithError/FormInputWithError";
+import { FormInputWithError } from "UIcomponents/formInputWithError/FormInputWithError";
+import { Form } from "globalStyles/globalStyles";
 
-const ReturnForm = ({ guideId }: { guideId: string }) => {
+export const ReturnForm = ({ guideId }: { guideId: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const ReturnButton = <Button style="default">RETURN</Button>;
@@ -123,5 +123,3 @@ const ReturnForm = ({ guideId }: { guideId: string }) => {
     />
   );
 };
-
-export default ReturnForm;

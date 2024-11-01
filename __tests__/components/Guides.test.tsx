@@ -1,4 +1,4 @@
-import { Guides, exportedForTesting } from "../../app/components/guides/Guides";
+import { Guides, exportedForTesting } from "components/guides/Guides";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import {
@@ -11,12 +11,13 @@ import {
 } from "../__mocks__/mongoHandler";
 import { fetchModules } from "utils/guideUtils";
 
-jest.mock(
-  "components/guides/guidesClient",
-  () =>
-    ({ guides }: { guides: ExtendedGuideInfo[] }) =>
+jest.mock("components/guidesClient/GuidesClient", () => ({
+  GuidesClient: jest
+    .fn()
+    .mockImplementation(({ guides }: { guides: ExtendedGuideInfo[] }) =>
       guides.map((guide) => <div key={guide.link}>{guide.module.title}</div>)
-);
+    ),
+}));
 
 const { filterGuides, createOptions } = exportedForTesting;
 

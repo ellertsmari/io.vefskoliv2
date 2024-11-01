@@ -1,24 +1,21 @@
 "use client";
+
+import MarkdownReader from "UIcomponents/markdown/reader";
+import { ReturnForm } from "components/returnForm/ReturnForm";
+import { Border, Wrapper, MaterialButton } from "globalStyles/globalStyles";
+import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
+import { GuideType } from "models/guide";
 import {
-  Wrapper,
-  Border,
-  Container,
   Main,
   Side,
-  Content,
-  Requirements,
-  KnowledgeAndSkills,
-  ReturnWrapper,
   MaterialsWrapper,
-  MaterialButton,
+  ReturnWrapper,
+  Requirements,
+  Content,
+  Container,
 } from "./style";
 
-import MarkdownReader from "../../../UIcomponents/markdown/reader";
-import ReturnForm from "./returnForm";
-import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
-import { GuideType } from "../../../models/guide";
-
-export const Guide = ({ guide }: { guide: GuideType }) => {
+export const GuideOverview = ({ guide }: { guide: GuideType }) => {
   if (!guide) {
     return <h1>Guide not found</h1>;
   }
@@ -55,7 +52,7 @@ export const Guide = ({ guide }: { guide: GuideType }) => {
                 <Border>
                   <Requirements>
                     {knowledge.length > 0 && (
-                      <KnowledgeAndSkills>
+                      <Wrapper>
                         <BlackSubTitle>KNOWLEDGE</BlackSubTitle>
                         {knowledge.map((knowledge, index) => {
                           return (
@@ -64,10 +61,10 @@ export const Guide = ({ guide }: { guide: GuideType }) => {
                             </MarkdownReader>
                           );
                         })}
-                      </KnowledgeAndSkills>
+                      </Wrapper>
                     )}
                     {skills.length > 0 && (
-                      <KnowledgeAndSkills>
+                      <Wrapper>
                         <BlackSubTitle>SKILLS</BlackSubTitle>
                         {skills.map((skills, index) => {
                           return (
@@ -76,7 +73,7 @@ export const Guide = ({ guide }: { guide: GuideType }) => {
                             </MarkdownReader>
                           );
                         })}
-                      </KnowledgeAndSkills>
+                      </Wrapper>
                     )}
                   </Requirements>
                 </Border>

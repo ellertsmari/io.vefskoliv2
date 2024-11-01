@@ -11,8 +11,8 @@ import {
 import { FeedbackStatus } from "../../../types/guideTypes";
 import { calculateReturnStyle } from "./utils";
 import { Button } from "globalStyles/buttons/default/style";
-import { FeedbackOverview } from "./FeedbackOverview";
-import { GiveFeedbackView } from "./GiveFeedbackView";
+import { FeedbackOverview } from "../feedbackOverview/FeedbackOverview";
+import { GiveFeedbackView } from "../GiveFeedbackView.tsx/GiveFeedbackView";
 
 export const GuideModal = () => {
   const { guide } = useGuide();

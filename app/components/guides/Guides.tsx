@@ -1,10 +1,10 @@
 "use client";
-import GuidesClient from "./guidesClient";
 
 import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "UIcomponents/dropdown/dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
 import { useSessionState } from "hooks/useSessionState";
+import { GuidesClient } from "components/guidesClient/GuidesClient";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
 
