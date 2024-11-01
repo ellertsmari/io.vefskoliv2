@@ -23,6 +23,7 @@ import { useSession } from "providers/SessionProvider";
 import { LogoutIcon } from "assets/Icons";
 import { signOut } from "serverActions/signOut";
 import { updateUserInfo } from "serverActions/updateUserInfo";
+import { useSessionState } from "react-session-hooks";
 
 export const Profile = () => {
   //getting the user from session
@@ -55,14 +56,14 @@ export const Profile = () => {
 };
 
 const EditProfileScreen = ({ user }: { user: UserType }) => {
-  const [userInfo, setUserInfo] = useState({
+  const [userInfo, setUserInfo, loading] = useSessionState("userInfo", {
     background: user?.background || "",
     careerGoals: user?.careerGoals || "",
     interests: user?.interests || "",
     favoriteArtists: user?.favoriteArtists || "",
   });
 
-  if (!userInfo) {
+  if (loading || !userInfo) {
     return <div>loading...</div>;
   }
 

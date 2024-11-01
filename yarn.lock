@@ -4424,10 +4424,10 @@ react-markdown@~9.0.1:
     unist-util-visit "^5.0.0"
     vfile "^6.0.0"
 
-react-session-hooks@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/react-session-hooks/-/react-session-hooks-1.0.2.tgz#f52bbdd43419a702cd0aadae6887ba5cb26276c1"
-  integrity sha512-ziiMm6Mc+YFflMZ8mVWPmlOyWOQai5/7wEXbV0IrxS8F5YyV7/ug+362JvT8ZpWmg6QaLSwGnIaBmmvfKC6Uig==
+react-session-hooks@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/react-session-hooks/-/react-session-hooks-1.0.4.tgz#b99641248ab2f8035e99c1d4d72b8bd80d6fa549"
+  integrity sha512-hEn8Iyyv9MpP0N9C1qZDh3IdX77UJuMmIT8C/fSCZHtMLgKKFd45+iaXyGHRSc0nv9iq+MSH7aEbNEBjZs/39Q==
 
 react@^19.0.0-rc-a7d1240c-20240731:
   version "19.0.0-rc-a7d1240c-20240731"
