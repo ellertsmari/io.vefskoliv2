@@ -1,11 +1,5 @@
 "use client";
-import { set } from "mongoose";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import {
-  getLocalItem,
-  removeLocalItem,
-  setLocalItem,
-} from "utils/interactWithLocalStorage";
+import { useEffect, useState } from "react";
 
 /**
  * Hook to manage state synchronized with localStorage.
@@ -27,46 +21,66 @@ export function useLocalState<T>(
   defaultValue?: T,
   serialize: (value: T) => string = JSON.stringify,
   deserialize: (value: string) => T = JSON.parse
-): [T | null, Dispatch<SetStateAction<T | null>>] {
-  const [storedValue, setStoredValue] = useState<T | null>(null);
-  const [rendering, setRendering] = useState(true);
-
-  // for updating the value in the session storage
-  useEffect(() => {
-    if (rendering) return;
-    const item = localStorage?.getItem(key);
-    if (localStorage && item !== storedValue) {
-      if (storedValue === null) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, serialize(storedValue));
+): [T | null, (value: T | null | ((prev: T | null) => T | null)) => void] {
+  const item = localStorage.getItem(key);
+  const [storedValue, setStoredValue] = useState<T | null>(() => {
+    try {
+      if (item) {
+        return deserialize(item);
       }
+    } catch (error) {
+      console.warn(`Error parsing localStorage key "${key}":`, error);
+      localStorage.removeItem(key); // Clean up invalid data
     }
-  }, [storedValue, key, serialize]);
 
-  // for setting initial value
-  useEffect(() => {
-    if (!localStorage) return;
-    const item = localStorage?.getItem(key);
-
-    setRendering(false);
-    if (item && item !== storedValue) {
+    if (defaultValue !== undefined) {
       try {
-        setStoredValue(deserialize(item));
-        return;
+        serialize(defaultValue); // Check if default value can be serialized
+        return defaultValue;
       } catch (error) {
-        console.warn(`Error parsing localStorage key "${key}":`, error);
-        localStorage.removeItem(key); // Clean up invalid data
+        throw new Error("Default value cannot be serialized");
       }
     }
+    return null;
+  });
 
-    if (defaultValue !== undefined) setStoredValue(defaultValue);
-  }, [key, deserialize]);
+  const updateValue = (value: T | ((prev: T | null) => T | null) | null) => {
+    // calculate new value
+    let newValue: T | null | ((prev: T | null) => T | null);
+    if (typeof value === "function") {
+      const callback = value as (prev: T | null) => T | null;
+      newValue = callback(storedValue);
+    } else if (!value) newValue = null;
+    else newValue = value;
+
+    // update session storage
+    if (!newValue) {
+      localStorage.removeItem(key);
+      setStoredValue(null);
+    } else {
+      try {
+        localStorage.setItem(key, serialize(newValue as T));
+        setStoredValue(newValue);
+      } catch (error) {
+        console.warn(
+          `Aborting state update for "${key}": unable to serialise new value:`,
+          error
+        );
+      }
+    }
+  };
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === key) {
-        setStoredValue(event.newValue ? deserialize(event.newValue) : null);
+        try {
+          setStoredValue(event.newValue ? deserialize(event.newValue) : null);
+        } catch (error) {
+          console.warn(
+            `Aborting automatic state update for "${key}": unable to serialise new value`,
+            error
+          );
+        }
       }
     };
 
@@ -74,7 +88,7 @@ export function useLocalState<T>(
     return () => {
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [key, deserialize]);
+  }, []);
 
-  return [storedValue, setStoredValue];
+  return [storedValue, updateValue];
 }

@@ -1,4 +1,5 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+"use client";
+import { useState } from "react";
 
 /**
  * Hook to manage state synchronized with session storage.
@@ -20,43 +21,54 @@ export function useSessionState<T>(
   defaultValue?: T,
   serialize: (value: T) => string = JSON.stringify,
   deserialize: (value: string) => T = JSON.parse
-): [T | null, Dispatch<SetStateAction<T | null>>] {
-  const [storedValue, setStoredValue] = useState<T | null>(null);
-  const [rendering, setRendering] = useState(true);
-
-  // for updating the value in the session storage
-  useEffect(() => {
-    if (rendering) return;
-    const item = sessionStorage?.getItem(key);
-
-    if (sessionStorage && item !== storedValue) {
-      if (storedValue === null) {
-        sessionStorage.removeItem(key);
-      } else {
-        sessionStorage.setItem(key, serialize(storedValue));
+): [T | null, (value: T | null | ((prev: T | null) => T | null)) => void] {
+  const item = sessionStorage.getItem(key);
+  const [storedValue, setStoredValue] = useState<T | null>(() => {
+    try {
+      if (item) {
+        return deserialize(item);
       }
+    } catch (error) {
+      console.warn(`Error parsing sessionStorage key "${key}":`, error);
+      sessionStorage.removeItem(key); // Clean up invalid data
     }
-  }, [storedValue, key, serialize]);
 
-  // for setting initial value
-  useEffect(() => {
-    if (!sessionStorage) return;
-    setRendering(false);
-
-    const item = sessionStorage.getItem(key);
-
-    if (item && item !== storedValue) {
+    if (defaultValue !== undefined) {
       try {
-        setStoredValue(deserialize(item));
-        return;
+        serialize(defaultValue); // Check if default value can be serialized
+        return defaultValue;
       } catch (error) {
-        console.warn(`Error parsing sessionStorage key "${key}":`, error);
-        sessionStorage.removeItem(key); // Clean up invalid data
+        throw new Error("Default value cannot be serialized");
       }
     }
+    return null;
+  });
 
-    if (defaultValue !== undefined) setStoredValue(defaultValue);
-  }, [key, deserialize]);
+  const updateValue = (value: T | ((prev: T | null) => T | null) | null) => {
+    // calculate new value
+    let newValue: T | null | ((prev: T | null) => T | null);
+    if (typeof value === "function") {
+      const callback = value as (prev: T | null) => T | null;
+      newValue = callback(storedValue);
+    } else if (!value) newValue = null;
+    else newValue = value;
 
-  return [storedValue, setStoredValue];
+    // update session storage
+    if (!newValue) {
+      sessionStorage.removeItem(key);
+      setStoredValue(null);
+    } else {
+      try {
+        sessionStorage.setItem(key, serialize(newValue as T));
+        setStoredValue(newValue);
+      } catch (error) {
+        console.warn(
+          `Aborting state update for "${key}": unable to serialise new value:`,
+          error
+        );
+      }
+    }
+  };
+
+  return [storedValue, updateValue];
 }
