@@ -4,7 +4,7 @@ import GuidesClient from "./guidesClient";
 import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "UIcomponents/dropdown/dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
-import { useSessionState } from "hooks/useSessionState";
+import { useSessionState } from "react-session-hooks";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
 
@@ -28,6 +28,7 @@ export const Guides = ({
     <Container>
       <GuideDropdownContainer>
         <Dropdown
+          key={selectedModule}
           options={options}
           currentOption={options.find(
             (option) => option.optionName === "Module " + selectedModule

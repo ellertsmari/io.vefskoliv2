@@ -22,7 +22,7 @@ import { returnFeedback } from "serverActions/returnFeedback";
 import { Vote } from "models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
-import { useLocalState } from "hooks/useLocalState";
+import { useLocalState } from "react-session-hooks";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const LOCAL_STORAGE_KEY = useMemo(() => `feedback for ${guideTitle}`, []);
