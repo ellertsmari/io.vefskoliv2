@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { ObjectId } from "mongodb";
-import type { FeedbackDocument, FeedbackType } from "models/review";
+import type { FeedbackType } from "models/review";
 import { auth } from "../../auth";
 import { Review, Vote } from "models/review";
 
@@ -43,7 +43,7 @@ export async function returnFeedback(
     };
   }
 
-  const { vote, comment, returnId } = validatedFields.data;
+  const { vote, comment, returnId, guideId } = validatedFields.data;
   const session = await auth();
 
   if (!session?.user) {
@@ -59,15 +59,14 @@ export async function returnFeedback(
     comment,
     owner: new ObjectId(user.id),
     return: new ObjectId(returnId),
-    guide: new ObjectId(data.guideId),
+    guide: new ObjectId(guideId),
   };
 
   try {
-    const review = (await Review.create(reviewData)) as FeedbackDocument;
+    await Review.create(reviewData);
 
     return {
       success: true,
-      data: review.toObject(),
       message: "Return feedback submitted successfully",
     };
   } catch (e) {
