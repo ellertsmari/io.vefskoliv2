@@ -15,10 +15,10 @@ export const Guides = ({
   extendedGuides: ExtendedGuideInfo[];
   modules: Module[];
 }) => {
-  const [selectedModule, setSelectedModule] =
+  const [selectedModule, setSelectedModule, loading] =
     useSessionState<number>(LOCAL_STORAGE_KEY);
 
-  if (!extendedGuides || !modules) return null;
+  if (!extendedGuides || !modules || loading) return null;
 
   const filteredGuides = filterGuides(selectedModule, extendedGuides);
 

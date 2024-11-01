@@ -143,13 +143,13 @@ describe("useSessionState", () => {
     expect(result.current[0]).toBe(true);
   });
 
-  it("should handle invalid JSON data in sessionStorage", () => {
+  it("should handle invalid JSON data in sessionStorage", async () => {
     sessionStorage.setItem("testKey", "invalid JSON");
     const consoleWarnMock = jest
       .spyOn(console, "warn")
       .mockImplementationOnce(() => {}); // Suppress expected console warning
     const { result } = renderHook(() => useSessionState("testKey", "default"));
-    expect(result.current[0]).toBe("default");
+    await waitFor(() => expect(result.current[0]).toBe("default"));
     expect(consoleWarnMock).toHaveBeenCalledTimes(1);
   });
 
