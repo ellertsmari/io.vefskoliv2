@@ -19,7 +19,7 @@ export const Guides = ({
     useSessionState<number>(LOCAL_STORAGE_KEY);
 
   if (!extendedGuides || !modules) return null;
-
+  console.log("selectedModule", selectedModule);
   const filteredGuides = filterGuides(selectedModule, extendedGuides);
 
   const options = createOptions(modules, setSelectedModule);
@@ -57,7 +57,7 @@ const filterGuides = (
   selectedModule: number | null,
   extendedGuides: ExtendedGuideInfo[]
 ) => {
-  if (!selectedModule) return extendedGuides;
+  if (selectedModule === null) return extendedGuides;
   return extendedGuides.filter((guide) => {
     if (guide.module.title[0] === "" + selectedModule) return guide;
   });
