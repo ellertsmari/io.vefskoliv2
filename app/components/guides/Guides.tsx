@@ -58,7 +58,7 @@ const filterGuides = (
   selectedModule: number | null,
   extendedGuides: ExtendedGuideInfo[]
 ) => {
-  if (!selectedModule) return extendedGuides;
+  if (selectedModule === null) return extendedGuides;
   return extendedGuides.filter((guide) => {
     if (guide.module.title[0] === "" + selectedModule) return guide;
   });
