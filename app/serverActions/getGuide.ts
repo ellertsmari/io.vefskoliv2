@@ -10,8 +10,9 @@ export const getGuide = async (id: string) => {
   }
   const objectId = new Types.ObjectId(id);
   await connectToDatabase();
-  const guide: GuideDocument | null = await Guide.findOne({
-    _id: objectId,
-  });
+  const guide: GuideDocument | null =
+    (await Guide.findOne({
+      _id: objectId,
+    })) || null;
   return guide;
 };

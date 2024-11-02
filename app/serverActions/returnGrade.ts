@@ -6,6 +6,21 @@ import { auth } from "../../auth";
 import { Review } from "../models/review";
 import { z } from "zod";
 
+type GradeDataType = {
+  grade: number | undefined;
+  reviewId: string | undefined;
+};
+
+type GradeFormState =
+  | {
+      errors?: {
+        reviewId?: string[];
+        grade?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
 export async function returnGrade(state: GradeFormState, data: GradeDataType) {
   const validatedFields = GradeFormSchema.safeParse({
     grade: data.grade,
@@ -56,12 +71,7 @@ export async function returnGrade(state: GradeFormState, data: GradeDataType) {
   }
 }
 
-export type GradeDataType = {
-  grade: number | undefined;
-  reviewId: string | undefined;
-};
-
-export const GradeFormSchema = z.object({
+const GradeFormSchema = z.object({
   grade: z
     .number()
     .int()
@@ -69,13 +79,3 @@ export const GradeFormSchema = z.object({
     .max(10, { message: "Grade must be at most 10" }),
   reviewId: z.string().min(2, { message: "Please append a reviewId" }).trim(),
 });
-
-export type GradeFormState =
-  | {
-      errors?: {
-        reviewId?: string[];
-        grade?: string[];
-      };
-      message?: string;
-    }
-  | undefined;

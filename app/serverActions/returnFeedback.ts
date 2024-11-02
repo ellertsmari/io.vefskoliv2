@@ -6,6 +6,25 @@ import type { FeedbackType } from "models/review";
 import { auth } from "../../auth";
 import { Review, Vote } from "models/review";
 
+type FeedbackDataType = {
+  vote: Vote | undefined;
+  comment: string | undefined;
+  returnId: string | undefined;
+  guideId: string | undefined;
+};
+
+type FeedbackFormState =
+  | {
+      errors?: {
+        returnId?: string[];
+        vote?: string[];
+        comment?: string[];
+        guideId?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
 export async function returnFeedback(
   state: FeedbackFormState,
   data: FeedbackDataType
@@ -24,7 +43,7 @@ export async function returnFeedback(
     };
   }
 
-  const { vote, comment, returnId } = validatedFields.data;
+  const { vote, comment, returnId, guideId } = validatedFields.data;
   const session = await auth();
 
   if (!session?.user) {
@@ -40,11 +59,11 @@ export async function returnFeedback(
     comment,
     owner: new ObjectId(user.id),
     return: new ObjectId(returnId),
-    guide: new ObjectId(data.guideId),
+    guide: new ObjectId(guideId),
   };
 
   try {
-    const review = await Review.create(reviewData);
+    await Review.create(reviewData);
 
     return {
       success: true,
@@ -58,14 +77,7 @@ export async function returnFeedback(
   }
 }
 
-export type FeedbackDataType = {
-  vote: Vote | undefined;
-  comment: string | undefined;
-  returnId: string | undefined;
-  guideId: string | undefined;
-};
-
-export const FeedbackFormSchema = z.object({
+const FeedbackFormSchema = z.object({
   vote: z.nativeEnum(Vote).refine((val) => Object.values(Vote).includes(val), {
     message: "Vote type is invalid",
   }),
@@ -76,15 +88,3 @@ export const FeedbackFormSchema = z.object({
     .min(2, { message: "Please provide valid feedback" })
     .trim(),
 });
-
-export type FeedbackFormState =
-  | {
-      errors?: {
-        returnId?: string[];
-        vote?: string[];
-        comment?: string[];
-        guideId?: string[];
-      };
-      message?: string;
-    }
-  | undefined;
