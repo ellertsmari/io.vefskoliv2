@@ -4,6 +4,18 @@ import { Return } from "../models/return";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 
+type ReturnFormState =
+  | {
+      errors?: {
+        projectUrl?: string[];
+        liveVersion?: string[];
+        projectName?: string[];
+        comment?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
 export async function returnGuide(state: ReturnFormState, formData: FormData) {
   const validatedFields = ReturnFormSchema.safeParse({
     projectUrl: formData.get("projectUrl"),
@@ -60,18 +72,6 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
     };
   }
 }
-
-export type ReturnFormState =
-  | {
-      errors?: {
-        projectUrl?: string[];
-        liveVersion?: string[];
-        projectName?: string[];
-        comment?: string[];
-      };
-      message?: string;
-    }
-  | undefined;
 
 const ReturnFormSchema = z.object({
   projectUrl: z.string().min(2, { message: "Please enter a valid URL" }).trim(),

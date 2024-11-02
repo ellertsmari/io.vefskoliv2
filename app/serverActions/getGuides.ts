@@ -177,7 +177,7 @@ const addGradesGiven = (): PipelineStage => {
   };
 };
 
-export const getGuidesPipelines = async (userId: ObjectId): Promise<PipelineStage[]> => {
+const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
   // define the final document structure
   const defineProject: PipelineStage = {
     $project: {
@@ -228,10 +228,10 @@ export async function getGuides(
 
   await connectToDatabase();
   const userId = new ObjectId(userIdString);
-  const pipeline = await getGuidesPipelines(userId);
+  const pipeline = getGuidesPipelines(userId);
 
   try {
-    return await Guide.aggregate(pipeline).exec();
+    return (await Guide.aggregate(pipeline).exec()) as GuideInfo[];
   } catch (e) {
     console.error("Failed to fetch guides:", e);
     throw e;

@@ -22,16 +22,32 @@ import { returnFeedback } from "serverActions/returnFeedback";
 import { Vote } from "models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
-import { useLocalState } from "hooks/useLocalState";
+import { useLocalState } from "react-session-hooks";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const LOCAL_STORAGE_KEY = useMemo(() => `feedback for ${guideTitle}`, []);
 
-  const [comment, setComment] = useLocalState<string>(LOCAL_STORAGE_KEY, "");
+  const [comment, setComment, loading] = useLocalState<string>(
+    LOCAL_STORAGE_KEY,
+    ""
+  );
   const [vote, setVote] = useState<Vote | undefined>(undefined);
   const [state, formAction, isPending] = useActionState(
     returnFeedback,
     undefined
+  );
+
+  useEffect(() => {
+    if (state?.success) {
+      setComment(null);
+      window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
+    }
+  }, [state?.success]);
+
+  const handleSetVote = useCallback((vote: Vote) => setVote(vote), []);
+  const handleSetComment = useCallback(
+    (comment: string) => setComment(comment),
+    []
   );
 
   const { guide } = useGuide();
@@ -51,20 +67,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
     }
   };
 
-  useEffect(() => {
-    if (state?.success) {
-      setComment(null);
-      window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
-    }
-  }, [state?.success]);
-
-  const handleSetVote = useCallback((vote: Vote) => setVote(vote), []);
-  const handleSetComment = useCallback(
-    (comment: string) => setComment(comment),
-    []
-  );
-
-  if (!guide) return null;
+  if (!guide || loading) return null;
 
   return (
     <FeedbackInfoContainer>

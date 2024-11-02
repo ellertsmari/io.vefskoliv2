@@ -1,10 +1,9 @@
 import { SubTitle } from "globalStyles/text";
 import { useCallback, useMemo, useState } from "react";
 import {
-  ExtendedGuideInfo,
   FeedbackDocumentWithReturn,
   GradesGivenStatus,
-} from "../../../types/guideTypes";
+} from "types/guideTypes";
 import {
   FeedbackContainer,
   Border,
@@ -12,10 +11,10 @@ import {
   ContentAndNavigatorContainer,
   ToggleContainer,
 } from "./style";
-import MarkdownReader from "../../UIcomponents/markdown/reader";
-import { Toggle, ToggleOption } from "../../UIcomponents/toggle/Toggle";
-import { OptionNavigator } from "../../UIcomponents/optionNavigator/OptionNavigator";
-import { useGuide } from "../../providers/GuideProvider";
+import MarkdownReader from "UIcomponents/markdown/reader";
+import { Toggle, ToggleOption } from "UIcomponents/toggle/Toggle";
+import { OptionNavigator } from "UIcomponents/optionNavigator/OptionNavigator";
+import { useGuide } from "providers/GuideProvider";
 import { ReturnOverview } from "./ReturnOverview";
 
 export const FeedbackOverview = () => {
@@ -51,6 +50,7 @@ export const FeedbackOverview = () => {
 
   if (!showGivenOrReceived) {
     const theReturn = returnsSubmitted[0];
+    console.log("theReturn", theReturn);
     return <ReturnOverview theReturn={theReturn} />;
   }
 
