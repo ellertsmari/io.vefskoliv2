@@ -10,7 +10,7 @@ import {
 } from "../__mocks__/mongoHandler";
 import { auth } from "../../auth";
 import { returnGuide } from "serverActions/returnGuide";
-import ReturnForm from "../../app/components/returnForm/ReturnForm";
+import { ReturnForm } from "components/returnForm/ReturnForm";
 jest.mock("../../auth", () => ({
   getUser: jest.fn(),
   signIn: jest.fn(),
