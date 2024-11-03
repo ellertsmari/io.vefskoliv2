@@ -7,7 +7,7 @@ import {
   connect,
 } from "../__mocks__/mongoHandler";
 import { Review, Vote } from "models/review";
-import { FeedbackDataType, returnFeedback } from "serverActions/returnFeedback";
+import { returnFeedback } from "serverActions/returnFeedback";
 
 jest.mock("../../auth", () => ({
   auth: jest.fn(),
@@ -26,7 +26,7 @@ describe("returnFeedback", () => {
   it("should return feedback", async () => {
     const vote = Vote.RECOMMEND_TO_GALLERY;
     const comment = "Great job!";
-    const input: FeedbackDataType = {
+    const input = {
       vote,
       comment,
       returnId,
@@ -52,7 +52,7 @@ describe("returnFeedback", () => {
   it("should return an error if form validation fails", async () => {
     const vote = Vote.PASS;
     const comment = "Great job!";
-    const input: FeedbackDataType = {
+    const input = {
       vote: undefined,
       comment: undefined,
       returnId: undefined,
@@ -65,7 +65,7 @@ describe("returnFeedback", () => {
   it("should return an error if feedback submission fails", async () => {
     const vote = Vote.PASS;
     const comment = "Great job!";
-    const input: FeedbackDataType = {
+    const input = {
       vote,
       comment,
       returnId,

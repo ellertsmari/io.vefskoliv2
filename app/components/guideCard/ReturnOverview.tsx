@@ -26,7 +26,8 @@ export const ReturnOverview = ({
   if (theFeedback) theReturn = theFeedback.associatedReturn;
 
   if (!theReturn) {
-    throw new Error("ReturnOverview requires a return document");
+    console.warn("No return found for this feedback");
+    return null;
   }
 
   return (

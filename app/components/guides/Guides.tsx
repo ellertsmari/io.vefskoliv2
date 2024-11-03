@@ -3,7 +3,7 @@
 import { Container, GuideDropdownContainer } from "./style";
 import { Dropdown } from "UIcomponents/dropdown/dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
-import { useSessionState } from "hooks/useSessionState";
+import { useSessionState } from "react-session-hooks";
 import { GuidesClient } from "components/guidesClient/GuidesClient";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
@@ -15,10 +15,10 @@ export const Guides = ({
   extendedGuides: ExtendedGuideInfo[];
   modules: Module[];
 }) => {
-  const [selectedModule, setSelectedModule] =
+  const [selectedModule, setSelectedModule, loading] =
     useSessionState<number>(LOCAL_STORAGE_KEY);
 
-  if (!extendedGuides || !modules) return null;
+  if (!extendedGuides || !modules || loading) return null;
 
   const filteredGuides = filterGuides(selectedModule, extendedGuides);
 
@@ -28,6 +28,7 @@ export const Guides = ({
     <Container>
       <GuideDropdownContainer>
         <Dropdown
+          key={selectedModule}
           options={options}
           currentOption={options.find(
             (option) => option.optionName === "Module " + selectedModule
@@ -57,7 +58,7 @@ const filterGuides = (
   selectedModule: number | null,
   extendedGuides: ExtendedGuideInfo[]
 ) => {
-  if (!selectedModule) return extendedGuides;
+  if (selectedModule === null) return extendedGuides;
   return extendedGuides.filter((guide) => {
     if (guide.module.title[0] === "" + selectedModule) return guide;
   });
