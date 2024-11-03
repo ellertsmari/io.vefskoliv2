@@ -2,8 +2,8 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../../types/guideTypes";
-import { GuideCardStatuses } from "../guideCardStatuses/GuideCardStatuses";
+} from "types/guideTypes";
+import { GuideCardStatuses } from "components/guideCardStatuses/GuideCardStatuses";
 import { StyledLink, Info, GuideNr, Name, GuideDescription } from "./style";
 
 export const GuideCardOverview = ({
