@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import {
   OptionValue,
   Container,
@@ -12,6 +12,7 @@ import {
 interface SliderProps<T> {
   id: string;
   options: T[];
+  titles?: string[];
   value?: T | null;
   selectable: boolean;
   helpLink: string;
@@ -22,42 +23,43 @@ export const Slider = <T extends string | number>({
   options,
   value,
   handleOnChange,
+  titles,
   selectable,
   helpLink,
   id,
 }: SliderProps<T>) => {
+  if (titles && titles.length !== options.length)
+    throw new Error("Titles must be the same length as options");
+
   const [tempValue, setTempValue] = useState<T | null | undefined>(value);
-  const [hasMounted, setHasMounted] = useState(false);
 
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (hasMounted && handleOnChange && tempValue) handleOnChange(tempValue);
-  }, [tempValue]);
-
-  const optionsList = options.map((option, index) => {
-    return (
-      <OptionValue
-        $selected={option === tempValue}
-        key={index}
-        htmlFor={`${id}-option-${option}`}
-        onClick={selectable ? () => setTempValue(option) : undefined}
-      >
-        {option}
-      </OptionValue>
-    );
-  });
+  const optionsList = useMemo(
+    () =>
+      options.map((option, index) => {
+        return (
+          <OptionValue
+            $selected={option === tempValue}
+            key={index}
+            htmlFor={`${id}-option-${option}`}
+            onClick={() => handleSliderChange(option)}
+            title={titles && titles[index]}
+          >
+            {option}
+          </OptionValue>
+        );
+      }),
+    [options, tempValue, selectable]
+  );
 
   const calculateSliderPercentage = () => {
     if (!tempValue) return 0;
     return (options.indexOf(tempValue) / (options.length - 1)) * 100;
   };
 
-  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = options[parseInt(event.target.value)];
+  const handleSliderChange = (newValue: T) => {
+    if (!handleOnChange || !selectable) return;
     setTempValue(newValue);
+    handleOnChange(newValue);
   };
 
   return (
@@ -70,7 +72,10 @@ export const Slider = <T extends string | number>({
           $selectable={selectable}
           disabled={!selectable}
           $sliderPercentage={calculateSliderPercentage()}
-          onChange={handleSliderChange}
+          onChange={(event) => {
+            const newValue = options[parseInt(event.target.value)];
+            handleSliderChange(newValue);
+          }}
           id={id}
         />
       </SliderContainer>

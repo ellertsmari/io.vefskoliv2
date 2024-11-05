@@ -15,21 +15,18 @@ import {
 } from "./style";
 import Modal from "UIcomponents/modal/modal";
 import { Input } from "UIcomponents/input/Input";
-import DefaultButton from "../../globalStyles/buttons/default";
+import DefaultButton from "globalStyles/buttons/default";
 import { DefaultUserIcon } from "assets/Icons";
-import { UserType } from "models/user";
-import { useSession } from "providers/SessionProvider";
 import { LogoutIcon } from "assets/Icons";
 import { signOut } from "serverActions/signOut";
 import { updateUserInfo } from "serverActions/updateUserInfo";
 import { useSessionState } from "react-session-hooks";
 import { Wrapper } from "globalStyles/globalStyles";
+import { Session } from "next-auth";
+import { AdapterUser } from "next-auth/adapters";
 
-export const Profile = () => {
-  //getting the user from session
-  const session = useSession();
-  //fix unknown later
-  const user = session?.user as UserType;
+export const Profile = ({ session }: { session: Session | null }) => {
+  const user = session?.user as AdapterUser;
 
   const ProfilePictureContainer = () => {
     return (
@@ -55,7 +52,7 @@ export const Profile = () => {
   );
 };
 
-const EditProfileScreen = ({ user }: { user: UserType }) => {
+const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
   const [userInfo, setUserInfo, loading] = useSessionState("userInfo", {
     background: user?.background || "",
     careerGoals: user?.careerGoals || "",

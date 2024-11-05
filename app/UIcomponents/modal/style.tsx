@@ -10,8 +10,8 @@ export const ModalWrapper = styled.div`
   align-items: flex-end;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   background-color: rgba(0, 0, 0, 0.5);
   position: fixed;
   z-index: 10;
@@ -32,12 +32,12 @@ export const ContentWrapper = styled.div`
   border: 1px solid var(--theme-module3-100);
   z-index: 11;
   overflow-y: auto;
-  max-height: 90vh;
+  max-height: 90dvh;
 
   @media (min-width: ${deskTopWidth}) {
     height: auto;
-    max-width: 90vw;
-    max-height: 90vh;
+    max-width: 90dvw;
+    max-height: 90dvh;
   }
 
   @media (min-width: 768px) {

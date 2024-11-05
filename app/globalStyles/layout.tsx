@@ -12,7 +12,7 @@ export const LayoutGrid = styled.div`
   padding: 1rem;
   gap: 1rem;
   width: 100%;
-  height: 100vh;
+  height: 100dvh;
   grid-auto-rows: min-content;
 
   @media (min-width: ${breakpoint}) {
@@ -25,7 +25,7 @@ export const LayoutGrid = styled.div`
 `;
 
 export const SidebarContainer = styled.div`
-  max-height: 100vh;
+  max-height: 100dvh;
   width: 100%;
   grid-area: sidebar;
   border-radius: 0.8rem;

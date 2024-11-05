@@ -1,17 +1,10 @@
 import type { AdapterUser as BaseAdapterUser } from "next-auth/adapters";
+import type { UserType } from "models/user";
 
 declare module "@auth/core/adapters" {
-  interface AdapterUser extends BaseAdapterUser {
-    avatarUrl: string | null | undefined;
-    background: string | null | undefined;
-    careerGoals: string | null | undefined;
-    createdAt: Date | null | undefined;
-    email: string | null | undefined;
-    favoriteArtists: string | null | undefined;
-    interests: string | null | undefined;
-    name: string | null | undefined;
-    role: string | null | undefined;
-  }
+  interface AdapterUser
+    extends BaseAdapterUser,
+      Omit<UserType, "_id" | "password" | "createdAt" | "updatedAt"> {}
 }
 
 // import 'next-auth';

@@ -51,7 +51,6 @@ export const FeedbackOverview = () => {
 
   if (!showGivenOrReceived) {
     const theReturn = returnsSubmitted[0];
-    console.log("theReturn", theReturn);
     return <ReturnOverview theReturn={theReturn} />;
   }
 

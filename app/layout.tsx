@@ -11,9 +11,8 @@ import {
 } from "./globalStyles/layout";
 import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
-import { SessionProvider } from "./providers/SessionProvider";
-import LoginPage from "pages/login/page";
-import { Navbar } from "components/navbar/NavBar";
+import { LoginPage } from "pages/login/page";
+import { Navbar } from "components/navBar/NavBar";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
@@ -28,27 +27,27 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  console.log("before auth");
   const session = await auth();
+  console.log("after auth");
 
   return (
     <html lang="en">
       <body className={poppins.className}>
         <StyledComponentsRegistry>
           <AnimatedBackground />
-          <SessionProvider session={session}>
-            {session?.user && (
-              <LayoutGrid>
-                <SidebarContainer>
-                  <Sidebar />
-                </SidebarContainer>
-                <NavbarContainer>
-                  <Navbar />
-                </NavbarContainer>
-                <Main>{children}</Main>
-              </LayoutGrid>
-            )}
-            <LoginPage />
-          </SessionProvider>
+          {session?.user && (
+            <LayoutGrid>
+              <SidebarContainer>
+                <Sidebar />
+              </SidebarContainer>
+              <NavbarContainer>
+                <Navbar />
+              </NavbarContainer>
+              <Main>{children}</Main>
+            </LayoutGrid>
+          )}
+          <LoginPage />
         </StyledComponentsRegistry>
       </body>
     </html>

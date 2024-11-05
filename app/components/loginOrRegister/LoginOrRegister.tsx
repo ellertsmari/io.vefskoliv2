@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "providers/SessionProvider";
+
 import { RegisterForm } from "components/registerForm/RegisterForm";
 import { LoginForm } from "components/loginForm/LoginForm";
+import { Session } from "next-auth";
 
-export function LoginOrRegister() {
-  const session = useSession();
-
+export function LoginOrRegister({ session }: { session: Session | null }) {
   const [selectedForm, setSelectedForm] = useState<"login" | "register">(
     "login"
   );
