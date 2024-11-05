@@ -13,7 +13,7 @@ import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
 import { SessionProvider } from "./providers/SessionProvider";
 import LoginPage from "pages/login/page";
-import { Navbar } from "components/navBar/NavBar";
+import { Navbar } from "components/navbar/NavBar";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 
