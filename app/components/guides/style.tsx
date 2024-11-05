@@ -12,14 +12,6 @@ export const Container = styled.div`
   padding: 1.5rem 1.5rem;
 `;
 
-export const GuideContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  gap: 0.75rem;
-  width: 100%;
-`;
-
 export const GuideDropdownContainer = styled.div`
   display: flex;
   align-items: center;

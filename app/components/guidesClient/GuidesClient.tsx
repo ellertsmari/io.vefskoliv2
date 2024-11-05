@@ -1,13 +1,13 @@
-import GuideCard from "../../guideCard/GuideCard";
+import GuideCard from "components/guideCard/GuideCard";
 
-import { GuideContainer } from "../style";
 import { ExtendedGuideInfo } from "types/guideTypes";
+import { GuideContainer } from "./style";
 
 type GuidesClientProps = {
   guides: ExtendedGuideInfo[];
   useGuideOrder: boolean;
 };
-const GuidesClient = ({ guides, useGuideOrder }: GuidesClientProps) => {
+export const GuidesClient = ({ guides, useGuideOrder }: GuidesClientProps) => {
   return (
     <GuideContainer>
       {guides.map((guide, index) => {
@@ -22,5 +22,3 @@ const GuidesClient = ({ guides, useGuideOrder }: GuidesClientProps) => {
     </GuideContainer>
   );
 };
-
-export default GuidesClient;

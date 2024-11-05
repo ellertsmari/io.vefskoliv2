@@ -98,7 +98,8 @@ export const ColouredCircle = styled.div<{ $backgroundColor?: StyleColors }>`
 `;
 
 export const OverviewWrapper = styled(Wrapper)`
-  gap: 32px;
+  gap: 2rem;
+  align-self: center;
   width: 100%;
 `;
 
@@ -142,25 +143,6 @@ export const LinkNoWrap = styled(Link)`
   white-space: nowrap;
 `;
 
-export const FeedbackContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 32px;
-`;
-
-export const FeedbackInfoContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  width: 100%;
-
-  @media (min-width: ${BREAKPOINT_DESKTOP}) {
-    flex-direction: row;
-  }
-`;
-
 export const WriteFeedbackContainer = styled.form`
   display: flex;
   flex-direction: column;
@@ -172,20 +154,6 @@ export const Border = styled.div`
   border: 1px solid var(--theme-module3-100);
   padding: 16px;
   border-radius: 8px;
-`;
-
-export const ContentAndNavigatorContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-`;
-
-export const ToggleContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
 `;
 
 export const VotingContainer = styled.div`

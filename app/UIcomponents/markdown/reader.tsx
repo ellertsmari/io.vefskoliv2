@@ -10,7 +10,7 @@ type MarkdownReaderProps = {
 // MarkdownReader component used to display markdown content as plain text in the individual guides
 const MarkdownReader = ({ children }: MarkdownReaderProps) => {
   return (
-    <div data-color-mode="light">
+    <div data-color-mode="light" style={{ wordBreak: "break-word" }}>
       <MDEditor.Markdown source={children}></MDEditor.Markdown>
     </div>
   );

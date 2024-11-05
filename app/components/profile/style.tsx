@@ -1,20 +1,19 @@
 import styled from "styled-components";
 import Image from "next/image";
+import { Wrapper } from "globalStyles/globalStyles";
 
 //Profile styles
 
-export const ProfileWrapper = styled.div`
+export const ProfileWrapper = styled(Wrapper)`
+  gap: 1rem;
+`;
+
+export const ImageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   width: fit-content;
-`;
-
-export const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 `;
 
 export const ProfileImageContainer = styled.div`
@@ -55,7 +54,7 @@ export const ProfileName = styled.h2`
 export const Logout = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
   align-items: center;
 `;
 
@@ -67,7 +66,7 @@ export const LogoutButton = styled.div`
   align-self: center;
   flex-direction: row;
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   &:hover {
     filter: brightness(0.1);
   }
@@ -96,7 +95,8 @@ export const AdditionalInfo = styled.p`
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  align-items: center;
+  gap: 2rem;
 `;
 
 export const ButtonWrapper = styled.div`
@@ -104,5 +104,5 @@ export const ButtonWrapper = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 16px;
+  gap: 1rem;
 `;

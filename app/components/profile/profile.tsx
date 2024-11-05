@@ -4,6 +4,7 @@ import {
   ProfileImageContainer,
   ProfileName,
   ProfileWrapper,
+  ImageWrapper,
   LogoutButton,
   Form,
   ProfileDetails,
@@ -11,7 +12,6 @@ import {
   ButtonWrapper,
   ProfileInfo,
   Logout,
-  Wrapper,
 } from "./style";
 import Modal from "../../UIcomponents/modal/modal";
 import Input from "../../globalStyles/input";
@@ -23,6 +23,7 @@ import { LogoutIcon } from "assets/Icons";
 import { signOut } from "serverActions/signOut";
 import { updateUserInfo } from "serverActions/updateUserInfo";
 import { useSessionState } from "react-session-hooks";
+import { Wrapper } from "globalStyles/globalStyles";
 
 export const Profile = () => {
   //getting the user from session
@@ -32,11 +33,11 @@ export const Profile = () => {
 
   const ProfilePictureContainer = () => {
     return (
-      <ProfileWrapper>
+      <ImageWrapper>
         <ProfilePicture url={user.avatarUrl} />
 
         <ProfileName>{user.name}</ProfileName>
-      </ProfileWrapper>
+      </ImageWrapper>
     );
   };
 
@@ -73,7 +74,7 @@ const EditProfileScreen = ({ user }: { user: UserType }) => {
   const { background, careerGoals, interests, favoriteArtists } = userInfo;
 
   return (
-    <>
+    <ProfileWrapper>
       <ProfileDetails>
         <ProfilePicture url={user.avatarUrl} />
         <ProfileInfo>
@@ -140,7 +141,7 @@ const EditProfileScreen = ({ user }: { user: UserType }) => {
         </DefaultButton>
         <DefaultButton style="outlined">CHANGE PASSWORD</DefaultButton>
       </ButtonWrapper>
-    </>
+    </ProfileWrapper>
   );
 };
 

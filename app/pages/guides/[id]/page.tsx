@@ -1,5 +1,5 @@
 import { getGuide } from "serverActions/getGuide";
-import { Guide } from "components/guides/[id]/Guide";
+import { GuideOverview } from "components/guideOverview/GuideOverview";
 import { GuideType } from "models/guide";
 
 const GuidePage = async ({ params }: { params: { id: string } }) => {
@@ -15,7 +15,7 @@ const GuidePage = async ({ params }: { params: { id: string } }) => {
     );
   }
 
-  return <Guide guide={guide} />;
+  return <GuideOverview guide={guide} />;
 };
 
 export default GuidePage;
