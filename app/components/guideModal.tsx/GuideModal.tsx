@@ -1,18 +1,18 @@
 import { SmallText, Title } from "globalStyles/text";
-import { useGuide } from "../../providers/GuideProvider";
+import { useGuide } from "providers/GuideProvider";
+import { FeedbackStatus } from "types/guideTypes";
+import { calculateReturnStyle } from "./calculateReturnStyle";
+import { Button } from "globalStyles/buttons/default/style";
+import { FeedbackOverview } from "components/feedbackOverview/FeedbackOverview";
+import { GiveFeedbackView } from "components/giveFeedbackView.tsx/GiveFeedbackView";
 import {
   ColouredCircle,
-  ReturnStatusContainer,
   Header,
+  GuideModalWrapper,
+  ReturnStatusContainer,
   TitleContainer,
-  ModalWrapper,
-  LinkNoWrap,
 } from "./style";
-import { FeedbackStatus } from "../../../types/guideTypes";
-import { calculateReturnStyle } from "./utils";
-import { Button } from "globalStyles/buttons/default/style";
-import { FeedbackOverview } from "../feedbackOverview/FeedbackOverview";
-import { GiveFeedbackView } from "../GiveFeedbackView.tsx/GiveFeedbackView";
+import { UnstyledLinkNoWrap } from "globalStyles/globalStyles";
 
 export const GuideModal = () => {
   const { guide } = useGuide();
@@ -28,7 +28,7 @@ export const GuideModal = () => {
   };
 
   return (
-    <ModalWrapper>
+    <GuideModalWrapper>
       <Header>
         <TitleContainer>
           <Title>{title}</Title>
@@ -39,13 +39,13 @@ export const GuideModal = () => {
               />
               <SmallText>{returnStatus}</SmallText>
             </ReturnStatusContainer>
-            <LinkNoWrap href={link} target="_blank">
+            <UnstyledLinkNoWrap href={link} target="_blank">
               <Button $styletype="outlined">VIEW THIS GUIDE</Button>
-            </LinkNoWrap>
+            </UnstyledLinkNoWrap>
           </div>
         </TitleContainer>
       </Header>
       <RenderedContent />
-    </ModalWrapper>
+    </GuideModalWrapper>
   );
 };

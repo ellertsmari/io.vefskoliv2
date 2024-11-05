@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "../providers/SessionProvider";
-import LoginForm from "./LoginForm";
-import RegisterForm from "./RegisterForm";
+import { useSession } from "providers/SessionProvider";
+import { RegisterForm } from "components/registerForm/RegisterForm";
+import { LoginForm } from "components/loginForm/LoginForm";
 
-export default function LoginOrRegister() {
+export function LoginOrRegister() {
   const session = useSession();
 
   const [selectedForm, setSelectedForm] = useState<"login" | "register">(

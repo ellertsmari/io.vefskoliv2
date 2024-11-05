@@ -14,8 +14,6 @@ declare module "@auth/core/adapters" {
   }
 }
 
-
-
 // import 'next-auth';
 // import { JWT } from 'next-auth/jwt';
 

@@ -1,7 +1,7 @@
 "use server";
 import { Types } from "mongoose";
 import { GuideDocument } from "models/guide";
-import { connectToDatabase } from "../clientActions/mongoose-connector";
+import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 
 export const getGuide = async (id: string) => {

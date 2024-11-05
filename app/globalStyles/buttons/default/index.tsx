@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "./style";
 
 type Props = {
@@ -9,11 +8,17 @@ type Props = {
   children: React.ReactNode;
   style: "default" | "outlined";
   disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 };
 
-const DefaultButton = ({ onClick, children, style, disabled }: Props) => {
+const DefaultButton = ({ onClick, children, style, disabled, type }: Props) => {
   return (
-    <Button onClick={onClick} $styletype={style} disabled={disabled}>
+    <Button
+      onClick={onClick}
+      $styletype={style}
+      disabled={disabled}
+      type={type}
+    >
       {children}
     </Button>
   );

@@ -4,7 +4,7 @@ import {
   ReturnStatus,
 } from "types/guideTypes";
 import { GuideCardStatuses } from "components/guideCardStatuses/GuideCardStatuses";
-import { StyledLink, Info, GuideNr, Name, GuideDescription } from "./style";
+import { StyledLink, Info, GuideDescription, GuideNr, Name } from "./style";
 
 export const GuideCardOverview = ({
   guideTitle,
