@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   OptionValue,
   Container,
@@ -12,6 +12,7 @@ import {
 interface SliderProps<T> {
   id: string;
   options: T[];
+  titles?: string[];
   value?: T | null;
   selectable: boolean;
   helpLink: string;
@@ -22,33 +23,38 @@ export const Slider = <T extends string | number>({
   options,
   value,
   handleOnChange,
+  titles,
   selectable,
   helpLink,
   id,
 }: SliderProps<T>) => {
+  if (titles && titles.length !== options.length)
+    throw new Error("Titles must be the same length as options");
+
   const [tempValue, setTempValue] = useState<T | null | undefined>(value);
-  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (hasMounted && handleOnChange && tempValue) handleOnChange(tempValue);
+    if (handleOnChange && tempValue) handleOnChange(tempValue);
   }, [tempValue]);
 
-  const optionsList = options.map((option, index) => {
-    return (
-      <OptionValue
-        $selected={option === tempValue}
-        key={index}
-        htmlFor={`${id}-option-${option}`}
-        onClick={selectable ? () => setTempValue(option) : undefined}
-      >
-        {option}
-      </OptionValue>
-    );
-  });
+  const optionsList = useMemo(
+    () =>
+      options.map((option, index) => {
+        console.log("option", option, "titles[index]", titles && titles[index]);
+        return (
+          <OptionValue
+            $selected={option === tempValue}
+            key={index}
+            htmlFor={`${id}-option-${option}`}
+            onClick={selectable ? () => setTempValue(option) : undefined}
+            title={titles && titles[index]}
+          >
+            {option}
+          </OptionValue>
+        );
+      }),
+    [options, tempValue, selectable]
+  );
 
   const calculateSliderPercentage = () => {
     if (!tempValue) return 0;
