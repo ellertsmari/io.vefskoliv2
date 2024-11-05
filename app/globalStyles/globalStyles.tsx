@@ -15,8 +15,7 @@ export const Border = styled(Wrapper)`
 
 export const MaterialButton = styled(Button)`
   text-align: left;
-  padding: 2px 0.5rem;
-  white-space: nowrap;
+  padding: 0.5rem 0.75rem;
 `;
 
 export const Form = styled.form`
