@@ -26,6 +26,7 @@ export const Grade = ({
   useEffect(() => {
     if (state?.success && state.data) {
       setCanGrade(false);
+      window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
     }
   }, [state?.success]);
 
