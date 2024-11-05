@@ -9,7 +9,7 @@ import { connectToDatabase } from "./app/clientActions/mongoose-connector";
 
 export async function getUser(email: string): Promise<UserDocument | null> {
   try {
-    connectToDatabase();
+    await connectToDatabase();
     const user: UserDocument | null = await User.findOne({ email });
     return user;
   } catch (error) {
