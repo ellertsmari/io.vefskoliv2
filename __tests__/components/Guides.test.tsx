@@ -11,18 +11,14 @@ import {
 } from "../__mocks__/mongoHandler";
 import { fetchModules } from "utils/guideUtils";
 
-
 // Mocking react-session-hooks as it is not needed for this test and causes ES6 import error that I can't solve yet
 jest.mock("react-session-hooks", () => ({
   useSessionState: jest.fn(() => [null, jest.fn(), false]),
 }));
 
-jest.mock(
-  "components/guides/guidesClient",
-  () =>
-    ({ guides }: { guides: ExtendedGuideInfo[] }) =>
-      guides.map((guide) => <div key={guide.link}>{guide.module.title}</div>)
-    ),
+jest.mock("components/guidesClient/GuidesClient", () => ({
+  GuidesClient: ({ guides }: { guides: ExtendedGuideInfo[] }) =>
+    guides.map((guide) => <div key={guide.link}>{guide.module.title}</div>),
 }));
 
 const { filterGuides, createOptions } = exportedForTesting;

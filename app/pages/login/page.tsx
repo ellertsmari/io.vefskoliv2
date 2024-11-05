@@ -1,7 +1,8 @@
-"use client";
+import LoginOrRegister from "UIcomponents/LoginOrRegister";
+import { auth } from "auth";
 
-import LoginOrRegister from "../../UIcomponents/LoginOrRegister";
+export default async function LoginPage() {
+  const session = await auth();
 
-export default function LoginPage() {
-  return <LoginOrRegister />;
+  return <LoginOrRegister session={session} />;
 }

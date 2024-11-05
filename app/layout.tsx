@@ -11,7 +11,6 @@ import {
 } from "./globalStyles/layout";
 import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
-import { SessionProvider } from "./providers/SessionProvider";
 import LoginPage from "pages/login/page";
 import { Navbar } from "components/navbar/NavBar";
 
@@ -37,20 +36,18 @@ export default async function RootLayout({
       <body className={poppins.className}>
         <StyledComponentsRegistry>
           <AnimatedBackground />
-          <SessionProvider session={session}>
-            {session?.user && (
-              <LayoutGrid>
-                <SidebarContainer>
-                  <Sidebar />
-                </SidebarContainer>
-                <NavbarContainer>
-                  <Navbar />
-                </NavbarContainer>
-                <Main>{children}</Main>
-              </LayoutGrid>
-            )}
-            <LoginPage />
-          </SessionProvider>
+          {session?.user && (
+            <LayoutGrid>
+              <SidebarContainer>
+                <Sidebar />
+              </SidebarContainer>
+              <NavbarContainer>
+                <Navbar />
+              </NavbarContainer>
+              <Main>{children}</Main>
+            </LayoutGrid>
+          )}
+          <LoginPage />
         </StyledComponentsRegistry>
       </body>
     </html>

@@ -58,6 +58,12 @@ describe("Grade Component", () => {
     );
 
     const submitButton = getByText("SUBMIT GRADE");
+
+    // Suppress console.error output as there is no navigation in test environment
+    const consoleErrorMock = jest
+      .spyOn(console, "error")
+      .mockImplementationOnce(() => {});
+
     fireEvent.click(submitButton);
 
     await waitFor(() =>
