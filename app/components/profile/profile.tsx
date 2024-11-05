@@ -13,7 +13,6 @@ import {
   Logout,
   Wrapper,
 } from "./style";
-import { useState } from "react";
 import Modal from "../../UIcomponents/modal/modal";
 import Input from "../../globalStyles/input";
 import DefaultButton from "../../globalStyles/buttons/default";
