@@ -16,7 +16,7 @@ import LoginPage from "pages/login/page";
 import { Navbar } from "components/navbar/NavBar";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
-
+// trigger rebuild
 export const metadata: Metadata = {
   title: "Vefskólinn LMS",
   description:
