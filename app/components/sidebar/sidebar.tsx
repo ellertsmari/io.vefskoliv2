@@ -1,6 +1,8 @@
+import { auth } from "auth";
 import { Profile } from "../profile/profile";
 
-function Sidebar() {
-  return <Profile />;
+async function Sidebar() {
+  const session = await auth();
+  return <Profile session={session} />;
 }
 export default Sidebar;
