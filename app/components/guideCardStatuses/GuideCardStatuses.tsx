@@ -3,16 +3,10 @@ import {
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../../types/guideTypes";
+} from "types/guideTypes";
 import { Grade, IconContainer, Status, StatusesWrapper } from "./style";
 
-import {
-  Bell,
-  GreenTick,
-  PurpleStar,
-  RedCross,
-  Hourglass,
-} from "../../assets/Icons";
+import { Bell, GreenTick, PurpleStar, RedCross, Hourglass } from "assets/Icons";
 
 export const GuideCardStatuses = ({
   returnStatus,

@@ -1,10 +1,6 @@
 "use server";
-import { ReturnDocument } from "../models/return";
-import {
-  FeedbackDocument,
-  GradedFeedbackDocument,
-  Vote,
-} from "../models/review";
+import { ReturnDocument } from "models/return";
+import { FeedbackDocument, GradedFeedbackDocument, Vote } from "models/review";
 import {
   ReturnStatus,
   FeedbackStatus,
@@ -13,7 +9,7 @@ import {
   ExtendedGuideInfo,
   GuideInfo,
   Module,
-} from "../../types/guideTypes";
+} from "types/guideTypes";
 
 export const extendGuides = async (
   guides: GuideInfo[]
@@ -98,12 +94,11 @@ export const calculateFeedbackStatus = async (
   feedbackGiven: FeedbackDocument[],
   availableForFeedback: ReturnDocument[]
 ): Promise<FeedbackStatus> => {
-  if (feedbackGiven.length < 2 && availableForFeedback.length === 0) {
-    return FeedbackStatus.AWAITING_PROJECTS;
-  }
-  if (feedbackGiven.length < 2) {
+  if (availableForFeedback.length)
     return FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK;
-  }
+
+  if (feedbackGiven.length < 2) return FeedbackStatus.AWAITING_PROJECTS;
+
   return FeedbackStatus.FEEDBACK_GIVEN;
 };
 
@@ -133,14 +128,11 @@ export const calculateGradesGivenStatus = async (
   gradesGiven: GradedFeedbackDocument[],
   availableToGrade: FeedbackDocument[]
 ): Promise<GradesGivenStatus> => {
-  if (gradesGiven.length >= 2) {
-    return GradesGivenStatus.GRADES_GIVEN;
-  }
-  if (availableToGrade.length > 0) {
-    return GradesGivenStatus.NEED_TO_GRADE;
-  }
+  if (availableToGrade.length) return GradesGivenStatus.NEED_TO_GRADE;
 
-  return GradesGivenStatus.AWAITING_FEEDBACK;
+  if (gradesGiven.length < 2) return GradesGivenStatus.AWAITING_FEEDBACK;
+
+  return GradesGivenStatus.GRADES_GIVEN;
 };
 
 export const fetchModules = (extendedGuides: ExtendedGuideInfo[]) => {

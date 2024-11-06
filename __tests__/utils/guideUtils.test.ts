@@ -147,7 +147,7 @@ describe("status calculations", () => {
       expect(result).toBe(FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK);
     });
 
-    it("should return FEEDBACK_GIVEN if at least 2 feedbacks are given", async () => {
+    it("should return NEED_TO_PROVIDE_FEEDBACK if at least 2 feedbacks are given and projects are available", async () => {
       const feedback1 = await createDummyFeedback();
       const feedback2 = await createDummyFeedback();
       const return1 = await createDummyReturn();
@@ -156,6 +156,13 @@ describe("status calculations", () => {
         [feedback1, feedback2],
         [return1]
       );
+      expect(result).toBe(FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK);
+    });
+    it("should return FEEDBACK_GIVEN if at least 2 feedbacks are given", async () => {
+      const feedback1 = await createDummyFeedback();
+      const feedback2 = await createDummyFeedback();
+
+      const result = await calculateFeedbackStatus([feedback1, feedback2], []);
       expect(result).toBe(FeedbackStatus.FEEDBACK_GIVEN);
     });
   });
@@ -234,7 +241,7 @@ describe("status calculations", () => {
       expect(result).toBe(GradesGivenStatus.NEED_TO_GRADE);
     });
 
-    it("should return REVIEWS_GIVEN if at least 2 reviews are given", async () => {
+    it("should return NEED_TO_GRADE if at least 2 reviews are given and projects are available", async () => {
       const review1 = await createDummyGrade();
       const review2 = await createDummyGrade();
       const return1 = await createDummyFeedback();
@@ -243,6 +250,16 @@ describe("status calculations", () => {
         [review1, review2],
         [return1]
       );
+      console.log("result for reviews given", result);
+
+      expect(result).toBe(GradesGivenStatus.NEED_TO_GRADE);
+    });
+    it("should return REVIEWS_GIVEN if at least 2 reviews are given", async () => {
+      const review1 = await createDummyGrade();
+      const review2 = await createDummyGrade();
+
+      const result = await calculateGradesGivenStatus([review1, review2], []);
+
       expect(result).toBe(GradesGivenStatus.GRADES_GIVEN);
     });
   });
