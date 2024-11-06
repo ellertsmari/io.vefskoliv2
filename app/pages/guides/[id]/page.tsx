@@ -1,3 +1,4 @@
+"use server";
 import { getGuide } from "serverActions/getGuide";
 import { GuideOverview } from "components/guideOverview/GuideOverview";
 import { GuideType } from "models/guide";

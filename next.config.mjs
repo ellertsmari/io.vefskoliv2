@@ -3,9 +3,9 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
-  experimental: {
-    esmExternals: true,
-  },
+  //   experimental: {
+  //     esmExternals: "loose",
+  //   },
 };
 
 export default nextConfig;
