@@ -14,7 +14,7 @@ import {
   Logout,
 } from "./style";
 import Modal from "UIcomponents/modal/modal";
-import Input from "globalStyles/input";
+import { Input } from "UIcomponents/input/Input";
 import DefaultButton from "globalStyles/buttons/default";
 import { DefaultUserIcon } from "assets/Icons";
 import { LogoutIcon } from "assets/Icons";

@@ -1,7 +1,7 @@
 // This file is used to create dummy data for testing purposes
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { User, UserDocument, UserInfo } from "../../app/models/user";
+import { User, UserDocument, UserInfo } from "models/user";
 import { faker } from "@faker-js/faker";
 import {
   FeedbackDocument,
@@ -10,18 +10,18 @@ import {
   GradedFeedbackDocument,
   GradedFeedbackType,
   Vote,
-} from "../../app/models/review";
-import { Return, ReturnDocument, ReturnType } from "../../app/models/return";
-import { Guide, GuideDocument, GuideType } from "../../app/models/guide";
+} from "models/review";
+import { Return, ReturnDocument, ReturnType } from "models/return";
+import { Guide, GuideDocument, GuideType } from "models/guide";
 import {
   ExtendedGuideInfo,
   FeedbackDocumentWithReturn,
   GuideInfo,
   Module,
-} from "../../types/guideTypes";
+} from "types/guideTypes";
 import { extendGuides } from "utils/guideUtils";
 
-jest.mock("clientActions/mongoose-connector", () => ({
+jest.mock("serverActions/mongoose-connector", () => ({
   connectToDatabase: jest.fn(),
 }));
 

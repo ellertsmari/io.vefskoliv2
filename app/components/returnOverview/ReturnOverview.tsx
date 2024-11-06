@@ -1,14 +1,13 @@
 import { SubTitle } from "globalStyles/text";
-import { FeedbackDocumentWithReturn } from "../../../types/guideTypes";
-import { ReturnDocument } from "../../models/return";
+import { FeedbackDocumentWithReturn } from "types/guideTypes";
+import { ReturnDocument } from "models/return";
+import { Grade } from "components/grade/Grade";
 import {
-  OverviewWrapper,
-  InfoContainer,
-  ReturnLinksWrapper,
-  ReturnButton,
-  Link,
-} from "./style";
-import { Grade } from "../grade/Grade";
+  MaterialButton,
+  UnstyledLink,
+  Wrapper,
+} from "globalStyles/globalStyles";
+import { OverviewWrapper, ReturnLinksWrapper } from "./style";
 
 export const ReturnOverview = ({
   theFeedback,
@@ -32,30 +31,30 @@ export const ReturnOverview = ({
 
   return (
     <OverviewWrapper>
-      <InfoContainer>
+      <Wrapper>
         <SubTitle>RETURN DETAILS</SubTitle>
         <ReturnLinks
           theReturn={theReturn}
           linkStyle={theFeedback ? "outlined" : "default"}
         />
-      </InfoContainer>
-      <InfoContainer>
+      </Wrapper>
+      <Wrapper>
         <SubTitle>PROJECT TITLE</SubTitle>
         {theReturn.projectName}
-      </InfoContainer>
-      <InfoContainer>
+      </Wrapper>
+      <Wrapper>
         <SubTitle>PROJECT COMMENT</SubTitle>
         {theReturn.comment}
-      </InfoContainer>
+      </Wrapper>
       {theFeedback && (
-        <InfoContainer>
+        <Wrapper>
           <Grade
             grade={theFeedback.grade}
             gradeable={gradeable}
             reviewId={theFeedback._id.toString()}
             key={theFeedback._id.toString()}
           />
-        </InfoContainer>
+        </Wrapper>
       )}
     </OverviewWrapper>
   );
@@ -71,16 +70,16 @@ const ReturnLinks = ({
   return (
     <>
       <ReturnLinksWrapper>
-        <Link href={theReturn.projectUrl} target="_blank">
-          <ReturnButton $styletype={linkStyle}>
+        <UnstyledLink href={theReturn.projectUrl} target="_blank">
+          <MaterialButton $styletype={linkStyle}>
             Github or Figma URL
-          </ReturnButton>
-        </Link>
-        <Link href={theReturn.liveVersion} target="_blank">
-          <ReturnButton $styletype={linkStyle}>
+          </MaterialButton>
+        </UnstyledLink>
+        <UnstyledLink href={theReturn.liveVersion} target="_blank">
+          <MaterialButton $styletype={linkStyle}>
             Live version or prototype (Figma)
-          </ReturnButton>
-        </Link>
+          </MaterialButton>
+        </UnstyledLink>
       </ReturnLinksWrapper>
     </>
   );

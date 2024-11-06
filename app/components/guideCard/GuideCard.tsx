@@ -6,14 +6,17 @@ import {
   ReturnStatus,
 } from "types/guideTypes";
 import { GuideProvider } from "providers/GuideProvider";
-import { GuideCardOverview } from "./GuideCardOverview";
+import { GuideCardOverview } from "components/guideCardOverview/GuideCardOverview";
 import { CardWrapper, InfoWrapper } from "./style";
 import { NotificationIconContainer } from "UIcomponents/toggle/style";
 import { NotificationIcon } from "assets/Icons";
 import { Suspense, lazy } from "react";
+import ComponentStyle from "styled-components/dist/models/ComponentStyle";
 
 const GuideModal = lazy(() =>
-  import("./GuideModal").then((mod) => ({ default: mod.GuideModal }))
+  import("../guideModal.tsx/GuideModal").then((mod) => ({
+    default: mod.GuideModal,
+  }))
 );
 
 const GuideCard = ({

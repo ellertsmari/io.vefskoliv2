@@ -2,10 +2,10 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
-import type { UserDocument } from "./app/models/user";
-import { User } from "./app/models/user";
+import type { UserDocument } from "models/user";
+import { User } from "models/user";
 import bcrypt from "bcrypt";
-import { connectToDatabase } from "./app/clientActions/mongoose-connector";
+import { connectToDatabase } from "serverActions/mongoose-connector";
 
 export async function getUser(email: string): Promise<UserDocument | null> {
   try {

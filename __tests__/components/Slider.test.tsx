@@ -1,6 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
-import { Slider } from "../../app/UIcomponents/slider/Slider";
+import { Slider } from "UIcomponents/slider/Slider";
 
 describe("Slider Component", () => {
   afterEach(() => {

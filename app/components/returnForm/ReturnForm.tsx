@@ -10,8 +10,8 @@ import {
   useState,
 } from "react";
 import { returnGuide } from "serverActions/returnGuide";
-import { FormInputWithError } from "UIcomponents/formInputWithError/FormInputWithError";
 import { Form } from "globalStyles/globalStyles";
+import { Input } from "UIcomponents/input/Input";
 
 export const ReturnForm = ({ guideId }: { guideId: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,7 +48,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
 
     return (
       <Form ref={formRef}>
-        <FormInputWithError
+        <Input
           id={"projectUrl"}
           type={"text"}
           name={"projectUrl"}
@@ -61,7 +61,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
               : undefined
           }
         />
-        <FormInputWithError
+        <Input
           id={"liveVersion"}
           type={"text"}
           name={"liveVersion"}
@@ -74,7 +74,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
               : undefined
           }
         />
-        <FormInputWithError
+        <Input
           id={"imageOfProject"}
           type={"text"}
           name={"imageOfProject"}
@@ -82,7 +82,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           required={false}
           disabled={false}
         />
-        <FormInputWithError
+        <Input
           id={"projectName"}
           type={"text"}
           name={"projectName"}
@@ -95,7 +95,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
               : undefined
           }
         />
-        <FormInputWithError
+        <Input
           id={"comment"}
           type={"textarea"}
           name={"comment"}
