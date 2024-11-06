@@ -11,8 +11,8 @@ import {
 } from "./globalStyles/layout";
 import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
-import { LoginPage } from "pages/login/page";
-import { Navbar } from "components/navBar/NavBar";
+import LoginPage from "pages/login/page";
+import { NavBar } from "components/navBar/NavBar";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
@@ -42,7 +42,7 @@ export default async function RootLayout({
                 <Sidebar />
               </SidebarContainer>
               <NavbarContainer>
-                <Navbar />
+                <NavBar />
               </NavbarContainer>
               <Main>{children}</Main>
             </LayoutGrid>

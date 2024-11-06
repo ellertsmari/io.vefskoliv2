@@ -1,7 +1,7 @@
 import { DesktopNavbar } from "./DesktopNav";
 import { MobileNavbar } from "./MobileNav";
 
-export const Navbar = () => {
+export const NavBar = () => {
   return (
     <>
       <DesktopNavbar />

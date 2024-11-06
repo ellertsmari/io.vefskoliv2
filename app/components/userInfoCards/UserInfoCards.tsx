@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import { Dropdown } from "UIcomponents/dropdown/dropdown";
+import { Dropdown } from "UIcomponents/dropdown/Dropdown";
 import { InfoSubtitle, UserInfoCardWrapper } from "./style";
 import { ShareableUserInfo } from "types/types";
-import { UserInfoCard } from "../userInfoCard/UserInfoCard";
+import { UserInfoCard } from "components/userInfoCard/UserInfoCard";
 
 export const UserInfoCards = ({
   userInfo,
