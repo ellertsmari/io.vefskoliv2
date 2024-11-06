@@ -27,12 +27,13 @@ export const ContentWrapper = styled.div`
   background-color: var(--primary-white);
   width: 100%;
   height: 95%;
-  gap: 32px;
-  border-radius: 8px;
+  gap: 2rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--theme-module3-100);
   z-index: 11;
   overflow-y: auto;
   max-height: 90dvh;
+  padding-bottom: 2rem;
 
   @media (min-width: ${deskTopWidth}) {
     height: auto;
@@ -41,7 +42,7 @@ export const ContentWrapper = styled.div`
   }
 
   @media (min-width: 768px) {
-    padding: 64px;
+    padding: 4rem;
   }
 `;
 
