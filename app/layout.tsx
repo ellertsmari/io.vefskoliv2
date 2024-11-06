@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import "./globalStyles/globals.css";
-import StyledComponentsRegistry from "./utils/registry";
-import AnimatedBackground from "./globalStyles/animatedBackground";
+import "globalStyles/globals.css";
+import StyledComponentsRegistry from "utils/registry";
+import AnimatedBackground from "globalStyles/animatedBackground";
 import {
   LayoutGrid,
   SidebarContainer,

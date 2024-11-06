@@ -11,7 +11,6 @@ import { CardWrapper, InfoWrapper } from "./style";
 import { NotificationIconContainer } from "UIcomponents/toggle/style";
 import { NotificationIcon } from "assets/Icons";
 import { Suspense, lazy } from "react";
-import ComponentStyle from "styled-components/dist/models/ComponentStyle";
 
 const GuideModal = lazy(() =>
   import("../guideModal.tsx/GuideModal").then((mod) => ({
