@@ -23,9 +23,12 @@ export const ToggleContainer = styled.div`
   width: 100%;
 `;
 
-export const CommentWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+export const CommentWrapper = styled(Wrapper)`
+  height: 10rem;
   padding: 1rem;
+  overflow-y: auto;
+`;
+
+export const FeedbackContentWrapper = styled(Wrapper)`
+  width: 100%;
 `;

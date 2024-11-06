@@ -15,8 +15,10 @@ import {
   ContentAndNavigatorContainer,
   ToggleContainer,
   CommentWrapper,
+  FeedbackContentWraper,
+  FeedbackContentWrapper,
 } from "./style";
-import { Border } from "globalStyles/globalStyles";
+import { Border, Wrapper } from "globalStyles/globalStyles";
 
 export const FeedbackOverview = () => {
   const { guide } = useGuide();
@@ -136,7 +138,7 @@ const FeedbackContent = ({
   currentFeedback: FeedbackDocumentWithReturn | null;
 }) => {
   return (
-    <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+    <FeedbackContentWrapper>
       <SubTitle>{subtitle}</SubTitle>
       <Border>
         <CommentWrapper>
@@ -145,6 +147,6 @@ const FeedbackContent = ({
           </MarkdownReader>
         </CommentWrapper>
       </Border>
-    </div>
+    </FeedbackContentWrapper>
   );
 };
