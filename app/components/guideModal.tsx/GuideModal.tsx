@@ -4,7 +4,7 @@ import { FeedbackStatus } from "types/guideTypes";
 import { calculateReturnStyle } from "./calculateReturnStyle";
 import { Button } from "globalStyles/buttons/default/style";
 import { FeedbackOverview } from "components/feedbackOverview/FeedbackOverview";
-import { GiveFeedbackView } from "components/giveFeedbackView.tsx/GiveFeedbackView";
+import { GiveFeedbackView } from "components/giveFeedbackView/GiveFeedbackView";
 import {
   ColouredCircle,
   Header,
