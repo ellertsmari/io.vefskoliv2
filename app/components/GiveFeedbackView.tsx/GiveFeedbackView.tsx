@@ -1,4 +1,4 @@
-import { ReturnOverview } from "../guideCard/ReturnOverview";
+import { ReturnOverview } from "components/returnOverview/ReturnOverview";
 
 import {
   VoteContainer,
@@ -7,7 +7,7 @@ import {
   WriteFeedbackContainer,
 } from "../guideCard/style";
 import { SubTitle } from "globalStyles/text";
-import MarkdownEditor from "../../UIcomponents/markdown/editor";
+import MarkdownEditor from "UIcomponents/markdown/editor";
 import {
   useActionState,
   useCallback,

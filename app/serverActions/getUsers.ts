@@ -1,7 +1,7 @@
 "use server";
 import { OptionalUserInfoKeys, User, UserWithIdType } from "models/user";
 import { FilterQuery } from "mongoose";
-import { connectToDatabase } from "../clientActions/mongoose-connector";
+import { connectToDatabase } from "./mongoose-connector";
 import { ShareableUserInfo } from "types/types";
 
 export const getUsers = async (

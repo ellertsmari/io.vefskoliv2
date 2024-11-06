@@ -1,6 +1,6 @@
 "use server";
 import { ObjectId } from "mongodb";
-import { connectToDatabase } from "../clientActions/mongoose-connector";
+import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { PipelineStage } from "mongoose";
 import { GuideInfo } from "types/guideTypes";

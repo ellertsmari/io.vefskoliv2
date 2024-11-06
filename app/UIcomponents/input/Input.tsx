@@ -6,9 +6,10 @@ type InputProps = {
   label: string;
   id: string;
   [props: string]: any; // To accept any other prop like placeholder, value, etc.
+  error?: string;
 };
 
-const Input = ({ label, id, ...props }: InputProps) => {
+export const Input = ({ label, id, error, ...props }: InputProps) => {
   return (
     <Wrapper>
       <Label htmlFor={id}>{label}</Label>
@@ -17,6 +18,7 @@ const Input = ({ label, id, ...props }: InputProps) => {
       ) : (
         <ReusableInput id={id} {...props} />
       )}
+      <ErrorMessage>{error}</ErrorMessage>
     </Wrapper>
   );
 };
@@ -25,5 +27,3 @@ export const ErrorMessage = styled.p`
   color: var(--error-failure-100);
   font-size: 14px;
 `;
-
-export default Input;

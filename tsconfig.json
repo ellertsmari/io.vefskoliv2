@@ -26,7 +26,6 @@
       "hooks/*": ["./app/hooks/*"],
       "pages/*": ["./app/pages/*"],
       "serverActions/*": ["./app/serverActions/*"],
-      "clientActions/*": ["./app/clientActions/*"],
       "assets/*": ["./app/assets/*"],
       "models/*": ["./app/models/*"],
       "providers/*": ["./app/providers/*"],

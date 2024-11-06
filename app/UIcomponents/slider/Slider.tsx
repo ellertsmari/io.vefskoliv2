@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   OptionValue,
   Container,
@@ -33,20 +33,15 @@ export const Slider = <T extends string | number>({
 
   const [tempValue, setTempValue] = useState<T | null | undefined>(value);
 
-  useEffect(() => {
-    if (handleOnChange && tempValue) handleOnChange(tempValue);
-  }, [tempValue]);
-
   const optionsList = useMemo(
     () =>
       options.map((option, index) => {
-        console.log("option", option, "titles[index]", titles && titles[index]);
         return (
           <OptionValue
             $selected={option === tempValue}
             key={index}
             htmlFor={`${id}-option-${option}`}
-            onClick={selectable ? () => setTempValue(option) : undefined}
+            onClick={() => handleSliderChange(option)}
             title={titles && titles[index]}
           >
             {option}
@@ -61,9 +56,10 @@ export const Slider = <T extends string | number>({
     return (options.indexOf(tempValue) / (options.length - 1)) * 100;
   };
 
-  const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = options[parseInt(event.target.value)];
+  const handleSliderChange = (newValue: T) => {
+    if (!handleOnChange || !selectable) return;
     setTempValue(newValue);
+    handleOnChange(newValue);
   };
 
   return (
@@ -76,7 +72,10 @@ export const Slider = <T extends string | number>({
           $selectable={selectable}
           disabled={!selectable}
           $sliderPercentage={calculateSliderPercentage()}
-          onChange={handleSliderChange}
+          onChange={(event) => {
+            const newValue = options[parseInt(event.target.value)];
+            handleSliderChange(newValue);
+          }}
           id={id}
         />
       </SliderContainer>

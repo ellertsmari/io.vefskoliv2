@@ -8,7 +8,7 @@ import MarkdownReader from "UIcomponents/markdown/reader";
 import { Toggle, ToggleOption } from "UIcomponents/toggle/Toggle";
 import { OptionNavigator } from "UIcomponents/optionNavigator/OptionNavigator";
 import { useGuide } from "providers/GuideProvider";
-import { ReturnOverview } from "components/guideCard/ReturnOverview";
+import { ReturnOverview } from "components/returnOverview/ReturnOverview";
 import {
   FeedbackContainer,
   FeedbackInfoContainer,
