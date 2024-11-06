@@ -1,15 +1,15 @@
-import Modal from "../../UIcomponents/modal/modal";
+import Modal from "UIcomponents/modal/modal";
 import {
   ExtendedGuideInfo,
   FeedbackStatus,
   GradesGivenStatus,
   ReturnStatus,
-} from "../../../types/guideTypes";
-import { GuideProvider } from "../../providers/GuideProvider";
-import { GuideCardOverview } from "../guideCardOverview/GuideCardOverview";
+} from "types/guideTypes";
+import { GuideProvider } from "providers/GuideProvider";
+import { GuideCardOverview } from "components/guideCardOverview/GuideCardOverview";
 import { CardWrapper, InfoWrapper } from "./style";
-import { NotificationIconContainer } from "../../UIcomponents/toggle/style";
-import { NotificationIcon } from "../../assets/Icons";
+import { NotificationIconContainer } from "UIcomponents/toggle/style";
+import { NotificationIcon } from "assets/Icons";
 import { Suspense, lazy } from "react";
 
 const GuideModal = lazy(() =>
