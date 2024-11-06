@@ -250,7 +250,6 @@ describe("status calculations", () => {
         [review1, review2],
         [return1]
       );
-      console.log("result for reviews given", result);
 
       expect(result).toBe(GradesGivenStatus.NEED_TO_GRADE);
     });
