@@ -7,7 +7,7 @@ import {
   DropDownContainer,
   animationDuration,
 } from "./style";
-import { Arrow } from "../../assets/Icons";
+import { Arrow } from "assets/Icons";
 
 export type DropdownOption = {
   optionName: string;
