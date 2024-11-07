@@ -19,7 +19,6 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
       "components/*": ["./app/components/*"],
       "UIcomponents/*": ["./app/UIcomponents/*"],
       "globalStyles/*": ["./app/globalStyles/*"],
@@ -34,12 +33,6 @@
     },
     "target": "ES2017"
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "app/components/userInfoCards"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
