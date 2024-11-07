@@ -76,49 +76,8 @@ const addGradesReceived = (): PipelineStage => {
   };
 };
 
-//////
-/////
-///// LOOK AT THIS
-/////
-/////
-
-const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
-  return {
-    $lookup: {
-      from: "returns",
-      let: { guideId: "$_id", feedbackGivenReturns: "$feedbackGiven.return" },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$guide", "$$guideId"] },
-                { $ne: ["$owner", userId] }, // exclude the user
-                { $not: { $in: ["$_id", "$$feedbackGivenReturns"] } }, // Exclude returns user has already given feedback on
-              ],
-            },
-          },
-        },
-        {
-          $sort: { createdAt: -1 }, // Sort by createdAt in descending order
-        },
-        {
-          $group: {
-            _id: "$owner", // Group by the owner field
-            mostRecentReturn: { $first: "$$ROOT" }, // Get the most recent document for each user
-          },
-        },
-        {
-          $replaceRoot: { newRoot: "$mostRecentReturn" }, // Replace the root with the most recent return
-        },
-      ],
-      as: "availableForGivingFeedback",
-    },
-  };
-};
-
 // grab the latest return from each user which has received less than 2 pieces of feedback (reviews)
-const lookupWaitingForFeedback = (userId: ObjectId): PipelineStage => {
+const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
       from: "returns",
@@ -164,22 +123,23 @@ const lookupWaitingForFeedback = (userId: ObjectId): PipelineStage => {
           },
         },
         {
-          $match: {
-            $expr: {
-              $lt: [{ $size: "$associatedReviews" }, 2], // Only include returns with fewer than 2 reviews
-            },
+          $addFields: {
+            associatedReviewCount: { $size: "$associatedReviews" }, // Count the number of associated reviews
           },
         },
+
         {
           $project: {
             associatedReviews: 0, // Exclude the associatedReviews field
           },
         },
         {
-          $sort: { createdAt: -1 }, // Sort returns by the createdAt field in descending order
+          $sort: {
+            associatedReviewCount: 1, // Sort by the number of associated reviews in ascending order
+          },
         },
       ],
-      as: "waitingForFeedback", // Store the filtered returns in this field
+      as: "availableForFeedback", // Store the filtered returns in this field
     },
   };
 };
@@ -214,6 +174,12 @@ const lookupFeedbackReceived = (userId: ObjectId): PipelineStage => {
                 { $eq: ["$associatedReturn.owner", userId] },
               ],
             },
+          },
+        },
+
+        {
+          $sort: {
+            createdAt: -1, // Sort by createdAt in descending order
           },
         },
       ],
@@ -268,7 +234,6 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
       feedbackReceived: 1,
 
       // giving feedback on others' returns
-      waitingForFeedback: 1,
       availableForFeedback: 1,
       feedbackGiven: 1,
 
@@ -288,7 +253,6 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
     addGradesGiven(),
     addAvailableToGrade(),
     lookupAvailableForFeedback(userId),
-    lookupWaitingForFeedback(userId),
     defineProject,
     {
       $sort: {
