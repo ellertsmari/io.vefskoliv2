@@ -1,10 +1,10 @@
 "use client";
 
 import { Container, GuideDropdownContainer } from "./style";
-import { Dropdown } from "UIcomponents/dropdown/Dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
 import { useSessionState } from "react-session-hooks";
 import { GuidesClient } from "components/guidesClient/GuidesClient";
+import { Dropdown } from "UIcomponents/dropdown/Dropdown";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
 
