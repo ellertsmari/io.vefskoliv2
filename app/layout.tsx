@@ -10,7 +10,7 @@ import {
   Main,
 } from "./globalStyles/layout";
 import Sidebar from "./components/sidebar/sidebar";
-import { auth } from "../auth";
+import { auth } from "auth";
 import LoginPage from "pages/login/page";
 import { NavBar } from "components/navBar/NavBar";
 
