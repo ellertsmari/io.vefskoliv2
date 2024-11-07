@@ -1,5 +1,5 @@
-import { DesktopNavbar } from "UIcomponents/navBar/DesktopNav";
-import { MobileNavbar } from "UIcomponents/navBar/MobileNav";
+import { DesktopNavbar } from "components/navBar/DesktopNav";
+import { MobileNavbar } from "components/navBar/MobileNav";
 
 const NavBar = () => {
   return (
