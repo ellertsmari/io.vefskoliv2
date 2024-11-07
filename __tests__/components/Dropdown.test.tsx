@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { Dropdown } from "../../app/tempComponents/dropdown/Dropdown";
+import { Dropdown } from "../../app/UIcomponents/dropdown/Dropdown";
 
 describe("DropDown", () => {
   const options = ["Option 1", "Option 2", "Option 3"].map((option) => ({
