@@ -36,31 +36,122 @@ describe("getGuides", () => {
 
   afterAll(async () => await closeDatabase());
 
-  it("returns availableForFeedback", async () => {
-    const user = await createDummyUser();
+  // TODO
+  describe("availableForFeedback", () => {
+    it("returns otherUsersReturns", async () => {
+      // only shows the latest return from each user
 
-    const guide = await createDummyGuide();
+      const user = await createDummyUser();
 
-    const userReturn = await createDummyReturn(user, guide);
-    const otherUserReturn = await createDummyReturn(undefined, guide);
-    const otherUserReturn2 = await createDummyReturn(undefined, guide);
+      const guide = await createDummyGuide();
 
-    const feedbackOnReturn = await createDummyFeedback(
-      undefined,
-      guide,
-      userReturn
-    );
+      const userReturn = await createDummyReturn(user, guide);
+      const otherUserReturn = await createDummyReturn(undefined, guide);
+      const otherUserReturn2 = await createDummyReturn(undefined, guide);
 
-    const guides = await getGuides(user._id.toString());
+      const feedbackOnReturn = await createDummyFeedback(
+        undefined,
+        guide,
+        userReturn
+      );
 
-    const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const guides = await getGuides(user._id.toString());
 
-    if (!gottenGuide) throw new Error("gottenGuide is null");
+      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
 
-    expect(gottenGuide.availableForFeedback).toEqual([
-      otherUserReturn.toObject(),
-      otherUserReturn2.toObject(),
-    ]);
+      if (!gottenGuide) throw new Error("gottenGuide is null");
+
+      expect(gottenGuide.availableForFeedback).toEqual([
+        otherUserReturn.toObject(),
+        otherUserReturn2.toObject(),
+      ]);
+    });
+  });
+
+  describe("waitingForFeedback", () => {
+    afterEach(async () => await clearDatabase());
+    it("only contains returns which have had less than two pieces of feedback", async () => {
+      const user = await createDummyUser();
+      const user2 = await createDummyUser();
+
+      const guide = await createDummyGuide();
+
+      const aReturn = await createDummyReturn(undefined, guide);
+      const anotherReturn1 = await createDummyReturn(user2, guide);
+      const anotherReturn2 = await createDummyReturn(user2, guide);
+
+      const feedbackOnAnotherReturn = await createDummyFeedback(
+        undefined,
+        guide,
+        anotherReturn2
+      );
+
+      const feedbackOnAnotherReturn2 = await createDummyFeedback(
+        undefined,
+        guide,
+        anotherReturn2
+      );
+
+      const feedbackOnAReturn = await createDummyFeedback(
+        undefined,
+        guide,
+        aReturn
+      );
+
+      const guides = await getGuides(user._id.toString());
+      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+
+      if (!gottenGuide) throw new Error("gottenGuide is null");
+
+      expect(gottenGuide.waitingForFeedback).toEqual([aReturn.toObject()]);
+    });
+
+    it("only contains the latest return from a user", async () => {
+      const userA = await createDummyUser();
+      const otherUserA = await createDummyUser();
+
+      const guide = await createDummyGuide();
+
+      const otherUserReturn = await createDummyReturn(otherUserA, guide);
+      const otherUserReturn2 = await createDummyReturn(otherUserA, guide);
+
+      const feedbackOnReturn = await createDummyFeedback(
+        undefined,
+        guide,
+        otherUserReturn
+      );
+
+      const guides = await getGuides(userA._id.toString());
+      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+
+      if (!gottenGuide) throw new Error("gottenGuide is null");
+
+      expect(gottenGuide.waitingForFeedback).toEqual([
+        otherUserReturn2.toObject(),
+      ]);
+    });
+
+    it("ignores returns the user has already given feedback on", async () => {
+      const user = await createDummyUser();
+
+      const guide = await createDummyGuide();
+
+      const userReturn = await createDummyReturn(user, guide);
+      const otherUserReturn = await createDummyReturn(undefined, guide);
+
+      const feedbackGiven = await createDummyFeedbackWithReturn(
+        user,
+        guide,
+        otherUserReturn
+      );
+
+      const guides = await getGuides(user._id.toString());
+      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+
+      if (!gottenGuide) throw new Error("gottenGuide is null");
+
+      expect(gottenGuide.waitingForFeedback).toEqual([]);
+    });
   });
 
   it("returns feedbackGiven", async () => {
@@ -281,6 +372,7 @@ describe("getGuides", () => {
       expect(isGuideInfo(guides[0])).toBe(true);
     }
   });
+
   it("returns empty array when there are no guides", async () => {
     const user = await createDummyUser();
 
