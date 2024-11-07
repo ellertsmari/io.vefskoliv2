@@ -15,7 +15,6 @@ import {
   ContentAndNavigatorContainer,
   ToggleContainer,
   CommentWrapper,
-  FeedbackContentWraper,
   FeedbackContentWrapper,
 } from "./style";
 import { Border, Wrapper } from "globalStyles/globalStyles";
