@@ -9,10 +9,10 @@ import {
   NavbarContainer,
   Main,
 } from "./globalStyles/layout";
-import Sidebar from "./components/sidebar/sidebar";
+import Sidebar from "components/sidebar/sidebar";
 import { auth } from "auth";
 import LoginPage from "pages/login/page";
-import { NavBar } from "components/navBar/NavBar";
+import NavBar from "components/navBar/NavBar";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
