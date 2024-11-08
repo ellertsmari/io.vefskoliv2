@@ -76,38 +76,73 @@ const addGradesReceived = (): PipelineStage => {
   };
 };
 
-// grab returns available for reviewing by user
+// grab the latest return from each user which has received less than 2 pieces of feedback (reviews)
 const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
       from: "returns",
-      let: { guideId: "$_id", feedbackGivenReturns: "$feedbackGiven.return" },
+      let: { guideId: "$_id", feedbackGivenReturns: "$feedbackGiven.return" }, // Guide ID from the current document
       pipeline: [
         {
           $match: {
             $expr: {
               $and: [
-                { $eq: ["$guide", "$$guideId"] }, // Ensure the guide matches
-                { $ne: ["$owner", userId] }, // Exclude returns from the user
+                { $eq: ["$guide", "$$guideId"] },
+                { $ne: ["$owner", userId] }, // exclude the user
                 { $not: { $in: ["$_id", "$$feedbackGivenReturns"] } }, // Exclude returns user has already given feedback on
               ],
             },
           },
         },
         {
+          $sort: { createdAt: -1 }, // Sort returns by the createdAt field in descending order
+        },
+        {
+          $group: {
+            _id: "$owner", // Group by the owner of the return
+            mostRecentReturn: { $first: "$$ROOT" }, // Get the most recent return for each owner
+          },
+        },
+        {
+          $replaceRoot: { newRoot: "$mostRecentReturn" }, // Replace the root with the most recent return
+        },
+        {
+          $lookup: {
+            from: "reviews", // Look up reviews for the return
+            let: { returnId: "$_id" }, // Pass the return ID to the review lookup
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$return", "$$returnId"], // Match reviews by return ID
+                  },
+                },
+              },
+            ],
+            as: "associatedReviews", // The reviews associated with this return
+          },
+        },
+        {
+          $addFields: {
+            associatedReviewCount: { $size: "$associatedReviews" }, // Count the number of associated reviews
+          },
+        },
+
+        {
+          $project: {
+            associatedReviews: 0, // Exclude the associatedReviews field
+          },
+        },
+        {
           $sort: {
-            reviewedAt: 1, // Ascending order by reviewedAt
-            createdAt: 1, // Ascending order by createdAt
+            associatedReviewCount: 1, // Sort by the number of associated reviews in ascending order
           },
         },
       ],
-      as: "availableForFeedback",
+      as: "availableForFeedback", // Store the filtered returns in this field
     },
   };
 };
-
-// TODO - CHECK HOW MANY TIMES THE RETURN HAS BEEN GIVEN FEEDBACK
-// Do here or do it in the client when enriching?
 
 // grab feedbackReceived from others
 const lookupFeedbackReceived = (userId: ObjectId): PipelineStage => {
@@ -139,6 +174,12 @@ const lookupFeedbackReceived = (userId: ObjectId): PipelineStage => {
                 { $eq: ["$associatedReturn.owner", userId] },
               ],
             },
+          },
+        },
+
+        {
+          $sort: {
+            createdAt: -1, // Sort by createdAt in descending order
           },
         },
       ],
@@ -208,10 +249,10 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
     lookupReturnsSubmitted(userId),
     lookupFeedbackGiven(userId),
     addGradesReceived(),
-    lookupAvailableForFeedback(userId),
     lookupFeedbackReceived(userId),
     addGradesGiven(),
     addAvailableToGrade(),
+    lookupAvailableForFeedback(userId),
     defineProject,
     {
       $sort: {

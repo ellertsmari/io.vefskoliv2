@@ -94,7 +94,7 @@ export const calculateFeedbackStatus = async (
   feedbackGiven: FeedbackDocument[],
   availableForFeedback: ReturnDocument[]
 ): Promise<FeedbackStatus> => {
-  if (availableForFeedback.length)
+  if (feedbackGiven.length < 2 && availableForFeedback.length)
     return FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK;
 
   if (feedbackGiven.length < 2) return FeedbackStatus.AWAITING_PROJECTS;
