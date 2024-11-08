@@ -1,8 +1,18 @@
 "use server";
+import { AdapterUser } from "next-auth/adapters";
 import { auth } from "../../auth";
 import { Return } from "../models/return";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
+
+export type ReturnFormData = {
+  projectUrl?: string;
+  liveVersion?: string;
+  projectName?: string;
+  comment?: string;
+  imageOfProject?: string;
+  guideId?: string;
+} | null;
 
 type ReturnFormState =
   | {
@@ -16,15 +26,12 @@ type ReturnFormState =
     }
   | undefined;
 
-export async function returnGuide(state: ReturnFormState, formData: FormData) {
-  const validatedFields = ReturnFormSchema.safeParse({
-    projectUrl: formData.get("projectUrl"),
-    liveVersion: formData.get("liveVersion"),
-    projectName: formData.get("projectName"),
-    comment: formData.get("comment"),
-    guideId: formData.get("guideId"),
-    imageOfProject: formData.get("imageOfProject"),
-  });
+export async function returnGuide(
+  state: ReturnFormState,
+  data: ReturnFormData
+) {
+  const validatedFields = ReturnFormSchema.safeParse(data);
+
   if (!validatedFields.success) {
     return {
       success: false,
@@ -49,18 +56,17 @@ export async function returnGuide(state: ReturnFormState, formData: FormData) {
       message: "You must be logged in to submit a return",
     };
   }
-  const { user } = session;
+  const user = session?.user as AdapterUser;
   try {
     const theReturn = await Return.create({
       projectUrl,
       projectName,
       comment,
       liveVersion,
-      owner: user.id,
+      owner: new ObjectId(user.id),
       guide: new ObjectId(guideId),
-      imageOfProject: imageOfProject,
+      imageOfProject,
     });
-
     return {
       success: true,
       message: "Return submitted successfully",
@@ -88,5 +94,5 @@ const ReturnFormSchema = z.object({
     .min(2, { message: "Please enter a valid description" })
     .trim(),
   guideId: z.string().trim(),
-  imageOfProject: z.string().trim(),
+  imageOfProject: z.string().trim().optional(),
 });

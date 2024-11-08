@@ -1,7 +1,12 @@
 /**
  * @jest-environment jsdom
  */
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  getAllByLabelText,
+  render,
+  waitFor,
+} from "@testing-library/react";
 import { ObjectId } from "mongodb";
 import {
   clearDatabase,
@@ -11,6 +16,7 @@ import {
 import { auth } from "../../auth";
 import { returnGuide } from "serverActions/returnGuide";
 import { ReturnForm } from "components/returnForm/ReturnForm";
+import React from "react";
 jest.mock("../../auth", () => ({
   getUser: jest.fn(),
   signIn: jest.fn(),
@@ -48,7 +54,7 @@ describe("ReturnForm", () => {
     });
   });
 
-  it("submits form", async () => {
+  it("successfully submits form", async () => {
     // Mock window.location.replace
     const replaceMock = jest.fn();
     Object.defineProperty(window, "location", {
@@ -67,12 +73,13 @@ describe("ReturnForm", () => {
       success: true,
     });
 
-    const projectUrl = "projectUrl";
+    const projectUrl =
+      "https://www.figma.com/board/zzY1HfwDdoUVAXJrJTwtYW/Untitled?node-id=24-1599&t=obAcOpdLEllhnacc-1";
     const liveVersion = "liveVersion";
     const comment = "comment";
     const projectName = "projectName";
 
-    const { getByLabelText, getByText, queryByLabelText } = render(
+    const { getByLabelText, getByText } = render(
       <ReturnForm guideId={guideId} />
     );
 
@@ -96,32 +103,65 @@ describe("ReturnForm", () => {
 
     fireEvent.click(getByText("SUBMIT"));
 
-    const expectedFormData = new FormData();
-    expectedFormData.append("projectUrl", projectUrl);
-    expectedFormData.append("liveVersion", liveVersion);
-    expectedFormData.append("comment", comment);
-    expectedFormData.append("projectName", projectName);
-    expectedFormData.append("imageOfProject", "");
-    expectedFormData.append("guideId", guideId);
-
-    const formatDataObject = (formData: FormData) => {
-      const obj: { [key: string]: string } = {};
-      for (let [key, value] of formData.entries()) {
-        obj[key] = value.toString();
-      }
-      return obj;
-    };
-
-    await waitFor(() => expect(returnGuide).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(returnGuide).toHaveBeenCalledWith(undefined, {
+        projectUrl,
+        liveVersion,
+        projectName,
+        comment,
+        guideId,
+      })
+    );
 
     const actualFormData = (returnGuide as jest.Mock).mock.calls[0][1];
 
-    await waitFor(() => {
-      expect(formatDataObject(actualFormData)).toEqual(
-        formatDataObject(expectedFormData)
-      );
+    expect(replaceMock).toHaveBeenCalledWith("/guides");
+  });
+
+  it("displays error message on failed form submission", async () => {
+    (auth as jest.Mock).mockResolvedValueOnce({
+      user: { id: "123456789012345678901234" },
     });
 
-    expect(replaceMock).toHaveBeenCalledWith("/guides");
+    (returnGuide as jest.Mock).mockResolvedValueOnce({
+      success: false,
+      message: "Failed to return guide",
+      errors: {
+        projectUrl: ["Please provide a valid URL"],
+        liveVersion: ["Please provide a valid URL"],
+        projectName: ["Please provide a project name"],
+        comment: ["Please provide a comment"],
+      },
+    });
+
+    const { getByLabelText, getByText, container } = render(
+      <ReturnForm guideId={guideId} />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector("#liveVersion-error")).toBeNull();
+      expect(container.querySelector("#projectUrl-error")).toBeNull();
+      expect(container.querySelector("#projectName-error")).toBeNull();
+      expect(container.querySelector("#comment-error")).toBeNull();
+    });
+
+    fireEvent.click(getByText("RETURN"));
+
+    fireEvent.click(getByText("SUBMIT"));
+
+    await waitFor(() => {
+      expect(container.querySelector("#liveVersion-error")).toHaveTextContent(
+        "Please provide a valid URL"
+      );
+      expect(container.querySelector("#projectUrl-error")).toHaveTextContent(
+        "Please provide a valid URL"
+      );
+      expect(container.querySelector("#projectName-error")).toHaveTextContent(
+        "Please provide a project name"
+      );
+      expect(container.querySelector("#comment-error")).toHaveTextContent(
+        "Please provide a comment"
+      );
+    });
   });
 });

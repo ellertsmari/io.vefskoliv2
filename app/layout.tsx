@@ -27,9 +27,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  console.log("before auth");
   const session = await auth();
-  console.log("after auth");
 
   return (
     <html lang="en">
