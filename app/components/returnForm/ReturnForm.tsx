@@ -9,45 +9,47 @@ import {
   useRef,
   useState,
 } from "react";
-import { returnGuide } from "serverActions/returnGuide";
+import { ReturnFormData, returnGuide } from "serverActions/returnGuide";
 import { Form } from "globalStyles/globalStyles";
 import { Input } from "UIcomponents/input/Input";
+import { useSessionState } from "react-session-hooks";
 
 export const ReturnForm = ({ guideId }: { guideId: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const ReturnButton = <Button style="default">RETURN</Button>;
-
   const FormContent = () => {
+    const [formData, setFormData, loading] = useSessionState<ReturnFormData>(
+      `returnForm-${guideId}`
+    );
+    // const [formData, setFormData] = useState<ReturnFormData | null>(null);
     const [state, formAction, isPending] = useActionState(
       returnGuide,
       undefined
     );
 
-    const formRef = useRef<HTMLFormElement>(null);
-
     useEffect(() => {
       if (state?.success) {
+        setFormData(null);
         // lazy way to force state update as we have no DB listeners setup yet
         window.location.replace("/guides");
       }
     }, [state?.success]);
 
-    if (!guideId) return null;
+    if (!guideId || loading) return null;
 
     const handleSubmit = (event: React.FormEvent<HTMLButtonElement>) => {
       event.preventDefault();
-      if (formRef.current) {
-        const formData = new FormData(formRef.current);
-        formData.append("guideId", guideId);
-        startTransition(() => {
-          formAction(formData);
-        });
-      }
+      startTransition(() => {
+        formAction({ ...formData, guideId });
+      });
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     return (
-      <Form ref={formRef}>
+      <Form>
         <Input
           id={"projectUrl"}
           type={"text"}
@@ -55,6 +57,8 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           label={"Github or Figma URL"}
           required={true}
           disabled={isPending}
+          value={formData?.projectUrl || ""}
+          onChange={handleInputChange}
           error={
             state?.errors?.projectUrl && !isPending
               ? state.errors.projectUrl[0]
@@ -66,6 +70,8 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           type={"text"}
           name={"liveVersion"}
           label={"Live version or prototype(Figma)"}
+          value={formData?.liveVersion || ""}
+          onChange={handleInputChange}
           required={true}
           disabled={isPending}
           error={
@@ -78,6 +84,8 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           id={"imageOfProject"}
           type={"text"}
           name={"imageOfProject"}
+          value={formData?.imageOfProject || ""}
+          onChange={handleInputChange}
           label={"Image that suits your project (optional)"}
           required={false}
           disabled={false}
@@ -87,6 +95,8 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           type={"text"}
           name={"projectName"}
           label={"Project title"}
+          value={formData?.projectName || ""}
+          onChange={handleInputChange}
           required={true}
           disabled={false}
           error={
@@ -100,6 +110,8 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           type={"textarea"}
           name={"comment"}
           label={"Short project description"}
+          value={formData?.comment || ""}
+          onChange={handleInputChange}
           required={true}
           disabled={false}
           error={
@@ -117,7 +129,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
 
   return (
     <Modal
-      modalTrigger={ReturnButton}
+      modalTrigger={<Button style="default">RETURN</Button>}
       modalContent={FormContent()}
       state={[isModalOpen, setIsModalOpen]}
     />
