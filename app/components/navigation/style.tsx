@@ -45,7 +45,7 @@ export const DesktopNav = styled(Nav)`
   display: none;
   @media (min-width: ${breakpoint}) {
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-end;
     display: flex;
     gap: 5px;
   }
