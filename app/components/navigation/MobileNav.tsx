@@ -15,12 +15,12 @@ export const MobileNavbar = () => {
         CLOSE NAVIGATION
       </OpenTrayButton>
 
-      <NavbarButton href="/">HOME</NavbarButton>
+      {/* <NavbarButton href="/">HOME</NavbarButton> */}
       <NavbarButton href="/guides">GUIDES</NavbarButton>
-      <NavbarButton href="/resources">RESOURCES</NavbarButton>
-      <NavbarButton href="/halloffame">H O F</NavbarButton>
+      {/* <NavbarButton href="/resources">RESOURCES</NavbarButton> */}
+      {/* <NavbarButton href="/halloffame">H O F</NavbarButton> */}
       <NavbarButton href="/people">PEOPLE</NavbarButton>
-      <NavbarButton href="/calendar">CALENDAR</NavbarButton>
+      {/* <NavbarButton href="/calendar">CALENDAR</NavbarButton> */}
     </MobileNav>
   ) : (
     <MobileNav>
