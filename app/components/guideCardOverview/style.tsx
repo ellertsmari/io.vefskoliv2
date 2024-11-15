@@ -1,7 +1,22 @@
 import { Wrapper } from "globalStyles/globalStyles";
+import Link from "next/link";
 import styled from "styled-components";
 
-export const StyledLink = styled.a`
+export const GuideCardContainer = styled.div`
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+
+  &:hover {
+    background-color: var(--primary-black-10);
+  }
+`;
+
+export const StyledLink = styled(Link)`
   text-decoration: none;
   color: inherit;
   display: flex;

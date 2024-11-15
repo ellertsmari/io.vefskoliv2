@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { Button } from "./buttons/default/style";
 import { BREAKPOINT_DESKTOP } from "./globalConstants";
+import Link from "next/link";
 
 export const Wrapper = styled.div`
   display: flex;
@@ -65,7 +66,7 @@ export const SuccessToast = styled(Toast)`
   color: var(--primary-black-100);
 `;
 
-export const UnstyledLink = styled.a`
+export const UnstyledLink = styled(Link)`
   text-decoration: none;
 `;
 

@@ -1,4 +1,5 @@
 import { SmallText } from "globalStyles/text";
+import Link from "next/link";
 import styled from "styled-components";
 
 export const Container = styled.div`
@@ -113,7 +114,7 @@ export const OptionValue = styled.label<{ $selected?: boolean }>`
   flex: 1;
 `;
 
-export const SliderHelpLink = styled.a`
+export const SliderHelpLink = styled(Link)`
   text-decoration-line: none;
   align-self: flex-end;
 `;

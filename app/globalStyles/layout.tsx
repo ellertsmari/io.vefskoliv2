@@ -36,9 +36,7 @@ export const SidebarContainer = styled.div`
   }
 `;
 export const NavbarContainer = styled.div`
-  max-width: 100%;
   width: 100%;
-  border-radius: 0.8rem;
   grid-area: navbar;
 `;
 export const Main = styled.div`
