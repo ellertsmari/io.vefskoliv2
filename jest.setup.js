@@ -1,5 +1,8 @@
-global.TextEncoder = require("util").TextEncoder;
-global.TextDecoder = require("util").TextDecoder;
+import { TextEncoder, TextDecoder } from "util";
+import dotenv from "dotenv";
 
-require("dotenv").config({ path: ".env.local" });
+dotenv.config({ path: ".env.local" });
 import "@testing-library/jest-dom";
+
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;

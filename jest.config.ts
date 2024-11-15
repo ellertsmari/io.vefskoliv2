@@ -8,6 +8,12 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const config: Config = {
+  transform: {
+    "^.+\\.(ts|tsx|js|jsx|mjs)$": [
+      "babel-jest",
+      { presets: ["@babel/preset-env"] },
+    ],
+  },
   coverageProvider: "v8",
   testEnvironment: "jsdom",
   // Add more setup options before each test is run
@@ -28,6 +34,11 @@ const config: Config = {
   },
   testPathIgnorePatterns: ["<rootDir>/__tests__/__mocks__/mongoHandler.ts"],
   transformIgnorePatterns: ["/node_modules/(?!(react-session-hooks)/)"],
+  globals: {
+    "ts-jest": {
+      useESM: true,
+    },
+  },
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

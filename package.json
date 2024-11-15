@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.ts",
     "test-watch": "jest --watch"
   },
+  "type": "module",
   "dependencies": {
     "@uiw/react-md-editor": "^4.0.4",
     "bcrypt": "^5.1.1",
