@@ -4,7 +4,14 @@ import {
   ReturnStatus,
 } from "types/guideTypes";
 import { GuideCardStatuses } from "components/guideCardStatuses/GuideCardStatuses";
-import { StyledLink, Info, GuideDescription, GuideNr, Name } from "./style";
+import {
+  Info,
+  GuideDescription,
+  GuideNr,
+  Name,
+  GuideCardContainer,
+  StyledLink,
+} from "./style";
 
 export const GuideCardOverview = ({
   guideTitle,
@@ -25,8 +32,8 @@ export const GuideCardOverview = ({
   gradesGivenStatus: GradesGivenStatus;
   grade?: number;
 }) => {
-  return (
-    <StyledLink href={link}>
+  const Content = () => {
+    return (
       <Info>
         <GuideDescription>
           <GuideNr>
@@ -41,6 +48,16 @@ export const GuideCardOverview = ({
           grade={grade}
         />
       </Info>
+    );
+  };
+
+  return link ? (
+    <StyledLink href={link} passHref style={{ textDecoration: "none" }}>
+      <Content />
     </StyledLink>
+  ) : (
+    <GuideCardContainer>
+      <Content />
+    </GuideCardContainer>
   );
 };

@@ -67,7 +67,9 @@ function createMockFeedbacksWithReturn(
   return feedbacks;
 }
 
-const returnsSubmitted = ["a return"];
+const returnsSubmitted = [
+  { projectUrl: "a link to project", liveVersion: "link to live version" },
+];
 
 describe("Feedback", () => {
   afterEach(() => {
@@ -79,6 +81,7 @@ describe("Feedback", () => {
         feedbackGiven: [],
         feedbackReceived: [],
         returnsSubmitted,
+        link: "someLink",
       },
     });
 

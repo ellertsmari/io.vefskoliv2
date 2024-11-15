@@ -1,26 +1,29 @@
 "use client";
 import { useState } from "react";
 import { NavbarButton, MobileNav, OpenTrayButton } from "./style";
+import { NavBarProps } from "./NavBar";
 
-export const MobileNavbar = () => {
+export const MobileNavbar = ({ links }: NavBarProps) => {
   const [isNavOpen, setIsNavOpen] = useState<boolean>(false);
 
   const handleOpenNav = () => {
     setIsNavOpen(!isNavOpen);
   };
 
+  const buttons = links.map((link, index) => {
+    return (
+      <NavbarButton key={index} href={link.page}>
+        {link.title}
+      </NavbarButton>
+    );
+  });
+
   return isNavOpen ? (
-    <MobileNav style={{ border: "solid 1px var(--theme-module3-100)" }}>
+    <MobileNav>
       <OpenTrayButton onClick={handleOpenNav} $opened>
         CLOSE NAVIGATION
       </OpenTrayButton>
-
-      {/* <NavbarButton href="/">HOME</NavbarButton> */}
-      <NavbarButton href="/guides">GUIDES</NavbarButton>
-      {/* <NavbarButton href="/resources">RESOURCES</NavbarButton> */}
-      {/* <NavbarButton href="/halloffame">H O F</NavbarButton> */}
-      <NavbarButton href="/people">PEOPLE</NavbarButton>
-      {/* <NavbarButton href="/calendar">CALENDAR</NavbarButton> */}
+      {buttons}
     </MobileNav>
   ) : (
     <MobileNav>

@@ -1,9 +1,10 @@
 "use client";
+import Link from "next/link";
 import styled from "styled-components";
 
 const breakpoint = "1191px";
 
-export const NavbarButton = styled.a`
+export const NavbarButton = styled(Link)`
   width: 100%;
   text-align: center;
   background-color: var(--primary-white);
@@ -31,7 +32,7 @@ export const DesktopNavbarButton = styled(NavbarButton)`
   }
 `;
 
-export const Nav = styled.div`
+export const Nav = styled.nav`
   display: flex;
   flex-wrap: wrap;
   flex-direction: column;
@@ -53,6 +54,8 @@ export const DesktopNav = styled(Nav)`
 
 export const MobileNav = styled(Nav)`
   display: flex;
+  border: solid 1px var(--theme-module3-100);
+  box-sizing: border-box;
   @media (min-width: ${breakpoint}) {
     display: none;
   }
@@ -75,7 +78,7 @@ export const OpenTrayButton = styled.button<{ $opened?: boolean }>`
   }
 `
       : `
-  border: solid 1px var(--theme-module3-100);
+  border: none;
   background-color: var(--primary-white);
   color: var(--theme-module3-100);
   border-radius: 8px;
