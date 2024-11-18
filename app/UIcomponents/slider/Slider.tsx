@@ -40,7 +40,7 @@ export const Slider = <T extends string | number>({
           <OptionValue
             $selected={option === tempValue}
             key={index}
-            htmlFor={`${id}-option-${option}`}
+            // htmlFor={`${id}-option-${option}`}
             onClick={() => handleSliderChange(option)}
             title={titles && titles[index]}
           >
@@ -76,10 +76,19 @@ export const Slider = <T extends string | number>({
             const newValue = options[parseInt(event.target.value)];
             handleSliderChange(newValue);
           }}
+          aria-valuetext={
+            titles && value ? titles[options.indexOf(value as T)] : undefined
+          }
+          aria-valuenow={
+            !titles && typeof value === "number" ? value : undefined
+          }
+          aria-valuemin={!titles ? 0 : undefined}
+          aria-valuemax={!titles ? options.length - 1 : undefined}
           id={id}
+          aria-describedby={`${id}-descriptions`}
         />
       </SliderContainer>
-      <ValueContainer>{optionsList}</ValueContainer>
+      <ValueContainer id={`${id}-descriptions`}>{optionsList}</ValueContainer>
       <SliderHelpLink href={helpLink} target="_blank" rel="noopener noreferrer">
         <SliderHelpLinkText>What do these values mean?</SliderHelpLinkText>
       </SliderHelpLink>

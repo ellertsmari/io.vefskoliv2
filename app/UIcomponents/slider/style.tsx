@@ -105,7 +105,7 @@ export const ValueContainer = styled.ul`
   justify-content: space-between;
 `;
 
-export const OptionValue = styled.label<{ $selected?: boolean }>`
+export const OptionValue = styled.li<{ $selected?: boolean }>`
   list-style: none;
   color: ${({ $selected }) =>
     $selected ? "var(--theme-module3-100)" : undefined};
