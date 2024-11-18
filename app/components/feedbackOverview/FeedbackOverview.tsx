@@ -18,6 +18,8 @@ import {
   FeedbackContentWrapper,
 } from "./style";
 import { Border, Wrapper } from "globalStyles/globalStyles";
+import { StyleColors } from "globalStyles/colors";
+import { Vote } from "models/review";
 
 export const FeedbackOverview = () => {
   const { guide } = useGuide();
@@ -74,6 +76,19 @@ export const FeedbackOverview = () => {
     return options;
   }, [isFeedbackGiven, isFeedbackReceived, availableToGrade]);
 
+  const NavigatorOptions = useMemo(() => {
+    if (showGivenOrReceived === "given") {
+      return feedbackGiven.map((feedback) =>
+        feedback.grade ? StyleColors.purple : StyleColors.lightGrey
+      );
+    }
+    return feedbackReceived.map((feedback) => {
+      if (feedback.vote === Vote.PASS) return StyleColors.green;
+      if (feedback.vote === Vote.NO_PASS) return StyleColors.red;
+      return StyleColors.lightGrey;
+    });
+  }, [showGivenOrReceived, feedbackGiven, feedbackReceived]);
+
   return (
     <FeedbackContainer>
       <ToggleContainer>
@@ -103,11 +118,7 @@ export const FeedbackOverview = () => {
             }`}
           />
           <OptionNavigator
-            numOptions={
-              showGivenOrReceived === "given"
-                ? feedbackGiven.length
-                : feedbackReceived.length
-            }
+            optionsWithColor={NavigatorOptions}
             selectedOption={
               showGivenOrReceived === "given"
                 ? selectedGivenIndex
