@@ -6,6 +6,11 @@ export const SubTitle = styled.h2`
   color: var(--theme-module3-100);
 `;
 
+export const SubTitleLabel = styled.label`
+  font-size: 16px;
+  color: var(--theme-module3-100);
+`;
+
 export const BlackSubTitle = styled(SubTitle)`
   font-size: 16px;
   color: var(--primary-black-100);

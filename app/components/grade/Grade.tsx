@@ -1,5 +1,5 @@
 import { Slider } from "UIcomponents/slider/Slider";
-import { SubTitle } from "globalStyles/text";
+import { SubTitle, SubTitleLabel } from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { ButtonContainer, GradeContainer, SubmitButton } from "./style";
 
@@ -56,7 +56,7 @@ export const Grade = ({
 
   return (
     <GradeContainer>
-      <SubTitle>GRADE</SubTitle>
+      <SubTitleLabel htmlFor="grade-slider">GRADE</SubTitleLabel>
       <Slider
         options={Array.from({ length: 10 }, (_, i) => i + 1)}
         value={tempGrade}
