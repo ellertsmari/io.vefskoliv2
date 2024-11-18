@@ -118,7 +118,7 @@ const Options = ({
     <>
       {[...Array(options)].map((_, index) => {
         if (selectedOption === index) {
-          return <SelectedOption key={index} />;
+          return <SelectedOption key={index} index={index} />;
         }
         return (
           <Option
