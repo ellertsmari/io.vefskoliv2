@@ -34,7 +34,7 @@ export default async function RootLayout({
       <body className={poppins.className}>
         <StyledComponentsRegistry>
           <AnimatedBackground />
-          {session?.user && (
+          {session?.user ? (
             <LayoutGrid>
               <SidebarContainer>
                 <Sidebar />
@@ -44,8 +44,9 @@ export default async function RootLayout({
               </NavbarContainer>
               <Main>{children}</Main>
             </LayoutGrid>
+          ) : (
+            <LoginPage />
           )}
-          <LoginPage />
         </StyledComponentsRegistry>
       </body>
     </html>
