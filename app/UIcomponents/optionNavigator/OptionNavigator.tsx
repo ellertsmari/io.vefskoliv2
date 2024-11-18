@@ -88,11 +88,7 @@ const OptionsWithColor = ({
       {optionsWithColor.map((optionColor, index) => {
         if (selectedOption === index) {
           return (
-            <SelectedOption
-              key={index}
-              color={optionColor}
-              aria-label={`Selected Option ${index + 1}`}
-            />
+            <SelectedOption key={index} color={optionColor} index={index} />
           );
         }
         return (
@@ -122,12 +118,7 @@ const Options = ({
     <>
       {[...Array(options)].map((_, index) => {
         if (selectedOption === index) {
-          return (
-            <SelectedOption
-              key={index}
-              aria-label={`Selected Option ${index + 1}`}
-            />
-          );
+          return <SelectedOption key={index} />;
         }
         return (
           <Option
@@ -143,9 +134,15 @@ const Options = ({
   );
 };
 
-const SelectedOption = ({ color }: { color?: StyleColors }) => {
+const SelectedOption = ({
+  color,
+  index,
+}: {
+  color?: StyleColors;
+  index: number;
+}) => {
   return (
-    <SelectedRing>
+    <SelectedRing aria-label={`Selected Option ${index + 1}`}>
       <Option
         $color={color ?? StyleColors.lightGrey}
         role="button"
