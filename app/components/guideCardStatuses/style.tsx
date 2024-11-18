@@ -13,9 +13,8 @@ export const StatusesWrapper = styled.div`
   flex: 1;
 `;
 
-export const Grade = styled(SmallText)<{ $color: string }>`
+export const Grade = styled(SmallText)`
   font-weight: bold;
-  color: ${({ $color }) => $color};
 `;
 
 export const Status = styled.div`

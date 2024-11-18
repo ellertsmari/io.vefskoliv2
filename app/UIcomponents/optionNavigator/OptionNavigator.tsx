@@ -5,7 +5,7 @@ import {
   SelectedRing,
   ArrowContainer,
 } from "./style";
-import { Arrow } from "../../assets/Icons";
+import { Arrow } from "assets/Icons";
 
 // Does not currently support keyboard navigation or pagination
 
@@ -87,7 +87,13 @@ const OptionsWithColor = ({
     <>
       {optionsWithColor.map((optionColor, index) => {
         if (selectedOption === index) {
-          return <SelectedOption key={index} color={optionColor} />;
+          return (
+            <SelectedOption
+              key={index}
+              color={optionColor}
+              aria-label={`Selected Option ${index + 1}`}
+            />
+          );
         }
         return (
           <Option
@@ -116,7 +122,12 @@ const Options = ({
     <>
       {[...Array(options)].map((_, index) => {
         if (selectedOption === index) {
-          return <SelectedOption key={index} />;
+          return (
+            <SelectedOption
+              key={index}
+              aria-label={`Selected Option ${index + 1}`}
+            />
+          );
         }
         return (
           <Option

@@ -96,11 +96,7 @@ const FeedbackAndGradeStatus = ({
           <Bell />
         </IconContainer>
         <SmallText>GRADE</SmallText>
-        {returnStatus === ReturnStatus.PASSED ? (
-          <Grade $color="var(--error-success-100)">{grade}</Grade>
-        ) : (
-          <Grade $color="var(--theme-module3-100)">{grade}</Grade>
-        )}
+        <Grade>{grade}</Grade>
       </>
     );
   }
