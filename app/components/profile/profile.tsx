@@ -136,7 +136,7 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
         <DefaultButton style="default" onClick={onSave}>
           SAVE
         </DefaultButton>
-        <DefaultButton style="outlined">CHANGE PASSWORD</DefaultButton>
+        {/* <DefaultButton style="outlined">CHANGE PASSWORD</DefaultButton> */}
       </ButtonWrapper>
     </ProfileWrapper>
   );
