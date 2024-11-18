@@ -142,11 +142,12 @@ const SelectedOption = ({
   index: number;
 }) => {
   return (
-    <SelectedRing aria-label={`Selected Option ${index + 1}`}>
+    <SelectedRing>
       <Option
         $color={color ?? StyleColors.lightGrey}
         role="button"
         aria-disabled
+        aria-label={`Selected Option ${index + 1}`}
       />
     </SelectedRing>
   );
