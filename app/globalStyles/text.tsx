@@ -3,16 +3,19 @@ import styled from "styled-components";
 
 export const SubTitle = styled.h2`
   font-size: 16px;
+  font-weight: 400;
   color: var(--theme-module3-100);
 `;
 
 export const SubTitleLabel = styled.label`
   font-size: 16px;
+  font-weight: 400;
   color: var(--theme-module3-100);
 `;
 
 export const BlackSubTitle = styled(SubTitle)`
   font-size: 16px;
+  font-weight: 400;
   color: var(--primary-black-100);
 `;
 
