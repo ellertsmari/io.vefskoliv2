@@ -40,7 +40,7 @@ export const Info = styled(Wrapper)`
 
 export const GuideNr = styled.h2`
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 400;
   align-self: center;
 `;
 
