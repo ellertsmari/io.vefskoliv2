@@ -65,7 +65,7 @@ Other root-level files and directories:
 - **`__tests__/`**: Test files for components and utilities.
 - **`jest.config.ts`**: Configuration for Jest testing.
 - **`next.config.mjs`**: Configuration for Next.js application settings.
-- **`tsconfig.json`**: TypeScript configuration.
+- **`tsconfig.json`**: TypeScript configuration
 
 ## Current issues
 
