@@ -1,3 +1,7 @@
-import GuidesPage from "./guides/page";
-
-export default GuidesPage;
+const Home = () => {
+    return ( <div>
+        Home
+    </div> );
+}
+ 
+export default Home;

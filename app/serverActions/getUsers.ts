@@ -21,7 +21,8 @@ const calculateShareableInfo = (
   userInfo: UserWithIdType
 ): ShareableUserInfo => {
   const shareableKeys = Object.keys(OptionalUserInfoKeys).concat(
-    "name"
+    "name",
+    "_id"
   ) as (keyof ShareableUserInfo)[];
 
   const shareableInfo = shareableKeys.reduce((acc, key) => {

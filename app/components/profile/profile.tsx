@@ -17,6 +17,7 @@ import Modal from "UIcomponents/modal/modal";
 import { Input } from "UIcomponents/input/Input";
 import DefaultButton from "globalStyles/buttons/default";
 import { DefaultUserIcon } from "assets/Icons";
+import Alias from "components/alias/Alias";
 import { LogoutIcon } from "assets/Icons";
 import { signOut } from "serverActions/signOut";
 import { updateUserInfo } from "serverActions/updateUserInfo";
@@ -30,21 +31,24 @@ export const Profile = ({ session }: { session: Session | null }) => {
 
   const ProfilePictureContainer = () => {
     return (
+      <>
       <ImageWrapper>
         <ProfilePicture url={user.avatarUrl} />
-
-        <ProfileName>{user.name}</ProfileName>
       </ImageWrapper>
+      </>
     );
   };
 
   return (
     <Wrapper>
       {user ? (
+        <>
         <Modal
           modalTrigger={<ProfilePictureContainer />}
           modalContent={<EditProfileScreen user={user} />}
         />
+        <ProfileName>{user.role === "teacher" ? <Alias/> : user.name}</ProfileName>
+        </>
       ) : (
         <div>loading...</div>
       )}
