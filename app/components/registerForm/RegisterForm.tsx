@@ -40,7 +40,7 @@ export function RegisterForm({
         setSelectedForm("login");
       }, 3000);
     }
-  }, [state?.success]);
+  }, [state?.success, setSelectedForm]);
 
   return (
     <FullScreenWrapper>

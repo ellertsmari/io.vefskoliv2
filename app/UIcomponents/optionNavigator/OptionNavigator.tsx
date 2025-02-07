@@ -37,7 +37,7 @@ export const OptionNavigator = ({
 
   return (
     <OptionsContainer>
-      {selectedOption !== (null || undefined) && selectedOption > 0 && (
+      {!!selectedOption && selectedOption > 0 && (
         <ArrowContainer
           onClick={() => selectOption(selectedOption - 1)}
           role="button"
@@ -60,16 +60,15 @@ export const OptionNavigator = ({
           selectedOption={selectedOption}
         />
       )}
-      {selectedOption !== (null || undefined) &&
-        selectedOption < length - 1 && (
-          <ArrowContainer
-            onClick={() => selectOption(selectedOption + 1)}
-            role="button"
-            aria-label="Select Next Option"
-          >
-            <Arrow direction="right" />
-          </ArrowContainer>
-        )}
+      {!!selectedOption && selectedOption < length - 1 && (
+        <ArrowContainer
+          onClick={() => selectOption(selectedOption + 1)}
+          role="button"
+          aria-label="Select Next Option"
+        >
+          <Arrow direction="right" />
+        </ArrowContainer>
+      )}
     </OptionsContainer>
   );
 };

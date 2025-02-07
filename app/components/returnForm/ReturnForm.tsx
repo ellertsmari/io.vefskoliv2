@@ -33,7 +33,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
         // lazy way to force state update as we have no DB listeners setup yet
         window.location.replace("/guides");
       }
-    }, [state?.success]);
+    }, [state?.success, setFormData]);
 
     if (!guideId || loading) return null;
 

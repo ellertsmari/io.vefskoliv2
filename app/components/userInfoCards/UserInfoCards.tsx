@@ -3,7 +3,7 @@ import { useState } from "react";
 import { InfoSubtitle, UserInfoCardWrapper } from "./style";
 import { ShareableUserInfo } from "types/types";
 import { UserInfoCard } from "components/userInfoCard/UserInfoCard";
-import { Dropdown } from "UIcomponents/dropdown/Dropdown";
+import { Dropdown, DropdownOption } from "UIcomponents/dropdown/Dropdown";
 
 export const UserInfoCards = ({
   userInfo,
@@ -14,22 +14,22 @@ export const UserInfoCards = ({
   title: string;
   zIndex?: number;
 }) => {
-  if (!userInfo?.length) return <div>{`No ${title} found`}</div>;
-
   const [selectedUser, setSelectedUser] = useState<ShareableUserInfo | null>(
     null
   );
 
-  const options = [
-    { optionName: "None", onClick: () => setSelectedUser(null) },
-  ].concat(
-    userInfo.map((user: ShareableUserInfo) => {
-      return {
-        optionName: user.name,
-        onClick: () => setSelectedUser(user),
-      };
-    })
-  );
+  const options: DropdownOption[] = userInfo?.length
+    ? [{ optionName: "None", onClick: () => setSelectedUser(null) }].concat(
+        userInfo.map((user: ShareableUserInfo) => {
+          return {
+            optionName: user.name,
+            onClick: () => setSelectedUser(user),
+          };
+        })
+      )
+    : [];
+
+  if (userInfo.length === 0) return <div>{`No ${title} found`}</div>;
 
   return (
     <UserInfoCardWrapper>

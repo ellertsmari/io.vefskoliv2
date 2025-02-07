@@ -1,12 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import {
-  fireEvent,
-  getAllByLabelText,
-  render,
-  waitFor,
-} from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { ObjectId } from "mongodb";
 import {
   clearDatabase,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { startTransition, useActionState, useRef, useTransition } from "react";
 import { authenticate } from "serverActions/authenticate";
 import { Form, Logo } from "components/loginForm/style";
 import { Input } from "UIcomponents/input/Input";
@@ -22,13 +22,15 @@ export function LoginForm({
     undefined
   );
 
-  const formRef = useRef(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleLogin = (event: any) => {
     event.preventDefault();
-    if (formRef.current) {
-      formAction(new FormData(formRef.current));
-    }
+
+    startTransition(() => {
+      if (formRef.current !== null)
+        return formAction(new FormData(formRef.current));
+    });
   };
 
   const handleGoToRegister = (event: any) => {

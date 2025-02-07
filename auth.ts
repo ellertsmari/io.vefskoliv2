@@ -40,6 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async session({ session }) {
+      await connectToDatabase();
       const dbuser: UserDocument | null = await User.findOne({
         email: session.user.email,
       });
@@ -58,6 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         name,
         role,
       } = dbuser;
+
       const id = dbuser.id.toString();
       const emailVerified = new Date();
 

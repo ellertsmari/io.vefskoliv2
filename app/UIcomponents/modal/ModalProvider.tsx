@@ -18,7 +18,10 @@ interface ModalContextProps {
 }
 
 export const ModalProvider = ({ children, state }: ModalContextProps) => {
-  const [isModalOpen, setIsModalOpen] = state || useState<boolean>(false);
+  const [isModalOpenLocal, setIsModalOpenLocal] = useState<boolean>(false);
+
+  const isModalOpen = state ? state[0] : isModalOpenLocal;
+  const setIsModalOpen = state ? state[1] : setIsModalOpenLocal;
 
   return (
     <ModalContext.Provider value={{ isModalOpen, setIsModalOpen }}>

@@ -1,5 +1,5 @@
 import { SubTitle } from "globalStyles/text";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FeedbackDocumentWithReturn,
   GradesGivenStatus,
@@ -17,7 +17,7 @@ import {
   CommentWrapper,
   FeedbackContentWrapper,
 } from "./style";
-import { Border, Wrapper } from "globalStyles/globalStyles";
+import { Border } from "globalStyles/globalStyles";
 import { StyleColors } from "globalStyles/colors";
 import { Vote } from "models/review";
 
@@ -60,7 +60,7 @@ export const FeedbackOverview = () => {
   const gradeable =
     showGivenOrReceived === "received" && theFeedback && !theFeedback.grade;
 
-  const toggleOptions = useCallback(() => {
+  const toggleOptions = () => {
     let options: ToggleOption[] = [];
     if (isFeedbackGiven) {
       options.push(["given", () => setShowGivenOrReceived("given")]);
@@ -74,9 +74,9 @@ export const FeedbackOverview = () => {
     }
 
     return options;
-  }, [isFeedbackGiven, isFeedbackReceived, availableToGrade]);
+  };
 
-  const NavigatorOptions = useMemo(() => {
+  const NavigatorOptions = () => {
     if (showGivenOrReceived === "given") {
       return feedbackGiven.map((feedback) =>
         feedback.grade ? StyleColors.purple : StyleColors.lightGrey
@@ -87,7 +87,7 @@ export const FeedbackOverview = () => {
       if (feedback.vote === Vote.NO_PASS) return StyleColors.red;
       return StyleColors.lightGrey;
     });
-  }, [showGivenOrReceived, feedbackGiven, feedbackReceived]);
+  };
 
   return (
     <FeedbackContainer>
@@ -118,7 +118,7 @@ export const FeedbackOverview = () => {
             }`}
           />
           <OptionNavigator
-            optionsWithColor={NavigatorOptions}
+            optionsWithColor={NavigatorOptions()}
             selectedOption={
               showGivenOrReceived === "given"
                 ? selectedGivenIndex
