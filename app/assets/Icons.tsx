@@ -15,6 +15,7 @@ export const Hourglass = () => (
   </svg>
 );
 
+const hatIconLabel = "Hat icon";
 export const HatIcon = ({ color }: { color?: string }) => (
   <svg
     width="100%"
@@ -22,7 +23,7 @@ export const HatIcon = ({ color }: { color?: string }) => (
     viewBox="0 0 25 18"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    aria-label="Hat icon"
+    aria-label={hatIconLabel}
   >
     <path
       fillRule="evenodd"
