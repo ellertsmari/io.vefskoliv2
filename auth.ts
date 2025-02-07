@@ -58,6 +58,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         name,
         role,
       } = dbuser;
+
       const id = dbuser.id.toString();
       const emailVerified = new Date();
 

@@ -135,7 +135,7 @@ export const calculateGradesGivenStatus = async (
   return GradesGivenStatus.GRADES_GIVEN;
 };
 
-export const fetchModules = (extendedGuides: ExtendedGuideInfo[]) => {
+export const fetchModules = async (extendedGuides: ExtendedGuideInfo[]) => {
   return extendedGuides
     .reduce((acc: Module[], guideToCheck) => {
       if (

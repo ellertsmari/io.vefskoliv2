@@ -24,6 +24,7 @@ import { useSessionState } from "react-session-hooks";
 import { Wrapper } from "globalStyles/globalStyles";
 import { Session } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
+import { useState } from "react";
 
 export const Profile = ({ session }: { session: Session | null }) => {
   const user = session?.user as AdapterUser;
@@ -53,16 +54,12 @@ export const Profile = ({ session }: { session: Session | null }) => {
 };
 
 const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
-  const [userInfo, setUserInfo, loading] = useSessionState("userInfo", {
+  const [userInfo, setUserInfo] = useState({
     background: user?.background || "",
     careerGoals: user?.careerGoals || "",
     interests: user?.interests || "",
     favoriteArtists: user?.favoriteArtists || "",
   });
-
-  if (loading || !userInfo) {
-    return <div>loading...</div>;
-  }
 
   const onSave = async () => {
     await updateUserInfo(userInfo);
