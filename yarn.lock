@@ -5399,7 +5399,8 @@ react-markdown@~9.0.1:
     unist-util-visit "^5.0.0"
     vfile "^6.0.0"
 
-react-session-hooks@^1.0.4:
+
+react-session-hooks@^1.0.8:
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/react-session-hooks/-/react-session-hooks-1.0.8.tgz#175db37090cfa275349a36579d21d3fcfdeec416"
   integrity sha512-0n+4vZ+q6HOqbVo4y9IPmnwsgzxsNUYK1bqCmrxyWcJJ+/Roa+AgPH+wKd5CSCWaQbvka6tggu/AiMAa/Su5Zg==
