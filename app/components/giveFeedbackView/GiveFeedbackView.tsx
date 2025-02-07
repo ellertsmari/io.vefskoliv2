@@ -23,9 +23,10 @@ import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
 import { FeedbackInfoContainer } from "./style";
 import { useLocalState } from "react-session-hooks";
+import { set } from "mongoose";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
-  const LOCAL_STORAGE_KEY = useMemo(() => `feedback for ${guideTitle}`, []);
+  const LOCAL_STORAGE_KEY = `feedback for ${guideTitle}`;
 
   const [comment, setComment, loading] = useLocalState<string>(
     LOCAL_STORAGE_KEY,
@@ -42,12 +43,12 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
       setComment(null);
       window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
     }
-  }, [state?.success]);
+  }, [state?.success, setComment]);
 
   const handleSetVote = useCallback((vote: Vote) => setVote(vote), []);
   const handleSetComment = useCallback(
     (comment: string) => setComment(comment),
-    []
+    [setComment]
   );
 
   const { guide } = useGuide();

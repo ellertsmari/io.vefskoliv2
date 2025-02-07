@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   OptionValue,
   Container,
@@ -33,6 +33,15 @@ export const Slider = <T extends string | number>({
 
   const [tempValue, setTempValue] = useState<T | null | undefined>(value);
 
+  const handleSliderChange = useCallback(
+    (newValue: T) => {
+      if (!handleOnChange || !selectable) return;
+      setTempValue(newValue);
+      handleOnChange(newValue);
+    },
+    [handleOnChange, selectable]
+  );
+
   const optionsList = useMemo(
     () =>
       options.map((option, index) => {
@@ -48,18 +57,12 @@ export const Slider = <T extends string | number>({
           </OptionValue>
         );
       }),
-    [options, tempValue, selectable]
+    [options, tempValue, handleSliderChange, titles]
   );
 
   const calculateSliderPercentage = () => {
     if (!tempValue) return 0;
     return (options.indexOf(tempValue) / (options.length - 1)) * 100;
-  };
-
-  const handleSliderChange = (newValue: T) => {
-    if (!handleOnChange || !selectable) return;
-    setTempValue(newValue);
-    handleOnChange(newValue);
   };
 
   return (

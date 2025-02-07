@@ -40,7 +40,7 @@ export const Grade = ({
       setCanGrade(false);
       window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
     }
-  }, [state?.success]);
+  }, [state?.success, state?.data]);
 
   const handleSubmit = () => {
     startTransition(async () => {

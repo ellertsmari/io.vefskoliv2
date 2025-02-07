@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Accordian,
   AccordianOptionContainer,
@@ -35,18 +35,21 @@ export const Dropdown = ({
   );
   const [showOptions, setShowOptions] = useState(false);
 
-  const handleOnClick = (optionName: string) => {
-    if (isOpen) {
-      setTimeout(() => {
-        setShowOptions(false);
-      }, animationDuration * 1000);
-    } else {
-      setShowOptions(true);
-    }
-    setIsOpen(!isOpen);
+  const handleOnClick = useCallback(
+    (optionName: string) => {
+      if (isOpen) {
+        setTimeout(() => {
+          setShowOptions(false);
+        }, animationDuration * 1000);
+      } else {
+        setShowOptions(true);
+      }
+      setIsOpen(!isOpen);
 
-    setShownOption(optionName);
-  };
+      setShownOption(optionName);
+    },
+    [isOpen]
+  );
 
   const Options = useMemo(() => {
     return options.map((option, index) => {
@@ -64,7 +67,7 @@ export const Dropdown = ({
         </AccordianOptionContainer>
       );
     });
-  }, [options, isOpen]);
+  }, [options, handleOnClick]);
 
   return (
     <Container style={style}>
