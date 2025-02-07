@@ -118,7 +118,7 @@ export const FeedbackOverview = () => {
             }`}
           />
           <OptionNavigator
-            optionsWithColor={NavigatorOptions}
+            optionsWithColor={NavigatorOptions()}
             selectedOption={
               showGivenOrReceived === "given"
                 ? selectedGivenIndex

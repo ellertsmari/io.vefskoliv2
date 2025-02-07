@@ -3,7 +3,9 @@ import { getGuide } from "serverActions/getGuide";
 import { GuideOverview } from "components/guideOverview/GuideOverview";
 import { GuideType } from "models/guide";
 
-const GuidePage = async ({ params }) => {
+type ParamsType = Promise<{ id: string }>;
+
+const GuidePage = async ({ params }: { params: ParamsType }) => {
   const { id } = await params;
   const guideJSON = await getGuide(id);
   const guide: GuideType = JSON.parse(JSON.stringify(guideJSON));
