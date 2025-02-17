@@ -12,13 +12,13 @@ const GuidesPage = async () => {
   if (!session?.user?.id) return null;
 
   const fetchedGuides = (await getGuides(session.user.id)) || [];
-  if (fetchedGuides.length < 1) throw new Error("No guides found");
+  // if (fetchedGuides.length < 1) throw new Error("No guides found");
 
   const extendedGuides = await extendGuides(
     JSON.parse(JSON.stringify(fetchedGuides))
   );
 
-  if (extendedGuides.length < 1) throw new Error("No extended guides found");
+  // if (extendedGuides.length < 1) throw new Error("No extended guides found");
 
   const modules: Module[] = await fetchModules(extendedGuides);
 

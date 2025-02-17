@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { startTransition, useActionState, useEffect, useRef } from "react";
 import { signUp } from "serverActions/signUp";
 import DefaultButton from "../../globalStyles/buttons/default";
 import { Input } from "UIcomponents/input/Input";
@@ -25,8 +25,11 @@ export function RegisterForm({
   const handleRegister = async (event: React.FormEvent<HTMLButtonElement>) => {
     event.preventDefault();
     if (formRef.current) {
-      formAction(new FormData(formRef.current));
-    }
+      
+      startTransition(() => {
+        if (formRef.current !== null)
+          return formAction(new FormData(formRef.current));
+      });    }
   };
 
   const handleGoToLogin = (event: any) => {
