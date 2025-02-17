@@ -7,13 +7,13 @@ import { z } from "zod";
 
 type SignupFormState =
   | {
-      errors?: {
-        name?: string[];
-        email?: string[];
-        password?: string[];
-      };
-      message?: string;
-    }
+    errors?: {
+      name?: string[];
+      email?: string[];
+      password?: string[];
+    };
+    message?: string;
+  }
   | undefined;
 
 export async function signUp(state: SignupFormState, formData: FormData) {
@@ -48,6 +48,7 @@ export async function signUp(state: SignupFormState, formData: FormData) {
       role: "user",
     });
   } catch (error) {
+    console.log("error", error)
     return {
       success: false,
       message: "Failed to create user. May already exist.",
@@ -60,7 +61,7 @@ export async function signUp(state: SignupFormState, formData: FormData) {
       email,
       password: rawPassword,
     });
-  } catch (error) {}
+  } catch (error) { }
 
   return {
     success: true,
