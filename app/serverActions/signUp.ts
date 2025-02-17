@@ -1,4 +1,5 @@
 "use server";
+import { connectToDatabase } from "./mongoose-connector";
 
 import bcrypt from "bcrypt";
 import { signIn, getUser } from "../../auth";
@@ -18,6 +19,7 @@ type SignupFormState =
 
 export async function signUp(state: SignupFormState, formData: FormData) {
   // Validate form fields
+  await connectToDatabase();
   const validatedFields = SignupFormSchema.safeParse({
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
