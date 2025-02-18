@@ -19,7 +19,7 @@ export const NavStyle = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5vh;
+
   width: 100%;
 `;
 export const LinkStyle = styled(Link)`
@@ -31,7 +31,7 @@ export const LinkStyle = styled(Link)`
   text-decoration: none;
   transition: 0.2s;
   border-radius: 8px;
-  padding: 4px 0;
+  padding: 24px 0;
   &: hover {
     color: black;
     background-color: white;
@@ -53,4 +53,8 @@ export const Icon = styled(Image)`
   ${LinkStyle}:hover & {
     filter: brightness(0);
   }
+`;
+
+export const LogOutButton = styled(Image)`
+  cursor: pointer;
 `;
