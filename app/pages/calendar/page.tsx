@@ -1,7 +1,8 @@
+import Cal from "components/calendar/Calendar";
 const Calendar = () => {
   return (
     <div>
-      <h1>Calendar Page</h1>
+      <Cal />
     </div>
   );
 };
