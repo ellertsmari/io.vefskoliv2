@@ -25,7 +25,7 @@ export const NavStyle = styled.div`
 export const LinkStyle = styled(Link)`
   width: 100%;
   display: flex;
-
+  margin: 6px 0;
   color: white;
   gap: 16px;
   text-decoration: none;
