@@ -25,11 +25,11 @@ export function RegisterForm({
   const handleRegister = async (event: React.FormEvent<HTMLButtonElement>) => {
     event.preventDefault();
     if (formRef.current) {
-      
       startTransition(() => {
         if (formRef.current !== null)
           return formAction(new FormData(formRef.current));
-      });    }
+      });
+    }
   };
 
   const handleGoToLogin = (event: any) => {

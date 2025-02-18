@@ -4,8 +4,8 @@ import bcrypt from "bcrypt";
 import { signIn, getUser } from "../../auth";
 import { User } from "../models/user";
 import { z } from "zod";
-import { connectToDatabase } from "./mongoose-connector";
 
+import { connectToDatabase } from "./mongoose-connector";
 
 type SignupFormState =
   | {
@@ -20,7 +20,9 @@ type SignupFormState =
 
 export async function signUp(state: SignupFormState, formData: FormData) {
   // Validate form fields
-  await connectToDatabase()
+
+  await connectToDatabase();
+
   const validatedFields = SignupFormSchema.safeParse({
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
@@ -43,20 +45,16 @@ export async function signUp(state: SignupFormState, formData: FormData) {
   } = validatedFields.data;
   const password = await bcrypt.hash(rawPassword, 10);
 
-
-
-
-
   try {
-   await User.create({
+    await User.create({
       name: firstName + " " + lastName,
       email,
       password,
       role: "user",
     });
-  } catch (error) 
-{           
-  console.log(error)
+  } catch (error) {
+    console.log(error);
+
     return {
       success: false,
       message: "Failed to create user. May already exist.",
@@ -76,7 +74,6 @@ export async function signUp(state: SignupFormState, formData: FormData) {
     message:
       "Successfully registered. Now logging you in. If it fails you will be redirected to the login page.",
   };
-  
 }
 
 const SignupFormSchema = z.object({

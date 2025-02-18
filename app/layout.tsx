@@ -13,6 +13,7 @@ import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
 import LoginPage from "pages/login/page";
 import { NavBar } from "components/navigation/NavBar";
+import Nav from "components/navbar/Nav";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
@@ -35,15 +36,18 @@ export default async function RootLayout({
         <StyledComponentsRegistry>
           <AnimatedBackground />
           {session?.user ? (
-            <LayoutGrid>
-              <SidebarContainer>
-                <Sidebar />
-              </SidebarContainer>
-              <NavbarContainer>
-                <NavBar />
-              </NavbarContainer>
-              <Main>{children}</Main>
-            </LayoutGrid>
+            <>
+              <LayoutGrid>
+                <SidebarContainer>
+                  {/*<Sidebar />*/}
+                  <Nav />
+                </SidebarContainer>
+                <NavbarContainer>
+                  <NavBar />
+                </NavbarContainer>
+                <Main>{children}</Main>
+              </LayoutGrid>
+            </>
           ) : (
             <LoginPage />
           )}
