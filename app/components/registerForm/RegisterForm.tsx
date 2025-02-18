@@ -4,14 +4,45 @@ import { startTransition, useActionState, useEffect, useRef } from "react";
 import { signUp } from "serverActions/signUp";
 import DefaultButton from "../../globalStyles/buttons/default";
 import { Input } from "UIcomponents/input/Input";
-import LogoSvg from "../../../public/logo.svg";
 import {
   ButtonWrapper,
   ErrorToast,
   FullScreenWrapper,
   SuccessToast,
 } from "globalStyles/globalStyles";
-import { Form, Logo } from "./style";
+import { Form,   ProfileImage,
+  ProfileImageContainer,
+  ProfileName,
+  ProfileWrapper,
+  ImageWrapper, } from "./style";
+import Copyright from "components/copyrightText/copyrightText";
+import { DefaultUserIcon } from "assets/Icons";
+import { TopLeftLogo } from "components/loginForm/style";
+import LogoSvg from "../../../public/logo.svg";
+
+
+
+
+
+const ProfilePicture = ({ url }: { url?: string | null | undefined }) => {
+  return (
+    <ProfileImageContainer>
+      {url ? (
+        <ProfileImage
+          width={100}
+          height={100}
+          src={url}
+          alt="student picture"
+        />
+      ) : (
+        <DefaultUserIcon />
+      )}
+    </ProfileImageContainer>
+  );
+};
+
+
+
 
 export function RegisterForm({
   setSelectedForm,
@@ -45,10 +76,17 @@ export function RegisterForm({
     }
   }, [state?.success, setSelectedForm]);
 
+  
   return (
     <FullScreenWrapper>
+      <TopLeftLogo src={LogoSvg} alt="logo" />
+
+      <ImageWrapper>
+        <ProfilePicture url={undefined} />
+      </ImageWrapper>
+           
       <Form ref={formRef}>
-        <Logo src={LogoSvg} alt="logo" />
+
         {state?.success === false && typeof state.message === "string" && (
           <>
             <ErrorToast>{state.message}</ErrorToast>
@@ -121,12 +159,12 @@ export function RegisterForm({
         <ButtonWrapper>
           <DefaultButton
             type="button"
-            style="outlined"
+            style="default"
             onClick={handleGoToLogin}
             aria-disabled={isPending}
             disabled={isPending}
           >
-            CANCEL
+            Cancel
           </DefaultButton>
           <DefaultButton
             type="submit"
@@ -135,10 +173,14 @@ export function RegisterForm({
             disabled={isPending || state?.success}
             onClick={handleRegister}
           >
-            REGISTER
+            Register
           </DefaultButton>
         </ButtonWrapper>
       </Form>
+            <Copyright/>
+      
     </FullScreenWrapper>
   );
 }
+
+
