@@ -1,7 +1,21 @@
-import Calendar from "node_modules/@toast-ui/calendar/types";
-import CalContainer from "./style";
-const Cal = () => {
-  return <CalContainer id="calendar" style="height: 600px;"></CalContainer>;
-};
+'use client'
 
-export default Cal;
+import FullCalendar from '@fullcalendar/react'
+import dayGridPlugin from '@fullcalendar/daygrid' // a plugin!
+
+export default function Calendar() {
+  return (
+
+
+    
+<FullCalendar
+  plugins={[ dayGridPlugin ]}
+  initialView="dayGridMonth"
+  weekends={false}
+  events={[
+    { title: 'event 1', date: '2019-04-01' },
+    { title: 'event 2', date: '2019-04-02' }
+  ]}
+/>
+  )
+}

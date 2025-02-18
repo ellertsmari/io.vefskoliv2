@@ -13,7 +13,7 @@ import { auth } from "../auth";
 import LoginPage from "pages/login/page";
 import { NavBar } from "components/navigation/NavBar";
 import Nav from "components/navbar/Nav";
-
+import FullCalendar from "components/calendar/Calendar";
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
 export const metadata: Metadata = {
@@ -34,18 +34,20 @@ export default async function RootLayout({
       <body className={poppins.className}>
         <StyledComponentsRegistry>
           {session?.user ? (
-            <>
-              <LayoutGrid>
-                <SidebarContainer>
-                  {/*<Sidebar />*/}
-                  <Nav />
-                </SidebarContainer>
-                <NavbarContainer>
-                  <NavBar />
-                </NavbarContainer>
-                <Main>{children}</Main>
-              </LayoutGrid>
-            </>
+            <LayoutGrid>
+              <SidebarContainer>
+                {/* You can include your Sidebar here if needed */}
+                <Nav />
+              </SidebarContainer>
+              <NavbarContainer>
+                <NavBar />
+              </NavbarContainer>
+              <Main>
+                {/* Place the Cali (Calendar) component here */}
+                <FullCalendar />
+                {children}
+              </Main>
+            </LayoutGrid>
           ) : (
             <LoginPage />
           )}
