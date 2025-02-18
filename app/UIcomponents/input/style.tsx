@@ -1,23 +1,27 @@
 import styled from "styled-components";
 
 const deskTopWidth = "382px";
-const mobileWidth = "240px";
+const mobileWidth = "264px";
 const breakPoint = "600px";
 
 export const ReusableInput = styled.input`
+
   width: ${mobileWidth};
-  height: 32px;
+  height: 40px;
   padding: 10px;
-  border: 1px solid var(--primary-black-30);
+  border: 1px solid #2B5B76;
   border-radius: 8px;
+  background-color: white;
+
 
   &:hover {
-    border: 1px solid var(--theme-module3-60);
+    background-color: #E8F1FC;
+
   }
 
   &:focus {
     outline: none;
-    border: 1px solid var(--theme-module3-100);
+    
   }
 
   @media (min-width: ${breakPoint}) {

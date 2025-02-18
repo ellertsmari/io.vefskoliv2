@@ -9,7 +9,7 @@ export const LayoutGrid = styled.div`
   grid-template-areas:
     "navbar"
     "main";
-  padding: 1rem;
+
   gap: 1rem;
   width: 100%;
   height: 100dvh;
@@ -38,6 +38,7 @@ export const SidebarContainer = styled.div`
 export const NavbarContainer = styled.div`
   width: 100%;
   grid-area: navbar;
+  padding: 1rem;
 `;
 export const Main = styled.div`
   max-width: 307px;

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "globalStyles/globals.css";
 import StyledComponentsRegistry from "utils/registry";
-import AnimatedBackground from "globalStyles/animatedBackground";
 import {
   LayoutGrid,
   SidebarContainer,
@@ -13,6 +12,7 @@ import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
 import LoginPage from "pages/login/page";
 import { NavBar } from "components/navigation/NavBar";
+import Nav from "components/navbar/Nav";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
@@ -33,17 +33,19 @@ export default async function RootLayout({
     <html lang="en">
       <body className={poppins.className}>
         <StyledComponentsRegistry>
-          <AnimatedBackground />
           {session?.user ? (
-            <LayoutGrid>
-              <SidebarContainer>
-                <Sidebar />
-              </SidebarContainer>
-              <NavbarContainer>
-                <NavBar />
-              </NavbarContainer>
-              <Main>{children}</Main>
-            </LayoutGrid>
+            <>
+              <LayoutGrid>
+                <SidebarContainer>
+                  {/*<Sidebar />*/}
+                  <Nav />
+                </SidebarContainer>
+                <NavbarContainer>
+                  <NavBar />
+                </NavbarContainer>
+                <Main>{children}</Main>
+              </LayoutGrid>
+            </>
           ) : (
             <LoginPage />
           )}

@@ -4,4 +4,5 @@ export enum StyleColors {
   red = "var(--error-failure-100)",
   orange = "var(--error-warning-100)",
   lightGrey = "var(--primary-black-10)",
+  
 }
