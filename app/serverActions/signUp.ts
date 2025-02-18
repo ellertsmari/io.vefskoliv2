@@ -5,6 +5,8 @@ import { signIn, getUser } from "../../auth";
 import { User } from "../models/user";
 import { z } from "zod";
 
+import { connectToDatabase } from "./mongoose-connector";
+
 type SignupFormState =
   | {
       errors?: {
@@ -18,6 +20,9 @@ type SignupFormState =
 
 export async function signUp(state: SignupFormState, formData: FormData) {
   // Validate form fields
+
+  await connectToDatabase();
+
   const validatedFields = SignupFormSchema.safeParse({
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
@@ -48,6 +53,8 @@ export async function signUp(state: SignupFormState, formData: FormData) {
       role: "user",
     });
   } catch (error) {
+    console.log(error);
+
     return {
       success: false,
       message: "Failed to create user. May already exist.",
