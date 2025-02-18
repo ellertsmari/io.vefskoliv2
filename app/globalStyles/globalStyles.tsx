@@ -14,6 +14,7 @@ export const FullScreenWrapper = styled(Wrapper)`
   justify-content: center;
   width: 100dvw;
   height: 100dvh;
+  color: white;
 `;
 
 export const Border = styled(Wrapper)`

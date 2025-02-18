@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "globalStyles/globals.css";
 import StyledComponentsRegistry from "utils/registry";
-import AnimatedBackground from "globalStyles/animatedBackground";
 import {
   LayoutGrid,
   SidebarContainer,
@@ -33,7 +32,6 @@ export default async function RootLayout({
     <html lang="en">
       <body className={poppins.className}>
         <StyledComponentsRegistry>
-          <AnimatedBackground />
           {session?.user ? (
             <LayoutGrid>
               <SidebarContainer>
