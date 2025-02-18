@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 const breakpoint = "768px";
 
+
 export const LayoutGrid = styled.div`
   display: grid;
   grid-template-rows: auto 15fr;
@@ -25,6 +26,7 @@ export const LayoutGrid = styled.div`
 `;
 
 export const SidebarContainer = styled.div`
+  
   max-height: 100dvh;
   width: 100%;
   grid-area: sidebar;

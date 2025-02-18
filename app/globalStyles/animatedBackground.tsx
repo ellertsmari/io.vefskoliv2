@@ -43,8 +43,8 @@ const AnimatedBackground = () => {
           y2="810.5"
           gradientUnits="userSpaceOnUse"
         >
-          <motion.stop stopColor="#7849DD" />
-          <motion.stop offset="1" stopColor="#D9D9D9" stopOpacity="0" />
+          <motion.stop stopColor="red" />
+          <motion.stop offset="1" stopColor="red" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_397_3379"
@@ -54,8 +54,8 @@ const AnimatedBackground = () => {
           y2="813"
           gradientUnits="userSpaceOnUse"
         >
-          <motion.stop stopColor="#A3A1F3" />
-          <motion.stop offset="1" stopColor="#D9D9D9" stopOpacity="0" />
+          <motion.stop stopColor="red" />
+          <motion.stop offset="1" stopColor="red" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="paint2_linear_397_3379"
@@ -65,8 +65,8 @@ const AnimatedBackground = () => {
           y2="811.5"
           gradientUnits="userSpaceOnUse"
         >
-          <motion.stop stopColor="#584CDA" />
-          <motion.stop offset="1" stopColor="#D9D9D9" stopOpacity="0" />
+          <motion.stop stopColor="red" />
+          <motion.stop offset="1" stopColor="red" stopOpacity="0" />
         </linearGradient>
       </defs>
     </SvgPath>
