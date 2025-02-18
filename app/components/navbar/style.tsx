@@ -54,3 +54,7 @@ export const Icon = styled(Image)`
     filter: brightness(0);
   }
 `;
+
+export const LogOutButton = styled(Image)`
+  cursor: pointer;
+`;
