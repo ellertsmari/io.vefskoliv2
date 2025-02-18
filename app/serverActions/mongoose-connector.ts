@@ -1,9 +1,11 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_CONNECTION;
 
 if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_CONNECTION environment variable inside .env.local');
+  throw new Error(
+    "Please define the MONGODB_CONNECTION environment variable inside .env.local",
+  );
 }
 
 let cachedConnection: typeof mongoose | null = null;
