@@ -5,7 +5,8 @@ import {
   Button,
   TodoText,
   TaskItem,
-  HiddenCheckbox,
+  Checkbox,
+  HiddenTrashButton,
 } from "./style";
 import { useState } from "react";
 import Image from "next/image";
@@ -17,7 +18,7 @@ const TodoList = () => {
   );
   const [newNote, setNewNote] = useState<string>("");
 
-  // 📝 Dodawanie nowego zadania
+  // adding new task
   const handleAddNote = () => {
     if (newNote.trim() === "") return;
     setTodos((prevTodos) => [
@@ -27,7 +28,7 @@ const TodoList = () => {
     setNewNote("");
   };
 
-  // ✅ Zmiana statusu zadania (checkbox)
+  // change status of task (checkbox)
   const handleToggleComplete = (index: number) => {
     setTodos((prevTodos) =>
       prevTodos.map((todo, i) =>
@@ -36,7 +37,7 @@ const TodoList = () => {
     );
   };
 
-  // 🗑️ Usuwanie zadania
+  // delete task
   const handleDelete = (index: number) => {
     setTodos((prevTodos) => prevTodos.filter((_, i) => i !== index));
   };
@@ -48,32 +49,34 @@ const TodoList = () => {
       </Layout>
       <Placeholder>
         {todos.length === 0 ? (
-          <p style={{ textAlign: "center", color: "gray" }}>Brak notatek</p>
+          <p style={{ textAlign: "center", color: "gray" }}>Nothing in here</p>
         ) : (
           todos.map((todo, index) => (
             <TaskItem key={index}>
-              <div style={{ gap: 10 }}>
-              <button
+              <div style={{ display: "flex", gap: "4px", padding: 4 }}>
+                <HiddenTrashButton
                   style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
+                   
                   }}
                   onClick={() => handleDelete(index)}
                 >
-                  <Image style={{}} src={Trash} alt="Delete" />
-                </button>
-                <HiddenCheckbox
+                  <Image style={{width:"12px", height:"15px"}} src={Trash} alt="Delete" />
+                </HiddenTrashButton>
+                <Checkbox
                   type="checkbox"
                   checked={todo.completed}
                   onChange={() => handleToggleComplete(index)}
                 />
-              
               </div>
               <TodoText
                 style={{
                   textDecoration: todo.completed ? "line-through" : "none",
-                  color: todo.completed ? "#888" : "#333",
+                  color: todo.completed
+                    ? "var(--main-Color)"
+                    : "var(--main-Color)",
                 }}
               >
                 {todo.text}
@@ -83,8 +86,8 @@ const TodoList = () => {
         )}
       </Placeholder>
 
-      {/* 🔹 Pole do wpisywania nowego zadania */}
-      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+      {/* space for tipping new task text  */}
+      <div style={{ display: "flex", gap: "10px" }}>
         <Textwrapped
           type="text"
           name="todo"

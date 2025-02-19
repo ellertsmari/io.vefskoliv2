@@ -2,15 +2,18 @@
 
 import { startTransition, useActionState, useRef, useTransition } from "react";
 import { authenticate } from "serverActions/authenticate";
-import { Form, Logo } from "components/loginForm/style";
+import { Form, Logo, TopLeftLogo } from "components/loginForm/style";
 import { Input } from "UIcomponents/input/Input";
 import DefaultButton from "globalStyles/buttons/default";
+import LogoGif from "../../../public/loginGif.gif";
 import LogoSvg from "../../../public/logo.svg";
+
 import {
   ErrorToast,
   FullScreenWrapper,
   ButtonWrapper,
 } from "globalStyles/globalStyles";
+import Copyright from "components/copyrightText/copyrightText";
 
 export function LoginForm({
   setSelectedForm,
@@ -39,9 +42,11 @@ export function LoginForm({
   };
 
   return (
+    <>
     <FullScreenWrapper>
-      <Form ref={formRef}>
-        <Logo src={LogoSvg} alt="logo" />
+    <TopLeftLogo src={LogoSvg} alt="logo" />
+    <Form ref={formRef}>
+        <Logo src={LogoGif} alt="logo" />
         <Input id="email" type="email" name="email" label="Email" required />
         <Input
           id="password"
@@ -50,22 +55,24 @@ export function LoginForm({
           label="Password"
           required
         />
-        <ButtonWrapper>
-          <DefaultButton
-            type="button"
-            style="outlined"
-            onClick={handleGoToRegister}
-          >
-            REGISTER
-          </DefaultButton>
-          <DefaultButton
+        
+        <ButtonWrapper >
+        <DefaultButton
             type="submit"
             style="default"
             aria-disabled={isPending}
             onClick={handleLogin}
           >
-            LOGIN
+            Login
           </DefaultButton>
+          <DefaultButton
+            type="button"
+            style="default"
+            onClick={handleGoToRegister}
+          >
+            Register
+          </DefaultButton>
+        
         </ButtonWrapper>
         {errorMessage && (
           <>
@@ -73,6 +80,11 @@ export function LoginForm({
           </>
         )}
       </Form>
+      
+      <Copyright/>
+
     </FullScreenWrapper>
+            </>
+    
   );
 }
