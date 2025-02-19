@@ -1,3 +1,13 @@
-import GuidesPage from "./guides/page";
+"use client"
 
-export default GuidesPage;
+import TodoList from "../components/todoList/todo";
+
+const homePage = () => {
+  return (
+    <div>
+     <TodoList/>
+    </div>
+  );
+}
+
+export default homePage;

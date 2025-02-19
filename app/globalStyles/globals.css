@@ -23,10 +23,9 @@ li {
 }
 
 h1 {
-  font-size: 18px;
 
   @media screen and (min-width: 480px) {
-    font-size: 24px;
+    font-size: 14px;
   }
 }
 
@@ -45,6 +44,8 @@ h1 {
   --theme-module3-30: #d1d1f9; /* 30% */
   --theme-module3-10: #f0f0fd; /* 10% */
   --theme-module3-hover: #2c2b76; /* hover */
+  --main-Color: #2B5B76; /* main color */
+  --main-Lightblue: #E8F1FC; /*main light blue*/
 
   /* Error Message Colors */
   --error-success-100: #84cf6e; /* 100% */
