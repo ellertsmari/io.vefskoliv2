@@ -42,18 +42,18 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
       <Content>
         <Main>
           <Wrapper>
-            <SubTitle>DESCRIPTION</SubTitle>
+            <SubTitle>Description</SubTitle>
             <MarkdownReader>{description}</MarkdownReader>
           </Wrapper>
           <Wrapper>
             {(knowledge.length > 0 || skills.length > 0) && (
               <>
-                <SubTitle>GOALS</SubTitle>
+                <SubTitle>Goals</SubTitle>
                 <Border>
                   <Requirements>
                     {knowledge.length > 0 && (
                       <Wrapper>
-                        <BlackSubTitle>KNOWLEDGE</BlackSubTitle>
+                        <BlackSubTitle>Knowledge</BlackSubTitle>
                         {knowledge.map((knowledge, index) => {
                           return (
                             <MarkdownReader key={index}>
@@ -81,7 +81,7 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
             )}
           </Wrapper>
           <Wrapper>
-            <SubTitle>REQUIREMENTS</SubTitle>
+            <SubTitle>Requirements</SubTitle>
             <MarkdownReader>{themeIdea.description}</MarkdownReader>
           </Wrapper>
         </Main>
