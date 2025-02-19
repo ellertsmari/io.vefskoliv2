@@ -31,23 +31,8 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={poppins.className}>
-        <StyledComponentsRegistry>
-          <AnimatedBackground />
-          {session?.user ? (
-            <LayoutGrid>
-              <SidebarContainer>
-                <Sidebar />
-              </SidebarContainer>
-              <NavbarContainer>
-                <NavBar />
-              </NavbarContainer>
-              <Main>{children}</Main>
-            </LayoutGrid>
-          ) : (
-            <LoginPage />
-          )}
-        </StyledComponentsRegistry>
+      <body>
+        {children}
       </body>
     </html>
   );
