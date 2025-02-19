@@ -61,13 +61,13 @@ const Nav = () => {
           return (
             <LinkStyle
               key={index}
-              myLink={list.link}
-              pathName={pathname}
+              mylink={list.link}
+              pathname={pathname}
               href={list.link}
             >
               <Icon
-                myLink={list.link}
-                pathName={pathname}
+                mylink={list.link}
+                pathname={pathname}
                 src={list.icon}
                 alt="icons"
               ></Icon>
