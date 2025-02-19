@@ -1,7 +1,8 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { NavStyle, NavBackground, TextStyle, LinkStyle, Icon } from "./style";
-
+import { usePathname } from "next/navigation";
 import Logo from "../../../public/LOGO-navbar.svg";
 import Home from "../../../public/icons/home.svg";
 import Guide from "../../../public/icons/guides.svg";
@@ -11,6 +12,8 @@ import Resources from "../../../public/icons/resources.svg";
 import LogOut from "../../../public/icons/logOut.svg";
 
 const Nav = () => {
+  const pathname = usePathname();
+  console.log(pathname);
   const navbarList = [
     {
       icon: Home,
@@ -38,6 +41,7 @@ const Nav = () => {
       link: "/resources",
     },
   ];
+
   return (
     <NavBackground>
       <Image src={Logo} alt="vefskolinn-logo" />
@@ -45,8 +49,13 @@ const Nav = () => {
       <NavStyle>
         {navbarList.map((list) => {
           return (
-            <LinkStyle href={list.link}>
-              <Icon src={list.icon} alt="icons"></Icon>
+            <LinkStyle myLink={list.link} pathName={pathname} href={list.link}>
+              <Icon
+                myLink={list.link}
+                pathName={pathname}
+                src={list.icon}
+                alt="icons"
+              ></Icon>
               <TextStyle>{list.text}</TextStyle>
             </LinkStyle>
           );
