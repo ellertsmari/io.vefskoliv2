@@ -1,8 +1,10 @@
-import Cal from "components/calendar/Calendar";
+import CalendarScheduler from "components/calendar/Calendar";
+
+
 const Calendar = () => {
   return (
     <div>
-      <Cal />
+      <CalendarScheduler />
     </div>
   );
 };
