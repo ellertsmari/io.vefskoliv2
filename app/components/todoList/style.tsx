@@ -1,5 +1,20 @@
 import styled from "styled-components";
 
+const BREAKPOINT = "680px";
+
+
+export const MainText = styled.h1`
+  @media (max-width: ${BREAKPOINT}) {
+font-size: 12px;
+  }
+`;
+
+export const EmptyText = styled.p`
+  @media (max-width: ${BREAKPOINT}) {
+font-size: 10px;
+  }
+`;
+
 export const Layout = styled.div`
   background-color: var(--main-Color);
   border-radius: 8px;

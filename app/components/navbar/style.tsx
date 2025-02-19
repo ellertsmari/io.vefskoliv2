@@ -32,7 +32,7 @@ export const LinkStyle = styled(Link)`
   transition: 0.2s;
   border-radius: 8px;
   padding: 24px 0;
-  &: hover {
+  &:hover {
     color: black;
     background-color: white;
   }
