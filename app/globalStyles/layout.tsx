@@ -17,6 +17,7 @@ export const LayoutGrid = styled.div`
 
   @media (min-width: ${breakpoint}) {
     grid-template-columns: minmax(0, 234px) auto;
+
     grid-template-rows: auto 15fr;
     grid-template-areas:
       "sidebar navbar"
@@ -41,12 +42,8 @@ export const NavbarContainer = styled.div`
   padding: 1rem;
 `;
 export const Main = styled.div`
-  padding: 1rem;
-  max-width: 100%;
-  height: 100%;
-  overflow: scroll;
-  background-color: white;
-  border: solid 1px #6563eb;
-  border-radius: 0.8rem;
+  max-width: 307px;
+  height: 241px;
+  border-radius: 8px;
   grid-area: main;
 `;
