@@ -21,11 +21,13 @@ export const NavStyle = styled.div`
   align-items: center;
   width: 100%;
 `;
-export const LinkStyle = styled(Link)`
+export const LinkStyle = styled(Link)<{ myLink?: string; pathName?: string }>`
   width: 100%;
   display: flex;
 
-  color: white;
+  color: ${(props) => (props.myLink === props.pathName ? "black" : "white")};
+  background-color: ${(props) =>
+    props.myLink === props.pathName ? "white" : ""};
   gap: 16px;
   text-decoration: none;
   transition: 0.2s;
@@ -45,10 +47,14 @@ export const TextStyle = styled.p`
   line-height: normal;
 `;
 
-export const Icon = styled(Image)`
-  margin-left: 35%;
+export const Icon = styled(Image)<{ myLink?: string; pathName?: string }>`
+  margin-left: 25%;
   height: 20px;
   width: 20px;
+
+  filter: ${(props) =>
+    props.myLink === props.pathName ? "brightness(0)" : "brightness(100)"};
+
   ${LinkStyle}:hover & {
     filter: brightness(0);
   }

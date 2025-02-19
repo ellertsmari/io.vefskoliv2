@@ -9,7 +9,9 @@ import {
   Icon,
   LogOutButton,
 } from "./style";
+
 import { signOut } from "serverActions/signOut";
+import { usePathname } from "next/navigation";
 
 import Logo from "../../../public/LOGO-navbar.svg";
 import Home from "../../../public/icons/home.svg";
@@ -20,6 +22,8 @@ import Resources from "../../../public/icons/resources.svg";
 import LogOut from "../../../public/icons/logOut.svg";
 
 const Nav = () => {
+  const pathname = usePathname();
+  console.log(pathname);
   const navbarList = [
     {
       icon: Home,
@@ -47,6 +51,7 @@ const Nav = () => {
       link: "/resources",
     },
   ];
+
   return (
     <NavBackground>
       <Image src={Logo} alt="vefskolinn-logo" />
@@ -54,8 +59,14 @@ const Nav = () => {
       <NavStyle>
         {navbarList.map((list, index) => {
           return (
-            <LinkStyle key={index} href={list.link}>
-              <Icon src={list.icon} alt="icons"></Icon>
+            <LinkStyle myLink={list.link} pathName={pathname} href={list.link}>
+              <Icon
+                myLink={list.link}
+                pathName={pathname}
+                src={list.icon}
+                alt="icons"
+              ></Icon>
+
               <TextStyle>{list.text}</TextStyle>
             </LinkStyle>
           );
