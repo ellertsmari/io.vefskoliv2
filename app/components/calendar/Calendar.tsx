@@ -65,6 +65,7 @@ const eventTypes = [
   { name: "Extra", color: "#9c27b0" },
 ];
 
+
 const ViewToggleButton = styled.button<{ $active: boolean }>`
   background-color: ${(props) => (props.$active ? "#2B5B76" : "white")};
   color: ${(props) => (props.$active ? "white" : "#2B5B76")};
@@ -468,5 +469,3 @@ const CalendarScheduler: React.FC = () => {
 };
 
 export default CalendarScheduler;
-
-

@@ -202,8 +202,8 @@ export const Arrow = ({
 
 const defaultUserIconLabel = "Default user icon";
 export const DefaultUserIcon = ({
-  height = 100,
-  width = 100,
+  height = 64,
+  width = 64,
 }: {
   height?: number | "auto";
   width?: number | "auto";

@@ -36,10 +36,10 @@ export const SidebarContainer = styled.div`
     display: block;
   }
 `;
-export const NavbarContainer = styled.div`
+export const HeaderContainer = styled.div`
   width: 100%;
-  grid-area: navbar;
-  padding: 1rem;
+  padding: 60px;
+  padding-top: 58px;
 `;
 export const Main = styled.div`
   width: 100%;
