@@ -7,6 +7,28 @@ import moment from "moment"
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop"
 import styled from "styled-components"
 import { CircleArrowLeft, CircleArrowRight } from "lucide-react"
+<<<<<<< HEAD
+=======
+import {
+  Container,
+  Title,
+  CalendarContainer,
+  Button,
+  Overlay,
+  Dialog,
+  DialogTitle,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  Select,
+  DeleteButton,
+  NavigationContainer,
+  NavigationButton,
+  LeftNav,
+  ViewToggle
+} from './style'
+>>>>>>> 5d89f165bc94563fe681641ec36e3ca10643eb69
 
 // Import styles
 import "react-big-calendar/lib/css/react-big-calendar.css"
@@ -38,6 +60,7 @@ const eventTypes = [
   { name: "Extra", color: "#9c27b0" },
 ]
 
+<<<<<<< HEAD
 const Container = styled.div`
   padding: 1rem;
 `
@@ -177,6 +200,9 @@ const ViewToggle = styled.div`
   display: flex;
   margin-left: 1rem;
 `
+=======
+
+>>>>>>> 5d89f165bc94563fe681641ec36e3ca10643eb69
 
 const ViewToggleButton = styled.button<{ $active: boolean }>`
   background-color: ${(props) => (props.$active ? "#2B5B76" : "white")};
@@ -477,5 +503,9 @@ const CalendarScheduler: React.FC = () => {
   )
 }
 
+<<<<<<< HEAD
 export default CalendarScheduler
 
+=======
+export default CalendarScheduler
+>>>>>>> 5d89f165bc94563fe681641ec36e3ca10643eb69
