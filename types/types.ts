@@ -5,3 +5,5 @@ export type ShareableUserInfo = Partial<{
 }> & {
   name: string;
 };
+
+
