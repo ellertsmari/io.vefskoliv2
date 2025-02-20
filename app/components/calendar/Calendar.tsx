@@ -7,8 +7,6 @@ import moment from "moment"
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop"
 import styled from "styled-components"
 import { CircleArrowLeft, CircleArrowRight } from "lucide-react"
-<<<<<<< HEAD
-=======
 import {
   Container,
   Title,
@@ -28,7 +26,6 @@ import {
   LeftNav,
   ViewToggle
 } from './style'
->>>>>>> 5d89f165bc94563fe681641ec36e3ca10643eb69
 
 // Import styles
 import "react-big-calendar/lib/css/react-big-calendar.css"
@@ -60,149 +57,6 @@ const eventTypes = [
   { name: "Extra", color: "#9c27b0" },
 ]
 
-<<<<<<< HEAD
-const Container = styled.div`
-  padding: 1rem;
-`
-
-const Title = styled.h1`
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #2B5B76;
-`
-
-const CalendarContainer = styled.div`
-  height: 500px;
-`
-
-const Button = styled.button`
-  background-color: #3174ad;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 1rem;
-
-  &:hover {
-    background-color: #2a5885;
-  }
-`
-
-const Overlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`
-
-const Dialog = styled.div`
-  background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  
-`
-
-const DialogTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #2B5B76;
-  
-`
-
-const Form = styled.form`
-  display: grid;
-  gap: 1rem;
-  
-`
-
-const FormGroup = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 3fr;
-  align-items: center;
-  gap: 1rem;
-  
-  
-`
-
-const Label = styled.label`
-  text-align: right;
-  color: #2B5B76;
-
-  
-`
-
-const Input = styled.input`
-  padding: 0.5rem;
-  border: 1px solid #2B5B76;
-  border-radius: 4px;
-  &:focus {
-    outline: none;  
-  }
-`
-
-const Select = styled.select`
-  padding: 0.5rem;
-  border: 1px solid #2B5B76;
-  border-radius: 4px;
-  background-color: transparent;
-  &:focus {
-    outline: none;  
-  }
-`
-
-
-
-
-const DeleteButton = styled(Button)`
-  background-color: #f44336;
-
-  &:hover {
-    background-color: #d32f2f;
-  }
-`
-
-const NavigationContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  color: #2B5B76;
-  align-content: center;
-`
-
-const NavigationButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.5rem;
-  color: #2B5B76;`
-
-
-const LeftNav = styled.div `
-  
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-`
-
-const ViewToggle = styled.div`
-  display: flex;
-  margin-left: 1rem;
-`
-=======
-
->>>>>>> 5d89f165bc94563fe681641ec36e3ca10643eb69
 
 const ViewToggleButton = styled.button<{ $active: boolean }>`
   background-color: ${(props) => (props.$active ? "#2B5B76" : "white")};
@@ -503,9 +357,5 @@ const CalendarScheduler: React.FC = () => {
   )
 }
 
-<<<<<<< HEAD
 export default CalendarScheduler
 
-=======
-export default CalendarScheduler
->>>>>>> 5d89f165bc94563fe681641ec36e3ca10643eb69
