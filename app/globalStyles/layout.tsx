@@ -42,7 +42,7 @@ export const HeaderContainer = styled.div`
   padding-top: 58px;
 `;
 export const Main = styled.div`
-  max-width: 307px;
+  width: 100%;
   height: 241px;
   border-radius: 8px;
   grid-area: main;

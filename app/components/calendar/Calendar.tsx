@@ -1,12 +1,20 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Calendar, momentLocalizer, type SlotInfo, type Event as CalendarEvent, type View } from "react-big-calendar"
-import moment from "moment"
-import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop"
-import styled from "styled-components"
-import { CircleArrowLeft, CircleArrowRight } from "lucide-react"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { addEvent, updateEvent, getEvents } from "serverActions/getEvents";
+import { EventType } from "../../models/event";
+import {
+  Calendar,
+  momentLocalizer,
+  type SlotInfo,
+  type Event as CalendarEvent,
+  type View,
+} from "react-big-calendar";
+import moment from "moment";
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
+import styled from "styled-components";
+import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
 import {
   Container,
   Title,
@@ -24,29 +32,29 @@ import {
   NavigationContainer,
   NavigationButton,
   LeftNav,
-  ViewToggle
-} from './style'
+  ViewToggle,
+} from "./style";
 
 // Import styles
-import "react-big-calendar/lib/css/react-big-calendar.css"
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css"
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 // Setup the localizer for react-big-calendar
-const localizer = momentLocalizer(moment)
+const localizer = momentLocalizer(moment);
 
 // Create a DnD Calendar
-const DnDCalendar = withDragAndDrop<Event, object>(Calendar as any)
+const DnDCalendar = withDragAndDrop<Event, object>(Calendar as any);
 
 interface Event extends CalendarEvent {
-  id: string
-  title: string
-  start: Date
-  end: Date
-  color: string
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  color: string;
 }
 
-type CalendarProps = React.ComponentProps<typeof Calendar<Event, object>>
-type DnDCalendarProps = CalendarProps 
+type CalendarProps = React.ComponentProps<typeof Calendar<Event, object>>;
+type DnDCalendarProps = CalendarProps;
 
 const eventTypes = [
   { name: "Module", color: "#2B5B76" },
@@ -55,7 +63,7 @@ const eventTypes = [
   { name: "Group project", color: "#C54C4C" },
   { name: "One on One", color: "#60A848" },
   { name: "Extra", color: "#9c27b0" },
-]
+];
 
 
 const ViewToggleButton = styled.button<{ $active: boolean }>`
@@ -72,20 +80,20 @@ const ViewToggleButton = styled.button<{ $active: boolean }>`
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
   }
-`
+`;
 
 const Legend = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   margin-top: 1rem;
-`
+`;
 
 const LegendItem = styled.div`
   display: flex;
   align-items: center;
   margin: 0.5rem;
-`
+`;
 
 const LegendColor = styled.div<{ color: string }>`
   width: 20px;
@@ -93,32 +101,32 @@ const LegendColor = styled.div<{ color: string }>`
   border-radius: 50%;
   background-color: ${(props) => props.color};
   margin-right: 0.5rem;
-`
+`;
 
 const CustomToolbar: React.FC<any> = (toolbar) => {
   const goToBack = () => {
-    toolbar.onNavigate("PREV")
-  }
+    toolbar.onNavigate("PREV");
+  };
 
   const goToNext = () => {
-    toolbar.onNavigate("NEXT")
-  }
+    toolbar.onNavigate("NEXT");
+  };
 
   const label = () => {
-    const date = toolbar.date
+    const date = toolbar.date;
     if (toolbar.view === "month") {
-      return moment(date).format("MMMM YYYY")
+      return moment(date).format("MMMM YYYY");
     }
     if (toolbar.view === "week") {
-      const start = moment(date).startOf("week").format("MMM D")
-      const end = moment(date).endOf("week").format("MMM D, YYYY")
-      return `${start} - ${end}`
+      const start = moment(date).startOf("week").format("MMM D");
+      const end = moment(date).endOf("week").format("MMM D, YYYY");
+      return `${start} - ${end}`;
     }
     if (toolbar.view === "day") {
-      return moment(date).format("dddd, MMMM D, YYYY")
+      return moment(date).format("dddd, MMMM D, YYYY");
     }
-    return ""
-  }
+    return "";
+  };
 
   return (
     <NavigationContainer>
@@ -126,144 +134,205 @@ const CustomToolbar: React.FC<any> = (toolbar) => {
         <NavigationButton onClick={goToBack}>
           <CircleArrowLeft />
         </NavigationButton>
-        <span style={{ margin: "0 10px"}}>{label()}</span>
+        <span style={{ margin: "0 10px" }}>{label()}</span>
         <NavigationButton onClick={goToNext}>
           <CircleArrowRight />
         </NavigationButton>
       </LeftNav>
       <ViewToggle>
-        <ViewToggleButton onClick={() => toolbar.onView("month")} $active={toolbar.view === "month" }>
+        <ViewToggleButton
+          onClick={() => toolbar.onView("month")}
+          $active={toolbar.view === "month"}
+        >
           Month
         </ViewToggleButton>
-        <ViewToggleButton onClick={() => toolbar.onView("week")} $active={toolbar.view === "week" }>
+        <ViewToggleButton
+          onClick={() => toolbar.onView("week")}
+          $active={toolbar.view === "week"}
+        >
           Week
         </ViewToggleButton>
       </ViewToggle>
     </NavigationContainer>
-  )
-}
+  );
+};
 
 const CalendarScheduler: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([])
-  const [newEventTitle, setNewEventTitle] = useState("")
-  const [newEventDate, setNewEventDate] = useState("")
-  const [newEventStart, setNewEventStart] = useState("")
-  const [newEventEnd, setNewEventEnd] = useState("")
-  const [newEventType, setNewEventType] = useState(eventTypes[0].name)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null)
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const [view, setView] = useState<View>("month")
+  const [events, setEvents] = useState<Event[]>([]);
+  const [newEventTitle, setNewEventTitle] = useState("");
+  const [newEventDate, setNewEventDate] = useState("");
+  const [newEventStart, setNewEventStart] = useState("");
+  const [newEventEnd, setNewEventEnd] = useState("");
+  const [newEventType, setNewEventType] = useState(eventTypes[0].name);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<View>("month");
+
+  useEffect(() => {
+    const getSchedule = async () => {
+      const dbEvents = (await getEvents()) as Event[];
+      // dbEvents.map (( x ) => delete  x.createdAt )
+      setEvents([...dbEvents]);
+    };
+    getSchedule();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dialogRef.current && !dialogRef.current.contains(event.target as Node)) {
-        setIsDialogOpen(false)
+      if (
+        dialogRef.current &&
+        !dialogRef.current.contains(event.target as Node)
+      ) {
+        setIsDialogOpen(false);
       }
-    }
+    };
 
     if (isDialogOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [isDialogOpen])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDialogOpen]);
 
   const addOrUpdateEvent = () => {
+    console.log("addOrUpdateEvadsdasdasdasdasdasdasdxent");
+
     if (newEventTitle && newEventDate && newEventStart && newEventEnd) {
       const eventData: Event = {
-        id: editingEvent ? editingEvent.id : Math.random().toString(36).substr(2, 9),
+        id: editingEvent
+          ? editingEvent.id
+          : Math.random().toString(36).substr(2, 9),
         title: newEventTitle,
         start: new Date(`${newEventDate} ${newEventStart}`),
         end: new Date(`${newEventDate} ${newEventEnd}`),
-        color: eventTypes.find((type) => type.name === newEventType)?.color || eventTypes[0].color,
-      }
+        color:
+          eventTypes.find((type) => type.name === newEventType)?.color ||
+          eventTypes[0].color,
+      };
 
       if (editingEvent) {
-        setEvents(events.map((e) => (e.id === editingEvent.id ? eventData : e)))
+        setEvents(
+          events.map((e) => (e.id === editingEvent.id ? eventData : e))
+        );
+        updateEvent(eventData);
       } else {
-        setEvents([...events, eventData])
+        setEvents([...events, eventData]);
+        addEvent(eventData as EventType);
       }
 
-      setNewEventTitle("")
-      setNewEventDate("")
-      setNewEventStart("")
-      setNewEventEnd("")
-      setNewEventType(eventTypes[0].name)
-      setIsDialogOpen(false)
-      setEditingEvent(null)
+      setNewEventTitle("");
+      setNewEventDate("");
+      setNewEventStart("");
+      setNewEventEnd("");
+      setNewEventType(eventTypes[0].name);
+      setIsDialogOpen(false);
+      setEditingEvent(null);
     }
-  }
+  };
 
-  const moveEvent = ({ event, start, end }: { event: Event; start: Date; end: Date }) => {
-    const idx = events.indexOf(event)
-    const updatedEvent = { ...event, start, end }
+  const moveEvent = ({
+    event,
+    start,
+    end,
+  }: {
+    event: Event;
+    start: Date;
+    end: Date;
+  }) => {
+    const idx = events.indexOf(event);
+    const updatedEvent = { ...event, start, end };
 
-    const nextEvents = [...events]
-    nextEvents.splice(idx, 1, updatedEvent)
+    const nextEvents = [...events];
+    nextEvents.splice(idx, 1, updatedEvent);
 
-    setEvents(nextEvents)
-  }
+    setEvents(nextEvents);
+    updateEvent(updatedEvent);
+  };
 
-  const resizeEvent = ({ event, start, end }: { event: Event; start: Date; end: Date }) => {
-    const idx = events.indexOf(event)
-    const updatedEvent = { ...event, start, end }
+  const resizeEvent = ({
+    event,
+    start,
+    end,
+  }: {
+    event: Event;
+    start: Date;
+    end: Date;
+  }) => {
+    const idx = events.indexOf(event);
+    const updatedEvent = { ...event, start, end };
 
-    const nextEvents = [...events]
-    nextEvents.splice(idx, 1, updatedEvent)
+    const nextEvents = [...events];
+    nextEvents.splice(idx, 1, updatedEvent);
 
-    setEvents(nextEvents)
-  }
+    setEvents(nextEvents);
+    updateEvent(updatedEvent);
+  };
 
   const handleSelectEvent = (event: Event) => {
-    setEditingEvent(event)
-    setNewEventTitle(event.title)
-    setNewEventDate(moment(event.start).format("YYYY-MM-DD"))
-    setNewEventStart(moment(event.start).format("HH:mm"))
-    setNewEventEnd(moment(event.end).format("HH:mm"))
-    setNewEventType(eventTypes.find((type) => type.color === event.color)?.name || eventTypes[0].name)
-    setIsDialogOpen(true)
-  }
+    setEditingEvent(event);
+    setNewEventTitle(event.title);
+    setNewEventDate(moment(event.start).format("YYYY-MM-DD"));
+    setNewEventStart(moment(event.start).format("HH:mm"));
+    setNewEventEnd(moment(event.end).format("HH:mm"));
+    setNewEventType(
+      eventTypes.find((type) => type.color === event.color)?.name ||
+        eventTypes[0].name
+    );
+    setIsDialogOpen(true);
+  };
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
-    setNewEventDate(moment(slotInfo.start).format("YYYY-MM-DD"))
-    setNewEventStart(moment(slotInfo.start).format("HH:mm"))
-    setNewEventEnd(moment(slotInfo.end).format("HH:mm"))
-    setEditingEvent(null)
-    setIsDialogOpen(true)
-  }
+    setNewEventDate(moment(slotInfo.start).format("YYYY-MM-DD"));
+    setNewEventStart(moment(slotInfo.start).format("HH:mm"));
+    setNewEventEnd(moment(slotInfo.end).format("HH:mm"));
+    setEditingEvent(null);
+    setIsDialogOpen(true);
+  };
 
   const deleteEvent = () => {
     if (editingEvent) {
-      const updatedEvents = events.filter((e) => e.id !== editingEvent.id)
-      setEvents(updatedEvents)
-      setEditingEvent(null)
-      setIsDialogOpen(false)
+      const updatedEvents = events.filter((e) => e.id !== editingEvent.id);
+      setEvents(updatedEvents);
+      setEditingEvent(null);
+      setIsDialogOpen(false);
     }
-  }
+  };
 
   const eventStyleGetter: CalendarProps["eventPropGetter"] = (event) => {
-    const typedEvent = event as Event
+    const typedEvent = event as Event;
     return {
       style: {
         backgroundColor: typedEvent.color,
       },
-    }
-  }
+    };
+  };
 
   return (
     <Container>
-      <Title>Calendar Scheduler</Title>
+      <Title> Schedule</Title>
       <CalendarContainer>
         <DnDCalendar
           localizer={localizer}
           events={events}
           startAccessor={(event: Event) => event.start}
           endAccessor={(event: Event) => event.end}
-          onEventDrop={({ event, start, end }) => moveEvent({ event: event as Event, start:(new Date(start)), end:(new Date(end)) })}
-          onEventResize={({ event, start, end }) => resizeEvent({ event: event as Event, start:(new Date(start)), end:(new Date(end)) })}
+          onEventDrop={({ event, start, end }) =>
+            moveEvent({
+              event: event as Event,
+              start: new Date(start),
+              end: new Date(end),
+            })
+          }
+          onEventResize={({ event, start, end }) =>
+            resizeEvent({
+              event: event as Event,
+              start: new Date(start),
+              end: new Date(end),
+            })
+          }
           resizable
           selectable
           onSelectSlot={handleSelectSlot}
@@ -274,7 +343,8 @@ const CalendarScheduler: React.FC = () => {
           view={view}
           onView={(newView: View) => setView(newView)}
           formats={{
-            timeGutterFormat: "HH:mm"}}
+            timeGutterFormat: "HH:mm",
+          }}
           components={{
             toolbar: CustomToolbar,
           }}
@@ -284,52 +354,89 @@ const CalendarScheduler: React.FC = () => {
       {isDialogOpen && (
         <Overlay onClick={() => setIsDialogOpen(false)}>
           <Dialog ref={dialogRef} onClick={(e) => e.stopPropagation()}>
-            <DialogTitle>{editingEvent ? "Edit Event" : "Add New Event"}</DialogTitle>
+            <DialogTitle>
+              {editingEvent ? "Edit Event" : "Add New Event"}
+            </DialogTitle>
             <Form
               onSubmit={(e) => {
-                e.preventDefault()
-                addOrUpdateEvent()
+                e.preventDefault();
+                addOrUpdateEvent();
               }}
             >
               <FormGroup>
                 <Label htmlFor="title">Title</Label>
-                <Input id="title" value={newEventTitle} onChange={(e) => setNewEventTitle(e.target.value)} />
+                <Input
+                  id="title"
+                  value={newEventTitle}
+                  onChange={(e) => setNewEventTitle(e.target.value)}
+                />
               </FormGroup>
               <FormGroup>
                 <Label htmlFor="date">Date</Label>
-                <Input id="date" type="date" value={newEventDate} onChange={(e) => setNewEventDate(e.target.value)} />
+                <Input
+                  id="date"
+                  type="date"
+                  value={newEventDate}
+                  onChange={(e) => setNewEventDate(e.target.value)}
+                />
               </FormGroup>
               <FormGroup>
                 <Label htmlFor="start">Start</Label>
-                <Select id="start" value={newEventStart} onChange={(e) => setNewEventStart(e.target.value)}>
-                  {Array.from({ length: 26 }, (_, i) => i + 14).map((halfHour) => {
-                    const hour = Math.floor(halfHour / 2)
-                    const minute = halfHour % 2 === 0 ? "00" : "30"
-                    return (
-                      <option key={halfHour} value={`${hour.toString().padStart(2, "0")}:${minute}`}>
-                        {`${hour}:${minute}`}
-                      </option>
-                    )
-                  })}
+                <Select
+                  id="start"
+                  value={newEventStart}
+                  onChange={(e) => setNewEventStart(e.target.value)}
+                >
+                  {Array.from({ length: 26 }, (_, i) => i + 14).map(
+                    (halfHour) => {
+                      const hour = Math.floor(halfHour / 2);
+                      const minute = halfHour % 2 === 0 ? "00" : "30";
+                      return (
+                        <option
+                          key={halfHour}
+                          value={`${hour
+                            .toString()
+                            .padStart(2, "0")}:${minute}`}
+                        >
+                          {`${hour}:${minute}`}
+                        </option>
+                      );
+                    }
+                  )}
                 </Select>
               </FormGroup>
               <FormGroup>
                 <Label htmlFor="end">End</Label>
-                <Select id="end" value={newEventEnd} onChange={(e) => setNewEventEnd(e.target.value)}>
-                  {Array.from({ length: 26 }, (_, i) => i + 14).map((halfHour) => {
-                    const hour = Math.floor(halfHour / 2)
-                    const minute = halfHour % 2 === 0 ? "00" : "30"
-                    return (
-                      <option key={halfHour} value={`${hour.toString().padStart(2, "0")}:${minute}`}>
-                        {`${hour}:${minute}`}
-                      </option>
-                    )
-                  })}
+                <Select
+                  id="end"
+                  value={newEventEnd}
+                  onChange={(e) => setNewEventEnd(e.target.value)}
+                >
+                  {Array.from({ length: 26 }, (_, i) => i + 14).map(
+                    (halfHour) => {
+                      const hour = Math.floor(halfHour / 2);
+                      const minute = halfHour % 2 === 0 ? "00" : "30";
+                      return (
+                        <option
+                          key={halfHour}
+                          value={`${hour
+                            .toString()
+                            .padStart(2, "0")}:${minute}`}
+                        >
+                          {`${hour}:${minute}`}
+                        </option>
+                      );
+                    }
+                  )}
                 </Select>
               </FormGroup>
               <FormGroup>
                 <Label htmlFor="type">Event Type</Label>
-                <Select id="type" value={newEventType} onChange={(e) => setNewEventType(e.target.value)}>
+                <Select
+                  id="type"
+                  value={newEventType}
+                  onChange={(e) => setNewEventType(e.target.value)}
+                >
                   {eventTypes.map((type) => (
                     <option key={type.name} value={type.name}>
                       {type.name}
@@ -337,8 +444,12 @@ const CalendarScheduler: React.FC = () => {
                   ))}
                 </Select>
               </FormGroup>
-              <Button type="submit">{editingEvent ? "Update Event" : "Add Event"}</Button>
-              {editingEvent && <DeleteButton onClick={deleteEvent}>Delete Event</DeleteButton>}
+              <Button type="submit">
+                {editingEvent ? "Update Event" : "Add Event"}
+              </Button>
+              {editingEvent && (
+                <DeleteButton onClick={deleteEvent}>Delete Event</DeleteButton>
+              )}
             </Form>
           </Dialog>
         </Overlay>
@@ -354,8 +465,7 @@ const CalendarScheduler: React.FC = () => {
         </Legend>
       )}
     </Container>
-  )
-}
+  );
+};
 
-export default CalendarScheduler
-
+export default CalendarScheduler;
