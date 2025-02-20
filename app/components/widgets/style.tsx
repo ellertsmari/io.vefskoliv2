@@ -41,7 +41,6 @@ export const ProgressWrapper = styled.div`
   flex-direction: column; /* Stack label, progress bar, and percentage */
   align-items: flex-start; /* Align content to the left */
   gap: 5px; /* Space between elements */
-  width: ; /* Fixed width */
 `;
 
 // Style to display the percentage
@@ -74,7 +73,7 @@ export const BoxContainer = styled.div`
   min-height: 110px;
   border: 1px solid #E8F1FC;
   border-radius: 8px;
-  padding: 20px 5px; /* Increased padding-top */
+  padding: 20px 10px; /* Increased padding-top */
   background-color: #ffffff;
   margin: 10px auto; /* Centers the box */
 `;
