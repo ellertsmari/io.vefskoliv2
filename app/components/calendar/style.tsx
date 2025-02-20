@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 export const Container = styled.div`
   padding: 1rem;
+  width: 100%;
 `;
 
 export const Title = styled.h1`
@@ -12,8 +13,6 @@ export const Title = styled.h1`
 `;
 
 export const CalendarContainer = styled.div`
-  display: flex;
-  justify-content: center;
   height: 600px;
   width: 100%;
 `;

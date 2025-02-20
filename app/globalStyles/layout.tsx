@@ -41,7 +41,7 @@ export const NavbarContainer = styled.div`
   padding: 1rem;
 `;
 export const Main = styled.div`
-  max-width: 307px;
+  width: 100%;
   height: 241px;
   border-radius: 8px;
   grid-area: main;
