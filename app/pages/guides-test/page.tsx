@@ -1,9 +1,9 @@
 "use client";
-import Guides from "../../components/guides";
+import Guides from "../../components/guidesWidget/guidesLayout";
 const HallOfFame = () => {
   return (
     <div>
-      <h1>Hæhæ</h1>
+      <h1>Vefskólinn</h1>
       <Guides></Guides>
     </div>
   );
