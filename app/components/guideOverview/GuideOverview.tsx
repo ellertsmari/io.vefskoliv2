@@ -46,9 +46,12 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
             <MarkdownReader>{description}</MarkdownReader>
           </Wrapper>
           <Wrapper>
+            <Wrapper>
+              <MarkdownReader>{themeIdea.description}</MarkdownReader>
+            </Wrapper>
             {(knowledge.length > 0 || skills.length > 0) && (
               <>
-                <SubTitle>Goals</SubTitle>
+                <SubTitle>Requirements</SubTitle>
                 <Border>
                   <Requirements>
                     {knowledge.length > 0 && (
@@ -80,10 +83,6 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
               </>
             )}
           </Wrapper>
-          <Wrapper>
-            <SubTitle>Requirements</SubTitle>
-            <MarkdownReader>{themeIdea.description}</MarkdownReader>
-          </Wrapper>
         </Main>
         <Side>
           {allMaterials.length > 0 && (
@@ -104,7 +103,7 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
                           {material.title}
                         </MaterialButton>
                       </a>
-                    ) : null
+                    ) : null,
                   )}
                 </MaterialsWrapper>
               </Border>
