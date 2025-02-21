@@ -8,7 +8,7 @@ const Countdown = ( ) => {
     const [weeks, setWeeks] = useState(0)
     const [days, setDays] = useState(0)
     const [hours, setHours] = useState(0)
-    const [min, setMin] = useState(0)
+    const [minuets, setMinuets] = useState(0)
     const [sec, setSec] = useState(0)
 
     useEffect (() =>{
@@ -32,7 +32,7 @@ const Countdown = ( ) => {
     setHours(h);
 
     const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    setMin(m);
+    setMinuets(m);
 
     const s = Math.floor((difference % (1000 * 60)) / 1000);
     setSec(s);
@@ -70,12 +70,12 @@ return () => clearInterval(interval);
                     <Label>Hours</Label>    
             </TimerSegment>  
                 <TimerSegment>
-                    <Time>{min.toString().slice(0)}</Time>
-                    <Label>Min</Label>  
+                    <Time>{minuets.toString().slice(0)}</Time>
+                    <Label>Minuets</Label>  
             </TimerSegment>  
                 <TimerSegment>
                     <Time>{sec.toString().slice(0)}</Time>
-                    <Label>Sec</Label>
+                    <Label>Seconds</Label>
                 </TimerSegment>
                 </TimerInner>
             </TimerWrapper>
