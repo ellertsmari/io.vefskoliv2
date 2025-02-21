@@ -8,10 +8,12 @@ export const NavBackground = styled.div`
   padding: 86px 0;
   display: flex;
   height: 100%;
+  width: 234px;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-
+  position: fixed;
+  left: 0;
   background: linear-gradient(180deg, #3c7d9c 0%, #2b5b76 100%);
 `;
 
@@ -19,7 +21,7 @@ export const NavStyle = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  width: 95%;
 `;
 export const LinkStyle = styled(Link)<{ mylink?: string; pathname?: string }>`
   width: 100%;
