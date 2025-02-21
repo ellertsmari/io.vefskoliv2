@@ -41,3 +41,13 @@ export const updateEvent = async (event : EvenType) => {
   
 
 
+  export const delEvent = async (event : EvenType) => {
+    await connectToDatabase();
+    (await Event.deleteOne({id:event.id}, event)) || null;
+    return event;
+  };
+  
+
+
+
+
