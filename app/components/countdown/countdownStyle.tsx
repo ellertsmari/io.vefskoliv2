@@ -3,7 +3,9 @@ import styled from "styled-components";
 
 export const Container = styled.div`
    display:flex;
-
+   width: 772px;
+   height:187px;
+   border: 5 px solid black;
    
   
     
@@ -25,30 +27,30 @@ export const TimerTitle = styled(TimerSegment)`
 `
 
 export const Time = styled.div`
-display: flex;
-width: 50px;
-height:50px;
-justify-content: center;
-align-items: center;
-border-radius: 6px;
-border: 1px solid #7C444F;
-background: var(--light-beige, #FDFAF8);
-font-family: Karma;
-font-size: 32px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
+    display: flex;
+    width: 50px;
+    height:50px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    border: 1px solid #7C444F;
+    background: var(--light-beige, #FDFAF8);
+    font-family: Karma;
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 
 `
 export const Label = styled.div`
-color: var(--100-Burgundy, #7C2D38);
-font-family: Karma;
-font-size: 12px;
-text-align: center;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-margin: 5px;
+    color: var(--100-Burgundy, #7C2D38);
+    font-family: Karma;
+    font-size: 12px;
+    text-align: center;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    margin: 5px;
 
 `
 
@@ -68,6 +70,18 @@ export const TimerInner= styled.div `
     font-weight: 700;
     align-items:center;
 
-    
 
+   `
+
+   export const FrameCountdown = styled.div `
+    display: flex;
+    width: 772px;
+    height: 187px;
+     justify-content: center;
+    align-items: center;
+    align-content: center;
+    border-radius: 16px;
+    background-color: rgba(250, 247, 242, 1);
+    box-shadow: 0px 4px 32px 0px rgba(124, 68, 79, 0.50); 
+   
    `

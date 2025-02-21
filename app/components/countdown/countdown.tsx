@@ -1,6 +1,6 @@
 'use client'
 import {useState, useEffect} from 'react';
-import {Container, TimerSegment, Time, Label, TimerWrapper, TimerInner, Headline, TimerTitle } from './countdownStyle'
+import {Container, TimerSegment, Time, Label, TimerWrapper, TimerInner, Headline, TimerTitle,  FrameCountdown} from './countdownStyle'
 
 
 const Countdown = ( ) => {
@@ -49,9 +49,9 @@ return () => clearInterval(interval);
 
     return (
        <Container>
+         <FrameCountdown>
         {lasPalmas ? <h1>Hólímólí! Það er komið að þessu!! </h1>:null}
-        
-
+       
         <TimerWrapper>
             <TimerInner>
                 <TimerTitle>
@@ -79,7 +79,7 @@ return () => clearInterval(interval);
                 </TimerSegment>
                 </TimerInner>
             </TimerWrapper>
-        
+            </FrameCountdown>
     </Container>   
              );      
           };
