@@ -1,9 +1,10 @@
 'use client'
+import Groups from "components/groups/groupsLayout";
 
 const HallOfFame = () => {
-  return ( <div>
-      <h1>Hall Of Fame Page</h1>
-  </div> );
+  return (<div>
+    <Groups />
+  </div>);
 }
 
 export default HallOfFame;
