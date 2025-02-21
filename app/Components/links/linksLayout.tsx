@@ -15,19 +15,27 @@ const Links = () => {
         <LinksGroup>
 
           <GitHubIcon>
-            <Image alt="GitHub" src={Link1} />
+            <a href="https://www.github.com">
+              <Image alt="GitHub" src={Link1} />
+            </a>
           </GitHubIcon>
 
           <SlackIcon>
-            <Image alt="Slack" src={Link2} />
+            <a href="https://www.slack.com">
+              <Image alt="Slack" src={Link2} />
+            </a>
           </SlackIcon>
 
           <FigmaIcon>
-            <Image alt="Figma" src={Link3} />
+            <a href="https://www.figma.com">
+              <Image alt="Figma" src={Link3} />
+            </a>
           </FigmaIcon>
 
           <LinkedInIcon>
-            <Image alt="LinkedIn" src={Link4} />
+            <a href="https://www.linkedin.com">
+              <Image alt="LinkedIn" src={Link4} />
+            </a>
           </LinkedInIcon>
 
         </LinksGroup>
