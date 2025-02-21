@@ -6,9 +6,12 @@ import "globalStyles/globals.css";
 
 
 
+
 import { PageWrapper, NavWrapper } from "./style";
 import Navbar from "components/navbar/navbar";
 import Sidebar from "components/sidebar/sidebar"
+import { auth } from "../auth";
+
 
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });

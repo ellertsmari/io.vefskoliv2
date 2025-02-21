@@ -1,4 +1,5 @@
 'use client'
+
 import frame1 from "../../public/Frame1.svg"
 import Image from "next/image";
 
@@ -11,6 +12,7 @@ const landingpage = () => {
       </div>
       
  );
+
 }
 
 export default landingpage;
