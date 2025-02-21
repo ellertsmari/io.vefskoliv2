@@ -6,9 +6,9 @@ import "globalStyles/globals.css";
 
 
 
-import { PageWrapper, } from "./style";
+import { PageWrapper, NavWrapper } from "./style";
 import Navbar from "components/navbar/navbar";
-
+import Sidebar from "components/sidebar/sidebar"
 
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
@@ -25,7 +25,15 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body style={{overflowX: "hidden"}}>
-      <Navbar/>{children}
+        <PageWrapper>
+         
+      <Navbar/>
+      <Sidebar/>
+      
+      
+      
+      {children}
+      </PageWrapper>
       </body>
     </html>
   );

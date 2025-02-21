@@ -60,9 +60,6 @@ export const Nav = styled.div`
     display: flex;
     width: 100%;
     justify-content: space-between;
-
-    background: linear-gradient(to bottom,
-      rgba(117, 43, 54, 1) 0%,
-      rgba(219, 79, 99, 1) 31%,
-      rgba(117, 43, 54, 1) 88%);
+    grid-area: navbar;
+    
 `
