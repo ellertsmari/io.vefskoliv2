@@ -38,12 +38,12 @@ const Nav = () => {
     {
       icon: Schedule,
       text: "Schedule",
-      link: "/schedule" /* Schedule dont exists in pages */,
+      link: "/calendar" /* Schedule dont exists in pages */,
     },
     {
       icon: HallOfFame,
       text: "Hall of Fame",
-      link: "/hallOfFame" /* H O F dont exists in pages */,
+      link: "/halloffame" /* H O F dont exists in pages */,
     },
     {
       icon: Resources,
