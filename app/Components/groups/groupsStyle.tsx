@@ -36,7 +36,7 @@ export const Container = styled.div`
 
 export const Wrap1 = styled.div`
   display: flex;
-  margin-bottom: 12px;
+  margin-bottom: 11px;
   align-items:center
 `;
 
