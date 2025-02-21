@@ -172,7 +172,6 @@ const CalendarScheduler: React.FC = () => {
   useEffect(() => {
     const getSchedule = async () => {
       const dbEvents = (await getEvents()) as Event[];
-      // dbEvents.map (( x ) => delete  x.createdAt )
       setEvents([...dbEvents]);
     };
     getSchedule();
@@ -298,6 +297,7 @@ const CalendarScheduler: React.FC = () => {
       setEvents(updatedEvents);
       setEditingEvent(null);
       setIsDialogOpen(false);
+      updateEvent(updatedEvents)
     }
   };
 
