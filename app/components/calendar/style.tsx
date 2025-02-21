@@ -131,3 +131,43 @@ export const ViewToggle = styled.div`
   display: flex;
   margin-left: 1rem;
 `;
+
+
+
+
+export const Legend = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+`;
+
+export const LegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 0.5rem;
+`;
+
+export const LegendColor = styled.div<{ color: string }>`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: ${(props) => props.color};
+  margin-right: 0.5rem;
+`;
+
+export const ViewToggleButton = styled.button<{ $active: boolean }>`
+  background-color: ${(props) => (props.$active ? "#2B5B76" : "white")};
+  color: ${(props) => (props.$active ? "white" : "#2B5B76")};
+  border: 1px solid #3174ad;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  &:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+  &:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+`;
