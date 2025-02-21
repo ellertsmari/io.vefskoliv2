@@ -1,10 +1,19 @@
 'use client'
-import Groups from "components/groups/groupsLayout";
 
-const HallOfFame = () => {
-  return (<div>
-    <Groups />
-  </div>);
+import frame1 from "../../public/Frame1.svg"
+import Image from "next/image";
+
+const landingpage = () => {
+  return (  
+    
+     
+    <div style={{ gridArea: "main", backgroundColor: "white" }}>
+      <Image alt="background" style={{width: "100%", height: "100%", objectFit: "cover"}} src={frame1}></Image>
+      </div>
+      
+ );
+
 }
 
-export default HallOfFame;
+export default landingpage;
+
