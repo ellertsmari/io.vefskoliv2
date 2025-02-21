@@ -6,6 +6,7 @@ background-color: #FDFAF8;
 width: 502px;
 height: 313px;
 border-radius: 16px;
+box-shadow: 0px 4px 32px 0px rgba(124, 68, 79, 0.50);
 `
 
 
