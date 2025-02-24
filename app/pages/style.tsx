@@ -1,6 +1,6 @@
 'use client'
 
-import { SidebarContainer } from "globalStyles/layout";
+import { SidebarContainer } from "globalStyles/gridtemplate";
 import Image from "next/image";
 import styled from "styled-components";
 /*

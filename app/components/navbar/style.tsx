@@ -44,14 +44,14 @@ export const BoldText = styled.span`
 
 export const ProfileImage = styled(Image).attrs({
   src: profilePic,
-  width: 150,
-  height: 150,
+  width: 190,
+  height: 190,
   alt: "Profile Picture",
   
 
 })`
-  border-radius: 50%;
-  object-fit: cover;
+  
+  
 `;
 
 
@@ -63,3 +63,4 @@ export const Nav = styled.div`
     grid-area: navbar;
     
 `
+
