@@ -6,11 +6,18 @@ import StyledComponentsRegistry from "utils/registry";
 
 
 
+
 import { PageWrapper, NavWrapper } from "./style";
 
 import Navbar from "components/navbar/navbar";
 import Sidebar from "components/sidebar/sidebar"
+
 import { LayoutGrid, Main, NavbarContainer, SidebarContainer } from "globalStyles/gridtemplate";
+
+import { auth } from "../auth";
+
+
+
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
