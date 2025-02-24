@@ -1,16 +1,21 @@
 import { Container, IconImage, ModulesText1, ModulesText2 } from "./style";
-import Figmaimg from "../../assets/Component 1.svg";
 
-const ModulesInfo = () => {
+type Props = {
+  ModuleTitle: string;
+  GuidesNumber: number;
+  GuidesImage: any;
+};
+
+const ModulesInfo = ({ ModuleTitle, GuidesNumber, GuidesImage }: Props) => {
   return (
     <>
-        <Container>
-          <IconImage alt="figma icon" src={Figmaimg} />
-          <div>
-            <ModulesText1>Module 2</ModulesText1>
-            <ModulesText2>10 guides</ModulesText2>
-          </div>
-        </Container>
+      <Container>
+        <IconImage alt="figma icon" src={GuidesImage} />
+        <div>
+          <ModulesText1>{ModuleTitle}</ModulesText1>
+          <ModulesText2>{GuidesNumber} guides</ModulesText2>
+        </div>
+      </Container>
     </>
   );
 };
