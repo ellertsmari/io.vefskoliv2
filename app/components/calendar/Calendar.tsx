@@ -1,5 +1,6 @@
 "use client";
 import type React from "react";
+
 import { useState, useRef, useEffect } from "react";
 import {
   addEvent,
@@ -7,7 +8,7 @@ import {
   getEvents,
   delEvent,
 } from "serverActions/getEvents";
-import { EventType } from "../../models/event";
+// import { EventType } from "../../models/event";
 import {
   Calendar,
   momentLocalizer,
@@ -17,7 +18,7 @@ import {
 } from "react-big-calendar";
 import moment from "moment";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
+import { CircleArrowLeft, CircleArrowRight, CirclePlus } from "lucide-react";
 import {
   Container,
   Title,
@@ -42,14 +43,12 @@ import {
   ViewToggleButton,
 } from "./style";
 
-// Import styles
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
-// Setup the localizer for react-big-calendar
+
 const localizer = momentLocalizer(moment);
 
-// Create a DnD Calendar
 const DnDCalendar = withDragAndDrop<Event, object>(Calendar as any);
 
 interface Event extends CalendarEvent {
@@ -58,17 +57,20 @@ interface Event extends CalendarEvent {
   start: Date;
   end: Date;
   color: string;
+  owner: string;
+  createdAt: NativeDate;
+  updatedAt: NativeDate;
 }
 
 type CalendarProps = React.ComponentProps<typeof Calendar<Event, object>>;
 
 const eventTypes = [
-  { name: "Module", color: "#2B5B76" },
-  { name: "Lecture", color: "#EC9A4D" },
-  { name: "Viso", color: "#E5D264" },
-  { name: "Group project", color: "#C54C4C" },
-  { name: "One on One", color: "#60A848" },
-  { name: "Extra", color: "#9c27b0" },
+  { name: "Guides", color: "#007ac2" },
+  { name: "Lecture", color: "#485c35" },
+  { name: "Viso", color: "#edb400" },
+  { name: "Group project", color: "#B53A3A" },
+  { name: "One on one interview", color: "#1b998b" },
+  { name: "Extra", color: "#807FD9" },
 ];
 
 const CustomToolbar: React.FC<any> = (toolbar) => {
@@ -79,8 +81,6 @@ const CustomToolbar: React.FC<any> = (toolbar) => {
   const goToNext = () => {
     toolbar.onNavigate("NEXT");
   };
-
-
 
   const label = () => {
     const date = toolbar.date;
@@ -109,7 +109,14 @@ const CustomToolbar: React.FC<any> = (toolbar) => {
           <CircleArrowRight />
         </NavigationButton>
       </LeftNav>
-      <ViewToggle>
+
+      <ViewToggle >
+        <Button
+          onClick={toolbar.onAddEvent}
+          style={{ backgroundColor: "transparent", padding: '0px 12px' }}
+        >
+          <CirclePlus color="#2B5B76" />
+        </Button>
         <ViewToggleButton
           onClick={() => toolbar.onView("month")}
           $active={toolbar.view === "month"}
@@ -129,9 +136,10 @@ const CustomToolbar: React.FC<any> = (toolbar) => {
 
 type Props = {
   role: string;
+  userid: string;
 };
 
-const CalendarScheduler = ({ role }: Props) => {
+const CalendarScheduler = ({ role, userid }: Props) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventDate, setNewEventDate] = useState("");
@@ -173,7 +181,6 @@ const CalendarScheduler = ({ role }: Props) => {
   }, [isDialogOpen]);
 
   const addOrUpdateEvent = () => {
-
     if (
       newEventTitle &&
       newEventDate &&
@@ -191,7 +198,12 @@ const CalendarScheduler = ({ role }: Props) => {
         color:
           eventTypes.find((type) => type.name === newEventType)?.color ||
           eventTypes[0].color,
+
+        owner: userid,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
+      console.log(userid);
 
       if (editingEvent) {
         setEvents(
@@ -201,7 +213,7 @@ const CalendarScheduler = ({ role }: Props) => {
       } else {
         setEvents([...events, eventData]);
 
-        addEvent(eventData as EventType);
+        addEvent(eventData);
       }
 
       setNewEventTitle("");
@@ -230,7 +242,8 @@ const CalendarScheduler = ({ role }: Props) => {
     const nextEvents = [...events];
     nextEvents.splice(idx, 1, updatedEvent);
 
-    if (role !== "admin") {
+    if (role !== "admin" && userid !== event.owner) {
+      alert("You do not have permission to change this event.");
       return;
     }
 
@@ -252,6 +265,11 @@ const CalendarScheduler = ({ role }: Props) => {
 
     const nextEvents = [...events];
     nextEvents.splice(idx, 1, updatedEvent);
+
+    if (role !== "admin" && userid !== event.owner) {
+      alert("You do not have permission to change this event.");
+      return;
+    }
 
     setEvents(nextEvents);
     updateEvent(updatedEvent);
@@ -282,10 +300,12 @@ const CalendarScheduler = ({ role }: Props) => {
     setIsDialogOpen(true);
   };
 
-  const deleteEvent = () => {
+  const deleteEvent = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
     if (editingEvent) {
-      if (role !== "admin") {
-        alert("You cannot delete this event. Admins only.");
+      if (role !== "admin" && userid !== editingEvent.owner) {
+        alert("You do not have permission to delete this event.");
 
         return;
       }
@@ -314,7 +334,7 @@ const CalendarScheduler = ({ role }: Props) => {
           localizer={localizer}
           events={events}
           startAccessor={(event: Event) => new Date(event.start)}
-          endAccessor={(event: Event) =>  new Date(event.end)}
+          endAccessor={(event: Event) => new Date(event.end)}
           onEventDrop={({ event, start, end }) =>
             moveEvent({
               event: event as Event,
@@ -342,11 +362,15 @@ const CalendarScheduler = ({ role }: Props) => {
             timeGutterFormat: "HH:mm",
           }}
           components={{
-            toolbar: CustomToolbar,
+            toolbar: (props) => (
+              <CustomToolbar
+                {...props}
+                onAddEvent={() => setIsDialogOpen(true)}
+              />
+            ),
           }}
         />
       </CalendarContainer>
-      <Button onClick={() => setIsDialogOpen(true)}>Add Event</Button>
       {isDialogOpen && (
         <Overlay onClick={() => setIsDialogOpen(false)}>
           <Dialog ref={dialogRef} onClick={(e) => e.stopPropagation()}>
@@ -454,7 +478,9 @@ const CalendarScheduler = ({ role }: Props) => {
                 {editingEvent ? "Update Event" : "Add Event"}
               </Button>
               {editingEvent && (
-                <DeleteButton onClick={deleteEvent}>Delete Event</DeleteButton>
+                <DeleteButton onClick={(e) => deleteEvent(e)}>
+                  Delete Event
+                </DeleteButton>
               )}
             </Form>
           </Dialog>

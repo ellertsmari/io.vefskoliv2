@@ -40,9 +40,30 @@ h1 {
 }
 .rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor {
   color: rgb(255, 255, 255);
-  filter: blur(1px);
+  /* filter: blur(1px); */
   /* width: 100%; */
 }
+
+.rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor:nth-child(1) {
+  color: rgb(255, 255, 255);
+  /* filter: blur(1px); */
+  /* width: 100%; */
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor:nth-child(1) {
+  color: rgb(255, 255, 255);
+  /* filter: blur(1px); */
+  /* width: 100%; */
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor .rbc-addons-dnd-resize-ew-icon:nth-child(2n) {
+
+  border-left: 3px double;
+  width: 15px;
+
+}
+
+
 
 .rbc-day-bg:hover {
   background-color: #e8f1fc;
@@ -59,12 +80,15 @@ h1 {
 
 
 
+.rbc-header{
+  color: #2B5B76;
+}
 
 
 
-
-
-
+.rbc-label{
+  color: #2B5B76;
+}
 
 
 
