@@ -40,8 +40,6 @@ const HomePage = () => {
       </BoxContainer>
 
       <DailyPlan/>
-     <TodoList/>
-     <ToolsAndWebsites/>
      <WidgetCalendar/>
      <ToolsAndWebsites />
     </div>
