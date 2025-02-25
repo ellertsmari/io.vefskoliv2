@@ -7,10 +7,14 @@ import {
   TaskItem,
   Checkbox,
   HiddenTrashButton,
+  MainText,
+  EmptyText,
 } from "./style";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Trash from "../../../public/trash.svg";
+import { setItem } from "./localStorage";
+
 
 const TodoList = () => {
   const [todos, setTodos] = useState<{ text: string; completed: boolean }[]>(
@@ -27,6 +31,17 @@ const TodoList = () => {
     ]);
     setNewNote("");
   };
+  
+  useEffect(() => {
+    const data = localStorage.getItem("todos");
+    if (data) {
+      setTodos(JSON.parse(data));
+    }
+  }, [])
+
+  useEffect(() => {
+    setItem ("todos", todos);
+  }, [todos]);
 
   // change status of task (checkbox)
   const handleToggleComplete = (index: number) => {
@@ -41,17 +56,19 @@ const TodoList = () => {
   const handleDelete = (index: number) => {
     setTodos((prevTodos) => prevTodos.filter((_, i) => i !== index));
   };
+  const sortedTodos = [...todos].sort((a, b) => Number(a.completed) - Number(b.completed));
+
 
   return (
     <div>
       <Layout>
-        <h1>To do:</h1>
+        <MainText>To do:</MainText>
       </Layout>
       <Placeholder>
         {todos.length === 0 ? (
-          <p style={{ textAlign: "center", color: "gray" }}>Nothing in here</p>
+          <EmptyText style={{ textAlign: "center", color: "gray" }}>Nothing in here</EmptyText>
         ) : (
-          todos.map((todo, index) => (
+          sortedTodos.map((todo, index) => (
             <TaskItem key={index}>
               <div style={{ display: "flex", gap: "4px", padding: 4 }}>
                 <HiddenTrashButton

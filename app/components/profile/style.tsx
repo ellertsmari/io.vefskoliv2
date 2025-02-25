@@ -10,23 +10,22 @@ export const ProfileWrapper = styled(Wrapper)`
 
 export const ImageWrapper = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
   width: fit-content;
 `;
 
 export const ProfileImageContainer = styled.div`
-  width: 120px;
-  height: 120px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--theme-module3-100);
+  border: 1px solid var(--main-Color);
   cursor: pointer;
   transition: 0.3s ease-in-out;
   justify-content: center;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   background-color: var(--primary-white);
   &:hover {
     filter: brightness(0.8);
@@ -40,13 +39,15 @@ export const ProfileInfo = styled.div`
 `;
 
 export const ProfileImage = styled(Image)`
-  width: 100px;
-  height: auto;
+  width: 40px;
+  height: 40px;
+  
 `;
 
 export const ProfileName = styled.h2`
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 500;
+  color: var(--main-Color);
 `;
 
 //Modal styles
@@ -89,7 +90,7 @@ export const ProfileDetails = styled.div`
 export const AdditionalInfo = styled.p`
   font-size: 14px;
   text-transform: uppercase;
-  color: var(--theme-module3-100);
+  color: var(--main-Color);
 `;
 
 export const Form = styled.form`
@@ -105,4 +106,31 @@ export const ButtonWrapper = styled.div`
   justify-content: center;
   align-items: center;
   gap: 1rem;
+`;
+
+export const UserWrapper = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+`;
+
+export const WelcomeTextWrapper = styled.div`
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--main-Color);
+
+`;
+
+export const WelcomeText = styled.h1`
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--theme-main-Color);
+`;
+
+export const HeaderWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  
 `;

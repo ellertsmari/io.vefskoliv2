@@ -1,8 +1,11 @@
 "use client";
 
 import ProgressBar from "components/widgets/ProgressBar";
-import TodoList from "../components/todoList/todo";
 import { BoxContainer, ProgressContainer, ProgressWrapper, Progress, Title, Percentage } from "app/components/widgets/style";
+import WidgetCalendar from "components/widgets/WidgetCalendar";
+import TodoList from "../components/todoList/todo";
+import ToolsAndWebsites from "../components/widgets/Tools";
+import DailyPlan from "../components/dailyPlan/DailyPlan"
 
 const HomePage = () => {
   return (
@@ -35,6 +38,12 @@ const HomePage = () => {
 
         </ProgressContainer>
       </BoxContainer>
+
+      <DailyPlan/>
+     <TodoList/>
+     <ToolsAndWebsites/>
+     <WidgetCalendar/>
+     <ToolsAndWebsites />
     </div>
   );
 };
