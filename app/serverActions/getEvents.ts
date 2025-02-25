@@ -1,5 +1,4 @@
 "use server";
-import { Types } from "mongoose";
 import { connectToDatabase } from "./mongoose-connector";
 import { Event } from "models/event";
 import { EventType } from "models/event";
@@ -7,15 +6,24 @@ import {
     type Event as CalendarEvent,
    
   } from "react-big-calendar";
+import { Schema } from "mongoose";
+import mongoose from "mongoose";
 
-
-interface EvenType extends CalendarEvent {
+interface Event extends CalendarEvent {
   id: string;
   title: string;
   start: Date;
   end: Date;
   color: string;
+  owner: string;
+  createdAt: NativeDate;
+  updatedAt: NativeDate;
+
+
+  
 }
+
+
 
 export const getEvents = async () => {
   await connectToDatabase();
@@ -24,16 +32,17 @@ export const getEvents = async () => {
 
 };
 
-export const addEvent = async (event: EventType) => {
+export const addEvent = async (event: Event) => {
   await connectToDatabase();
   (await Event.insertOne(event)) || null;
+
   return event;
 };
 
 
 
 
-export const updateEvent = async (event : EvenType) => {
+export const updateEvent = async (event : Event) => {
     await connectToDatabase();
     (await Event.updateOne({id:event.id}, event)) || null;
     return event;
@@ -41,7 +50,7 @@ export const updateEvent = async (event : EvenType) => {
   
 
 
-  export const delEvent = async (event : EvenType) => {
+  export const delEvent = async (event : Event) => {
     await connectToDatabase();
     (await Event.deleteOne({id:event.id}, event)) || null;
     return event;

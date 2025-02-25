@@ -5,7 +5,7 @@ import {
   InferSchemaType,
  
 } from "mongoose";
-
+import mongoose from "mongoose";
 
 const eventSchema = new Schema(
   {
@@ -14,6 +14,8 @@ const eventSchema = new Schema(
     start: { type: Schema.Types.Date, required: false },
     end: { type: Schema.Types.Date, required: false },
     color: { type: Schema.Types.String, required: false },
+    owner: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User"  },
+
   },
   { timestamps: true }
 );
