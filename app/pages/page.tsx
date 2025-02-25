@@ -1,6 +1,7 @@
 "use client"
 
 import TodoList from "../components/todoList/todo";
+import ToolsAndWebsites from "../components/widgets/Tools";
 import DailyPlan from "../components/dailyPlan/DailyPlan"
 
 const homePage = () => {
@@ -8,6 +9,7 @@ const homePage = () => {
     <div>
       <DailyPlan/>
      <TodoList/>
+     <ToolsAndWebsites />
     </div>
   );
 }
