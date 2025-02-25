@@ -1,8 +1,12 @@
 "use client";
-
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { addEvent, updateEvent, getEvents } from "serverActions/getEvents";
+import {
+  addEvent,
+  updateEvent,
+  getEvents,
+  delEvent,
+} from "serverActions/getEvents";
 import { EventType } from "../../models/event";
 import {
   Calendar,
@@ -13,7 +17,6 @@ import {
 } from "react-big-calendar";
 import moment from "moment";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import styled from "styled-components";
 import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
 import {
   Container,
@@ -33,6 +36,10 @@ import {
   NavigationButton,
   LeftNav,
   ViewToggle,
+  Legend,
+  LegendItem,
+  LegendColor,
+  ViewToggleButton,
 } from "./style";
 
 // Import styles
@@ -54,7 +61,6 @@ interface Event extends CalendarEvent {
 }
 
 type CalendarProps = React.ComponentProps<typeof Calendar<Event, object>>;
-type DnDCalendarProps = CalendarProps;
 
 const eventTypes = [
   { name: "Module", color: "#2B5B76" },
@@ -65,44 +71,6 @@ const eventTypes = [
   { name: "Extra", color: "#9c27b0" },
 ];
 
-
-const ViewToggleButton = styled.button<{ $active: boolean }>`
-  background-color: ${(props) => (props.$active ? "#2B5B76" : "white")};
-  color: ${(props) => (props.$active ? "white" : "#2B5B76")};
-  border: 1px solid #3174ad;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  &:first-child {
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-  }
-  &:last-child {
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-  }
-`;
-
-const Legend = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 1rem;
-`;
-
-const LegendItem = styled.div`
-  display: flex;
-  align-items: center;
-  margin: 0.5rem;
-`;
-
-const LegendColor = styled.div<{ color: string }>`
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: ${(props) => props.color};
-  margin-right: 0.5rem;
-`;
-
 const CustomToolbar: React.FC<any> = (toolbar) => {
   const goToBack = () => {
     toolbar.onNavigate("PREV");
@@ -111,6 +79,8 @@ const CustomToolbar: React.FC<any> = (toolbar) => {
   const goToNext = () => {
     toolbar.onNavigate("NEXT");
   };
+
+
 
   const label = () => {
     const date = toolbar.date;
@@ -157,10 +127,16 @@ const CustomToolbar: React.FC<any> = (toolbar) => {
   );
 };
 
-const CalendarScheduler: React.FC = () => {
+type Props = {
+  role: string;
+};
+
+const CalendarScheduler = ({ role }: Props) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventDate, setNewEventDate] = useState("");
+  const [newEventDateEnd, setNewEventDateEnd] = useState("");
+
   const [newEventStart, setNewEventStart] = useState("");
   const [newEventEnd, setNewEventEnd] = useState("");
   const [newEventType, setNewEventType] = useState(eventTypes[0].name);
@@ -172,7 +148,6 @@ const CalendarScheduler: React.FC = () => {
   useEffect(() => {
     const getSchedule = async () => {
       const dbEvents = (await getEvents()) as Event[];
-      // dbEvents.map (( x ) => delete  x.createdAt )
       setEvents([...dbEvents]);
     };
     getSchedule();
@@ -198,16 +173,21 @@ const CalendarScheduler: React.FC = () => {
   }, [isDialogOpen]);
 
   const addOrUpdateEvent = () => {
-    console.log("addOrUpdateEvadsdasdasdasdasdasdasdxent");
 
-    if (newEventTitle && newEventDate && newEventStart && newEventEnd) {
+    if (
+      newEventTitle &&
+      newEventDate &&
+      newEventDateEnd &&
+      newEventStart &&
+      newEventEnd
+    ) {
       const eventData: Event = {
         id: editingEvent
           ? editingEvent.id
           : Math.random().toString(36).substr(2, 9),
         title: newEventTitle,
         start: new Date(`${newEventDate} ${newEventStart}`),
-        end: new Date(`${newEventDate} ${newEventEnd}`),
+        end: new Date(`${newEventDateEnd} ${newEventEnd}`),
         color:
           eventTypes.find((type) => type.name === newEventType)?.color ||
           eventTypes[0].color,
@@ -220,11 +200,13 @@ const CalendarScheduler: React.FC = () => {
         updateEvent(eventData);
       } else {
         setEvents([...events, eventData]);
+
         addEvent(eventData as EventType);
       }
 
       setNewEventTitle("");
       setNewEventDate("");
+      setNewEventDateEnd("");
       setNewEventStart("");
       setNewEventEnd("");
       setNewEventType(eventTypes[0].name);
@@ -247,6 +229,10 @@ const CalendarScheduler: React.FC = () => {
 
     const nextEvents = [...events];
     nextEvents.splice(idx, 1, updatedEvent);
+
+    if (role !== "admin") {
+      return;
+    }
 
     setEvents(nextEvents);
     updateEvent(updatedEvent);
@@ -275,6 +261,8 @@ const CalendarScheduler: React.FC = () => {
     setEditingEvent(event);
     setNewEventTitle(event.title);
     setNewEventDate(moment(event.start).format("YYYY-MM-DD"));
+    setNewEventDateEnd(moment(event.start).format("YYYY-MM-DD"));
+
     setNewEventStart(moment(event.start).format("HH:mm"));
     setNewEventEnd(moment(event.end).format("HH:mm"));
     setNewEventType(
@@ -286,6 +274,8 @@ const CalendarScheduler: React.FC = () => {
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
     setNewEventDate(moment(slotInfo.start).format("YYYY-MM-DD"));
+    setNewEventDateEnd(moment(slotInfo.start).format("YYYY-MM-DD"));
+
     setNewEventStart(moment(slotInfo.start).format("HH:mm"));
     setNewEventEnd(moment(slotInfo.end).format("HH:mm"));
     setEditingEvent(null);
@@ -294,10 +284,16 @@ const CalendarScheduler: React.FC = () => {
 
   const deleteEvent = () => {
     if (editingEvent) {
+      if (role !== "admin") {
+        alert("You cannot delete this event. Admins only.");
+
+        return;
+      }
       const updatedEvents = events.filter((e) => e.id !== editingEvent.id);
       setEvents(updatedEvents);
       setEditingEvent(null);
       setIsDialogOpen(false);
+      delEvent(editingEvent);
     }
   };
 
@@ -317,8 +313,8 @@ const CalendarScheduler: React.FC = () => {
         <DnDCalendar
           localizer={localizer}
           events={events}
-          startAccessor={(event: Event) => event.start}
-          endAccessor={(event: Event) => event.end}
+          startAccessor={(event: Event) => new Date(event.start)}
+          endAccessor={(event: Event) =>  new Date(event.end)}
           onEventDrop={({ event, start, end }) =>
             moveEvent({
               event: event as Event,
@@ -372,7 +368,7 @@ const CalendarScheduler: React.FC = () => {
                 />
               </FormGroup>
               <FormGroup>
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">Start Date</Label>
                 <Input
                   id="date"
                   type="date"
@@ -381,7 +377,17 @@ const CalendarScheduler: React.FC = () => {
                 />
               </FormGroup>
               <FormGroup>
-                <Label htmlFor="start">Start</Label>
+                <Label htmlFor="date">End Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={newEventDateEnd}
+                  onChange={(e) => setNewEventDateEnd(e.target.value)}
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <Label htmlFor="start">Start Time</Label>
                 <Select
                   id="start"
                   value={newEventStart}
@@ -406,7 +412,7 @@ const CalendarScheduler: React.FC = () => {
                 </Select>
               </FormGroup>
               <FormGroup>
-                <Label htmlFor="end">End</Label>
+                <Label htmlFor="end">End Time</Label>
                 <Select
                   id="end"
                   value={newEventEnd}
