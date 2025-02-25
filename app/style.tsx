@@ -8,12 +8,9 @@ export const PageWrapper = styled.div`
   "sidebar main" 
   ;
   width: 100%;
-  height: 100vh;
+  height: 100dvh;
   overflow-x: hidden;
-  background: linear-gradient(to bottom,
-      rgba(117, 43, 54, 1) 0%,
-      rgba(219, 79, 99, 1) 31%,
-      rgba(117, 43, 54, 1) 88%);
+ 
 `;
 
 export const NavWrapper = styled.div`

@@ -7,7 +7,7 @@ const landingpage = () => {
   return (  
     
      
-    <div style={{ gridArea: "main", backgroundColor: "white" }}>
+    <div style={{ gridArea: "main", backgroundColor: "white", minHeight: "100vh" }}>
       <Image alt="background" style={{width: "100%", height: "100%", objectFit: "cover"}} src={frame1}></Image>
       </div>
       
