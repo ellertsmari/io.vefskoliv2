@@ -18,16 +18,15 @@ export const CalendarContainer = styled.div`
 `;
 
 export const Button = styled.button`
-  background-color: #3174ad;
+  background-color: #2a5885;
   color: white;
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 1rem;
 
   &:hover {
-    background-color: #2a5885;
+    background-color: #356697;
   }
 `;
 
@@ -114,6 +113,8 @@ export const NavigationContainer = styled.div`
 `;
 
 export const NavigationButton = styled.button`
+  display: flex;
+  align-items: center;
   background: none;
   border: none;
   cursor: pointer;
@@ -125,10 +126,15 @@ export const LeftNav = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  align-content: center;
+
 `;
 
 export const ViewToggle = styled.div`
   display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
   margin-left: 1rem;
 `;
 
@@ -146,11 +152,12 @@ export const LegendItem = styled.div`
   display: flex;
   align-items: center;
   margin: 0.5rem;
+  color: #2B5B76
 `;
 
 export const LegendColor = styled.div<{ color: string }>`
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background-color: ${(props) => props.color};
   margin-right: 0.5rem;
@@ -159,15 +166,23 @@ export const LegendColor = styled.div<{ color: string }>`
 export const ViewToggleButton = styled.button<{ $active: boolean }>`
   background-color: ${(props) => (props.$active ? "#2B5B76" : "white")};
   color: ${(props) => (props.$active ? "white" : "#2B5B76")};
-  border: 1px solid #3174ad;
+  border: 1px solid #2B5B76;
+
   padding: 0.25rem 0.5rem;
   cursor: pointer;
-  &:first-child {
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+
+  &:nth-child(2) {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
   }
   &:last-child {
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
   }
-`;
+
+
+  &:hover {
+    background-color: ${(props) => (props.$active ? "#1d4f5d" : "#E8F1FC")};
+    color: ${(props) => (props.$active ? "white" : "#2B5B76")};
+  }
+`
