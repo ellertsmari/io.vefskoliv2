@@ -5,7 +5,7 @@ const Page = ( ) => {
     return (
         <div>
         <Calendar/> 
-        <div>HALLÓ</div>
+        
         </div>
             
     )
