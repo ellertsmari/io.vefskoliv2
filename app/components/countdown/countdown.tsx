@@ -1,6 +1,6 @@
 'use client'
 import {useState, useEffect} from 'react';
-import {Container, TimerSegment, Time, Label, TimerWrapper, TimerInner, Headline, TimerTitle,  FrameCountdown} from './countdownStyle'
+import {Container, TimerSegment, Time, Label, TimerWrapper, TimerInner, Headline, TimerTitle, FrameCountdown} from './countdownStyle'
 
 
 const Countdown = ( ) => {
