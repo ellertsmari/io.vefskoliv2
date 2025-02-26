@@ -29,27 +29,27 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
+
 
   return (
     <html lang="en">
       <body style={{overflowX: "hidden"}}>
       <StyledComponentsRegistry>
-      <LayoutGrid>   
+      <LayoutGrid>
         <NavbarContainer>
         <Navbar></Navbar>
   </NavbarContainer>
       <SidebarContainer>
-        
+
 
       <Sidebar/>
   </SidebarContainer>
       <Main>
-       
+
 
 
       </Main>
-      
+
       {children}
       </LayoutGrid>
       </StyledComponentsRegistry>
@@ -57,6 +57,3 @@ export default async function RootLayout({
     </html>
   );
 }
-
-
-        
