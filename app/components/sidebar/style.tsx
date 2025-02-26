@@ -10,7 +10,7 @@ export const ImageIcon = styled(Image) `
 
 export const ArrowIcon = styled(ImageIcon)`
     position: absolute;
-    transform: translate(220%, 0%);
+    transform: translate(220%, 15%);
     height: 44px;
     width: 44px;
     

@@ -8,11 +8,11 @@ const breakpoint = "768px";
 
 export const LayoutGrid = styled.div`
   display: grid;
-  grid-template-rows: auto 15fr;
-  grid-template-columns: 150px 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-areas:
     "navba navbar"
-    "main main";
+    "sidebar main";
   gap: 1rem;
   width: 100%;
   height: 100dvh;

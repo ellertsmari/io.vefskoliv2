@@ -1,6 +1,9 @@
 
 'use client'
+import { Pen, PenIcon } from "lucide-react";
 import profilePic from "../../../public/profilepic.svg"
+import pen from "../../../public/pen.svg"
+
 
 import Image from "next/image";
 import styled from "styled-components";
@@ -43,7 +46,7 @@ export const BoldText = styled.span`
 `;
 
 export const ProfileImage = styled(Image).attrs({
-  src: profilePic,
+  
   width: 190,
   height: 190,
   alt: "Profile Picture",
@@ -64,3 +67,10 @@ export const Nav = styled.div`
     
 `
 
+export const PenImage = styled(Image)`
+position: absolute;
+bottom: 20px;
+right: 45px;
+cursor: pointer;
+`
+;
