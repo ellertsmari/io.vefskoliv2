@@ -14,10 +14,6 @@ export const Button = styled.button`
   justify-content: center;
   align-items: center;
   transition: 0.1s ease-in-out;
-
-  &:hover {
-    background-color: var(--error-failure-100);
-  }
 `;
 
 export const ExitIcon = styled(Image)`

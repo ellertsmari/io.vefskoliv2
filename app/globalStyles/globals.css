@@ -1,15 +1,12 @@
+@import "tailwindcss";
+
 * {
-  box-sizing: border-box;
   padding: 0;
   margin: 0;
-  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
-  -moz-box-sizing: border-box; /* Firefox, other Gecko */
-  box-sizing: border-box; /* Opera/IE 8+ */
 }
 
 body {
-  font-family: "Poppins", sans-serif;
-  background-color: #f0f0fd;
+  font-family: "Plus Jakarta Display", sans-serif;
 }
 
 div,
@@ -32,8 +29,47 @@ h1 {
 
 /* Color Palette Definitions */
 :root {
+  /* NEW VERSION OF THE  */
   /* Primary Colors */
+  --primary-default: #007aff;
+  --primary-light-300: #98a9ff;
+  --primary-light-200: #ccd4ff;
+  --primary-light-100: #f5f4ff;
+  --primary-light-grey: #fafafa;
   --primary-white: #ffffff;
+
+  --secondary-dark: #141522;
+  --secondary-light-400: #54577a;
+  --secondary-light-300: #8e92bc;
+  --secondary-light-200: #bbbed7;
+  --secondary-light-100: #dddeeb;
+
+  --fail-text: #ff4423;
+  --fail-bg: #ffece9;
+
+  --pass-text: #17990d;
+  --pass-bg: #e2f3e1;
+
+  --due-text: var(--secondary-dark);
+  --due-bg: var(--primary-light-grey);
+
+  --grade-text: var(--primary-white);
+  --grade-bg: var(--primary-default);
+
+  --review-text: #b06cff;
+  --review-bg: #f1e5ff;
+
+  --waiting-text: #fba700;
+  --waiting-bg: #fff7d9;
+
+  /* Font Weights */
+  --light: 300;
+  --regular: 400;
+  --medium: 500;
+  --semibold: 600;
+
+  /* WE ARE NOT USING THESE COLORS -magnea */
+
   --primary-black-100: #000000; /* 100% */
   --primary-black-60: #666666; /* 60% */
   --primary-black-30: #b3b3b3; /* 30% */
@@ -50,7 +86,7 @@ h1 {
   --error-success-100: #84cf6e; /* 100% */
   --error-success-60: #b5e2a8; /* 60% */
   --error-success-30: #dbf1d4; /* 30% */
-  --error-success-10: #f3fbf1; /* 10% */
+  --error-success-10: #ffffff; /* 10% */
 
   --error-failure-100: #f55f5b; /* 100% */
   --error-failure-60: #f99f9d; /* 60% */

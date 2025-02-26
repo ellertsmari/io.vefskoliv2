@@ -18,7 +18,7 @@ export const FullScreenWrapper = styled(Wrapper)`
 
 export const Border = styled(Wrapper)`
   border: 1px solid var(--theme-module3-100);
-  border-radius: 0.5rem;
+  border-radius: 1.3rem;
 `;
 
 export const MaterialButton = styled(Button)`
@@ -29,13 +29,13 @@ export const MaterialButton = styled(Button)`
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: start;
   gap: 2rem;
 `;
 
 export const ButtonWrapper = styled.div`
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
   width: 100%;
 `;
@@ -50,7 +50,7 @@ const Toast = styled.div`
   padding: 16px;
   top: 100px;
   position: absolute;
-  border-radius: 8px;
+  border-radius: 20px;
   z-index: 1000;
 `;
 

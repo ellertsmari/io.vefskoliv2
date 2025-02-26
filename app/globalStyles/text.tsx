@@ -2,26 +2,28 @@
 import styled from "styled-components";
 
 export const SubTitle = styled.h2`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
-  color: var(--theme-module3-100);
+  color: #8e92bc;
 `;
 
 export const SubTitleLabel = styled.label`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
-  color: var(--theme-module3-100);
+  color: #8e92bc;
 `;
 
 export const BlackSubTitle = styled(SubTitle)`
   font-size: 16px;
   font-weight: 400;
-  color: var(--primary-black-100);
+  color: #8e92bc;
 `;
 
 export const Title = styled.h1`
   grid-area: main;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 600;
+  color: #141522;
 `;
 
 export const SmallText = styled.p`

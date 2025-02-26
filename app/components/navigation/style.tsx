@@ -7,23 +7,22 @@ const breakpoint = "1191px";
 export const NavbarButton = styled(Link)`
   width: 100%;
   text-align: center;
-  background-color: var(--primary-white);
   color: var(--theme-module3-100);
   font-size: 18px;
   padding: 10px;
   text-decoration: none;
 
   &:hover {
-    background-color: var(--primary-black-10);
+    background-color: var(--primary-default);
+    color: var(--primary-white);
   }
 `;
 
 export const DesktopNavbarButton = styled(NavbarButton)`
   display: none;
-  width: 128px;
+  width: 200px;
   @media (min-width: ${breakpoint}) {
-    display: block;
-    background-color: var(--primary-white);
+    display: flex;
     border: solid 1px var(--theme-module3-100);
     font-size: 15px;
     border-radius: 8px;
@@ -45,10 +44,10 @@ export const Nav = styled.nav`
 export const DesktopNav = styled(Nav)`
   display: none;
   @media (min-width: ${breakpoint}) {
-    flex-direction: row;
-    justify-content: flex-end;
+    flex-direction: column;
+    justify-content: center;
     display: flex;
-    gap: 5px;
+    gap: 12px;
   }
 `;
 

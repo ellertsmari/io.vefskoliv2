@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 export const InfoWrapper = styled.div`
   border: 1px solid var(--theme-module3-100);
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 1rem;
   display: grid;
   gap: 1rem;

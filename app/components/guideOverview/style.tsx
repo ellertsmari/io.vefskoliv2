@@ -1,4 +1,3 @@
-import { Button } from "globalStyles/buttons/default/style";
 import { Wrapper } from "globalStyles/globalStyles";
 import styled from "styled-components";
 
