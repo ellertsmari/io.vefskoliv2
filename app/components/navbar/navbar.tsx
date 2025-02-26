@@ -25,6 +25,7 @@ const Navbar = () => {
         <TopRightContainer>
         <Image height={25} width={25} src={cog} alt="Settings" className="cog"></Image>
         <Image height={25} width={25} src={logout} alt="Logout" className="logout"></Image>
+        <span></span>
         </TopRightContainer>
         <GreetingContainer>
         
@@ -36,7 +37,7 @@ const Navbar = () => {
 
         <div className="relative">
         <PenImage src={pen} width={30} height={30} alt="Pen Settings"   />
-          <ProfileImage src={profilePic} width={100} height={100} alt="Profile Pic" />
+          <ProfileImage src={profilePic} width={50} height={50} alt="Profile Pic" />
           
   </div>
       {/*<div style={{ position: "relative", width: "100px", height: "100px" }}>

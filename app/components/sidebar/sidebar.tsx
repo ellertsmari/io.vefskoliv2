@@ -13,9 +13,18 @@ import Link from "next/link";
 import { ImageIcon, ArrowIcon } from "./style";
 import { usePathname } from "next/navigation";
 import arrow from "../../../public/arrow.svg";
+import { useState } from "react";
+
+import homewhite from "../sidebar/icons/redIcons/homehover.svg"
+import guideswhite from "../sidebar/icons/redIcons/guideshover.svg"
+import calendarwhite from "../sidebar/icons/redIcons/calendarhover.svg"
+import peoplewhite from "../sidebar/icons/redIcons/peoplehover.svg"
+import resourceswhite from "../sidebar/icons/redIcons/resourceshover.svg"
+import emailwhite from "../sidebar/icons/redIcons/emailhover.svg"
 
 
 const Sidebar = () => {
+    const [openModal, setOpenModal] = useState(false)
     const pathname = usePathname()
     const iconlist = [
         {
@@ -40,19 +49,36 @@ const Sidebar = () => {
         }, 
     ]
     return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", paddingTop: "40px" }}>
-            {/* {iconlist.map(( icon:any, index ) => <Link href={icon.link} key={index}> 
-            <ImageIcon link={icon.link} pathname={pathname}  src={icon.icon} alt="icon"></ImageIcon> 
-            </Link> )} */}
+        <>
+        {!openModal ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", paddingTop: "40px" }}>
+
             <ImageIcon src={home} alt="home" /> 
             <ImageIcon src={guides} alt="guides"  /> 
             <ImageIcon src={calendar} alt="calendar"  /> 
             <ImageIcon src={people} alt="people"  /> 
             <ImageIcon src={resources} alt="resources"  />
             <ImageIcon src={email} alt="email"  />  
+            <button onClick={() => setOpenModal(true)}>
             <ArrowIcon src={arrow} alt="Arrow" width={24} height={24} />
+            </button>
             
-        </div>
+            </div>
+        ) : (
+            <div>
+                <button onClick={() => setOpenModal(false)}>Go back</button>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", paddingTop: "40px" }}></div>
+
+                <Image src={homewhite} alt="home"/>
+                <Image src={guideswhite} alt="guides"/>
+                <Image src={calendarwhite} alt="calendar"/>
+                <Image src={peoplewhite} alt="people"/>
+                <Image src={resourceswhite} alt="resources"/>
+                <Image src={emailwhite} alt="email"/>
+
+            </div>
+        )}
+        </>
     )
 }
 

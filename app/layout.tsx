@@ -44,9 +44,11 @@ export default async function RootLayout({
 
       <Sidebar/>
   </SidebarContainer>
-      <Main>
-       
+  
 
+  
+      <Main>
+      
 
       </Main>
       

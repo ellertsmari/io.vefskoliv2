@@ -47,8 +47,8 @@ export const BoldText = styled.span`
 
 export const ProfileImage = styled(Image).attrs({
   
-  width: 190,
-  height: 190,
+  width: 160,
+  height: 160,
   alt: "Profile Picture",
   
 
