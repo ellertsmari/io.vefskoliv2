@@ -45,7 +45,6 @@ export default async function RootLayout({
               </HeaderContainer>
               <Main>
                 {/* Place the Cali (Calendar) component here */}
-
                 {children}
               </Main>
             </LayoutGrid>
