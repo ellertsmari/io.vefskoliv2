@@ -2,12 +2,12 @@
 import { useState } from "react";
 
 import Image from "next/image"
-import { BoldText, GreetingContainer, GreetingsText, Nav, ProfileContainer, ProfileImage, TopRightContainer } from "./style"
-import profilePic from "../../../public/profilepic.svg" 
+import { BoldText, GreetingContainer, GreetingsText, Nav, PenImage, ProfileContainer, ProfileImage, TopRightContainer } from "./style"
+import profilePic from "../../../public/User Picture.png" 
 import logo from "../../../public/logo.svg"
 import cog from "../../../public/cog.svg"
 import logout from "../../../public/logout.svg"
-
+import pen from "../../../public/pen.svg"
 
 const Navbar = () => {
   
@@ -35,12 +35,24 @@ const Navbar = () => {
         </GreetingsText>
 
         <div className="relative">
+        <PenImage src={pen} width={30} height={30} alt="Pen Settings"   />
           <ProfileImage src={profilePic} width={100} height={100} alt="Profile Pic" />
           
-          </div>
+  </div>
+      {/*<div style={{ position: "relative", width: "100px", height: "100px" }}>
+  <ProfileImage src={profilePic} width={100} height={100} alt="Profile Pic" />
+  <PenImage
+    src={pen}
+    width={30}
+    height={30}
+    alt="Pen Settings"
+    style={{ position: "absolute", bottom: -50, right: -90 }}
+  />
+</div>*/}
 
          
          <span></span>
+         
         </GreetingContainer>
        
         </ProfileContainer>
