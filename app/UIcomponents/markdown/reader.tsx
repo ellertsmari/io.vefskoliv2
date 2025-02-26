@@ -1,6 +1,7 @@
 "use client";
 
 import MDEditor from "@uiw/react-md-editor";
+import { BlueSmallText } from "globalStyles/text";
 import React from "react";
 
 type MarkdownReaderProps = {
@@ -15,10 +16,12 @@ const MarkdownReader = ({ children }: MarkdownReaderProps) => {
       style={{
         wordBreak: "break-word",
         margin: "20px 0",
-        backgroundColor: "red",
       }}
     >
-      <MDEditor.Markdown source={children}></MDEditor.Markdown>
+      <MDEditor.Markdown
+        style={{ color: "#2b5b76", backgroundColor: "transparent" }}
+        source={children}
+      ></MDEditor.Markdown>
     </div>
   );
 };
