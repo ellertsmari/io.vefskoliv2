@@ -1,15 +1,33 @@
 import styled from "styled-components";
 
-export const Layout = styled.div`
+const BREAKPOINT = "680px";
+
+export const MainText = styled.h1`
+  @media (max-width: ${BREAKPOINT}) {
+    font-size: 12px;
+  }
   background-color: var(--main-Color);
-  border-radius: 8px;
-  font-size: 14px;
-  color: white;
+  width: 307px;
   height: 42px;
-  padding: 12px;
+  border-radius: 8px;
+  color: white;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
 `;
 
-export const Placeholder = styled.div`
+export const MainContainer = styled.div`
+  display: flex;
+  flex-direction: column;`
+
+export const EmptyText = styled.p`
+  @media (max-width: ${BREAKPOINT}) {
+    font-size: 10px;
+  }
+`;
+
+export const PlaceholderTasks = styled.div`
   max-width: 307px;
   height: 241px;
   overflow: scroll;
@@ -27,7 +45,7 @@ export const TodoText = styled.span`
   font-family: "Poppins", sans-serif;
   color: var(--main-Color);
   text-transform: capitalize;
-  flex-grow: 1; 
+  flex-grow: 1;
   padding: 4px;
   border-radius: 6px;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -48,10 +66,10 @@ export const Textwrapped = styled.input`
   padding: 6px;
   outline: none;
 
-&:focus {
+  &:focus {
     border-color: var(--main-Color); /* Change border color when focused */
   }
-  `;
+`;
 
 export const Button = styled.div`
   max-width: 66px;
@@ -74,9 +92,9 @@ export const Button = styled.div`
 `;
 
 /* Style for all task */
-export const TaskItem = styled.div`
+export const TaskContainer = styled.div`
   display: flex;
-  align-items: flex-start;  /* Ensures everything is vertically aligned */
+  align-items: flex-start; /* Ensures everything is vertically aligned */
   gap: 2px;
   padding: 8px;
   border-radius: 8px;
@@ -95,14 +113,14 @@ export const TaskItem = styled.div`
 `;
 
 export const HiddenTrashButton = styled.button`
-    opacity: 0;
-`
+  opacity: 0;
+`;
 
 /* hidden checkbox */
 export const Checkbox = styled.input`
   width: 14px;
   height: 14px;
-  border:1px solid var(--main-Color);
+  border: 1px solid var(--main-Color);
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -116,7 +134,7 @@ export const Checkbox = styled.input`
   /* Make sure it does not disappear when checked */
   &:checked {
     /* background-color: var(--main-Lightblue); */
-    background-color:1px solid var(--main-Color);
+    background-color: 1px solid var(--main-Color);
   }
 
   &:checked::after {
@@ -140,8 +158,17 @@ export const TrashButton = styled.button`
   width: 18px; /* Ensure size does not change */
   height: 18px; /* Keep it from shifting */
 
-  ${TaskItem}:hover & {
+  ${TaskContainer}:hover & {
     opacity: 1;
   }
 `;
 
+export const AddTaskContainer = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+export const StyleList = styled.div`
+ display: flex;
+  gap: 4px;
+  padding: 4px;`

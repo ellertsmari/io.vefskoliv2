@@ -18,7 +18,7 @@ export const FullScreenWrapper = styled(Wrapper)`
 `;
 
 export const Border = styled(Wrapper)`
-  border: 1px solid var(--theme-module3-100);
+  border: 1px solid #2B5B76;
   border-radius: 0.5rem;
 `;
 

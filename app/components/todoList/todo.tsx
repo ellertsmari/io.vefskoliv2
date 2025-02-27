@@ -1,18 +1,23 @@
 "use client"
 
 import {
-  Layout,
-  Placeholder,
+  MainContainer,
+  PlaceholderTasks,
   Textwrapped,
   Button,
   TodoText,
-  TaskItem,
+  TaskContainer,
   Checkbox,
   HiddenTrashButton,
+  MainText,
+  EmptyText,
+  AddTaskContainer,
+  StyleList,
 } from "./style";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Trash from "../../../public/trash.svg";
+import { setItem } from "./localStorage";
 
 const TodoList = () => {
   const [todos, setTodos] = useState<{ text: string; completed: boolean }[]>(
@@ -30,6 +35,17 @@ const TodoList = () => {
     setNewNote("");
   };
 
+  useEffect(() => {
+    const data = localStorage.getItem("todos");
+    if (data) {
+      setTodos(JSON.parse(data));
+    }
+  }, []);
+
+  useEffect(() => {
+    setItem("todos", todos);
+  }, [todos]);
+
   // change status of task (checkbox)
   const handleToggleComplete = (index: number) => {
     setTodos((prevTodos) =>
@@ -43,36 +59,42 @@ const TodoList = () => {
   const handleDelete = (index: number) => {
     setTodos((prevTodos) => prevTodos.filter((_, i) => i !== index));
   };
+  const sortedTodos = [...todos].sort(
+    (a, b) => Number(a.completed) - Number(b.completed)
+  );
 
   return (
-    <div>
-      <Layout>
-        <h1>To do:</h1>
-      </Layout>
-      <Placeholder>
+    <MainContainer>
+        <MainText>To do:</MainText>
+      <PlaceholderTasks>
         {todos.length === 0 ? (
-          <p style={{ textAlign: "center", color: "gray" }}>Nothing in here</p>
+          <EmptyText style={{ textAlign: "center", color: "gray" }}>
+            Nothing in here
+          </EmptyText>
         ) : (
-          todos.map((todo, index) => (
-            <TaskItem key={index}>
-              <div style={{ display: "flex", gap: "4px", padding: 4 }}>
+          sortedTodos.map((todo, index) => (
+            <TaskContainer key={index}>
+              <StyleList>
                 <HiddenTrashButton
                   style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                   
                   }}
                   onClick={() => handleDelete(index)}
                 >
-                  <Image style={{width:"12px", height:"15px"}} src={Trash} alt="Delete" />
+                  <Image
+                    style={{ width: "12px", height: "15px" }}
+                    src={Trash}
+                    alt="Delete"
+                  />
                 </HiddenTrashButton>
                 <Checkbox
                   type="checkbox"
                   checked={todo.completed}
                   onChange={() => handleToggleComplete(index)}
                 />
-              </div>
+              </StyleList>
               <TodoText
                 style={{
                   textDecoration: todo.completed ? "line-through" : "none",
@@ -83,13 +105,13 @@ const TodoList = () => {
               >
                 {todo.text}
               </TodoText>
-            </TaskItem>
+            </TaskContainer>
           ))
         )}
-      </Placeholder>
+      </PlaceholderTasks>
 
       {/* space for tipping new task text  */}
-      <div style={{ display: "flex", gap: "10px" }}>
+      <AddTaskContainer>
         <Textwrapped
           type="text"
           name="todo"
@@ -103,8 +125,8 @@ const TodoList = () => {
           }}
         />
         <Button onClick={handleAddNote}>Add note</Button>
-      </div>
-    </div>
+      </AddTaskContainer>
+    </MainContainer>
   );
 };
 

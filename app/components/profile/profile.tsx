@@ -12,6 +12,10 @@ import {
   ButtonWrapper,
   ProfileInfo,
   Logout,
+  UserWrapper,
+  WelcomeText,
+  WelcomeTextWrapper,
+  HeaderWrapper
 } from "./style";
 import Modal from "UIcomponents/modal/modal";
 import { Input } from "UIcomponents/input/Input";
@@ -25,17 +29,27 @@ import { Wrapper } from "globalStyles/globalStyles";
 import { Session } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
 import { useState } from "react";
+import svg from "../../../public/icons/settings.svg";
+import Image from "next/image";
 
 export const Profile = ({ session }: { session: Session | null }) => {
   const user = session?.user as AdapterUser;
 
   const ProfilePictureContainer = () => {
     return (
-      <ImageWrapper>
-        <ProfilePicture url={user.avatarUrl} />
-
-        <ProfileName>{user.name}</ProfileName>
-      </ImageWrapper>
+      <HeaderWrapper>
+        <WelcomeTextWrapper style={{ padding: "10px" }}>
+          <WelcomeText style={{ fontSize: "40px", fontFamily: "Poppins" }}>
+            Welcome {user.name}
+            <p>What do you plan for today?</p>
+          </WelcomeText>
+        </WelcomeTextWrapper>
+          <UserWrapper style={{ display: "flex", justifyItems: "center" }}>
+            <Image alt="settings" src={svg} />
+            <ProfileName>{user.name}</ProfileName>
+            <ProfilePicture url={user.avatarUrl} />
+          </UserWrapper>
+      </HeaderWrapper>
     );
   };
 
@@ -72,7 +86,6 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
       <ProfileDetails>
         <ProfilePicture url={user.avatarUrl} />
         <ProfileInfo>
-          <ProfileName style={{ fontSize: "16px" }}>{user.name}</ProfileName>
           <AdditionalInfo>{user.role}</AdditionalInfo>
           <AdditionalInfo
             style={{ color: "var(--primary-black-100)", textTransform: "none" }}

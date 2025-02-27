@@ -16,6 +16,7 @@ div,
 p,
 li {
   font-size: 14px;
+  font-size:12px ;
 
   @media screen and (min-width: 480px) {
     font-size: 16px;
@@ -23,11 +24,76 @@ li {
 }
 
 h1 {
-
   @media screen and (min-width: 480px) {
     font-size: 14px;
   }
 }
+
+.rbc-event-content {
+  font-size: 12px;
+  padding-left: 5px;
+}
+.rbc-day-slot .rbc-event,
+.rbc-day-slot .rbc-background-event {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor {
+  color: rgb(255, 255, 255);
+  /* filter: blur(1px); */
+  /* width: 100%; */
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor:nth-child(1) {
+  color: rgb(255, 255, 255);
+  /* filter: blur(1px); */
+  /* width: 100%; */
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor:nth-child(1) {
+  color: rgb(255, 255, 255);
+  /* filter: blur(1px); */
+  /* width: 100%; */
+}
+
+.rbc-addons-dnd .rbc-addons-dnd-resize-ew-anchor .rbc-addons-dnd-resize-ew-icon:nth-child(2n) {
+
+  border-left: 3px double;
+  width: 15px;
+
+}
+
+
+
+.rbc-day-bg:hover {
+  background-color: #e8f1fc;
+  transition-delay: 0s;
+}
+
+.rbc-day-bg:not(:hover) {
+  transition-delay: 0.2s;
+}
+
+.rbc-day-bg {
+  transition: background-color 0.3s ease;
+}
+
+
+
+.rbc-header{
+  color: #2B5B76;
+}
+
+
+
+.rbc-label{
+  color: #2B5B76;
+}
+
+
+
+
 
 /* Color Palette Definitions */
 :root {
@@ -44,8 +110,8 @@ h1 {
   --theme-module3-30: #d1d1f9; /* 30% */
   --theme-module3-10: #f0f0fd; /* 10% */
   --theme-module3-hover: #2c2b76; /* hover */
-  --main-Color: #2B5B76; /* main color */
-  --main-Lightblue: #E8F1FC; /*main light blue*/
+  --main-Color: #2b5b76; /* main color */
+  --main-Lightblue: #e8f1fc; /*main light blue*/
 
   /* Error Message Colors */
   --error-success-100: #84cf6e; /* 100% */

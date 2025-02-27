@@ -22,6 +22,7 @@ export const MaterialsWrapper = styled.div`
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 1rem;
+  
 `;
 
 export const ReturnWrapper = styled.div`
