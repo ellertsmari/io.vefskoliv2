@@ -23,7 +23,6 @@ import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
 import { FeedbackInfoContainer } from "./style";
 import { useLocalState } from "react-session-hooks";
-import { set } from "mongoose";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const LOCAL_STORAGE_KEY = `feedback for ${guideTitle}`;

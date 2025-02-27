@@ -1,7 +1,6 @@
 "use client";
 import styled from "styled-components";
-import { Wrapper } from "UIcomponents/input/style";
-import { Button } from "globalStyles/buttons/default/style";
+
 
 const BREAKPOINT = "680px";
 const BREAKPOINT_DESKTOP = "1024px";

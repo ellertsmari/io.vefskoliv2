@@ -5,6 +5,8 @@ import GuideCard from "components/guideCard/GuideCard";
 import useLocalStorage from "utils/useLocalStorage";
 import { useSearchParams } from "next/navigation";
 
+
+
 interface Props {
   guides: ExtendedGuideInfo[];
 }
@@ -12,13 +14,12 @@ interface Props {
 export default function GuideNav({ guides }: Props) {
   let guideNumber = 0;
 
-
   const searchParams = useSearchParams();
   const moduleParam = searchParams.get("module");
 
   const [moduleSelected, setModuleSelected] = useLocalStorage(
     "Selected module",
-    { selected : moduleParam }
+    { selected: moduleParam }
   );
   useEffect(() => {
     moduleParam && setModuleSelected({ selected: moduleParam });
@@ -29,10 +30,10 @@ export default function GuideNav({ guides }: Props) {
   };
 
   const [selectedModule, setSelectedModule] = useState("0 - Preparation");
- 
+
   return (
     <>
-      <ButtonContainer >
+      <ButtonContainer>
         <Button86 onClick={() => setSelectedModule("0 - Preparation")}>
           Intro
         </Button86>
@@ -65,11 +66,17 @@ export default function GuideNav({ guides }: Props) {
         </Button86>
       </ButtonContainer>
       <GuideContainer>
+
         {guides.map((guide, index) => {
           if (selectedModule && guide.module.title === selectedModule) {
             guideNumber++;
 
-            return <GuideCard guide={guide} key={index} order={guideNumber} />;
+            return (
+              <>
+                <h1>{guide.module.title}</h1>
+                <GuideCard guide={guide} key={index} order={guideNumber} />
+              </>
+            );
           }
         })}
       </GuideContainer>
