@@ -1,6 +1,11 @@
 import "globalStyles/globals.css";
 import Countdown from "components/countdown/countdown";
-import { BackgroundDiv } from "./style";
+import {
+  BackgroundDiv,
+  MainContainer,
+  NewSidebarContainer,
+  RightSideMain,
+} from "./style";
 import Groups from "components/groups/groupsLayout";
 import Links from "components/links/linksLayout";
 import Notes from "components/notes/noteslayout";
@@ -10,14 +15,19 @@ const Landingpage = () => {
   return (
     <>
       <BackgroundDiv>
-        <Countdown></Countdown>
+        <MainContainer>
+          <NewSidebarContainer>
+            <Countdown></Countdown>
+            <Notes></Notes>
+          </NewSidebarContainer>
+          <RightSideMain>
+            <Links></Links>
 
-        <Groups></Groups>
+            <Groups></Groups>
 
-        <Links></Links>
-
-        <Notes></Notes>
-        <CalendarComponent></CalendarComponent>
+            <CalendarComponent></CalendarComponent>
+          </RightSideMain>
+        </MainContainer>
       </BackgroundDiv>
     </>
   );

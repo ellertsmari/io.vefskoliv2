@@ -52,9 +52,9 @@ const CalendarComponent = () => {
       <StyledCalendar onChange={onChange} value={value} />
       <EventWrapper>
         <Headline>Events</Headline>
-        {events.map((event) => {
+        {events.map((event, index) => {
           return (
-            <EventListContainer>
+            <EventListContainer key={index}>
               <EventColumn>
                 <EventDay>{event.day}</EventDay>
                 <EventDate>{event.date}</EventDate>

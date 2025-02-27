@@ -4,20 +4,18 @@ import { SidebarContainer } from "globalStyles/gridtemplate";
 import Image from "next/image";
 import styled from "styled-components";
 import frame1 from "../../public/Frame1.svg";
-/*
+
 export const MainContainer = styled.div`
   display: grid;
-  grid-template-areas
-  : "sidebar main"
-  ;
-  grid-template-columns: 150px 1fr;
-` 
-*/
+  grid-template-areas: "sidebar main";
+  grid-template-columns: 2fr 1fr;
+`;
+
 export const NewSidebarContainer = styled.div`
   grid-area: sidebar;
 `;
 
-export const Main = styled(Image)`
+export const RightSideMain = styled.div`
   grid-area: main;
 `;
 console.log(frame1.src);
