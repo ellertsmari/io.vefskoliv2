@@ -2,15 +2,27 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
-  -moz-box-sizing: border-box; /* Firefox, other Gecko */
-  box-sizing: border-box; /* Opera/IE 8+ */
+  -webkit-box-sizing: border-box;
+  /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;
+  /* Firefox, other Gecko */
+  box-sizing: border-box;
+  /* Opera/IE 8+ */
 }
 
-body {
-  font-family: "Poppins", sans-serif;
-  background-color: #f0f0fd;
+
+
+body {}
+
+
+.logo {
+  margin-left: 30px;
+  /* Adjust the value as needed */
 }
+
+
+
+
 
 div,
 p,
@@ -34,31 +46,52 @@ h1 {
 :root {
   /* Primary Colors */
   --primary-white: #ffffff;
-  --primary-black-100: #000000; /* 100% */
-  --primary-black-60: #666666; /* 60% */
-  --primary-black-30: #b3b3b3; /* 30% */
-  --primary-black-10: #e6e6e6; /* 10% */
+  --primary-black-100: #000000;
+  /* 100% */
+  --primary-black-60: #666666;
+  /* 60% */
+  --primary-black-30: #b3b3b3;
+  /* 30% */
+  --primary-black-10: #e6e6e6;
+  /* 10% */
 
   /* Theme Colors */
-  --theme-module3-100: #6563eb; /* 100% */
-  --theme-module3-60: #a3a1f3; /* 60% */
-  --theme-module3-30: #d1d1f9; /* 30% */
-  --theme-module3-10: #f0f0fd; /* 10% */
-  --theme-module3-hover: #2c2b76; /* hover */
+  --theme-module3-100: #6563eb;
+  /* 100% */
+  --theme-module3-60: #a3a1f3;
+  /* 60% */
+  --theme-module3-30: #d1d1f9;
+  /* 30% */
+  --theme-module3-10: #f0f0fd;
+  /* 10% */
+  --theme-module3-hover: #2c2b76;
+  /* hover */
 
   /* Error Message Colors */
-  --error-success-100: #84cf6e; /* 100% */
-  --error-success-60: #b5e2a8; /* 60% */
-  --error-success-30: #dbf1d4; /* 30% */
-  --error-success-10: #f3fbf1; /* 10% */
+  --error-success-100: #84cf6e;
+  /* 100% */
+  --error-success-60: #b5e2a8;
+  /* 60% */
+  --error-success-30: #dbf1d4;
+  /* 30% */
+  --error-success-10: #f3fbf1;
+  /* 10% */
 
-  --error-failure-100: #f55f5b; /* 100% */
-  --error-failure-60: #f99f9d; /* 60% */
-  --error-failure-30: #fccfce; /* 30% */
-  --error-failure-10: #feefef; /* 10% */
+  --error-failure-100: #f55f5b;
+  /* 100% */
+  --error-failure-60: #f99f9d;
+  /* 60% */
+  --error-failure-30: #fccfce;
+  /* 30% */
+  --error-failure-10: #feefef;
+  /* 10% */
 
-  --error-warning-100: #fea65b; /* 100% */
-  --error-warning-60: #feca9d; /* 60% */
-  --error-warning-30: #ffe5ce; /* 30% */
-  --error-warning-10: #fff7ef; /* 10% */
+  --error-warning-100: #fea65b;
+  /* 100% */
+  --error-warning-60: #feca9d;
+  /* 60% */
+  --error-warning-30: #ffe5ce;
+  /* 30% */
+  --error-warning-10: #fff7ef;
+  /* 10% */
 }
