@@ -6,8 +6,7 @@ import {
     type Event as CalendarEvent,
    
   } from "react-big-calendar";
-import { Schema } from "mongoose";
-import mongoose from "mongoose";
+
 
 interface Event extends CalendarEvent {
   id: string;

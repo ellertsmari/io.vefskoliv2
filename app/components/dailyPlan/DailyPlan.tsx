@@ -1,3 +1,4 @@
+"use client"
 import React, { MouseEventHandler, useEffect, useState } from "react";
 import { getEvents } from "serverActions/getEvents";
 import { Event as CalendarEvent } from "react-big-calendar";

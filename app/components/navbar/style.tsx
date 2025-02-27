@@ -1,7 +1,6 @@
 "use client";
 import styled from "styled-components";
 import Image from "next/image";
-import Nav from "./Nav";
 import Link from "next/link";
 
 export const NavBackground = styled.div`
@@ -13,6 +12,7 @@ export const NavBackground = styled.div`
   justify-content: space-between;
   align-items: center;
   position: fixed;
+
   left: 0;
   background: linear-gradient(180deg, #3c7d9c 0%, #2b5b76 100%);
 `;
@@ -38,6 +38,8 @@ export const LinkStyle = styled(Link)<{ mylink?: string; pathname?: string }>`
   &:hover {
     color: black;
     background-color: white;
+    margin: 1px;
+
   }
 `;
 

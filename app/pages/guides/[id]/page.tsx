@@ -19,7 +19,12 @@ const GuidePage = async ({ params }: { params: ParamsType }) => {
     );
   }
 
-  return <GuideOverview guide={guide} />;
+  return (
+    <div>
+      {" "}
+      <GuideOverview guide={guide} />{" "}
+    </div>
+  );
 };
 
 export default GuidePage;

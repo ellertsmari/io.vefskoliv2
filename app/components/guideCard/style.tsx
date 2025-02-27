@@ -1,7 +1,6 @@
 "use client";
 import styled from "styled-components";
-import { Wrapper } from "UIcomponents/input/style";
-import { Button } from "globalStyles/buttons/default/style";
+
 
 const BREAKPOINT = "680px";
 const BREAKPOINT_DESKTOP = "1024px";
@@ -11,6 +10,7 @@ export const CardWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  padding: 50px;
 `;
 
 export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`

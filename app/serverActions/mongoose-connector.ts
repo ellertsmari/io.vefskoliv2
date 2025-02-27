@@ -11,7 +11,6 @@ if (!MONGODB_URI) {
 let cachedConnection: typeof mongoose | null = null;
 
 export async function connectToDatabase(): Promise<typeof mongoose> {
-  console.log("MONGODB_URI", MONGODB_URI)
 
   if (cachedConnection) {
 

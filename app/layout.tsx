@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "globalStyles/globals.css";
 import StyledComponentsRegistry from "utils/registry";
-import {
-  LayoutGrid,
-  SidebarContainer,
-  HeaderContainer,
-  Main,
-} from "./globalStyles/layout";
+
 import { auth } from "../auth";
 import LoginPage from "pages/login/page";
 import Nav from "components/navbar/Nav";
-import FullCalendar from "components/calendar/Calendar";
 import { Profile } from "components/profile/profile";
+import {
+  HeaderContainer,
+  LayoutGrid,
+  Main,
+  SidebarContainer,
+} from "globalStyles/layoutStyles";
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
 export const metadata: Metadata = {

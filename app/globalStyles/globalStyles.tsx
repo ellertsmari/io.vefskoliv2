@@ -18,11 +18,12 @@ export const FullScreenWrapper = styled(Wrapper)`
 `;
 
 export const Border = styled(Wrapper)`
-  border: 1px solid #2B5B76;
+  border: 1px solid #2b5b76;
   border-radius: 0.5rem;
 `;
 
 export const MaterialButton = styled(Button)`
+  width: 100%;
   text-align: left;
   padding: 0.5rem 0.75rem;
 `;

@@ -1,5 +1,5 @@
 import React from "react";
-import { ProgressContainer, LabelContainer, OvalsContainer, Oval } from "./style";
+import { ProgressContainer, LabelContainer, OvalsContainer, Oval, Wrapper, Title, BoxContainer } from "./style";
 
 interface ProgressBarProps {
   label?: string;
