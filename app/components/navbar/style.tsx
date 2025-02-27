@@ -39,6 +39,7 @@ export const LinkStyle = styled(Link)<{ mylink?: string; pathname?: string }>`
   &:hover {
     color: black;
     background-color: white;
+    margin: 1px;
 
   }
 `;

@@ -1,5 +1,5 @@
 import Nav from "components/navbar/Nav";
-import { LayoutGrid, SidebarContainer } from "globalStyles/layout";
+import { LayoutGrid, SidebarContainer } from "globalStyles/layoutStyles";
 import React from "react";
 import StyledComponentsRegistry from "utils/registry";
 
