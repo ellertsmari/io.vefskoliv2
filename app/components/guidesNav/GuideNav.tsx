@@ -2,10 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Button86, GuideContainer, ButtonContainer } from "./style";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import GuideCard from "components/guideCard/GuideCard";
-import useLocalStorage from "utils/useLocalStorage";
-import { useSearchParams } from "next/navigation";
-
-
+import { title } from "process";
+// import useLocalStorage from "utils/useLocalStorage";
+// import { useSearchParams } from "next/navigation";
 
 interface Props {
   guides: ExtendedGuideInfo[];
@@ -14,20 +13,20 @@ interface Props {
 export default function GuideNav({ guides }: Props) {
   let guideNumber = 0;
 
-  const searchParams = useSearchParams();
-  const moduleParam = searchParams.get("module");
+  // const searchParams = useSearchParams();
+  // const moduleParam = searchParams.get("module");
 
-  const [moduleSelected, setModuleSelected] = useLocalStorage(
-    "Selected module",
-    { selected: moduleParam }
-  );
-  useEffect(() => {
-    moduleParam && setModuleSelected({ selected: moduleParam });
-  }, [moduleParam]);
-  const { selected } = moduleSelected;
-  const option = (selected: string) => {
-    setModuleSelected({ selected });
-  };
+  // const [moduleSelected, setModuleSelected] = useLocalStorage(
+  //   "Selected module",
+  //   { selected: moduleParam }
+  // );
+  // useEffect(() => {
+  //   moduleParam && setModuleSelected({ selected: moduleParam });
+  // }, [moduleParam]);
+  // const { selected } = moduleSelected;
+  // const option = (selected: string) => {
+  //   setModuleSelected({ selected });
+  // };
 
   const [selectedModule, setSelectedModule] = useState("0 - Preparation");
 
@@ -66,14 +65,14 @@ export default function GuideNav({ guides }: Props) {
         </Button86>
       </ButtonContainer>
       <GuideContainer>
-
         {guides.map((guide, index) => {
           if (selectedModule && guide.module.title === selectedModule) {
             guideNumber++;
 
             return (
               <>
-                <h1>{guide.module.title}</h1>
+                {/* {guides.map((title, index) => title.title)}; */}
+                {/* <h1>{guide.module.title}</h1> */}
                 <GuideCard guide={guide} key={index} order={guideNumber} />
               </>
             );
