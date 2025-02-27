@@ -63,19 +63,38 @@ export const Title = styled.h2`
   font-weight: normal;
   color: #2b5b76;
   text-align: left;
-  display: block; /* Ensures normal block behavior */
-  margin-top: 160px;
-  margin-bottom: 5px; 
+  width: 100%;
+  max-width: 1250px; /* Matches BoxContainer width */
+  margin-bottom: 5px;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+    text-align: center;
+  }
 `;
 
 export const BoxContainer = styled.div`
-  width: 1250px;
+  width: 100%;
+  max-width: 1250px; /* Matches Title width */
   min-height: 110px;
   border: 1px solid #E8F1FC;
   border-radius: 8px;
-  padding: 20px 10px; /* Increased padding-top */
+  padding: 20px 10px;
   background-color: #ffffff;
-  margin: 10px auto; /* Centers the box */
+  margin: 10px 0; /* Adjusts spacing */
 `;
+
+export const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers the title and box */
+  width: 100%;
+`;
+
 
 
