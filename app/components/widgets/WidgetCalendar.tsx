@@ -12,7 +12,7 @@ import {
   isSameMonth,
   isSameDay,
 } from "date-fns";
-import { ContainerCalendar, CalendarComponent } from "./widgetCalendarStyle";
+import { CalendarComponent } from "./widgetCalendarStyle";
 
 type ValuePiece = Date | null;
 
@@ -48,7 +48,6 @@ function WidgetCalendar() {
 
   return (
     <div>
-      <ContainerCalendar>
         <CalendarComponent onChange={onChange} value={value} locale="en-EN" />
         {/* <Header>Calendar</Header>
       <Month>{format(currentDate, "MMMM")}</Month>
@@ -58,7 +57,6 @@ function WidgetCalendar() {
         ))}
       </WeekDays>
       <Days>{days}</Days> */}
-      </ContainerCalendar>
     </div>
   );
 }
