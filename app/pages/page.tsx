@@ -1,15 +1,21 @@
-import frame1 from "../../public/Frame1.svg";
-import Image from "next/image";
 import "globalStyles/globals.css";
 import Countdown from "components/countdown/countdown";
-import { url } from "inspector";
 import { BackgroundDiv } from "./style";
+import Groups from "components/groups/groupsLayout";
+import Links from "components/links/linksLayout";
+import Notes from "components/notes/noteslayout";
 
 const Landingpage = () => {
   return (
     <>
       <BackgroundDiv>
         <Countdown></Countdown>
+
+        <Groups></Groups>
+
+        <Links></Links>
+
+        <Notes></Notes>
       </BackgroundDiv>
     </>
   );
