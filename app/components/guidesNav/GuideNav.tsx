@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Button86, GuideContainer, ButtonContainer } from "./style";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import GuideCard from "components/guideCard/GuideCard";
-import { title } from "process";
 // import useLocalStorage from "utils/useLocalStorage";
 // import { useSearchParams } from "next/navigation";
 
@@ -69,13 +68,7 @@ export default function GuideNav({ guides }: Props) {
           if (selectedModule && guide.module.title === selectedModule) {
             guideNumber++;
 
-            return (
-              <>
-                {/* {guides.map((title, index) => title.title)}; */}
-                {/* <h1>{guide.module.title}</h1> */}
-                <GuideCard guide={guide} key={index} order={guideNumber} />
-              </>
-            );
+            return <GuideCard guide={guide} key={index} order={guideNumber} />;
           }
         })}
       </GuideContainer>

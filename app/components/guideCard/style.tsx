@@ -16,7 +16,7 @@ export const CardWrapper = styled.div`
 export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--theme-module3-100);
+  border: 1px solid #2B5B76;
   align-items: center;
   gap: 16px;
   width: 190px;
