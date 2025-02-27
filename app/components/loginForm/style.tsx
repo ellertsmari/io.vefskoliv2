@@ -24,7 +24,7 @@ export const TopLeftLogo = styled(nextImage)`
   top: 0px;
   left: 25px;
   width: auto;
-  height: 250px;
+  height: 150px;
   @media (max-width: 1024px) {
     height: 150px;
   }

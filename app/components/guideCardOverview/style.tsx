@@ -26,7 +26,7 @@ export const StyledLink = styled(Link)`
   height: 100%;
 
   &:hover {
-    background-color: var(--primary-black-10);
+    background-color: #E8F1FC;
   }
 `;
 

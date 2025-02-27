@@ -16,7 +16,7 @@ export const Button = styled.button<{ $styletype: "default" | "outlined" }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: 0.1s ease-in-out;
+  transition: background-color 0.4s ease, color 0.4s ease; 
   width: 110px;
 
   &:hover {

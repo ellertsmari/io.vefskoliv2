@@ -51,7 +51,7 @@ export const ReusableTextarea = styled.textarea`
 `;
 
 export const Label = styled.label`
-  font-size: 12px;
+  font-size: 16px;
   color: var(--primary-black-60);
   width: ${mobileWidth};
 
