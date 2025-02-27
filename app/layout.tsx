@@ -6,7 +6,6 @@ import StyledComponentsRegistry from "utils/registry";
 import { auth } from "../auth";
 import LoginPage from "pages/login/page";
 import Nav from "components/navbar/Nav";
-import FullCalendar from "components/calendar/Calendar";
 import { Profile } from "components/profile/profile";
 import {
   HeaderContainer,
