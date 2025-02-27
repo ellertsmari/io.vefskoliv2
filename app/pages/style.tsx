@@ -1,8 +1,9 @@
-'use client'
+"use client";
 
 import { SidebarContainer } from "globalStyles/gridtemplate";
 import Image from "next/image";
 import styled from "styled-components";
+import frame1 from "../../public/Frame1.svg";
 /*
 export const MainContainer = styled.div`
   display: grid;
@@ -13,10 +14,17 @@ export const MainContainer = styled.div`
 ` 
 */
 export const NewSidebarContainer = styled.div`
-grid-area: sidebar;
-`
+  grid-area: sidebar;
+`;
 
-export const Main = styled (Image)`
-grid-area: main;
-`
-  
+export const Main = styled(Image)`
+  grid-area: main;
+`;
+console.log(frame1.src);
+export const BackgroundDiv = styled.div`
+  background-color: white;
+  background-image: url(${frame1.src});
+  background-size: cover;
+  width: 100%;
+  height: 100%;
+`;

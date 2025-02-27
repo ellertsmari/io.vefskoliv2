@@ -3,8 +3,6 @@ import { Poppins } from "next/font/google";
 import "globalStyles/globals.css";
 import StyledComponentsRegistry from "utils/registry";
 
-import { PageWrapper, NavWrapper } from "./style";
-
 import Navbar from "components/navbar/navbar";
 import Sidebar from "components/sidebar/sidebar";
 

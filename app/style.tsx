@@ -1,4 +1,4 @@
-'use client'
+/*'use client'
 import styled from "styled-components";
 
 export const PageWrapper = styled.div`
@@ -20,3 +20,4 @@ export const NavWrapper = styled.div`
   overflow-x: hidden;
   
 `;
+*/

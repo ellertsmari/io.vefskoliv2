@@ -1,6 +1,6 @@
 "use client";
 import styled from "styled-components";
-
+import frame1 from "../../public/Frame1.svg";
 const breakpoint = "768px";
 
 export const LayoutGrid = styled.div`
@@ -14,7 +14,6 @@ export const LayoutGrid = styled.div`
   width: 100%;
   grid-auto-rows: min-content;
   grid-auto-flow: row;
-
   background: linear-gradient(
     to bottom,
     rgba(117, 43, 54, 1) 0%,
@@ -50,7 +49,7 @@ export const Main = styled.div`
   max-width: 100%;
   height: 100%;
   overflow: scroll;
-  background-color: white;
+
   border: solid 1px #6563eb;
 
   grid-area: main;
