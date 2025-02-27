@@ -4,6 +4,7 @@ import { BackgroundDiv } from "./style";
 import Groups from "components/groups/groupsLayout";
 import Links from "components/links/linksLayout";
 import Notes from "components/notes/noteslayout";
+import CalendarComponent from "components/calendar/calendar";
 
 const Landingpage = () => {
   return (
@@ -16,6 +17,7 @@ const Landingpage = () => {
         <Links></Links>
 
         <Notes></Notes>
+        <CalendarComponent></CalendarComponent>
       </BackgroundDiv>
     </>
   );
