@@ -78,7 +78,8 @@ align-items: center;
 export const MainFrame = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 21px;`
+  gap: 21px;
+  max-width: 307px;`
 
   export const NavigationContainer = styled.button`
     display: flex;
@@ -89,7 +90,7 @@ export const MainFrame = styled.div`
   background-color: white;
   border: none;
   cursor: pointer;
-`;
+`
 
 export const EventsContainer= styled.div`
 display: flex;
@@ -103,4 +104,5 @@ export const Time= styled.div`
 font-size: 12px;
 color: var(--main-Color);`
 
-export const ModuleWrapper= styled.div``
+export const Title= styled.div`
+color: var(--main-Color)`

@@ -12,6 +12,7 @@ import {
   EventsContainer,
   TitleParagraph,
  Time,
+ Title,
 
 } from "./style";
 import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
@@ -62,7 +63,7 @@ const [today, setToday]= useState(new Date());
 
   return (
     <MainFrame className="daily-plan">
-      <h1>Daily Plan</h1>
+      <Title>Daily Plan</Title>
       <Wrapper>
         <Header>
           <NavigationContainer onClick={()=>onClick(-1)}>
