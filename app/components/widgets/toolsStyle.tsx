@@ -68,4 +68,5 @@ export const Icon = styled(CheckCircle)`
 export const ContentBox = styled.div`
   width:307px;
   border-radius: 8px;
+  height: 300px;
  `;

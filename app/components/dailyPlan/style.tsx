@@ -102,3 +102,5 @@ font-size: 14px;`
 export const Time= styled.div`
 font-size: 12px;
 color: var(--main-Color);`
+
+export const ModuleWrapper= styled.div``
