@@ -15,7 +15,8 @@ import {
   UserWrapper,
   WelcomeText,
   WelcomeTextWrapper,
-  HeaderWrapper
+  HeaderWrapper,
+  ParagraphStyle
 } from "./style";
 import Modal from "UIcomponents/modal/modal";
 import { Input } from "UIcomponents/input/Input";
@@ -41,7 +42,7 @@ export const Profile = ({ session }: { session: Session | null }) => {
         <WelcomeTextWrapper style={{ padding: "10px" }}>
           <WelcomeText style={{ fontSize: "40px", fontFamily: "Poppins" }}>
             Welcome {user.name}
-            <p>What do you plan for today?</p>
+            <ParagraphStyle>What is your plan for today?</ParagraphStyle>
           </WelcomeText>
         </WelcomeTextWrapper>
           <UserWrapper style={{ display: "flex", justifyItems: "center" }}>

@@ -50,7 +50,6 @@ export const ProfileName = styled.h2`
   color: var(--main-Color);
 `;
 
-//Modal styles
 
 export const Logout = styled.div`
   display: flex;
@@ -134,3 +133,6 @@ export const HeaderWrapper = styled.div`
   gap: 1rem;
   
 `;
+
+export const ParagraphStyle= styled.div`
+color: #a8a8a8`

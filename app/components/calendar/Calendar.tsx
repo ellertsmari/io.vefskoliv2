@@ -41,6 +41,7 @@ import {
   LegendItem,
   LegendColor,
   ViewToggleButton,
+  MainContainer,
 } from "./style";
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -327,6 +328,7 @@ const CalendarScheduler = ({ role, userid }: Props) => {
   };
 
   return (
+    <MainContainer>
     <Container>
       <Title> Schedule</Title>
       <CalendarContainer>
@@ -497,6 +499,7 @@ const CalendarScheduler = ({ role, userid }: Props) => {
         </Legend>
       )}
     </Container>
+    </MainContainer>
   );
 };
 

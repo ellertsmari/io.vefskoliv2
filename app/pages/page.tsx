@@ -1,4 +1,3 @@
-
 import ProgressB from "components/progress/progress";
 
 import WidgetCalendar from "components/widgets/WidgetCalendar";
@@ -33,14 +32,10 @@ const HomePage = () => {
           </LayoutToolsandTodo>
         </BoxContainer>
       </Widgetlayout>
-      <ProgressB/>
-
-     
-       
+      <ProgressB />
     </PageContainer>
-
-
   );
 };
 
 export default HomePage;
+ 

@@ -6,7 +6,7 @@ export const PageContainer = styled.div`
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 38px;
   padding: 24px;
 `;
 
@@ -19,20 +19,22 @@ export const OverviewContainer = styled.div`
 export const LayoutPlanCal = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 21px;
 `;
 
 export const LayoutToolsandTodo = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  
+  grid-template-columns: 1fr 1fr; 
+  gap: 62px;
+  align-items: start;
 `;
 
 export const Widgetlayout = styled.div`
-  max-width: 1300px;
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   flex-direction: row;
-  gap: 32px;
-
+  gap: 62px;
 `;
 
 
@@ -41,5 +43,4 @@ export const SchoolProgressContainer = styled.div`
 `;
 
 export const BoxContainer = styled.div`
-  display: grid;
-  `
+  display: grid;`

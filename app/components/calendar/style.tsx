@@ -2,8 +2,15 @@ import styled from "styled-components";
 
 export const Container = styled.div`
   padding: 1rem;
-  width: 100%;
+  width: 1200px;
+  display: flex;
+  flex-direction: column;
+  
 `;
+export const MainContainer=styled.div `
+display: flex;
+justify-content: center;
+`
 
 export const Title = styled.h1`
   font-size: 1.5rem;
@@ -152,7 +159,7 @@ export const LegendItem = styled.div`
   display: flex;
   align-items: center;
   margin: 0.5rem;
-  color: #2B5B76
+  color: #2B5B76;
 `;
 
 export const LegendColor = styled.div<{ color: string }>`
@@ -161,7 +168,7 @@ export const LegendColor = styled.div<{ color: string }>`
   border-radius: 50%;
   background-color: ${(props) => props.color};
   margin-right: 0.5rem;
-`;
+`
 
 export const ViewToggleButton = styled.button<{ $active: boolean }>`
   background-color: ${(props) => (props.$active ? "#2B5B76" : "white")};
