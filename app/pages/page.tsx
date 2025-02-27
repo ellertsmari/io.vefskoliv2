@@ -1,19 +1,36 @@
-'use client'
+import "globalStyles/globals.css";
+import Countdown from "components/countdown/countdown";
+import {
+  BackgroundDiv,
+  MainContainer,
+  NewSidebarContainer,
+  RightSideMain,
+} from "./style";
+import Groups from "components/groups/groupsLayout";
+import Links from "components/links/linksLayout";
+import Notes from "components/notes/noteslayout";
+import CalendarComponent from "components/calendar/calendar";
 
-import frame1 from "../../public/Frame1.svg"
-import Image from "next/image";
+const Landingpage = () => {
+  return (
+    <>
+      <BackgroundDiv>
+        <MainContainer>
+          <NewSidebarContainer>
+            <Countdown></Countdown>
+            <Notes></Notes>
+          </NewSidebarContainer>
+          <RightSideMain>
+            <Links></Links>
 
-const landingpage = () => {
-  return (  
-    
-     
-    <div style={{ gridArea: "main", backgroundColor: "white", minHeight: "100vh" }}>
-      <Image alt="background" style={{width: "100%", height: "100%", objectFit: "cover"}} src={frame1}></Image>
-      </div>
-      
- );
+            <Groups></Groups>
 
-}
+            <CalendarComponent></CalendarComponent>
+          </RightSideMain>
+        </MainContainer>
+      </BackgroundDiv>
+    </>
+  );
+};
 
-export default landingpage;
-
+export default Landingpage;

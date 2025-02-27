@@ -3,6 +3,7 @@ import Image from "next/image";
 import home from "public/Vector.svg"
 
 export const ImageIcon = styled(Image) `
+    transform: translate(15%);
     height: 60px;
     width: 60px;
     border-radius: 8px;
@@ -10,7 +11,12 @@ export const ImageIcon = styled(Image) `
 
 export const ArrowIcon = styled(ImageIcon)`
     position: absolute;
-    transform: translate(220%, 15%);
+    top: 45px;
+    left: 120px;
+    cursor: pointer;
+
+
+    /*transform: translate(220%, 15%);*/
     height: 44px;
     width: 44px;
     
