@@ -11,6 +11,7 @@ export const CardWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  padding: 50px;
 `;
 
 export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`

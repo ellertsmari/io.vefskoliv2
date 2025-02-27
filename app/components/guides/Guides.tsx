@@ -1,11 +1,11 @@
 "use client";
 
-import { Container, GuideDropdownContainer } from "./style";
+import { Container, GuideDropdownContainer} from "./style";
 import { Dropdown } from "UIcomponents/dropdown/Dropdown";
-import { ExtendedGuideInfo, Module } from "types/guideTypes";
+import { ExtendedGuideInfo, Module,  } from "types/guideTypes";
 import { useLocalState } from "react-session-hooks";
 import { GuidesClient } from "components/guidesClient/GuidesClient";
-
+import GuideNav from "components/guidesNav/GuideNav";
 const LOCAL_STORAGE_KEY = "selectedModule";
 
 export const Guides = ({
@@ -25,9 +25,13 @@ export const Guides = ({
   const options = createOptions(modules, setSelectedModule);
 
   return (
-    <Container>
-      <GuideDropdownContainer>
-        <Dropdown
+      <>
+   
+
+    <GuideNav guides={extendedGuides}/>
+
+      {/* <GuideDropdownContainer>
+         <Dropdown
           key={selectedModule}
           options={options}
           currentOption={options.find(
@@ -37,10 +41,10 @@ export const Guides = ({
             optionName: "All Modules",
             onClick: () => setSelectedModule(null),
           }}
-        />
-      </GuideDropdownContainer>
-      <GuidesClient guides={filteredGuides} useGuideOrder={!!selectedModule} />
-    </Container>
+        /> 
+      </GuideDropdownContainer> */}
+      {/* <GuidesClient guides={filteredGuides} useGuideOrder={!!selectedModule} /> */}
+    </>
   );
 };
 

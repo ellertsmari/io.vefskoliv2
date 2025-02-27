@@ -13,7 +13,7 @@ import {
   LayoutGrid,
   Main,
   SidebarContainer,
-} from "globalStyles/layout";
+} from "globalStyles/layoutStyles";
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
 export const metadata: Metadata = {
