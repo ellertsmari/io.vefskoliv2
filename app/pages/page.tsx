@@ -20,9 +20,7 @@ const GuidesWidget = async ()=> {
 
   const fetchedGuides =(await getGuides(userId)) || [];
   if(fetchedGuides.length<1) throw new Error("No guides found")
-  const extendedGuides = await extendGuides(
-    JSON.parse(JSON.stringify(fetchedGuides))
-  );
+  const extendedGuides = await extendGuides(fetchedGuides);
   return (
 
         <>
