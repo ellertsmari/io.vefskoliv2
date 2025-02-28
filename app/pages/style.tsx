@@ -19,7 +19,7 @@ export const OverviewContainer = styled.div`
 export const LayoutPlanCal = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 21px;
+  gap: 60px;
 `;
 
 export const LayoutToolsandTodo = styled.div`
