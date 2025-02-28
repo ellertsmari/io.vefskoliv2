@@ -30,7 +30,7 @@ export const ModulesText2 = styled.p`
 `;
 
 export const GuidesContainer = styled.div`
-  width: 1000px;
+  width: 772px;
   background: rgba(255, 255, 255, 0.7);
   border-radius: 16px;
   box-shadow: 0px 4px 32px -10px rgba(124, 68, 79, 0.5);

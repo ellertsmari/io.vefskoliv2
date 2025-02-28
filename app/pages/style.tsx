@@ -9,10 +9,13 @@ export const MainContainer = styled.div`
   display: grid;
   grid-template-areas: "sidebar main";
   grid-template-columns: 2fr 1fr;
+  gap: 40px
+
 `;
 
 export const NewSidebarContainer = styled.div`
   grid-area: sidebar;
+  gap: 40px
 `;
 
 export const RightSideMain = styled.div`

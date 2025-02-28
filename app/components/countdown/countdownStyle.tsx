@@ -4,6 +4,9 @@ export const Container = styled.div`
   display: flex;
   width: 772px;
   height: 187px;
+
+  padding-top: 20px;
+  margin: auto;
 `;
 
 export const TimerWrapper = styled.div``;
@@ -11,7 +14,10 @@ export const TimerSegment = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  margin: 20px;
   margin: 8px;
+
 `;
 
 export const TimerTitle = styled(TimerSegment)``;
@@ -60,12 +66,14 @@ export const Headline = styled.div`
 
 export const FrameCountdown = styled.div`
   display: flex;
+  width: 1300px;
   width: 772px;
   height: 187px;
   justify-content: center;
   align-items: center;
   align-content: center;
   border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
   background-color: rgba(250, 247, 242, 1);
   box-shadow: 0px 4px 32px 0px rgba(124, 68, 79, 0.5);
 `;
