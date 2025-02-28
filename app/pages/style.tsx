@@ -9,12 +9,15 @@ export const MainContainer = styled.div`
   display: grid;
   grid-template-areas: "sidebar main";
   grid-template-columns: 2fr 1fr;
-  gap: 40px
+  gap: 40px;
+  padding: 40px;
+  padding-top: 143px;
+  width: 100%;
 `;
 
 export const NewSidebarContainer = styled.div`
   grid-area: sidebar;
-  gap: 40px
+  gap: 40px;
 `;
 
 export const RightSideMain = styled.div`
@@ -25,6 +28,6 @@ export const BackgroundDiv = styled.div`
   background-color: white;
   background-image: url(${frame1.src});
   background-size: cover;
-  width: 100%;
+
   height: 100%;
 `;
