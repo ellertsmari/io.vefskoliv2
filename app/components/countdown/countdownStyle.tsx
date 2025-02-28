@@ -6,9 +6,6 @@ export const Container = styled.div`
    width: 772px;
    height:187px;
    border: 5 px solid black;
-   
-  
-    
 `
 
 export const TimerWrapper = styled.div `
@@ -21,7 +18,6 @@ export const TimerSegment = styled.div`
  margin: 8px;
 
 `
-
 export const TimerTitle = styled(TimerSegment)`
 
 `

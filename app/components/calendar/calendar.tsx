@@ -2,13 +2,13 @@
 import Calendar from 'react-calendar';
 import {useState} from 'react';
 import 'react-calendar/dist/Calendar.css';
-import {StyledCalendar, Headline, EventListContainer, EventColumn, EventDay, EventDate, EventContent, EventIcon, ContainerFrame, EventWrapper, } from './calendarStyle'
+import {StyledCalendar, Headline, EventListContainer, EventColumn, EventDay, EventDate, EventContent, EventIcon, ContainerFrame, EventWrapper, BellIcon} from './calendarStyle'
 import Image from 'next/image';
 import Bell from '/public/Icon.svg'
 
-type ValuePiece = Date | null;
+type ValuePiece = Date | null;//
 
-type Value = ValuePiece | [ValuePiece, ValuePiece];
+type Value = ValuePiece | [ValuePiece, ValuePiece];//
 
 const CalendarComponent = () => {
 const [value, onChange] = useState<Value>(new Date());
@@ -36,32 +36,33 @@ const events = [
     }
 ]
 
-
+console.log(Number(events[0].date))
     return (
     
         <ContainerFrame>
             <StyledCalendar onChange={onChange} value={value}/>
                 <EventWrapper>
-                <Headline>Events</Headline>
-                    {events.map((event)=>{
-                        return(
-                            <EventListContainer>
-                            <EventColumn>
-                                <EventDay>{event.day}</EventDay>
-                                    <EventDate>{event.date}</EventDate>
-                                        <div style={{borderLeft: '1px solid #C4ABB0', height: '30px',}} ></div>
+                    <Headline>Events</Headline>
+                        {events.map((event)=>{
+                             return(
+                                <EventListContainer $inputColor={(Number(event.date)===(value as Date).getDate()&&'rgba(196, 171, 176, 0.25)') as string}>
+                                    <EventColumn>
+                                        <EventDay>{event.day}</EventDay>
+                                            <EventDate>{event.date}</EventDate>
+                                                <div style={{borderLeft: '1px solid #C4ABB0', height: '30px',}} ></div>
                                             <EventContent>{event.content}</EventContent>
-                            </EventColumn>  
-                            <EventIcon> <Image src={event.image} alt="icon"  width="24" height="24" /> </EventIcon>
+                                    </EventColumn>  
+                                        <EventIcon 
+                                        $inputColor={(Number(event.date)===(value as Date).getDate()&&'var(--100-Burgundy, #7C2D38);') as string}> 
+                                            <BellIcon src={event.image} 
+                                                $iconColor={(Number(event.date)===(value as Date).getDate()&&' #fffff;') as string} alt="icon"  width="24" height="24" /> 
+                                        </EventIcon>
 
-                        </EventListContainer>        
-                        )
-                    })}
+                                </EventListContainer>        
+                                    )
+                                    })}
                  </EventWrapper>
         </ContainerFrame>
-
-        
-
     )
 }
 

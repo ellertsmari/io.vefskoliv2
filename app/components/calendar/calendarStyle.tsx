@@ -1,27 +1,29 @@
 import styled from "styled-components";
 import Calendar from 'react-calendar';
+import Image from "next/image";
 
 
 export const StyledCalendar= styled(Calendar)`
-    background-color: #faf2f2;
+    background: rgba(255, 255, 255, 0.7);
     font-family: Karma;
     color: var(--100-Burgundy, #7C2D38);
     border: none;
     margin: 0 auto;
 
-
+    // allir dagar í dagatali, aðallitur á font//
     .react-calendar__month-view__days__day {
         font-family: 'Lato', sans-serif;
         color: var(--100-Burgundy, #7C2D38);
         font-size: 16px;
     }
-
+    //dagar sem tilheyra ekki dögum í mánuðinum//
     .react-calendar__month-view__days__day--neighboringMonth{
         font-family: 'Lato', sans-serif;
+        color:red;
         color: var(--30-Burgundy, #C4ABB0);
         font-size: 16px;
     }
-
+    //vikudagar//
     .react-calendar__month-view__weekdays__weekday>abbr{
         font-size: 12px;
         text-decoration: none;
@@ -33,7 +35,7 @@ export const StyledCalendar= styled(Calendar)`
 
     //Headline of the calendar- months and arrow//
     .react-calendar__navigation__label {
-        color: var(--100-Burgundy, #7C2D38); //virkar ekki
+        color: var(--100-Burgundy, #7C2D38); 
         font-size:28px;
         font-weight: 600;
         font-family: Karma;
@@ -62,6 +64,7 @@ export const StyledCalendar= styled(Calendar)`
             font-size:35px;
             position: absolute;
             left:40%;
+            
         }
     }
 
@@ -82,6 +85,7 @@ export const StyledCalendar= styled(Calendar)`
             font-size:35px;
             position: absolute;
             left:40%;
+            
         }
     }
     .react-calendar__tile--active{
@@ -94,13 +98,13 @@ export const StyledCalendar= styled(Calendar)`
     
     .react-calendar__tile--now {
         background-color: #faf2f2;
-        border: 1px solid;
         border-radius:20px;
 
     }    
     .react-calendar__tile--now:enabled:hover,
     .react-calendar__tile--now:enabled:focus {
         background-color: #faf2f2;
+        
         
 }
 .react-calendar__tile:enabled:hover {
@@ -111,14 +115,15 @@ export const StyledCalendar= styled(Calendar)`
 `
 
 export const ContainerFrame = styled.div `
-    background-color: #faf2f2;
+background: rgba(255, 255, 255, 0.7);   
     width: 503px;
     height: 750px;   
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-   padding:35px;
+    padding:35px;
+    border-radius:16px;
 
 `
     export const Headline = styled.div`
@@ -139,7 +144,7 @@ export const EventWrapper = styled.div`
 `
 
 //ramminn utan um athugasemdir//
-export const EventListContainer = styled.div`
+export const EventListContainer = styled.div<{ $inputColor?: string; }>`
     display: flex;
     justify-content: space-between;
     width: 436px;
@@ -149,6 +154,8 @@ export const EventListContainer = styled.div`
     border-radius: 10px;
     box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.25);
     margin: 0 auto;
+    background-color: ${props => props.$inputColor || ""};
+
 
 `
 export const EventColumn = styled.div `
@@ -172,15 +179,21 @@ export const EventContent = styled.div `
     font-size: 14px;
     font-weight: 400;
 `   
-export const EventIcon = styled.div `
+export const EventIcon = styled.div<{ $inputColor?: string;  }> `
     display: flex;
     align-items: center;
     padding:10px;
     border-radius:20px;
     background: rgba(196, 171, 176, 0.50);
+    background-color: ${props => props.$inputColor || ""};    
 
 
 
-   
-  
 `
+
+export const BellIcon = styled(Image)<{$iconColor?:string;}>`
+    background: ${props => props.$iconColor || ""};
+`
+
+
+
