@@ -11,7 +11,7 @@ import Icon5 from "../../assets/Component6.svg";
 import GradesInfo from "./gradesInfo";
 
 type Props = {
-  data: { module: { title:string } }[];
+  data: { module: { title: string } }[];
 };
 const GuidesWidget = ({ data }: Props) => {
   const icons = [Icon0, Icon1, Icon2, Icon3, Icon4, Icon5, Icon0, Icon2];
@@ -45,6 +45,7 @@ const GuidesWidget = ({ data }: Props) => {
                 ModuleTitle={"Module " + (index + 1)}
                 GuidesNumber={module.number}
                 GuidesImage={module.image}
+                key={module.index}
               />
             );
           })}

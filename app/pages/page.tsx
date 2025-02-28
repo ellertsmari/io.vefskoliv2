@@ -1,5 +1,4 @@
-
-"use server"
+"use server";
 
 import "globalStyles/globals.css";
 import Countdown from "components/countdown/countdown";
@@ -18,38 +17,37 @@ import Guides from "components/guides/guidesLayout";
 import { getGuides } from "serverActions/getGuides";
 import { extendGuides } from "utils/guideUtils";
 
-const GuidesWidget = async ()=> {
-  const userId ='67b48a1159ab390636d322d9'
+const GuidesWidget = async () => {
+  const userId = "67b48a1159ab390636d322d9";
 
-  const fetchedGuides =(await getGuides(userId)) || [];
-  if(fetchedGuides.length<1) throw new Error("No guides found")
+  const fetchedGuides = (await getGuides(userId)) || [];
+  if (fetchedGuides.length < 1) throw new Error("No guides found");
   const extendedGuides = await extendGuides(
     JSON.parse(JSON.stringify(fetchedGuides))
   );
   return (
+    <>
+      <BackgroundDiv>
+        <MainContainer>
+          <NewSidebarContainer>
+            <Guides data={extendedGuides}></Guides>
+            <Countdown></Countdown>
+            <Notes></Notes>
+          </NewSidebarContainer>
+          <RightSideMain>
+            <Links></Links>
 
-        <>
-          <BackgroundDiv>
-            <MainContainer>
-              <NewSidebarContainer>
-                <Guides data={extendedGuides}></Guides>
-                <Countdown></Countdown>
-                <Notes></Notes>
-              </NewSidebarContainer>
-              <RightSideMain>
-                <Links></Links>
+            <Groups></Groups>
 
-                <Groups></Groups>
+            <CalendarComponent></CalendarComponent>
+          </RightSideMain>
+        </MainContainer>
+      </BackgroundDiv>
+    </>
+  );
+};
 
-                <CalendarComponent></CalendarComponent>
-              </RightSideMain>
-            </MainContainer>
-          </BackgroundDiv>
-        </>
-      );
-    };
-
-    export default GuidesWidget;
+export default GuidesWidget;
 
 // const GuidesWidget = async ()=> {
 //   const userId ='67b48a1159ab390636d322d9'
@@ -67,7 +65,6 @@ const GuidesWidget = async ()=> {
 // };
 
 // export default GuidesWidget;
-
 
 const Landingpage = () => {
   return (
@@ -91,4 +88,4 @@ const Landingpage = () => {
   );
 };
 
-export default Landingpage;
+/*export default Landingpage;*/
