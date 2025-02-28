@@ -10,6 +10,7 @@ export const MainContainer = styled.div`
   grid-template-areas: "sidebar main";
   grid-template-columns: 2fr 1fr;
   gap: 40px
+
 `;
 
 export const NewSidebarContainer = styled.div`
