@@ -10,8 +10,10 @@ export const CalendarComponent = styled(Calendar)`
   border: 1px solid #E8F1FC;
   border-radius: 8px;
   padding: 20px;
-  width: 350px;
-  height: 244px;
+  width: 307px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
 
 .react-calendar__month-view__days,
 .react-calendar__tile,
@@ -107,6 +109,7 @@ button
 
     &:hover {
       background-color: var(--main-Lightblue);
+      border-radius: 4px;
     }
 
     &.react-calendar__tile--active {
@@ -124,3 +127,11 @@ export const ContainerCalendar = styled.div`
   width: 300px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
+
+// export const Header=styled.div``
+
+// export const Month=styled.div``
+// export const WeekDays=styled.div``
+
+// export const Days=styled.div``
+// export const MainContainer=styled.div

@@ -29,7 +29,7 @@ export const EmptyText = styled.p`
 
 export const PlaceholderTasks = styled.div`
   max-width: 307px;
-  height: 241px;
+  height: 182px;
   overflow: scroll;
   background-color: white;
   border: solid 1px var(--main-Lightblue);
