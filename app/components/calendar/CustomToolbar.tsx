@@ -1,27 +1,14 @@
 import { CircleArrowLeft, CircleArrowRight, CirclePlus } from "lucide-react";
 import {
-  Container,
-  Title,
-  CalendarContainer,
+
   Button,
-  Overlay,
-  Dialog,
-  DialogTitle,
-  Form,
-  FormGroup,
-  Label,
-  Input,
-  Select,
-  DeleteButton,
+
   NavigationContainer,
   NavigationButton,
   LeftNav,
   ViewToggle,
-  Legend,
-  LegendItem,
-  LegendColor,
-  ViewToggleButton,
-  MainContainer,
+ 
+  ViewToggleButton
 } from "./style";
 import moment from "moment";
 

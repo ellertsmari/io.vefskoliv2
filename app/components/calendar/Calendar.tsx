@@ -8,7 +8,6 @@ import {
   getEvents,
   delEvent,
 } from "serverActions/getEvents";
-// import { EventType } from "../../models/event";
 import {
   Calendar,
   momentLocalizer,
@@ -18,7 +17,6 @@ import {
 } from "react-big-calendar";
 import moment from "moment";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import { CircleArrowLeft, CircleArrowRight, CirclePlus } from "lucide-react";
 import {
   Container,
   Title,
@@ -33,14 +31,10 @@ import {
   Input,
   Select,
   DeleteButton,
-  NavigationContainer,
-  NavigationButton,
-  LeftNav,
-  ViewToggle,
+  
   Legend,
   LegendItem,
   LegendColor,
-  ViewToggleButton,
   MainContainer,
 } from "./style";
 import CustomToolbar from "./CustomToolbar";
