@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import styled from "styled-components";
 
 export const PageContainer = styled.div`
@@ -24,7 +24,7 @@ export const LayoutPlanCal = styled.div`
 
 export const LayoutToolsandTodo = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr; 
+  grid-template-columns: 1fr 1fr;
   gap: 62px;
   align-items: start;
 `;
@@ -37,10 +37,10 @@ export const Widgetlayout = styled.div`
   gap: 62px;
 `;
 
-
 export const SchoolProgressContainer = styled.div`
   margin-top: 24px;
 `;
 
 export const BoxContainer = styled.div`
-  display: grid;`
+  display: grid;
+`;

@@ -22,7 +22,6 @@ import LogOut from "../../../public/icons/logOut.svg";
 
 const Nav = () => {
   const pathname = usePathname();
-  console.log(pathname);
   const navbarList = [
     {
       icon: Home,
