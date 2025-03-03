@@ -7,6 +7,8 @@ import {
 } from "mongoose";
 import mongoose from "mongoose";
 
+
+//define schema structure
 const eventSchema = new Schema(
   {
     id: { type: Schema.Types.String, required: true, unique: true },
@@ -19,8 +21,8 @@ const eventSchema = new Schema(
   },
   { timestamps: true }
 );
-
+// creates types
 export type EventType = InferSchemaType<typeof eventSchema> 
 
-
+// creates model
 export const Event = models?.Event || model<EventType>("Event", eventSchema);
