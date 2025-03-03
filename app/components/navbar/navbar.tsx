@@ -64,7 +64,7 @@ const Navbar = () => {
                 alt="Profile Pic"
               />
             </div>
-            {/*<div style={{ position: "relative", width: "100px", height: "100px" }}>
+            {/* <div style={{ position: "relative", width: "100px", height: "100px" }}>
   <ProfileImage src={profilePic} width={100} height={100} alt="Profile Pic" />
   <PenImage
     src={pen}
@@ -73,7 +73,7 @@ const Navbar = () => {
     alt="Pen Settings"
     style={{ position: "absolute", bottom: -50, right: -90 }}
   />
-</div>*/}
+</div> */}
 
             <span></span>
           </GreetingContainer>

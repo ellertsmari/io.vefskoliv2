@@ -17,10 +17,8 @@ export const TimerSegment = styled.div`
 
 `
 export const TimerTitle = styled(TimerSegment)`
-  margin: 20px;
   margin: 8px;
 `;
-
 
 export const Time = styled.div`
   display: flex;
@@ -52,6 +50,7 @@ export const TimerInner = styled.div`
   display: flex;
   padding: 11px;
   align-items: center;
+
 `;
 
 export const Headline = styled.div`

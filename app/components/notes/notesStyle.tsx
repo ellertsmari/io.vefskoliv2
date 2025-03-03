@@ -6,7 +6,6 @@ export const NotesContainer = styled.label`
   gap: 8px;
   font-weight: bold;
   padding-top: 50px;
-  /*margin:auto;*/
 `;
 
 export const NotesHeading = styled.h1`
@@ -23,7 +22,6 @@ export const NotesBox = styled.div`
   display: flex;
   align-items: center;
   padding-left: 70px;
-  /*margin: auto;*/
 `;
 
 export const NotesTextarea = styled.textarea`

@@ -8,7 +8,7 @@ import Sidebar from "components/sidebar/sidebar";
 
 
 export default function ClientLayout({ children }) {
-  
+
   const gradients = [
     "linear-gradient(to bottom, rgba(117,43,54,1) 0%, rgba(219,79,99,1) 31%, rgba(117,43,54,1) 88%)",
     "linear-gradient(to bottom, rgba(53, 45, 124, 1) 0%, rgba(80, 99, 219, 1) 31%, rgba(132, 142, 230, 1) 88%)",
@@ -17,10 +17,10 @@ export default function ClientLayout({ children }) {
 
   ];
 
-  
+
   const [bg, setBg] = useState(gradients[0]);
 
-  
+
   const changeBackground = (newBg) => {
     setBg(newBg);
   };
@@ -37,4 +37,3 @@ export default function ClientLayout({ children }) {
     </LayoutGrid>
   );
 }
-
