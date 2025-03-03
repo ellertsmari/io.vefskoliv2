@@ -55,6 +55,7 @@ export const Dialog = styled.div`
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
 `;
 
 export const DialogTitle = styled.h2`

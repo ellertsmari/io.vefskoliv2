@@ -29,6 +29,8 @@ export default function GuideNav({ guides }: Props) {
 
   const [selectedModule, setSelectedModule] = useState("0 - Preparation");
 
+  const [isClicked, setIsClicked] = useState(false);
+
   return (
     <>
       <ButtonContainer>
