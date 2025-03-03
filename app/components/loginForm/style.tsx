@@ -12,7 +12,7 @@ export const Form = styled(GlobalForm)`
 `;
 
 export const Logo = styled(Lottie)`
-  max-width: 380px;
+  width: 395px;
 
   height: 280px;
 
