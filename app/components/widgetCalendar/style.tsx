@@ -33,6 +33,23 @@ export const CalendarComponent = styled(Calendar)`
     text-align: center;
   }
 
+  .react-calendar__month-view__days,
+  .react-calendar__tile,
+  .react-calendar__month-view__days__day,
+  .react-calendar__month-view__days__day--neighboringMonth,
+  abbr,
+  button {
+    border: none;
+    font-size: 12px;
+    margin: 0px auto;
+    padding: 0px;
+  }
+
+  .react-calendar__month-view__weekdays__weekday,
+  .react-calendar__month-view__weekdays__weekday--weekend {
+    text-align: center;
+  }
+
   /* Style the navigation buttons (arrows) */
   .react-calendar__navigation__prev2-button,
   .react-calendar__navigation__next2-button,

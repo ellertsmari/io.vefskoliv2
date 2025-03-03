@@ -22,7 +22,6 @@ import LogOut from "../../../public/icons/logOut.svg";
 
 const Nav = () => {
   const pathname = usePathname();
-  console.log(pathname);
   const navbarList = [
     {
       icon: Home,
@@ -60,13 +59,13 @@ const Nav = () => {
           return (
             <LinkStyle
               key={index}
-              mylink={list.link}
-              pathname={pathname}
+              $mylink={list.link}
+              $pathname={pathname}
               href={list.link}
             >
               <Icon
-                mylink={list.link}
-                pathname={pathname}
+                $mylink={list.link}
+                $pathname={pathname}
                 src={list.icon}
                 alt="icons"
               ></Icon>

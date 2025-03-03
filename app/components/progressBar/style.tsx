@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import styled from "styled-components";
 
@@ -24,10 +24,10 @@ export const OvalsContainer = styled.div`
   gap: 3px; /*space between oval forms */
 `;
 
-export const Oval = styled.div<{ filled: boolean }>`
+export const Oval = styled.div<{ $filled: boolean }>`
   width: 20px;
   height: 40px;
-  background-color: ${({ filled }) => (filled ? "#2B5B76" : "#D9D9D9")};
+  background-color: ${({ $filled }) => ($filled ? "#2B5B76" : "#D9D9D9")};
   border-radius: 50px; /* oval form */
   transition: background-color 0.3s ease-in-out;
 `;
@@ -36,7 +36,7 @@ export const Oval = styled.div<{ filled: boolean }>`
 export const ProgressWrapper = styled.div`
   font-size: 14px;
   font-weight: normal;
-  color: #2B5B76;
+  color: #2b5b76;
   display: flex;
   flex-direction: column; /* Stack label, progress bar, and percentage */
   align-items: flex-start; /* Align content to the left */
@@ -47,8 +47,8 @@ export const ProgressWrapper = styled.div`
 export const Percentage = styled.span`
   font-size: 14px;
   font-weight: normal;
-  color: #2B5B76;
- `;
+  color: #2b5b76;
+`;
 
 export const Progress = styled.div`
   display: flex;
@@ -82,7 +82,7 @@ export const BoxContainer = styled.div`
   width: 100%;
   max-width: 1250px; /* Matches Title width */
   min-height: 110px;
-  border: 1px solid #E8F1FC;
+  border: 1px solid #e8f1fc;
   border-radius: 8px;
   padding: 20px 10px;
   background-color: #ffffff;
@@ -95,6 +95,3 @@ export const Wrapper = styled.div`
   align-items: center; /* Centers the title and box */
   width: 100%;
 `;
-
-
-
