@@ -10,7 +10,6 @@ import { Wrapper } from "globalStyles/globalStyles";
 export const Form = styled(GlobalForm)`
   padding: 2.5rem 3.5rem 2.5rem 3.5rem;
   border-radius: 0.5rem;
-  background-color: var(--primary-white);
   gap: 2rem;
 `;
 
@@ -37,8 +36,8 @@ export const ImageWrapper = styled.div`
 `;
 
 export const ProfileImageContainer = styled.div`
-  width: 120px;
-  height: 120px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;

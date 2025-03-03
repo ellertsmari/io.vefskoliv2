@@ -7,6 +7,7 @@ import { Input } from "UIcomponents/input/Input";
 import DefaultButton from "globalStyles/buttons/default";
 import LogoGif from "../../../public/loginGif.gif";
 import LogoSvg from "../../../public/logo.svg";
+import HelloWorldAnimation from "../../../public/helloWorld.json"
 
 import {
   ErrorToast,
@@ -46,7 +47,7 @@ export function LoginForm({
     <FullScreenWrapper>
     <TopLeftLogo src={LogoSvg} alt="logo" />
     <Form ref={formRef}>
-        <Logo src={LogoGif} alt="logo" />
+        <Logo animationData={HelloWorldAnimation} loop={false} />
         <Input id="email" type="email" name="email" label="Email" required />
         <Input
           id="password"
