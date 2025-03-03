@@ -44,6 +44,7 @@ export const addEvent = async (event: Event) => {
 export const updateEvent = async (event : Event) => {
     await connectToDatabase();
     (await Event.updateOne({id:event.id}, event)) || null;
+    
     return event;
   };
   
