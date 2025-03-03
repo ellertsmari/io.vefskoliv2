@@ -96,6 +96,7 @@ export const CalendarComponent = styled(Calendar)`
   /* Container for the month title and arrows */
   .react-calendar__navigation {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     width: 100%;

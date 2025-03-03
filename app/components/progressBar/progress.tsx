@@ -1,7 +1,7 @@
 "use server"
 
-import ProgressBar from "components/widgets/ProgressBar"
-import { BoxContainer, Percentage, Progress, ProgressContainer, ProgressWrapper, Title } from "components/widgets/style"
+import ProgressBar from "components/progressBar/ProgressBar"
+import { BoxContainer, Percentage, Progress, ProgressContainer, ProgressWrapper, Title } from "components/progressBar/style"
 import { getGuides } from "serverActions/getGuides"
 import {auth} from "auth"
 

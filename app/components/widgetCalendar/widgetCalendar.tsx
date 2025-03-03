@@ -12,7 +12,7 @@ import {
   isSameMonth,
   isSameDay,
 } from "date-fns";
-import { CalendarComponent, ContainerMain, Title, Days, WeekDays, Month, Header, Day } from "./widgetCalendarStyle";
+import { CalendarComponent, ContainerMain, Title, Days, WeekDays, Month, Header, Day } from "./style";
 
 type ValuePiece = Date | null;
 
@@ -50,7 +50,12 @@ function WidgetCalendar() {
     <>
     <ContainerMain>
       <Title>Calendar</Title>
-        <CalendarComponent onChange={()=> onChange(value)} value={value} locale="en-EN" />
+        <CalendarComponent 
+          navigationLabel={({ date, label, locale, view }) =>
+          view === "month"
+          ? date.toLocaleDateString(locale, { month: "long" })
+          : label} 
+        onChange={()=> onChange(value)} value={value} locale="en-EN" />
       </ContainerMain>
       </>
   );

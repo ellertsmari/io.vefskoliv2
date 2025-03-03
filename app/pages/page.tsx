@@ -1,8 +1,8 @@
-import ProgressB from "components/progress/progress";
+import ProgressB from "components/progressBar/progress";
 
-import WidgetCalendar from "components/widgets/WidgetCalendar";
+import WidgetCalendar from "../components/widgetCalendar/widgetCalendar";
 import TodoList from "../components/todoList/todo";
-import ToolsAndWebsites from "../components/widgets/Tools";
+import ToolsAndWebsites from "../components/tools/Tools";
 import DailyPlan from "../components/dailyPlan/DailyPlan";
 import { ModulesProgress } from "../components/overview/moduleProgress";
 import {

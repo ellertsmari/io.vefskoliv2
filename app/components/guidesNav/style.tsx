@@ -1,14 +1,14 @@
 import styled from 'styled-components';
 
+
 export const Button86 = styled.button`
   all: unset;
   width: 100px;
   height: 30px;
   font-size: 16px;
-  background: transparent;
-  border: none;
-  position: relative;
-  color: #f0f0f0;
+  background: white;
+  border: 1px solid #2B5B76;
+  color: #2B5B76;
   cursor: pointer;
   z-index: 1;
   padding: 5px 5px;
@@ -20,51 +20,17 @@ export const Button86 = styled.button`
   -webkit-user-select: none;
   touch-action: manipulation;
   margin-top: 10px;
+  border-radius: 10px;
+  transition: all 0.4s ease-in-out;
 
-  &::after,
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    z-index: -99999;
-    transition: all 0.4s;
-  }
-
-  &::before {
-    transform: translate(0%, 0%);
-    width: 100%;
-    height: 100%;
+  &:hover {
     background: #2B5B76;
-    border-radius: 10px;
+    color: white;
   }
 
-  &::after {
-    transform: translate(10px, 10px);
-    width: 35px;
-    height: 35px;
-    background: #e8f1fc30;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border-radius: 50px;
-  }
-
-  &:hover::before {
-    transform: translate(5%, 20%);
-    width: 110%;
-    height: 110%;
-  }
-
-  &:hover::after {
-    border-radius: 10px;
-    transform: translate(0, 0);
-    width: 100%;
-    height: 100%;
-  }
-
-  &:active::after {
-    transition: 0s;
-    transform: translate(0, 5%);
+  &:focus {
+    background: #2B5B76;
+    color: white;
   }
 
   @media (max-width: 500px) {
@@ -73,8 +39,6 @@ export const Button86 = styled.button`
     font-size: 14px;
     padding: 4px 4px;
     flex-wrap: wrap;
-
-    
   }
 `;
 
