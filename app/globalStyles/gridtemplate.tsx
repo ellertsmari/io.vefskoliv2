@@ -22,7 +22,7 @@ export const LayoutGrid = styled.div`
   );
 
   @media (min-width: ${breakpoint}) {
-    grid-template-columns: minmax(0, 100px) auto;
+    /*grid-template-columns: minmax(0, 100px) auto;*/
     grid-template-rows: auto 1fr;
     grid-template-areas:
       "navbar navbar"
@@ -31,12 +31,11 @@ export const LayoutGrid = styled.div`
 `;
 
 export const SidebarContainer = styled.div`
-  height: 100dvh;
-  width: 100%;
+  width: 100px;
   grid-area: sidebar;
   border-radius: 0.8rem;
   display: none;
-
+  position: relative;
   @media (min-width: ${breakpoint}) {
     display: block;
   }
@@ -44,6 +43,7 @@ export const SidebarContainer = styled.div`
 export const NavbarContainer = styled.div`
   width: 100%;
   grid-area: navbar;
+  height: 180px;
 `;
 export const Main = styled.div`
   max-width: 100%;

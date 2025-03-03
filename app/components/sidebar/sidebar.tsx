@@ -23,6 +23,8 @@ import peoplewhite from "../sidebar/icons/redIcons/peoplehover.svg";
 import resourceswhite from "../sidebar/icons/redIcons/resourceshover.svg";
 import emailwhite from "../sidebar/icons/redIcons/emailhover.svg";
 
+import colorize from "../../../public/colorize.png";
+
 const Sidebar = () => {
   const [openModal, setOpenModal] = useState(false);
   const pathname = usePathname();
@@ -114,6 +116,17 @@ const Sidebar = () => {
           </div>
         </div>
       )}
+      <Image
+        src={colorize}
+        alt="Colorize"
+        width={50}
+        height={50}
+        style={{
+          position: "absolute",
+          bottom: "80px",
+          left: "30px",
+        }}
+      />
     </>
   );
 };

@@ -2,13 +2,21 @@ import styled from "styled-components";
 import Calendar from 'react-calendar';
 import Image from "next/image";
 
-
-export const StyledCalendar= styled(Calendar)`
-    background: rgba(255, 255, 255, 0);
+export const StyledCalendar = styled(Calendar)`
+     background: rgba(255, 255, 255, 0);
     font-family: Karma;
     color: var(--100-Burgundy, #7C2D38);
     border: none;
     margin: 0 auto;
+
+  //hiding the arrow for display decades on calendar, the left arrow//
+  .react-calendar__navigation__prev2-button {
+    display: none;
+  }
+  //hiding the arrow for display decades on calendar, the right arrow//
+  .react-calendar__navigation__next2-button {
+    display: none;
+  }
 
     // allir dagar í dagatali, aðallitur á font//
     .react-calendar__month-view__days__day {
@@ -28,6 +36,15 @@ export const StyledCalendar= styled(Calendar)`
         font-size: 12px;
         text-decoration: none;
     }
+  
+  .react-calendar__tile--active {
+    background: rgba(196, 171, 176, 0.5);
+    border-radius: 20px;
+  }
+  .react-calendar__tile--active:enabled:hover,
+  .react-calendar__tile--active:enabled:focus {
+    background: rgba(196, 171, 176, 0.5);
+  }
 
     .react-calendar__year-view__months{
         font-family: 'Lato', sans-serif;
@@ -125,24 +142,22 @@ background: rgba(255, 255, 255, 0.7);
     justify-content: space-between;
     padding:35px;
     border-radius:16px;
-
 `
-    export const Headline = styled.div`
-    display: flex;
-    font-family: Karma;
-    font-size:28px;
-    font-weight: 700;
-    align-items: center;
-    justify-content: center;
-    padding:10px;
 
-`
+export const Headline = styled.div`
+  display: flex;
+  font-family: Karma;
+  font-size: 28px;
+  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+`;
 export const EventWrapper = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap:10px;
-
-`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
 
 //ramminn utan um athugasemdir//
 export const EventListContainer = styled.div<{ $inputColor?: string; }>`
