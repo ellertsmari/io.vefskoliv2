@@ -47,6 +47,8 @@ import {
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
+
+moment.updateLocale("en", { week: { dow: 1 } })
 const localizer = momentLocalizer(moment);
 
 const DnDCalendar = withDragAndDrop<Event, object>(Calendar as any);
