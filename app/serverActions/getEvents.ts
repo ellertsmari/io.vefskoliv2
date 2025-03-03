@@ -26,14 +26,14 @@ interface Event extends CalendarEvent {
 
 export const getEvents = async () => {
   await connectToDatabase();
-  const events: EventType[] | null = (await Event.find()) || null;
+  const events: EventType[] | null = (await Event.find()) 
   return JSON.parse(JSON.stringify(events));
 
 };
 
 export const addEvent = async (event: Event) => {
   await connectToDatabase();
-  (await Event.insertOne(event)) || null;
+  (await Event.insertOne(event)) 
 
   return event;
 };
@@ -43,7 +43,7 @@ export const addEvent = async (event: Event) => {
 
 export const updateEvent = async (event : Event) => {
     await connectToDatabase();
-    (await Event.updateOne({id:event.id}, event)) || null;
+    (await Event.updateOne({id:event.id}, event))
     
     return event;
   };
@@ -52,7 +52,8 @@ export const updateEvent = async (event : Event) => {
 
   export const delEvent = async (event : Event) => {
     await connectToDatabase();
-    (await Event.deleteOne({id:event.id}, event)) || null;
+    
+    (await Event.deleteOne({id:event.id}, event)) 
     return event;
   };
   
