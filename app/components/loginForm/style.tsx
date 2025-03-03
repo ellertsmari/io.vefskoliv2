@@ -6,7 +6,7 @@ export const Form = styled(GlobalForm)`
   padding: 2.5rem 3.5rem 2.5rem 3.5rem;
   border-radius: 0.5rem;
   background-color: var(--primary-white);
-  gap: 1rem;
+  gap: 2rem;
 `;
 
 export const Logo = styled(nextImage)`
