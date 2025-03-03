@@ -77,6 +77,4 @@ export const FrameCountdown = styled.div`
   background: rgba(255, 255, 255, 0.70);
 
 
-
-
 `;
