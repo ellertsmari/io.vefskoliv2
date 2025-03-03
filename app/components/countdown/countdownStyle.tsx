@@ -2,11 +2,11 @@ import styled from "styled-components";
 
 export const Container = styled.div`
   display: flex;
-  width: 772px;
+  width: 100%;
   height: 187px;
 
   padding-top: 20px;
-  margin: auto;
+  /*margin: auto;*/
 `;
 
 export const TimerWrapper = styled.div``;
@@ -17,7 +17,6 @@ export const TimerSegment = styled.div`
 
   margin: 20px;
   margin: 8px;
-
 `;
 
 export const TimerTitle = styled(TimerSegment)``;
@@ -66,10 +65,10 @@ export const Headline = styled.div`
 
 export const FrameCountdown = styled.div`
   display: flex;
-  width: 1300px;
-  width: 772px;
+  padding: 70px;
+  width: 100%;
   height: 187px;
-  justify-content: center;
+  justify-content: start;
   align-items: center;
   align-content: center;
   border-radius: 16px;
