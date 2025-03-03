@@ -2,7 +2,7 @@
 
 import styled from "styled-components";
 import { CheckCircle } from "lucide-react"; // Example icon library
-import { ReactIcon, NextJsIcon, DesignSprintIcon, DribbleIcon } from "./Icons";
+import { ReactIcon, NextJsIcon, DesignSprintIcon, DribbleIcon } from "../tools/Icons";
 import Image from "next/image";
 
 export const Container = styled.div`

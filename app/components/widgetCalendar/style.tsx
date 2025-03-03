@@ -42,7 +42,7 @@ export const CalendarComponent = styled(Calendar)`
     border: 2px solid var(--main-Color);
     border-radius: 100px;
     width: 30px; /* Smaller width for the arrows */
-    height: 30px; /* Smaller height for the arrows */
+    height: 25px; /* Smaller height for the arrows */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -79,6 +79,7 @@ export const CalendarComponent = styled(Calendar)`
   /* Container for the month title and arrows */
   .react-calendar__navigation {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     width: 100%;

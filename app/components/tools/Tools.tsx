@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Container, Title, ContentBox, List, ListItem, Bg } from "app/components/widgets/toolsStyle";
+import { Container, Title, ContentBox, List, ListItem, Bg } from "app/components/tools/toolsStyle";
 import Image from "next/image";
 import ReactIcon from "../../../public/icons/react.svg"; // Importing SVG icons
 import NextJsIcon from "../../../public/icons/nextJs.svg"; // Importing SVG icons
