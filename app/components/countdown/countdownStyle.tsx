@@ -67,7 +67,7 @@ export const Headline = styled.div`
 export const FrameCountdown = styled.div`
   display: flex;
   padding: 70px;
-  width: 772px;
+  width: 100%;
   height: 187px;
   justify-content: start;
   align-items: center;

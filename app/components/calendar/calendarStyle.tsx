@@ -142,6 +142,8 @@ background: rgba(255, 255, 255, 0.7);
     justify-content: space-between;
     padding:35px;
     border-radius:16px;
+    box-shadow: 0px 4px 32px 0px rgba(124, 68, 79, 0.5);
+
 `
 
 export const Headline = styled.div`
