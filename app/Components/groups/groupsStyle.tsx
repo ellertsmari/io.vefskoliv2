@@ -2,11 +2,11 @@ import styled from "styled-components";
 
 export const BoxGroups = styled.label`
   display: flex;
-  background-color: #fdfaf8;
-
+  background: rgba(255, 255, 255, 0.70);
   height: 313px;
   border-radius: 16px;
   box-shadow: 0px 4px 32px 0px rgba(124, 68, 79, 0.5);
+  margin-bottom:65px;
 `;
 
 export const GroupsContainer = styled.label`

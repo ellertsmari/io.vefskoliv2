@@ -2,8 +2,7 @@ import styled from "styled-components";
 
 export const LinksBox = styled.label`
   display: flex;
-  background-color: #fdfaf8;
-
+  background: rgba(255, 255, 255, 0.70);
   height: 159px;
   border-radius: 16px;
   box-shadow: 0px 4px 32px 0px rgba(124, 68, 79, 0.5);
