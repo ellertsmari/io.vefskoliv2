@@ -98,7 +98,9 @@ gap:16px;
 flex-direction: column;`
 
 export const TitleParagraph= styled.div`
-font-size: 14px;`
+font-size: 14px;
+text-align: center;
+`
 
 export const Time= styled.div`
 font-size: 12px;
