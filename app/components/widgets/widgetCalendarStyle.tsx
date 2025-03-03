@@ -33,7 +33,7 @@ export const CalendarComponent = styled(Calendar)`
     text-align: center;
   }
 
-<<<<<<< HEAD
+
   .react-calendar__month-view__days,
   .react-calendar__tile,
   .react-calendar__month-view__days__day,
@@ -51,8 +51,7 @@ export const CalendarComponent = styled(Calendar)`
     text-align: center;
   }
 
-=======
->>>>>>> 3e50cd90eccf460aad198a9bb0c47f3273fc9816
+
   /* Style the navigation buttons (arrows) */
   .react-calendar__navigation__prev2-button,
   .react-calendar__navigation__next2-button,
