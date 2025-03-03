@@ -45,7 +45,7 @@ const GuidesWidget = ({ data }: Props) => {
                 ModuleTitle={"Module " + (index + 1)}
                 GuidesNumber={module.number}
                 GuidesImage={module.image}
-                key={module.index}
+                key={index}
               />
             );
           })}
