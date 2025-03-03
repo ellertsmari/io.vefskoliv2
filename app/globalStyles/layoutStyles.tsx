@@ -1,7 +1,7 @@
 "use client";
 import styled from "styled-components";
 
-const breakpoint = "768px";
+const breakpoint = "940px";
 
 export const LayoutGrid = styled.div`
   display: grid;
