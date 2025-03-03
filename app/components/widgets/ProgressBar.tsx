@@ -1,5 +1,13 @@
 import React from "react";
-import { ProgressContainer, LabelContainer, OvalsContainer, Oval, Wrapper, Title, BoxContainer } from "./style";
+import {
+  ProgressContainer,
+  LabelContainer,
+  OvalsContainer,
+  Oval,
+  Wrapper,
+  Title,
+  BoxContainer,
+} from "./style";
 
 interface ProgressBarProps {
   label?: string;
@@ -18,7 +26,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label, progress = 0 }) => {
       </LabelContainer>
       <OvalsContainer>
         {Array.from({ length: totalOvals }).map((_, index) => (
-          <Oval key={index} filled={index < filledOvals} />
+          <Oval key={index} $filled={index < filledOvals} />
         ))}
       </OvalsContainer>
     </ProgressContainer>

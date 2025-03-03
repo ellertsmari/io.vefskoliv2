@@ -33,7 +33,6 @@ export const CalendarComponent = styled(Calendar)`
     text-align: center;
   }
 
-
   .react-calendar__month-view__days,
   .react-calendar__tile,
   .react-calendar__month-view__days__day,
@@ -50,7 +49,6 @@ export const CalendarComponent = styled(Calendar)`
   .react-calendar__month-view__weekdays__weekday--weekend {
     text-align: center;
   }
-
 
   /* Style the navigation buttons (arrows) */
   .react-calendar__navigation__prev2-button,
@@ -165,10 +163,6 @@ export const WeekDays = styled.div``;
 export const Days = styled.div``;
 export const Day = styled.div;
 
-<<<<<<< HEAD
-// export const Days=styled.div``
-// export const MainContainer=styled.div
-=======
 export const ContainerMain = styled.div`
   gap: 21px;
   display: flex;
@@ -179,4 +173,3 @@ export const Title = styled.div`
   font-size: 16px;
   color: var(--main-Color);
 `;
->>>>>>> 3e50cd90eccf460aad198a9bb0c47f3273fc9816
