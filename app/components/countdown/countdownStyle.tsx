@@ -15,11 +15,12 @@ export const TimerSegment = styled.div`
   flex-direction: column;
   align-items: center;
 
+`
+export const TimerTitle = styled(TimerSegment)`
   margin: 20px;
   margin: 8px;
 `;
 
-export const TimerTitle = styled(TimerSegment)``;
 
 export const Time = styled.div`
   display: flex;
@@ -72,7 +73,10 @@ export const FrameCountdown = styled.div`
   align-items: center;
   align-content: center;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.7);
-  background-color: rgba(250, 247, 242, 1);
   box-shadow: 0px 4px 32px 0px rgba(124, 68, 79, 0.5);
+  background: rgba(255, 255, 255, 0.70);
+
+
+
+
 `;
