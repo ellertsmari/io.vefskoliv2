@@ -4,7 +4,7 @@ import Image from "next/image";
 
 
 export const StyledCalendar= styled(Calendar)`
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0);
     font-family: Karma;
     color: var(--100-Burgundy, #7C2D38);
     border: none;
@@ -27,7 +27,7 @@ export const StyledCalendar= styled(Calendar)`
     .react-calendar__month-view__weekdays__weekday>abbr{
         font-size: 12px;
         text-decoration: none;
-    } 
+    }
 
     .react-calendar__year-view__months{
         font-family: 'Lato', sans-serif;
@@ -49,7 +49,7 @@ export const StyledCalendar= styled(Calendar)`
     }
      //hiding the arrow for display decades on calendar, the right arrow//
     .react-calendar__navigation__next2-button{
-        display:none;  
+        display:none;
     }
 
      //color of the arrow which are displayed//
@@ -57,7 +57,7 @@ export const StyledCalendar= styled(Calendar)`
         color: var(--100-Burgundy, #7C2D38);
     }
 
-    .react-calendar__month-view__days__day:nth-child(12) { 
+    .react-calendar__month-view__days__day:nth-child(12) {
         position:relative;
         ::after{
             content:".";
@@ -68,7 +68,7 @@ export const StyledCalendar= styled(Calendar)`
         }
     }
 
-    .react-calendar__month-view__days__day:nth-child(16) { 
+    .react-calendar__month-view__days__day:nth-child(16) {
         position:relative;
         ::after{
             content:".";
@@ -78,7 +78,7 @@ export const StyledCalendar= styled(Calendar)`
         }
     }
 
-    .react-calendar__month-view__days__day:nth-child(20) { 
+    .react-calendar__month-view__days__day:nth-child(20) {
         position:relative;
         ::after{
             content:".";
@@ -95,15 +95,16 @@ export const StyledCalendar= styled(Calendar)`
     .react-calendar__tile--active:enabled:hover, .react-calendar__tile--active:enabled:focus {
         background: rgba(196, 171, 176, 0.50);
     }
-    
+
     .react-calendar__tile--now {
         background-color: #faf2f2;
         border-radius:20px;
 
-    }    
+    }
     .react-calendar__tile--now:enabled:hover,
     .react-calendar__tile--now:enabled:focus {
         background-color: #faf2f2;
+
         
         
 }
@@ -117,7 +118,7 @@ export const StyledCalendar= styled(Calendar)`
 export const ContainerFrame = styled.div `
 background: rgba(255, 255, 255, 0.7);   
     width: 503px;
-    height: 750px;   
+    height: 750px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -167,7 +168,7 @@ export const EventDay= styled.div `
     color: var(--30-Burgundy, #C4ABB0);font-family: "Chocolate Classical Sans";
     font-size: 16px;
     font-weight: 400;
-` 
+`
 export const EventDate = styled.div`
     color: var(--100-Burgundy, #7C444F);
     font-size: 24px;
