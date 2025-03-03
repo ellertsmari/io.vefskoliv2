@@ -16,6 +16,17 @@ export const CalendarComponent = styled(Calendar)`
   flex-direction: column;
   margin-bottom: 14px;
 
+  /* Style for weekend days */
+  .react-calendar__month-view__days__day--weekend {
+  color: #17A1FA; 
+  }
+ 
+  .react-calendar 
+  .style__CalendarComponent-sc-97b7ff8e-0 
+  .enimAs {
+    width: 30px;
+  }
+
   .react-calendar__month-view__days,
   .react-calendar__tile,
   .react-calendar__month-view__days__day,
@@ -23,9 +34,8 @@ export const CalendarComponent = styled(Calendar)`
   abbr,
   button {
     border: none;
-    font-size: 12px;
-    margin: 0px auto;
-    padding: 0px;
+    font-size: 11px;
+    text-decoration: none;
   }
 
   .react-calendar__month-view__weekdays__weekday,
@@ -80,7 +90,7 @@ export const CalendarComponent = styled(Calendar)`
 
   /* Style for the month title */
   .react-calendar__navigation__label {
-    font-size: 20px;
+    font-size: 14px;
     font-weight: bold;
     color: #2b5b76; /* Color for the month title */
     text-transform: capitalize;
@@ -100,21 +110,25 @@ export const CalendarComponent = styled(Calendar)`
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    margin-bottom: 10px;
   }
+
+  
+  .react-calendar__tile--active {
+    background-color: #2B5B76 !important; /* Selected date fill color */
+    color: white !important; /* Ensures text is readable */
+    border-radius: 8px; /* Optional: Makes selection look smoother */
+  }
+
 
   /* Color for the days of the neighboring months */
   .react-calendar__month-view__days__day--neighboringMonth {
     color: #b3b3b3; /* Color for neighboring month days (January and March) */
     font-size: 11px;
   }
-
+  
   .react-calendar__month-view__days__day.react-calendar__tile--active {
-    background-color: var(--main-Lightblue);
-    color: #2b5b76;
-  }
-
-  .react-calendar__month-view__days__day.react-calendar__tile--active {
-    border: 4px solid var(--main-Lightblue);
+    border: none;
     border-radius: 8px;
   }
 
@@ -123,17 +137,25 @@ export const CalendarComponent = styled(Calendar)`
     font-size: 11px; /* Set day of week size to 11px */
     font-weight: bold;
     color: #2b5b76; /* Color for the weekdays */
+    margin-bottom: 4px;
+    margin-top: 1px; 
+    text-decoration: none;
   }
 
+  /* Style for neighboring month days */
+  .react-calendar__month-view__days__day--neighboringMonth {
+    color: #B3B3B3;
+  }
+  
   /* Styling the individual day tiles */
   .react-calendar__month-view__days__day {
     font-size: 11px; /* Set day number size to 11px */
     font-weight: normal;
-    color: var(--main-Color);
-    padding: 8px;
+    margin-top: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
-    background-color: white;
+    background: none;
+    padding: 5px;
 
     &:hover {
       background-color: var(--main-Lightblue);
