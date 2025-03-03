@@ -12,28 +12,22 @@ import {
   NavbarContainer,
   SidebarContainer,
 } from "globalStyles/gridtemplate";
+import ClientLayout from "components/ClientLayout";
 
 const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
-// trigger rebuild
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body style={{ overflowX: "hidden" }}>
         <StyledComponentsRegistry>
-          <LayoutGrid>
-            <NavbarContainer>
-              <Navbar></Navbar>
-            </NavbarContainer>
-            <SidebarContainer>
-              <Sidebar />
-            </SidebarContainer>
-            <Main>{children}</Main>
-          </LayoutGrid>
+          <ClientLayout>{children} </ClientLayout>
+
+          <SidebarContainer></SidebarContainer>
         </StyledComponentsRegistry>
       </body>
     </html>

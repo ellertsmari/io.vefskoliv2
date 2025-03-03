@@ -25,35 +25,29 @@ import emailwhite from "../sidebar/icons/redIcons/emailhover.svg";
 
 import colorize from "../../../public/colorize.png";
 
-const Sidebar = () => {
+const ColorizeButton = styled(Image)`
+  cursor: pointer;
+  position: absolute;
+  bottom: 80px;
+  left: 30px;
+`;
+
+interface SidebarProps {
+  gradients: string[];
+  changeBackground: (newBg: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ gradients, changeBackground }) => {
   const [openModal, setOpenModal] = useState(false);
-  const pathname = usePathname();
-  const iconlist = [
-    {
-      icon: "../../../public/Vector.svg",
-      link: "/",
-    },
-    {
-      icon: guides,
-      link: "/guides",
-    },
-    {
-      icon: calendar,
-      link: "/calendar",
-    },
-    {
-      icon: people,
-      link: "/people",
-    },
-    {
-      icon: resources,
-      link: "/resources",
-    },
-    {
-      icon: email,
-      link: "/email",
-    },
-  ];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleColorizeClick = () => {
+    const newIndex = (currentIndex + 1) % gradients.length;
+    setCurrentIndex(newIndex);
+    changeBackground(gradients[newIndex]);
+    console.log("Background changed to:", gradients[newIndex]);
+  };
+
   return (
     <>
       {!openModal ? (
@@ -116,16 +110,19 @@ const Sidebar = () => {
           </div>
         </div>
       )}
+
       <Image
         src={colorize}
         alt="Colorize"
-        width={50}
-        height={50}
+        width={90}
+        height={90}
         style={{
           position: "absolute",
-          bottom: "80px",
-          left: "30px",
+          bottom: "90px",
+          left: "20px",
+          cursor: "pointer",
         }}
+        onClick={handleColorizeClick}
       />
     </>
   );
