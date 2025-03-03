@@ -42,7 +42,7 @@ const GuidesWidget = ({ data }: Props) => {
           {titlesAndNumbers.map((module, index) => {
             return (
               <ModulesInfo
-                ModuleTitle={"Module " + (index + 1)}
+                ModuleTitle={"Module " + index}
                 GuidesNumber={module.number}
                 GuidesImage={module.image}
                 key={index}
