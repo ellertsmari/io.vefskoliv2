@@ -36,8 +36,8 @@ export const ImageWrapper = styled.div`
 `;
 
 export const ProfileImageContainer = styled.div`
-  width: 120px;
-  height: 120px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;

@@ -9,13 +9,13 @@ export const ReusableInput = styled.input`
   width: ${mobileWidth};
   height: 40px;
   padding: 10px;
-  border: 1px solid #2B5B76;
+  border: 1px solid var(--main-Color);
   border-radius: 8px;
   background-color: white;
 
 
   &:hover {
-    background-color: #E8F1FC;
+    background-color: #F3F8FD;
 
   }
 
@@ -33,7 +33,7 @@ export const ReusableTextarea = styled.textarea`
   width: ${mobileWidth};
   height: 200px;
   padding: 10px;
-  border: 1px solid var(--primary-black-30);
+  border: 1px solid var(--main-Color);
   border-radius: 8px;
 
   &:hover {
@@ -51,8 +51,8 @@ export const ReusableTextarea = styled.textarea`
 `;
 
 export const Label = styled.label`
-  font-size: 16px;
-  color: var(--primary-black-60);
+  font-size: 14px;
+  color: var(--main-Color);
   width: ${mobileWidth};
 
   @media (min-width: ${breakPoint}) {

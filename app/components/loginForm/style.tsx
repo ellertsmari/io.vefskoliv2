@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import nextImage from "next/image";
 import { Form as GlobalForm, Wrapper } from "globalStyles/globalStyles";
+import Lottie from "lottie-react";
+
 
 export const Form = styled(GlobalForm)`
   padding: 2.5rem 3.5rem 2.5rem 3.5rem;
@@ -9,7 +11,7 @@ export const Form = styled(GlobalForm)`
   gap: 2rem;
 `;
 
-export const Logo = styled(nextImage)`
+export const Logo = styled(Lottie)`
   max-width: 380px;
 
   height: 280px;
