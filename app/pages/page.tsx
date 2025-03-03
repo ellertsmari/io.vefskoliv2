@@ -67,26 +67,26 @@ export default GuidesWidget;
 
 // export default GuidesWidget;
 
-const Landingpage = () => {
-  return (
-    <>
-      <BackgroundDiv>
-        <MainContainer>
-          <NewSidebarContainer>
-            <Countdown></Countdown>
-            <Notes></Notes>
-          </NewSidebarContainer>
-          <RightSideMain>
-            <Links></Links>
+// const Landingpage = () => {
+//   return (
+//     <>
+//       <BackgroundDiv>
+//         <MainContainer>
+//           <NewSidebarContainer>
+//             <Countdown></Countdown>
+//             <Notes></Notes>
+//           </NewSidebarContainer>
+//           <RightSideMain>
+//             <Links></Links>
 
-            <Groups></Groups>
+//             <Groups></Groups>
 
-            <CalendarComponent></CalendarComponent>
-          </RightSideMain>
-        </MainContainer>
-      </BackgroundDiv>
-    </>
-  );
-};
+//             <CalendarComponent></CalendarComponent>
+//           </RightSideMain>
+//         </MainContainer>
+//       </BackgroundDiv>
+//     </>
+//   );
+// };
 
 /*export default Landingpage;*/
