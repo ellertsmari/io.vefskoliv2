@@ -51,7 +51,7 @@ export const ListItem = styled.div`
   color: #2b5b76;
   font-size: 12px;
   flex-direction: column;
-
+  width: 100%;
   gap: 10px;
 
   &:last-child {

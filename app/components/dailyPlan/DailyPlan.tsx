@@ -52,7 +52,6 @@ const [today, setToday]= useState(new Date());
   }, [today]);
 
   const onClick = (add: number) => {
-    console.log("clicked", add);
     const newDate = new Date (today);
     newDate.setDate(today.getDate()+add)
     setToday(newDate);
