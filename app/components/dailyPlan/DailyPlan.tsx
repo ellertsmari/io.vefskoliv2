@@ -1,5 +1,6 @@
 "use client"
-import React, { MouseEventHandler, useEffect, useState } from "react";
+
+import React, { Dispatch, MouseEventHandler, SetStateAction, useEffect, useState } from "react";
 import { getEvents } from "serverActions/getEvents";
 import { Event as CalendarEvent } from "react-big-calendar";
 import {
@@ -26,10 +27,13 @@ interface Event extends CalendarEvent {
   color: string;
 }
 
-const DailyPlan = () => {
-  const [events, setEvents] = useState<Event[]>([]);
+type Props={
+today: Date,
+setToday:Dispatch<SetStateAction<Date>>
+}
 
-const [today, setToday]= useState(new Date());
+const DailyPlan = ({setToday,today}:Props) => {
+   const [events, setEvents] = useState<Event[]>([]);
 
   const day = today.getDate();
   const month = today.toLocaleString("en-US", { month: "long" });
@@ -55,10 +59,7 @@ const [today, setToday]= useState(new Date());
     const newDate = new Date (today);
     newDate.setDate(today.getDate()+add)
     setToday(newDate);
-
   }
-
-
 
   return (
     <MainFrame className="daily-plan">

@@ -79,8 +79,39 @@ export const CalendarComponent = styled(Calendar)`
 
   .react-calendar__navigation__arrow {
     color: var(--main-Color);
-    font-size: 25px;
+    font-size: 10px;
   }
+
+  /* Customize only the arrow content */
+/* Remove default text content inside the button */
+.react-calendar__navigation__prev-button,
+.react-calendar__navigation__next-button {
+  font-size: 0; /* Hides default text */
+  position: relative; /* Ensures custom arrows are positioned correctly */
+}
+
+/* Add custom left arrow */
+.react-calendar__navigation__prev-button::after {
+  font-size: 14px; /* Adjust size */
+  content: " ➜ "; /* Left arrow */
+  font-size: 14px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(42%, 42%);
+  rotate: 180deg;
+}
+
+/* Add custom left arrow */
+.react-calendar__navigation__next-button::after {
+  font-size: 14px; /* Adjust size */
+  content: "➜"; /* Left arrow */
+  font-size: 14px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-52%, -52%);
+}
 
   /* Hide the second set of arrows (prev2 and next2) */
   .react-calendar__navigation__prev2-button,

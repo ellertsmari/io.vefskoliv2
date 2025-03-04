@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import Calendar from "react-calendar";
 import {
   format,
@@ -13,38 +13,44 @@ import {
   isSameDay,
 } from "date-fns";
 import { CalendarComponent, ContainerMain, Title, Days, WeekDays, Month, Header, Day } from "./style";
+import { Event as CalendarEvent } from "react-big-calendar";
 
 type ValuePiece = Date | null;
 
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
-function WidgetCalendar() {
-  const [value, onChange] = useState<Value>(new Date());
+interface Event extends CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  color: string;
+}
 
-    const [currentDate, setCurrentDate] = useState(new Date());
+type Props={
+today: Date,
+setToday:Dispatch<SetStateAction<Date>>
+}
 
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart);
-    const endDate = endOfWeek(monthEnd);
+function WidgetCalendar({setToday,today}:Props) {
+  const [value, onChange] = useState<Value>(today);
+  console.log(value)
+ 
+  const monthStart = startOfMonth(today);
+  const monthEnd = endOfMonth(monthStart);
+  const startDate = startOfWeek(monthStart);
+  const endDate = endOfWeek(monthEnd);
 
-    // const dateFormat = "d";
-    // const days = [];
-
-    // let day = startDate;
-
-    // while (day <= endDate) {
-    //   days.push(
-    //     <Day
-    //       key={day.toString()}
-    //       isToday={isSameDay(day, new Date())}
-    //       isCurrentMonth={isSameMonth(day, monthStart)}
-    //     >
-    //       {format(day, dateFormat)}
-    //     </Day>
-    //   );
-    //   day = addDays(day, 1);
-    // }
+  const onClick = (add: number) => {
+    console.log("clicked", add);
+    const newDate = new Date (today);
+    newDate.setDate(today.getDate()+add)
+    setToday(newDate);
+  }
+      
+  const day = today.getDate();
+  const month = today.toLocaleString("en-US", { month: "long" });
+  today.setHours(0, 0, 0, 0);
 
   return (
     <>

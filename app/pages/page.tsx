@@ -1,18 +1,15 @@
 import ProgressB from "components/progressBar/progress";
-
-import WidgetCalendar from "../components/widgetCalendar/widgetCalendar";
 import TodoList from "../components/todoList/todo";
 import ToolsAndWebsites from "../components/tools/Tools";
-import DailyPlan from "../components/dailyPlan/DailyPlan";
 import { ModulesProgress } from "../components/overview/moduleProgress";
 import {
   Widgetlayout,
   LayoutToolsandTodo,
-  LayoutPlanCal,
   PageContainer,
   OverviewContainer,
   BoxContainer,
 } from "../../app/pages/style";
+import ConnectCalendar from "components/connectCalendar/connectCalendar";
 
 const HomePage = () => {
   return (
@@ -22,10 +19,7 @@ const HomePage = () => {
           <ModulesProgress />
         </OverviewContainer>
         <BoxContainer>
-          <LayoutPlanCal>
-            <DailyPlan />
-            <WidgetCalendar />
-          </LayoutPlanCal>
+           <ConnectCalendar/>
           <LayoutToolsandTodo>
             <ToolsAndWebsites />
             <TodoList />
