@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   MainContainer,
@@ -17,7 +17,7 @@ import {
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Trash from "../../../public/trash.svg";
-import { setItem } from "./localStorage";
+import { setItem, getItem } from "./localStorage";
 
 const TodoList = () => {
   const [todos, setTodos] = useState<{ text: string; completed: boolean }[]>(
@@ -36,9 +36,9 @@ const TodoList = () => {
   };
 
   useEffect(() => {
-    const data = localStorage.getItem("todos");
+    const data = getItem("todos");
     if (data) {
-      setTodos(JSON.parse(data));
+      setTodos(data);
     }
   }, []);
 
@@ -46,13 +46,15 @@ const TodoList = () => {
     setItem("todos", todos);
   }, [todos]);
 
-  // change status of task (checkbox)
   const handleToggleComplete = (index: number) => {
-    setTodos((prevTodos) =>
-      prevTodos.map((todo, i) =>
+    setTodos((prevTodos) => {
+      const updatedTodos = prevTodos.map((todo, i) =>
         i === index ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
+      );
+      return updatedTodos.sort(
+        (a, b) => Number(a.completed) - Number(b.completed)
+      );
+    });
   };
 
   // delete task
@@ -62,10 +64,11 @@ const TodoList = () => {
   const sortedTodos = [...todos].sort(
     (a, b) => Number(a.completed) - Number(b.completed)
   );
+  console.log(todos);
 
   return (
     <MainContainer>
-        <MainText>To do:</MainText>
+      <MainText>To do:</MainText>
       <PlaceholderTasks>
         {todos.length === 0 ? (
           <EmptyText style={{ textAlign: "center", color: "gray" }}>

@@ -19,7 +19,8 @@ export const MainText = styled.h1`
 
 export const MainContainer = styled.div`
   display: flex;
-  flex-direction: column;`
+  flex-direction: column;
+`;
 
 export const EmptyText = styled.p`
   @media (max-width: ${BREAKPOINT}) {
@@ -169,6 +170,7 @@ export const AddTaskContainer = styled.div`
 `;
 
 export const StyleList = styled.div`
- display: flex;
+  display: flex;
   gap: 4px;
-  padding: 4px;`
+  padding: 4px;
+`;
