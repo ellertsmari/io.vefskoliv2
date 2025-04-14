@@ -67,11 +67,6 @@ Other root-level files and directories:
 - **`next.config.mjs`**: Configuration for Next.js application settings.
 - **`tsconfig.json`**: TypeScript configuration
 
-## Current issues
-
-We do not currently have a solutuon to grab updated data automatically, so to get fresh guide data the guides page needs to be uploaded.
-Some pages are blank as they have no yet been implemented.
-
 ## Notes
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
