@@ -29,7 +29,6 @@ export const ContentWrapper = styled.div`
   height: 95%;
   gap: 2rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--theme-module3-100);
   z-index: 11;
   overflow-y: auto;
   max-height: 90dvh;

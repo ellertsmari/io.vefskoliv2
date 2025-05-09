@@ -1,23 +1,54 @@
 "use client";
-
 import styled from "styled-components";
 
-const BREAKPOINT = "1191px";
+const breakPoint = "768px";
 
 export const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1.5rem;
-  padding: 1.5rem 1.5rem;
+  position: relative;
+  width: 100%;
+  padding: 5px;
 `;
 
 export const GuideDropdownContainer = styled.div`
   display: flex;
-  align-items: center;
+  gap: 10px;
   width: 100%;
-  justify-content: center;
-  @media (min-width: ${BREAKPOINT}) {
-    justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+`;
+
+export const ModuleOptionContainer = styled.button<{ isActive: boolean }>`
+  padding: 10px 20px;
+  color: #8e92bc;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: none;
+  position: relative;
+
+  &:hover {
+    color: var(--primary-default);
   }
+
+  &:focus {
+    outline: none;
+  }
+
+  ${({ isActive }) =>
+    isActive
+      ? `
+        color: var(--primary-default);
+        font-weight: bold;
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background-color: var(--primary-default);
+        }
+      `
+      : ""}
 `;

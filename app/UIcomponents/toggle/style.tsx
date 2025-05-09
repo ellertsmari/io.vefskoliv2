@@ -29,6 +29,15 @@ export const NotificationIconContainer = styled.div`
   z-index: 1;
 `;
 
+export const RedIconContainer = styled.div`
+  position: absolute;
+  height: 10px;
+  width: 10px;
+  top: 82px;
+  left: 115px;
+  z-index: 1;
+`;
+
 export const ToggleContainer = styled.div`
   display: flex;
   flex-wrap: nowrap;

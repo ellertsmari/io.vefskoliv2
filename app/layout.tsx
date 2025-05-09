@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "globalStyles/globals.css";
 import StyledComponentsRegistry from "utils/registry";
-import AnimatedBackground from "globalStyles/animatedBackground";
-import {
-  LayoutGrid,
-  SidebarContainer,
-  NavbarContainer,
-  Main,
-} from "./globalStyles/layout";
+import { LayoutGrid, SidebarContainer, Main } from "./globalStyles/layout";
 import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
 import LoginPage from "pages/login/page";
-import { NavBar } from "components/navigation/NavBar";
+import { Header } from "components/header/Header";
+import { SessionProvider } from "next-auth/react";
 
-const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
-// trigger rebuild
+const plusJarkaSans = Plus_Jakarta_Sans({
+  weight: ["300", "400", "500", "600"],
+  style: "normal",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Vefskólinn LMS",
   description:
@@ -31,22 +30,21 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={poppins.className}>
+      <body className={plusJarkaSans.className}>
         <StyledComponentsRegistry>
-          <AnimatedBackground />
-          {session?.user ? (
-            <LayoutGrid>
-              <SidebarContainer>
-                <Sidebar />
-              </SidebarContainer>
-              <NavbarContainer>
-                <NavBar />
-              </NavbarContainer>
-              <Main>{children}</Main>
-            </LayoutGrid>
-          ) : (
-            <LoginPage />
-          )}
+          <SessionProvider session={session}>
+            {session?.user ? (
+              <LayoutGrid>
+                <SidebarContainer>
+                  <Sidebar />
+                </SidebarContainer>
+                <Header />
+                <Main>{children}</Main>
+              </LayoutGrid>
+            ) : (
+              <LoginPage />
+            )}
+          </SessionProvider>
         </StyledComponentsRegistry>
       </body>
     </html>

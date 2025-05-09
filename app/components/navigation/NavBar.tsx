@@ -1,15 +1,31 @@
+import { ReactNode } from "react";
 import { DesktopNavbar } from "./DesktopNav";
 import { MobileNavbar } from "./MobileNav";
+import {
+  HomeIcon,
+  ResourcesIcon,
+  HallOfFameIcon,
+  PeopleIcon,
+  CalendarIcon,
+  LectureIcon,
+} from "assets/Icons";
 
-type Link = { page: string; title: string };
+type Link = { page: string; title: string; icon: ReactNode };
 export type NavBarProps = { links: Link[] };
 
 const links: Link[] = [
+  { page: "/dashboard", title: "Home", icon: <HomeIcon /> },
+  { page: "/resources", title: "Resources", icon: <ResourcesIcon /> },
+  { page: "/halloffame", title: "Hall of Fame", icon: <HallOfFameIcon /> },
+  { page: "/people", title: "People", icon: <PeopleIcon /> },
+  { page: "/calendar", title: "Calendar", icon: <CalendarIcon /> },
+  { page: "/lecture", title: "Lecture", icon: <LectureIcon /> },
+
   // { href: "/", label: "HOME" },
-  { page: "/guides", title: "GUIDES" },
+  // { page: "/guides", title: "GUIDES" },
   // { href: "/resources", label: "RESOURCES" },
   // { href: "/halloffame", label: "H O F" },
-  { page: "/people", title: "PEOPLE" },
+  // { page: "/people", title: "PEOPLE" },
   // { href: "/calendar", label: "CALENDAR" },
 ];
 

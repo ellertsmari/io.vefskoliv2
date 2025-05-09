@@ -11,18 +11,21 @@
     "test-watch": "jest --watch"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.0.6",
     "@uiw/react-md-editor": "^4.0.4",
     "bcrypt": "^5.1.1",
     "framer-motion": "^11.1.9",
     "mongoose": "^8.3.4",
     "next": "^15.1.6",
     "next-auth": "^5.0.0-beta.20",
+    "postcss": "^8.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.3.0",
     "react-session-hooks": "^1.0.8",
     "rehype-sanitize": "^6.0.0",
     "styled-components": "^6.1.10",
+    "tailwindcss": "^4.0.6",
     "zod": "^3.23.8"
   },
   "devDependencies": {

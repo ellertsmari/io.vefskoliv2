@@ -8,8 +8,8 @@ import {
 import { GuideProvider } from "providers/GuideProvider";
 import { GuideCardOverview } from "components/guideCardOverview/GuideCardOverview";
 import { CardWrapper, InfoWrapper } from "./style";
-import { NotificationIconContainer } from "UIcomponents/toggle/style";
-import { NotificationIcon } from "assets/Icons";
+import { RedIconContainer } from "UIcomponents/toggle/style";
+import { RedIcon } from "assets/Icons";
 import { Suspense, lazy } from "react";
 
 const GuideModal = lazy(() =>
@@ -17,6 +17,11 @@ const GuideModal = lazy(() =>
     default: mod.GuideModal,
   }))
 );
+
+const capitalizeFirstLetter = (text: string) => {
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+};
 
 const GuideCard = ({
   guide,
@@ -29,22 +34,18 @@ const GuideCard = ({
 
   const link =
     guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
+
   return (
     <GuideProvider guide={guide}>
       <CardWrapper>
-        <InfoWrapper
-          $borderStyle={calculateBorderStyle(
-            returnStatus,
-            feedbackStatus,
-            gradesGivenStatus
-          )}
-        >
+        <InfoWrapper>
           {link ? (
             <GuideCardOverview
-              moduleTitle={guide.module.title[0]}
-              guideTitle={guide.title}
+              moduleTitle={capitalizeFirstLetter(guide.module.title[0])}
+              guideTitle={capitalizeFirstLetter(guide.title)}
               link={link}
               order={order}
+              category={guide.category}
               returnStatus={returnStatus}
               feedbackStatus={feedbackStatus}
               gradesGivenStatus={gradesGivenStatus}
@@ -59,9 +60,10 @@ const GuideCard = ({
               <Modal
                 modalTrigger={
                   <GuideCardOverview
-                    moduleTitle={guide.module.title[0]}
-                    guideTitle={guide.title}
+                    moduleTitle={capitalizeFirstLetter(guide.module.title[0])}
+                    guideTitle={capitalizeFirstLetter(guide.title)}
                     order={order}
+                    category={guide.category}
                     returnStatus={returnStatus}
                     feedbackStatus={feedbackStatus}
                     gradesGivenStatus={gradesGivenStatus}
@@ -84,36 +86,10 @@ const GuideCard = ({
 
 const Notification = () => {
   return (
-    <NotificationIconContainer>
-      <NotificationIcon />
-    </NotificationIconContainer>
+    <RedIconContainer>
+      <RedIcon />
+    </RedIconContainer>
   );
-};
-
-const calculateBorderStyle = (
-  returnStatus: ReturnStatus,
-  feedbackStatus: FeedbackStatus,
-  gradesGivenStatus: GradesGivenStatus
-) => {
-  if (returnStatus === ReturnStatus.NOT_RETURNED) {
-    return undefined;
-  }
-
-  if (
-    feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK ||
-    gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE
-  ) {
-    return "border-color: var(--error-warning-100);";
-  }
-  if (returnStatus === ReturnStatus.PASSED) {
-    return "border-color: var(--error-success-100); background-color: var(--error-success-10)";
-  }
-  if (returnStatus === ReturnStatus.FAILED) {
-    return "border-color: var(--error-failure-100); background-color: var(--error-failure-10)";
-  }
-  if (returnStatus === ReturnStatus.HALL_OF_FAME) {
-    return "border-color: var(--theme-module3-100); background-color: var(--theme-module3-10); border-width: 3px;";
-  }
 };
 
 export default GuideCard;

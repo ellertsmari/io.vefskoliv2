@@ -2,7 +2,7 @@ import styled from "styled-components";
 import Image from "next/image";
 import { Wrapper } from "globalStyles/globalStyles";
 
-//Profile styles
+// Profile styles
 
 export const ProfileWrapper = styled(Wrapper)`
   gap: 1rem;
@@ -14,11 +14,13 @@ export const ImageWrapper = styled.div`
   align-items: center;
   gap: 8px;
   width: fit-content;
+  margin: 0; /* Remove extra spacing for header alignment */
+  padding: 0; /* Remove extra padding for header alignment */
 `;
 
 export const ProfileImageContainer = styled.div`
-  width: 120px;
-  height: 120px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
   border: 1px solid var(--theme-module3-100);
@@ -26,7 +28,7 @@ export const ProfileImageContainer = styled.div`
   transition: 0.3s ease-in-out;
   justify-content: center;
   display: flex;
-  align-items: flex-end;
+  align-items: center; /* Center image vertically for header alignment */
   background-color: var(--primary-white);
   &:hover {
     filter: brightness(0.8);
@@ -40,16 +42,18 @@ export const ProfileInfo = styled.div`
 `;
 
 export const ProfileImage = styled(Image)`
-  width: 100px;
-  height: auto;
+  width: 32px; /* Match container size for header alignment */
+  height: 32px; /* Ensure consistent 32x32px size */
+  object-fit: cover; /* Fill container without distortion */
 `;
 
 export const ProfileName = styled.h2`
   font-size: 24px;
   font-weight: 500;
+  display: none; /* Hide in header; shown in modal via ProfileInfo */
 `;
 
-//Modal styles
+// Modal styles
 
 export const Logout = styled.div`
   display: flex;

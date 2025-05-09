@@ -71,3 +71,24 @@ export enum GradesReceivedStatus {
   AWAITING_GRADES = "Awaiting grades",
   GRADES_RECEIVED = "Grades received",
 }
+export interface GuideType {
+  _id: string;
+  title: string;
+  category: string;
+  returnStatus: string;
+  feedbackStatus: string;
+  gradesGivenStatus: string;
+  grades?: number[];
+}
+
+export interface ProgressDataType {
+  moduleTitle: string;
+  progress: number;
+}
+
+export interface FilterType {
+  status?: string;
+  category?: string;
+  minGrade?: number;
+  maxGrade?: number;
+}

@@ -1,7 +1,5 @@
 "use client";
 import styled from "styled-components";
-import { Wrapper } from "UIcomponents/input/style";
-import { Button } from "globalStyles/buttons/default/style";
 
 const BREAKPOINT = "680px";
 const BREAKPOINT_DESKTOP = "1024px";
@@ -9,23 +7,21 @@ const BREAKPOINT_DESKTOP = "1024px";
 export const CardWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: start;
   gap: 4px;
+  background-color: #ffffff;
+  border-radius: 20px;
 `;
 
-export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`
+export const InfoWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--theme-module3-100);
-  align-items: center;
+  align-items: start;
   gap: 16px;
-  width: 190px;
-  height: 200px;
-  border-radius: 8px;
+  width: 360px;
+  height: 160px;
 
   position: relative;
-
-  ${(props) => props.$borderStyle}
 `;
 
 export const WriteFeedbackContainer = styled.form`
@@ -38,7 +34,7 @@ export const WriteFeedbackContainer = styled.form`
 export const Border = styled.div`
   border: 1px solid var(--theme-module3-100);
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 20px;
 `;
 
 export const VotingContainer = styled.div`
@@ -59,7 +55,7 @@ export const VoteIcon = styled.div`
   display: flex;
   border-width: 1px;
   border-style: solid;
-  border-radius: 8px;
+  border-radius: 20px;
   width: 100px;
   height: 100px;
   justify-content: center;

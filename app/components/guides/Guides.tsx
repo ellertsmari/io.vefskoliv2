@@ -1,7 +1,11 @@
 "use client";
 
-import { Container, GuideDropdownContainer } from "./style";
-import { Dropdown } from "UIcomponents/dropdown/Dropdown";
+import { useState } from "react";
+import {
+  Container,
+  GuideDropdownContainer,
+  ModuleOptionContainer,
+} from "./style";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
 import { useLocalState } from "react-session-hooks";
 import { GuidesClient } from "components/guidesClient/GuidesClient";
@@ -17,28 +21,35 @@ export const Guides = ({
 }) => {
   const [selectedModule, setSelectedModule, loading] =
     useLocalState<number>(LOCAL_STORAGE_KEY);
+  const [filter, setFilter] = useState<{
+    tagStatus: string;
+    guideCategory: string;
+  }>({
+    tagStatus: "",
+    guideCategory: "",
+  });
 
   if (!extendedGuides || !modules || loading) return null;
 
-  const filteredGuides = filterGuides(selectedModule, extendedGuides);
-
+  const filteredGuides = filterGuides(selectedModule, extendedGuides, filter);
   const options = createOptions(modules, setSelectedModule);
 
   return (
     <Container>
       <GuideDropdownContainer>
-        <Dropdown
-          key={selectedModule}
-          options={options}
-          currentOption={options.find(
-            (option) => option.optionName === "Module " + selectedModule
-          )}
-          titleOption={{
-            optionName: "All Modules",
-            onClick: () => setSelectedModule(null),
-          }}
-        />
+        {options.map((option) => (
+          <ModuleOptionContainer
+            key={option.optionName}
+            onClick={option.onClick}
+            isActive={
+              selectedModule === Number(option.optionName.split(" ")[1])
+            }
+          >
+            <p>{option.optionName}</p>
+          </ModuleOptionContainer>
+        ))}
       </GuideDropdownContainer>
+
       <GuidesClient guides={filteredGuides} useGuideOrder={!!selectedModule} />
     </Container>
   );
@@ -48,23 +59,24 @@ const createOptions = (
   modules: Module[],
   setSelectedModule: React.Dispatch<number | null>
 ) => {
-  return modules.map((module) => ({
-    optionName: "Module " + module.number,
-    onClick: () => setSelectedModule(module.number),
-  }));
+  return modules
+    .filter((module) => module.number !== 0)
+    .map((module) => ({
+      optionName: "Module " + module.number,
+      onClick: () => setSelectedModule(module.number),
+    }));
 };
 
 const filterGuides = (
   selectedModule: number | null,
-  extendedGuides: ExtendedGuideInfo[]
+  extendedGuides: ExtendedGuideInfo[],
+  filter: { tagStatus: string; guideCategory: string }
 ) => {
   if (selectedModule === null) return extendedGuides;
-  return extendedGuides.filter((guide) => {
-    if (guide.module.title[0] === "" + selectedModule) return guide;
-  });
-};
 
-export const exportedForTesting = {
-  createOptions,
-  filterGuides,
+  return extendedGuides.filter((guide) => {
+    const matchesModule = guide.module.title[0] === "" + selectedModule;
+
+    return matchesModule;
+  });
 };

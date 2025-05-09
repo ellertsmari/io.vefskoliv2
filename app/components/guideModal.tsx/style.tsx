@@ -26,6 +26,7 @@ export const ReturnStatusContainer = styled.div`
 
 export const TitleContainer = styled(Wrapper)`
   width: 100%;
+  justify-content: start;
 `;
 
 export const Header = styled(Wrapper)`
