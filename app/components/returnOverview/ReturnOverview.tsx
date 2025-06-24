@@ -1,4 +1,4 @@
-import { SubTitle } from "globalStyles/text";
+import { SubHeading1 } from "globalStyles/text";
 import { FeedbackDocumentWithReturn } from "types/guideTypes";
 import { ReturnDocument } from "models/return";
 import { Grade } from "components/grade/Grade";
@@ -32,18 +32,18 @@ export const ReturnOverview = ({
   return (
     <OverviewWrapper>
       <Wrapper>
-        <SubTitle>RETURN DETAILS</SubTitle>
+        <SubHeading1>RETURN DETAILS</SubHeading1>
         <ReturnLinks
           theReturn={theReturn}
           linkStyle={theFeedback ? "outlined" : "default"}
         />
       </Wrapper>
       <Wrapper>
-        <SubTitle>PROJECT TITLE</SubTitle>
+        <SubHeading1>PROJECT TITLE</SubHeading1>
         {theReturn.projectName}
       </Wrapper>
       <Wrapper>
-        <SubTitle>PROJECT COMMENT</SubTitle>
+        <SubHeading1>PROJECT COMMENT</SubHeading1>
         {theReturn.comment}
       </Wrapper>
       {theFeedback && (

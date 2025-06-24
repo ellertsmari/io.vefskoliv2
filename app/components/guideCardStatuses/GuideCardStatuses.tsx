@@ -1,4 +1,4 @@
-import { SmallText } from "globalStyles/text";
+import { Paragraph } from "globalStyles/text";
 import {
   FeedbackStatus,
   GradesGivenStatus,
@@ -27,7 +27,7 @@ export const GuideCardStatuses = ({
         <IconContainer>
           <ReturnStatusIcon returnStatus={returnStatus} />
         </IconContainer>
-        <SmallText>{returnStatus}</SmallText>
+        <Paragraph>{returnStatus}</Paragraph>
       </Status>
       <Status>
         <FeedbackAndGradeStatus
@@ -73,7 +73,7 @@ const FeedbackAndGradeStatus = ({
         <IconContainer>
           <Bell />
         </IconContainer>
-        <SmallText>{FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK}</SmallText>
+        <Paragraph>{FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK}</Paragraph>
       </>
     );
   }
@@ -84,7 +84,7 @@ const FeedbackAndGradeStatus = ({
         <IconContainer>
           <Bell />
         </IconContainer>
-        <SmallText>{GradesGivenStatus.NEED_TO_GRADE}</SmallText>
+        <Paragraph>{GradesGivenStatus.NEED_TO_GRADE}</Paragraph>
       </>
     );
   }
@@ -95,7 +95,7 @@ const FeedbackAndGradeStatus = ({
         <IconContainer>
           <Bell />
         </IconContainer>
-        <SmallText>GRADE</SmallText>
+        <Paragraph>GRADE</Paragraph>
         <Grade>{grade}</Grade>
       </>
     );

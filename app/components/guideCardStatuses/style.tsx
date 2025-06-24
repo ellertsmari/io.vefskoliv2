@@ -1,6 +1,6 @@
 "use client";
 
-import { SmallText } from "globalStyles/text";
+import { ParagraphBold } from "globalStyles/text";
 import styled from "styled-components";
 
 export const StatusesWrapper = styled.div`
@@ -13,7 +13,7 @@ export const StatusesWrapper = styled.div`
   flex: 1;
 `;
 
-export const Grade = styled(SmallText)`
+export const Grade = styled(ParagraphBold)`
   font-weight: bold;
 `;
 

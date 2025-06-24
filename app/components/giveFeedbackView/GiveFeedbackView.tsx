@@ -6,7 +6,7 @@ import {
   VotingContainer,
   WriteFeedbackContainer,
 } from "../guideCard/style";
-import { SubTitle } from "globalStyles/text";
+import { SubHeading1 } from "globalStyles/text";
 import MarkdownEditor from "UIcomponents/markdown/editor";
 import {
   useActionState,
@@ -77,7 +77,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
         <ReturnOverview theReturn={theReturn} />
       </div>
       <WriteFeedbackContainer>
-        <SubTitle>WRITE A REVIEW</SubTitle>
+        <SubHeading1>WRITE A REVIEW</SubHeading1>
         <MarkdownEditor value={comment || ""} setValue={handleSetComment} />
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button
@@ -102,7 +102,7 @@ const VoteSelector = ({
 }) => {
   return (
     <>
-      <SubTitle>VOTE</SubTitle>
+      <SubHeading1>VOTE</SubHeading1>
       <VotingContainer>
         {Object.values(Vote)
           .map((vote) => (

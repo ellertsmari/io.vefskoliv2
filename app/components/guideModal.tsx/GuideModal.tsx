@@ -1,4 +1,4 @@
-import { SmallText, Title } from "globalStyles/text";
+import { Paragraph, Heading1 } from "globalStyles/text";
 import { useGuide } from "providers/GuideProvider";
 import { FeedbackStatus } from "types/guideTypes";
 import { calculateReturnStyle } from "./calculateReturnStyle";
@@ -31,13 +31,13 @@ export const GuideModal = () => {
     <GuideModalWrapper>
       <Header>
         <TitleContainer>
-          <Title>{title}</Title>
+          <Heading1>{title}</Heading1>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <ReturnStatusContainer>
               <ColouredCircle
                 $backgroundColor={calculateReturnStyle(returnStatus)}
               />
-              <SmallText>{returnStatus}</SmallText>
+              <Paragraph>{returnStatus}</Paragraph>
             </ReturnStatusContainer>
             <UnstyledLinkNoWrap href={link} target="_blank">
               <Button $styletype="outlined">VIEW THIS GUIDE</Button>

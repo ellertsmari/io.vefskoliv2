@@ -10,27 +10,22 @@ export const ProfileWrapper = styled(Wrapper)`
 
 export const ImageWrapper = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
   width: fit-content;
 `;
 
 export const ProfileImageContainer = styled.div`
-  width: 120px;
-  height: 120px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--theme-module3-100);
   cursor: pointer;
   transition: 0.3s ease-in-out;
   justify-content: center;
+  align-items: center;
   display: flex;
-  align-items: flex-end;
-  background-color: var(--primary-white);
-  &:hover {
-    filter: brightness(0.8);
-  }
+  background-color: var(--primary-black-100);
 `;
 
 export const ProfileInfo = styled.div`
@@ -44,10 +39,9 @@ export const ProfileImage = styled(Image)`
   height: auto;
 `;
 
-export const ProfileName = styled.h2`
-  font-size: 24px;
-  font-weight: 500;
-`;
+export const ProfileInitials = styled.p`
+  color: var(--primary-white)
+`
 
 //Modal styles
 
