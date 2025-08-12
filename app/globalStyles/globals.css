@@ -7,9 +7,13 @@
   box-sizing: border-box; /* Opera/IE 8+ */
 }
 
+input:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px var(--primary-black-10) inset;
+}
+
 body {
-  font-family: "Poppins", sans-serif;
-  background-color: #f0f0fd;
+  font-family: "Source Sans 3", sans-serif;
+
 }
 
 div,

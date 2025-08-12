@@ -1,5 +1,5 @@
 "use client";
-import { SubTitle } from "globalStyles/text";
+import { SubHeading1 } from "globalStyles/text";
 import styled from "styled-components";
 
 export const Container = styled.div`
@@ -14,7 +14,7 @@ export const UserInfoCardWrapper = styled.div`
   gap: 1rem;
 `;
 
-export const InfoSubtitle = styled(SubTitle)`
+export const InfoSubtitle = styled(SubHeading1)`
   @media (max-width: 430px) {
     display: none;
   }

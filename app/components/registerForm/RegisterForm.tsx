@@ -4,14 +4,14 @@ import { startTransition, useActionState, useEffect, useRef } from "react";
 import { signUp } from "serverActions/signUp";
 import DefaultButton from "../../globalStyles/buttons/default";
 import { Input } from "UIcomponents/input/Input";
-import LogoSvg from "../../../public/logo.svg";
 import {
   ButtonWrapper,
   ErrorToast,
   FullScreenWrapper,
   SuccessToast,
+  Form
 } from "globalStyles/globalStyles";
-import { Form, Logo } from "./style";
+import { Heading1 } from "globalStyles/text";
 
 export function RegisterForm({
   setSelectedForm,
@@ -47,7 +47,7 @@ export function RegisterForm({
   return (
     <FullScreenWrapper>
       <Form ref={formRef}>
-        <Logo src={LogoSvg} alt="logo" />
+        <Heading1>SIGN UP</Heading1>
         {state?.success === false && typeof state.message === "string" && (
           <>
             <ErrorToast>{state.message}</ErrorToast>
@@ -62,7 +62,7 @@ export function RegisterForm({
           id="firstName"
           type="text"
           name="firstName"
-          label="First Name"
+          label="FIRTS NAME"
           required
           aria-disabled={isPending || state?.success}
           disabled={isPending || state?.success}
@@ -77,7 +77,7 @@ export function RegisterForm({
           id="lastName"
           type="text"
           name="lastName"
-          label="Last Name"
+          label="LAST NAME"
           required
           aria-disabled={isPending || state?.success}
           disabled={isPending || state?.success}
@@ -91,7 +91,7 @@ export function RegisterForm({
           id="email"
           type="email"
           name="email"
-          label="Email"
+          label="EMAIL"
           required
           aria-disabled={isPending || state?.success}
           disabled={isPending || state?.success}
@@ -106,7 +106,7 @@ export function RegisterForm({
           id="password"
           type="password"
           name="password"
-          label="Password"
+          label="PASSWORD"
           aria-disabled={isPending || state?.success}
           disabled={isPending || state?.success}
           required

@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Source_Sans_3 } from "next/font/google";
 import "globalStyles/globals.css";
 import StyledComponentsRegistry from "utils/registry";
-import AnimatedBackground from "globalStyles/animatedBackground";
+import BackgroundImg from "app/assets/Background.svg"
 import {
   LayoutGrid,
-  SidebarContainer,
-  NavbarContainer,
+  NavigationContainer,
+  TopbarContainer,
   Main,
+  Background
 } from "./globalStyles/layout";
-import Sidebar from "./components/sidebar/sidebar";
 import { auth } from "../auth";
 import LoginPage from "pages/login/page";
 import { NavBar } from "components/navigation/NavBar";
+import TopBar from "components/topBar";
 
-const poppins = Poppins({ weight: "400", style: "normal", subsets: ["latin"] });
+const SourceSans3 = Source_Sans_3({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
 export const metadata: Metadata = {
   title: "Vefskólinn LMS",
@@ -28,24 +29,31 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  const shouldShowAvatar = !!session?.user
 
   return (
     <html lang="en">
-      <body className={poppins.className}>
+      <body className={SourceSans3.className}>
         <StyledComponentsRegistry>
-          <AnimatedBackground />
+          
           {session?.user ? (
+            <>
+            <Background src={BackgroundImg} alt="Background image"/>
             <LayoutGrid>
-              <SidebarContainer>
-                <Sidebar />
-              </SidebarContainer>
-              <NavbarContainer>
-                <NavBar />
-              </NavbarContainer>
+            <TopbarContainer>
+                <TopBar showAvatar={shouldShowAvatar}/>
+              </TopbarContainer>
+              <NavigationContainer>
+                <NavBar/>
+              </NavigationContainer>
               <Main>{children}</Main>
             </LayoutGrid>
+            </>
           ) : (
+            <>
+            <TopBar showAvatar={shouldShowAvatar}/>
             <LoginPage />
+            </>
           )}
         </StyledComponentsRegistry>
       </body>

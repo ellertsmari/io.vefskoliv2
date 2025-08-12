@@ -1,4 +1,4 @@
-import { SubTitle } from "globalStyles/text";
+import { SubHeading1 } from "globalStyles/text";
 import { useMemo, useState } from "react";
 import {
   FeedbackDocumentWithReturn,
@@ -149,7 +149,7 @@ const FeedbackContent = ({
 }) => {
   return (
     <FeedbackContentWrapper>
-      <SubTitle>{subtitle}</SubTitle>
+      <SubHeading1>{subtitle}</SubHeading1>
       <Border>
         <CommentWrapper>
           <MarkdownReader>

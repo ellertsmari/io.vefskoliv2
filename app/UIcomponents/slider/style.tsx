@@ -1,4 +1,4 @@
-import { SmallText } from "globalStyles/text";
+import { Paragraph } from "globalStyles/text";
 import Link from "next/link";
 import styled from "styled-components";
 
@@ -119,7 +119,7 @@ export const SliderHelpLink = styled(Link)`
   align-self: flex-end;
 `;
 
-export const SliderHelpLinkText = styled(SmallText)`
+export const SliderHelpLinkText = styled(Paragraph)`
   color: var(--theme-module3-100);
 `;
 

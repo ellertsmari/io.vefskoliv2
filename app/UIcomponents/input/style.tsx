@@ -10,14 +10,15 @@ export const ReusableInput = styled.input`
   padding: 10px;
   border: 1px solid var(--primary-black-30);
   border-radius: 8px;
+  transition: 0.15s ease-in-out;
 
   &:hover {
-    border: 1px solid var(--theme-module3-60);
+    border: 1px solid var(--primary-black-100);
   }
 
   &:focus {
     outline: none;
-    border: 1px solid var(--theme-module3-100);
+    border: 1px solid var(--primary-black-100);
   }
 
   @media (min-width: ${breakPoint}) {
@@ -47,7 +48,7 @@ export const ReusableTextarea = styled.textarea`
 `;
 
 export const Label = styled.label`
-  font-size: 12px;
+  font-size: 14px;
   color: var(--primary-black-60);
   width: ${mobileWidth};
 

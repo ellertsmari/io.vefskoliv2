@@ -2,15 +2,15 @@
 
 import { startTransition, useActionState, useRef, useTransition } from "react";
 import { authenticate } from "serverActions/authenticate";
-import { Form, Logo } from "components/loginForm/style";
 import { Input } from "UIcomponents/input/Input";
 import DefaultButton from "globalStyles/buttons/default";
-import LogoSvg from "../../../public/logo.svg";
 import {
   ErrorToast,
   FullScreenWrapper,
   ButtonWrapper,
+  Form
 } from "globalStyles/globalStyles";
+import { Heading1 } from "globalStyles/text";
 
 export function LoginForm({
   setSelectedForm,
@@ -40,14 +40,15 @@ export function LoginForm({
 
   return (
     <FullScreenWrapper>
+      
       <Form ref={formRef}>
-        <Logo src={LogoSvg} alt="logo" />
-        <Input id="email" type="email" name="email" label="Email" required />
+      <Heading1>SIGN IN</Heading1>
+        <Input id="email" type="email" name="email" label="EMAIL" required />
         <Input
           id="password"
           type="password"
           name="password"
-          label="Password"
+          label="PASSWORD"
           required
         />
         <ButtonWrapper>

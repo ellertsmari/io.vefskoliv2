@@ -1,10 +1,6 @@
 "use client";
 import {
-  ProfileImage,
-  ProfileImageContainer,
-  ProfileName,
   ProfileWrapper,
-  ImageWrapper,
   LogoutButton,
   Form,
   ProfileDetails,
@@ -13,14 +9,13 @@ import {
   ProfileInfo,
   Logout,
 } from "./style";
+import ProfilePicture from "./profilePicture";
 import Modal from "UIcomponents/modal/modal";
 import { Input } from "UIcomponents/input/Input";
 import DefaultButton from "globalStyles/buttons/default";
-import { DefaultUserIcon } from "assets/Icons";
 import { LogoutIcon } from "assets/Icons";
 import { signOut } from "serverActions/signOut";
 import { updateUserInfo } from "serverActions/updateUserInfo";
-import { useSessionState } from "react-session-hooks";
 import { Wrapper } from "globalStyles/globalStyles";
 import { Session } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
@@ -31,11 +26,7 @@ export const Profile = ({ session }: { session: Session | null }) => {
 
   const ProfilePictureContainer = () => {
     return (
-      <ImageWrapper>
-        <ProfilePicture url={user.avatarUrl} />
-
-        <ProfileName>{user.name}</ProfileName>
-      </ImageWrapper>
+        <ProfilePicture name={user.name} url={user.avatarUrl} />
     );
   };
 
@@ -70,9 +61,8 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
   return (
     <ProfileWrapper>
       <ProfileDetails>
-        <ProfilePicture url={user.avatarUrl} />
+        <ProfilePicture name={user.name} url={user.avatarUrl} />
         <ProfileInfo>
-          <ProfileName style={{ fontSize: "16px" }}>{user.name}</ProfileName>
           <AdditionalInfo>{user.role}</AdditionalInfo>
           <AdditionalInfo
             style={{ color: "var(--primary-black-100)", textTransform: "none" }}
@@ -139,19 +129,5 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
   );
 };
 
-const ProfilePicture = ({ url }: { url?: string | null | undefined }) => {
-  return (
-    <ProfileImageContainer>
-      {url ? (
-        <ProfileImage
-          width={100}
-          height={100}
-          src={url}
-          alt="student picture"
-        />
-      ) : (
-        <DefaultUserIcon />
-      )}
-    </ProfileImageContainer>
-  );
-};
+
+

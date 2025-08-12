@@ -29,7 +29,7 @@ export const MaterialButton = styled(Button)`
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: left;
   gap: 2rem;
 `;
 
@@ -57,13 +57,13 @@ const Toast = styled.div`
 export const ErrorToast = styled(Toast)`
   background-color: var(--error-failure-10);
   border: 1px solid var(--error-failure-100);
-  color: var(--primary-black-100);
+  color: var(--error-failure-100);
 `;
 
 export const SuccessToast = styled(Toast)`
   background-color: var(--error-success-10);
   border: 1px solid var(--error-success-100);
-  color: var(--primary-black-100);
+  color: var(--error-success-100);
 `;
 
 export const UnstyledLink = styled(Link)`

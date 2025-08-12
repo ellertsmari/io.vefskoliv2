@@ -3,7 +3,7 @@
 import MarkdownReader from "UIcomponents/markdown/reader";
 import { ReturnForm } from "components/returnForm/ReturnForm";
 import { Border, Wrapper, MaterialButton } from "globalStyles/globalStyles";
-import { Title, SubTitle, BlackSubTitle } from "globalStyles/text";
+import { Heading1, SubHeading1, SubHeading1Bold } from "globalStyles/text";
 import { GuideType } from "models/guide";
 import {
   Main,
@@ -38,22 +38,22 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
 
   return (
     <Container>
-      <Title>{title}</Title>
+      <Heading1>{title}</Heading1>
       <Content>
         <Main>
           <Wrapper>
-            <SubTitle>DESCRIPTION</SubTitle>
+            <SubHeading1>DESCRIPTION</SubHeading1>
             <MarkdownReader>{description}</MarkdownReader>
           </Wrapper>
           <Wrapper>
             {(knowledge.length > 0 || skills.length > 0) && (
               <>
-                <SubTitle>GOALS</SubTitle>
+                <SubHeading1>GOALS</SubHeading1>
                 <Border>
                   <Requirements>
                     {knowledge.length > 0 && (
                       <Wrapper>
-                        <BlackSubTitle>KNOWLEDGE</BlackSubTitle>
+                        <SubHeading1Bold>KNOWLEDGE</SubHeading1Bold>
                         {knowledge.map((knowledge, index) => {
                           return (
                             <MarkdownReader key={index}>
@@ -65,7 +65,7 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
                     )}
                     {skills.length > 0 && (
                       <Wrapper>
-                        <BlackSubTitle>SKILLS</BlackSubTitle>
+                        <SubHeading1Bold>SKILLS</SubHeading1Bold>
                         {skills.map((skills, index) => {
                           return (
                             <MarkdownReader key={index}>
@@ -81,14 +81,14 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
             )}
           </Wrapper>
           <Wrapper>
-            <SubTitle>REQUIREMENTS</SubTitle>
+            <SubHeading1>REQUIREMENTS</SubHeading1>
             <MarkdownReader>{themeIdea.description}</MarkdownReader>
           </Wrapper>
         </Main>
         <Side>
           {allMaterials.length > 0 && (
             <Wrapper>
-              <SubTitle>MATERIALS</SubTitle>
+              <SubHeading1>MATERIALS</SubHeading1>
               <Border>
                 <MaterialsWrapper>
                   {allMaterials.map((material, index) =>

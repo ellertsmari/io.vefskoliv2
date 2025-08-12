@@ -1,4 +1,4 @@
-import { SubTitle } from "globalStyles/text";
+import { SubHeading1 } from "globalStyles/text";
 import { OptionalUserInfoKeys } from "models/user";
 import React from "react";
 import { InfoWrapper } from "./style";
@@ -13,7 +13,7 @@ export const UserInfoCard = ({ userInfo }: UserInfoCardProps) => {
   const toRender = info.map((detail) => {
     return (
       <React.Fragment key={detail}>
-        <SubTitle>{detail.toUpperCase()}</SubTitle>
+        <SubHeading1>{detail.toUpperCase()}</SubHeading1>
         <p>{userInfo[detail]}</p>
       </React.Fragment>
     );

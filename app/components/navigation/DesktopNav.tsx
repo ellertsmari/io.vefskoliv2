@@ -1,10 +1,16 @@
+"use client"
 import { NavBarProps } from "./NavBar";
-import { DesktopNav, DesktopNavbarButton } from "./style";
+import { DesktopNav, DesktopNavbarButton, Icon} from "./style";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export const DesktopNavbar = ({ links }: NavBarProps) => {
+  const pathname = usePathname()
   const buttons = links.map((link, index) => {
+    const currentPage = pathname === link.page
     return (
-      <DesktopNavbarButton key={index} href={link.page}>
+      <DesktopNavbarButton $active={currentPage} key={index} href={link.page}>
+      <Icon $active={currentPage} width={40} height={40} src={link.icon} alt="Navigation icon"/>
         {link.title}
       </DesktopNavbarButton>
     );
