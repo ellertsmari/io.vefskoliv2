@@ -1,14 +1,17 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import styled from "styled-components";
 
 const breakpoint = "840px";
 
-export const NavbarButton = styled(Link)`
+export const NavbarButton = styled(Link)<{$active: boolean}>`
   width: 100%;
   text-align: center;
-  color: var(--primary-black-100);
   text-decoration: none;
+  background-color: ${({$active}) => ($active ? "black" : "none")};
+  color: ${({$active}) => ($active ? "white" : "black")};
+  transition: 0.3s ease-in-out;
 `;
 
 export const Nav = styled.nav`
@@ -40,7 +43,15 @@ export const DesktopNavbarButton = styled(NavbarButton)`
   font-size: 15px;
   border-radius: 8px;
   cursor: pointer;
+
+  &:hover{
+    background-color: lightgray;
+  }
 `;
+
+export const Icon = styled(Image)<{$active: boolean}>`
+  filter: ${({$active}) => ($active ? "brightness(0) invert(1)" : "none")};
+`
 
 export const MobileNav = styled(Nav)`
   display: flex;
@@ -57,5 +68,6 @@ export const MobileNavbarButton = styled(NavbarButton)`
     width: 40px;
     height: 40px;
     display: flex;
+    border-radius: 8px;
     cursor: pointer;
 `;
