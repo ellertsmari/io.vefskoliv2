@@ -1,7 +1,6 @@
 "use client"
 import { NavBarProps } from "./NavBar";
 import { DesktopNav, DesktopNavbarButton, Icon} from "./style";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 export const DesktopNavbar = ({ links }: NavBarProps) => {
