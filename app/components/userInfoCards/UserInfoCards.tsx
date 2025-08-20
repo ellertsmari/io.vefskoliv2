@@ -3,7 +3,7 @@ import { useState } from "react";
 import { InfoSubtitle, UserInfoCardWrapper } from "./style";
 import { ShareableUserInfo } from "types/types";
 import { UserInfoCard } from "components/userInfoCard/UserInfoCard";
-import { Dropdown, DropdownOption } from "UIcomponents/dropdown/Dropdown";
+import { ModuleOptions, Option } from "UIcomponents/dropdown/Dropdown";
 
 export const UserInfoCards = ({
   userInfo,
@@ -18,7 +18,7 @@ export const UserInfoCards = ({
     null
   );
 
-  const options: DropdownOption[] = userInfo?.length
+  const options: Option[] = userInfo?.length
     ? [{ optionName: "None", onClick: () => setSelectedUser(null) }].concat(
         userInfo.map((user: ShareableUserInfo) => {
           return {
@@ -41,13 +41,8 @@ export const UserInfoCards = ({
         }}
       >
         <InfoSubtitle>{title}</InfoSubtitle>
-        <Dropdown
+        <ModuleOptions
           options={options}
-          titleOption={{
-            optionName: title,
-            onClick: () => setSelectedUser(null),
-          }}
-          zIndex={zIndex}
         />
       </div>
       {selectedUser && <UserInfoCard userInfo={selectedUser} />}
