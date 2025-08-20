@@ -47,37 +47,47 @@ const fadeOutLarge = keyframes`
 export const Container = styled.div`
   min-height: ${minHeightSmall};
   position: relative;
-  width: 200px;
   height: auto;
-  min-width: 200px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow-y: scroll;
   @media (min-width: ${breakPoint}) {
-    // min-height: ${minHeightLarge};
+    display: flex;
+    gap: 24px;
+  }
+    @media (max-width: ${breakPoint}) {
+    display: flex;
+    gap: 24px;
   }
 `;
 
+export const CapsuleButton = styled.button<{$active: boolean}>`
+  width: 120px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--primary-black-100);
+  background-color: ${({$active}) => ($active ? "black" : "white")};
+  color: ${({$active}) => ($active ? "white" : "black")};
+  cursor: pointer;
+
+  &:hover{
+    background-color: var(--primary-black-10);
+  }
+`
+
 export const DropDownContainer = styled.div<{
-  $isOpen: boolean;
-  $zIndex?: number;
 }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   position: absolute;
-  z-index: ${(props) => props.$zIndex ?? 2};
   top: 0;
   border-radius: ${radius};
   border: 1px solid var(--theme-module3-100);
   width: 100%;
   overflow: hidden;
-  max-height: ${(props) => (props.$isOpen ? maxHeight : minHeightSmall)};
-  animation: ${(props) => (props.$isOpen ? fadeInSmall : fadeOutSmall)}
-    ${animationDuration}s ease-in-out;
-
-  @media (min-width: ${breakPoint}) {
-    max-height: ${(props) => (props.$isOpen ? maxHeight : minHeightLarge)};
-    animation: ${(props) => (props.$isOpen ? fadeInLarge : fadeOutLarge)}
-      ${animationDuration}s ease-in-out;
-  }
 `;
 
 export const Accordian = styled.div<{ $title?: boolean }>`

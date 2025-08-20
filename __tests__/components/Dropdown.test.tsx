@@ -1,7 +1,7 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { Dropdown } from "../../app/UIcomponents/dropdown/Dropdown";
+import { ModuleOptions } from "../../app/UIcomponents/dropdown/Dropdown";
 
-describe("DropDown", () => {
+describe("ModuleOptions", () => {
   const options = ["Option 1", "Option 2", "Option 3"].map((option) => ({
     optionName: option,
     onClick: jest.fn(),
@@ -11,12 +11,8 @@ describe("DropDown", () => {
 
   it("should render correctly", async () => {
     const { getByText, queryByText } = render(
-      <Dropdown
+      <ModuleOptions
         options={options}
-        titleOption={{
-          optionName: title,
-          onClick: jest.fn(),
-        }}
       />
     );
 
@@ -47,12 +43,8 @@ describe("DropDown", () => {
   it("should render with initial option", async () => {
     const initialOption = options[1].optionName;
     const { getByText, queryByText } = render(
-      <Dropdown
+      <ModuleOptions
         options={options}
-        titleOption={{
-          optionName: initialOption,
-          onClick: jest.fn(),
-        }}
       />
     );
 
@@ -80,12 +72,8 @@ describe("DropDown", () => {
 
   it("should open and close the dropdown when the title is clicked", async () => {
     const { getByText, queryByText } = render(
-      <Dropdown
+      <ModuleOptions
         options={options}
-        titleOption={{
-          optionName: title,
-          onClick: jest.fn(),
-        }}
       />
     );
 
@@ -115,12 +103,8 @@ describe("DropDown", () => {
 
   it("should render correctly when no options are provided", async () => {
     const { getByText, queryByText } = render(
-      <Dropdown
+      <ModuleOptions
         options={[]}
-        titleOption={{
-          optionName: title,
-          onClick: jest.fn(),
-        }}
       />
     );
 

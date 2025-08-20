@@ -10,7 +10,7 @@ export const GuideCardContainer = styled.div`
   align-items: flex-start;
   width: 100%;
   height: 100%;
-
+  border-radius: 8px;
   &:hover {
     background-color: var(--primary-black-10);
   }
@@ -24,6 +24,7 @@ export const StyledLink = styled(Link)`
   align-items: flex-start;
   width: 100%;
   height: 100%;
+  border-radius: 8px;
 
   &:hover {
     background-color: var(--primary-black-10);

@@ -1,7 +1,7 @@
 "use client";
 
 import { Container, GuideDropdownContainer } from "./style";
-import { Dropdown } from "UIcomponents/dropdown/Dropdown";
+import { ModuleOptions } from "UIcomponents/dropdown/Dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
 import { useLocalState } from "react-session-hooks";
 import { GuidesClient } from "components/guidesClient/GuidesClient";
@@ -16,7 +16,7 @@ export const Guides = ({
   modules: Module[];
 }) => {
   const [selectedModule, setSelectedModule, loading] =
-    useLocalState<number>(LOCAL_STORAGE_KEY);
+    useLocalState<number>(LOCAL_STORAGE_KEY, 0, v => v.toString());
 
   if (!extendedGuides || !modules || loading) return null;
 
@@ -27,16 +27,12 @@ export const Guides = ({
   return (
     <Container>
       <GuideDropdownContainer>
-        <Dropdown
+        <ModuleOptions
           key={selectedModule}
           options={options}
           currentOption={options.find(
             (option) => option.optionName === "Module " + selectedModule
           )}
-          titleOption={{
-            optionName: "All Modules",
-            onClick: () => setSelectedModule(null),
-          }}
         />
       </GuideDropdownContainer>
       <GuidesClient guides={filteredGuides} useGuideOrder={!!selectedModule} />
@@ -48,9 +44,10 @@ const createOptions = (
   modules: Module[],
   setSelectedModule: React.Dispatch<number | null>
 ) => {
+  console.log(modules)
   return modules.map((module) => ({
     optionName: "Module " + module.number,
-    onClick: () => setSelectedModule(module.number),
+    onClick: () => {console.log(module.number); setSelectedModule(module.number)},
   }));
 };
 
