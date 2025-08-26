@@ -47,20 +47,41 @@ export async function signUp(state: SignupFormState, formData: FormData) {
       password,
       role: "user",
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 11000) {
+      return {
+        success: false,
+        message: "User with this email already exists.",
+      };
+    }
+    
+    console.error('User creation error:', error);
     return {
       success: false,
-      message: "Failed to create user. May already exist.",
+      message: "Failed to create user. Please try again later.",
     };
   }
 
   try {
     const user = await getUser(email);
+    if (!user) {
+      return {
+        success: false,
+        message: "User created but failed to retrieve. Please try logging in.",
+      };
+    }
+    
     await signIn("credentials", {
       email,
       password: rawPassword,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.error('Sign in error after signup:', error);
+    return {
+      success: false,
+      message: "Account created successfully, but automatic login failed. Please log in manually.",
+    };
+  }
 
   return {
     success: true,

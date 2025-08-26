@@ -9,13 +9,45 @@ if (!MONGODB_URI) {
 let cachedConnection: typeof mongoose | null = null;
 
 export async function connectToDatabase(): Promise<typeof mongoose> {
-  if (cachedConnection) {
+  if (cachedConnection && cachedConnection.connection.readyState === 1) {
     return cachedConnection;
   }
 
-  const connection = await mongoose.connect(MONGODB_URI as string); //we can safely assume that MONGODB_URI is a string because we check in the if statement here above
+  try {
+    if (cachedConnection) {
+      await cachedConnection.disconnect();
+    }
 
-  cachedConnection = connection;
+    const connection = await mongoose.connect(MONGODB_URI as string, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
 
-  return connection;
+    cachedConnection = connection;
+
+    // Handle connection events
+    connection.connection.on('error', (error) => {
+      console.error('MongoDB connection error:', error);
+      cachedConnection = null;
+    });
+
+    connection.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected');
+      cachedConnection = null;
+    });
+
+    return connection;
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+    cachedConnection = null;
+    throw new Error('Failed to connect to database');
+  }
+}
+
+export async function disconnectFromDatabase(): Promise<void> {
+  if (cachedConnection) {
+    await cachedConnection.disconnect();
+    cachedConnection = null;
+  }
 }
