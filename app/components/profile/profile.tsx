@@ -85,7 +85,7 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
           type="text"
           id="background"
           value={background}
-          onChange={(e: { target: { value: string } }) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setUserInfo({ ...userInfo, background: e.target.value });
           }}
           label="BACKGROUND"
@@ -94,7 +94,7 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
           type="text"
           id="careerGoals"
           value={careerGoals}
-          onChange={(e: { target: { value: string } }) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setUserInfo({ ...userInfo, careerGoals: e.target.value });
           }}
           label="NEAR FUTURE CAREER GOALS"
@@ -104,7 +104,7 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
           id="interests"
           placeholder={user.interests}
           value={interests}
-          onChange={(e: { target: { value: string } }) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUserInfo({ ...userInfo, interests: e.target.value })
           }
           label="MAIN INTERESTS"
@@ -113,7 +113,7 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
           type="text"
           id="favoriteArtists"
           value={favoriteArtists}
-          onChange={(e: { target: { value: string } }) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUserInfo({ ...userInfo, favoriteArtists: e.target.value })
           }
           label="FAVORITE BAND/ARTIST"

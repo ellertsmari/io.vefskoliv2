@@ -3,29 +3,39 @@ import styled from "styled-components";
 import { Wrapper, Label, ReusableInput, ReusableTextarea } from "./style";
 import { Paragraph } from "globalStyles/text";
 
-type InputProps = {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   id: string;
-  [props: string]: any; // To accept any other prop like placeholder, value, etc.
   error?: string;
-};
+  type?: "text" | "email" | "password" | "textarea" | "number" | "tel" | "url";
+}
 
-export const Input = ({ label, id, error, ...props }: InputProps) => {
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string;
+  id: string;
+  error?: string;
+  type: "textarea";
+}
+
+type ComponentProps = InputProps | TextareaProps;
+
+export const Input = ({ label, id, error, type = "text", ...props }: ComponentProps) => {
   return (
     <Wrapper>
       <Label>
         {label}
-        {props.type === "textarea" ? (
+        {type === "textarea" ? (
           <ReusableTextarea
             id={id}
             aria-describedby={error ? `${id}-error` : undefined}
-            {...props}
+            {...(props as TextareaProps)}
           />
         ) : (
           <ReusableInput
             id={id}
+            type={type}
             aria-describedby={error ? `${id}-error` : undefined}
-            {...props}
+            {...(props as InputProps)}
           />
         )}
       </Label>

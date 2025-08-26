@@ -48,33 +48,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!dbuser) {
         return session;
       }
-      //@ts-ignore
-      const {
-        avatarUrl,
-        background,
-        careerGoals,
-        email,
-        favoriteArtists,
-        interests,
-        name,
-        role,
-      } = dbuser;
-
-      const id = dbuser.id.toString();
-      const emailVerified = new Date();
-
-      session.user = {
-        avatarUrl,
-        background,
-        careerGoals,
-        email,
-        favoriteArtists,
-        interests,
-        name,
-        role,
-        id,
-        emailVerified,
-      };
+      
+      if (session.user && dbuser) {
+        session.user = {
+          ...session.user,
+          avatarUrl: dbuser.avatarUrl,
+          background: dbuser.background,
+          careerGoals: dbuser.careerGoals,
+          email: dbuser.email,
+          favoriteArtists: dbuser.favoriteArtists,
+          interests: dbuser.interests,
+          name: dbuser.name,
+          role: dbuser.role,
+          id: dbuser.id.toString(),
+          emailVerified: new Date(),
+        };
+      }
 
       return session;
     },

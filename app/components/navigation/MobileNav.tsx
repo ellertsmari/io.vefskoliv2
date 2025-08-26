@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 
 export const MobileNavbar = ({ links }: NavBarProps) => {
   const pathname = usePathname()
-  const buttons = links.map((link, index) => {
+  const buttons = links.map((link) => {
     const currentPage = pathname === link.page
     return (
-      <MobileNavbarButton $active={currentPage} key={index} href={link.page}>
+      <MobileNavbarButton $active={currentPage} key={link.page} href={link.page}>
         <Icon $active={currentPage} width={40} height={40} src={link.icon} alt="Navigation icon"/>
       </MobileNavbarButton>
     );
