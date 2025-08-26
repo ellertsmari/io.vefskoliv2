@@ -1,7 +1,7 @@
 import { Slider } from "UIcomponents/slider/Slider";
 import { SubHeadingLabel} from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
-import { ButtonContainer, GradeContainer, SubmitButton } from "./style";
+import { ButtonContainer, GradeContainer, SubmitButton, GradeMeaningDisplay } from "./style";
 
 import { returnGrade } from "serverActions/returnGrade";
 
@@ -56,6 +56,11 @@ export const Grade = ({
 
   return (
     <GradeContainer>
+      {/* Display current grade meaning above the label */}
+      <GradeMeaningDisplay>
+        {gradeMeanings[tempGrade - 1]}
+      </GradeMeaningDisplay>
+      
       <SubHeadingLabel htmlFor="grade-slider">GRADE</SubHeadingLabel>
       <Slider
         options={Array.from({ length: 10 }, (_, i) => i + 1)}
