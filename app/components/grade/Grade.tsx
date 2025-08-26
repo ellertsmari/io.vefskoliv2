@@ -58,7 +58,7 @@ export const Grade = ({
     <GradeContainer>
       {/* Display current grade meaning above the label */}
       <GradeMeaningDisplay>
-        <strong>Grade {tempGrade}:</strong> {gradeMeanings[tempGrade - 1]}
+        {gradeMeanings[tempGrade - 1]}
       </GradeMeaningDisplay>
       
       <SubHeadingLabel htmlFor="grade-slider">GRADE</SubHeadingLabel>
