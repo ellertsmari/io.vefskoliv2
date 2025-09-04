@@ -15,7 +15,13 @@ import {
   Container,
 } from "./style";
 
-export const GuideOverview = ({ guide }: { guide: GuideType }) => {
+export const GuideOverview = ({ 
+  guide, 
+  isAuthenticated = true // Default to true to maintain backwards compatibility
+}: { 
+  guide: GuideType; 
+  isAuthenticated?: boolean;
+}) => {
   if (!guide) {
     return <h1>Guide not found</h1>;
   }
@@ -113,9 +119,11 @@ export const GuideOverview = ({ guide }: { guide: GuideType }) => {
         </Side>
       </Content>
 
-      <ReturnWrapper>
-        <ReturnForm guideId={guide._id.toString()} />
-      </ReturnWrapper>
+      {isAuthenticated && (
+        <ReturnWrapper>
+          <ReturnForm guideId={guide._id.toString()} />
+        </ReturnWrapper>
+      )}
     </Container>
   );
 };
