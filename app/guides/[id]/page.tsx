@@ -5,7 +5,7 @@ import { GuideType } from "models/guide";
 
 type ParamsType = Promise<{ id: string }>;
 
-const GuidePage = async ({ params }: { params: ParamsType }) => {
+const PublicGuidePage = async ({ params }: { params: ParamsType }) => {
   const { id } = await params;
   const guideJSON = await getGuide(id);
   const guide: GuideType = JSON.parse(JSON.stringify(guideJSON));
@@ -22,4 +22,9 @@ const GuidePage = async ({ params }: { params: ParamsType }) => {
   return <GuideOverview guide={guide} />;
 };
 
-export default GuidePage;
+export default PublicGuidePage;
+
+
+
+
+
