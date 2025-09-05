@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react";
-import { GuideCardOverview } from "../../app/components/guideCardOverview/GuideCardOverview";
+import { GuideCardOverview } from "../../app/LMS/components/guideCardOverview/GuideCardOverview";
 import {
   ReturnStatus,
   FeedbackStatus,

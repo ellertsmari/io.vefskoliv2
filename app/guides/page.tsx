@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "../../auth";
-import { Guides } from "components/guides/Guides";
+import { Guides } from "./components/guides/Guides";
 import { Module, ReturnStatus, FeedbackStatus, GradesReceivedStatus, GradesGivenStatus } from "types/guideTypes";
 import { getGuides } from "serverActions/getGuides";
 import { getPublicGuides } from "serverActions/getPublicGuides";

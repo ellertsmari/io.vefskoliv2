@@ -1,7 +1,7 @@
 "use server";
 import { auth } from "../../../auth";
 import { getGuide } from "serverActions/getGuide";
-import { GuideOverview } from "components/guideOverview/GuideOverview";
+import { GuideOverview } from "../components/guideOverview/GuideOverview";
 import { GuideType } from "models/guide";
 import { Session } from "next-auth";
 

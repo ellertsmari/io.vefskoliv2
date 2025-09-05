@@ -2,7 +2,7 @@ import React from "react";
 import "@testing-library/jest-dom";
 
 import { render, screen, waitFor } from "@testing-library/react";
-import GuideCard from "../../app/components/guideCard/GuideCard";
+import GuideCard from "../../app/LMS/components/guideCard/GuideCard";
 import {
   clearDatabase,
   connect,
