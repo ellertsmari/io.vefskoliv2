@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import PeoplePage from "pages/people/page";
+import PeoplePage from "../../app/LMS/people/page";
 import { getUsers } from "serverActions/getUsers";
 
 jest.mock("serverActions/getUsers", () => ({

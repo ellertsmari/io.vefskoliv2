@@ -14,7 +14,7 @@ const config: Config = {
   setupFilesAfterEnv: ["./jest.setup.js"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^components/(.*)$": "<rootDir>/app/components/$1",
+    "^components/(.*)$": "<rootDir>/app/LMS/components/$1",
     "^UIcomponents/(.*)$": "<rootDir>/app/UIcomponents/$1",
     "^globalStyles/(.*)$": "<rootDir>/app/globalStyles/$1",
     "^hooks/(.*)$": "<rootDir>/app/hooks/$1",

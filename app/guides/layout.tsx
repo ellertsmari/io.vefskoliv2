@@ -6,7 +6,7 @@ import {
   Main,
   Background
 } from "../globalStyles/layout";
-import TopBar from "components/topBar";
+import TopBar from "../components/navigation/TopBar";
 
 export const metadata: Metadata = {
   title: "Guides - Vefskólinn LMS",

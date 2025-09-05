@@ -11,9 +11,9 @@ import {
   Background
 } from "./globalStyles/layout";
 import { auth } from "../auth";
-import { LoginOrRegister } from "components/loginOrRegister/LoginOrRegister";
-import { NavBar } from "components/navigation/NavBar";
-import TopBar from "components/topBar";
+import { LoginOrRegister } from "./components/auth/loginOrRegister/LoginOrRegister";
+import { NavBar } from "./components/navigation/NavBar/NavBar";
+import TopBar from "./components/navigation/TopBar";
 import { headers } from "next/headers";
 
 const SourceSans3 = Source_Sans_3({ weight: "400", style: "normal", subsets: ["latin"] });

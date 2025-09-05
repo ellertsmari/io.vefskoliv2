@@ -4,7 +4,7 @@ import {
   GradesGivenStatus,
   ReturnStatus,
 } from "../../types/guideTypes";
-import { GuideCardStatuses } from "../../app/components/guideCardStatuses/GuideCardStatuses";
+import { GuideCardStatuses } from "../../app/LMS/components/guideCardStatuses/GuideCardStatuses";
 import { exportedForTesting } from "../../app/assets/Icons";
 
 describe("Statuses", () => {
