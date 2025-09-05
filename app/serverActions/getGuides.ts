@@ -156,9 +156,7 @@ const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
         {
           $sort: {
             associatedReviewCount: 1, // Primary: fewest reviews first
-            userReturnHash: 1, // Secondary: user-specific deterministic assignment (string sort)
-            createdAt: 1, // Tertiary: oldest first for equal hash values
-            _id: 1, // Final tiebreaker
+            createdAt: 1, // secondary: oldest first for equal hash values
           },
         },
         {
