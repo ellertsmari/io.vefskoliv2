@@ -1,7 +1,7 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { ModuleOptions } from "../../app/UIcomponents/dropdown/Dropdown";
+import { ModuleSelector } from "../../app/components/moduleSelector/ModuleSelector";
 
-describe("ModuleOptions", () => {
+describe("ModuleSelector", () => {
   const options = ["Option 1", "Option 2", "Option 3"].map((option) => ({
     optionName: option,
     onClick: jest.fn(),
@@ -11,7 +11,7 @@ describe("ModuleOptions", () => {
 
   it("should render correctly", async () => {
     const { getByText, queryByText } = render(
-      <ModuleOptions
+      <ModuleSelector
         options={options}
       />
     );
@@ -43,7 +43,7 @@ describe("ModuleOptions", () => {
   it("should render with initial option", async () => {
     const initialOption = options[1].optionName;
     const { getByText, queryByText } = render(
-      <ModuleOptions
+      <ModuleSelector
         options={options}
       />
     );
@@ -72,7 +72,7 @@ describe("ModuleOptions", () => {
 
   it("should open and close the dropdown when the title is clicked", async () => {
     const { getByText, queryByText } = render(
-      <ModuleOptions
+      <ModuleSelector
         options={options}
       />
     );
@@ -103,7 +103,7 @@ describe("ModuleOptions", () => {
 
   it("should render correctly when no options are provided", async () => {
     const { getByText, queryByText } = render(
-      <ModuleOptions
+      <ModuleSelector
         options={[]}
       />
     );

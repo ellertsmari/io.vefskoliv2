@@ -3,7 +3,7 @@ import { useState } from "react";
 import { InfoSubtitle, UserInfoCardWrapper } from "./style";
 import { ShareableUserInfo } from "types/types";
 import { UserInfoCard } from "components/userInfoCard/UserInfoCard";
-import { ModuleOptions, Option } from "UIcomponents/dropdown/Dropdown";
+import { ModuleSelector, Option } from "components/moduleSelector/ModuleSelector";
 
 export const UserInfoCards = ({
   userInfo,
@@ -41,7 +41,7 @@ export const UserInfoCards = ({
         }}
       >
         <InfoSubtitle>{title}</InfoSubtitle>
-        <ModuleOptions
+        <ModuleSelector
           options={options}
         />
       </div>

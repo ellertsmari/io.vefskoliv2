@@ -13,7 +13,7 @@ interface OptionProps {
   style?: React.CSSProperties;
 }
 
-export const ModuleOptions = ({ options, style, currentOption }: OptionProps) => {
+export const ModuleSelector = ({ options, style, currentOption }: OptionProps) => {
   const Options = useMemo(() => {
     return options.map((option, index) => {
       const { optionName, onClick } = option;

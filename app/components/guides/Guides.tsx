@@ -1,7 +1,7 @@
 "use client";
 
 import { Container, GuideDropdownContainer } from "./style";
-import { ModuleOptions } from "UIcomponents/dropdown/Dropdown";
+import { ModuleSelector } from "components/moduleSelector/ModuleSelector";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
 import { useLocalState } from "react-session-hooks";
 import { GuidesClient } from "components/guidesClient/GuidesClient";
@@ -27,7 +27,7 @@ export const Guides = ({
   return (
     <Container>
       <GuideDropdownContainer>
-        <ModuleOptions
+        <ModuleSelector
           key={selectedModule}
           options={options}
           currentOption={options.find(
