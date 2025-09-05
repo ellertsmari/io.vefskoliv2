@@ -135,7 +135,35 @@ const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
         },
         {
           $sort: {
-            associatedReviewCount: 1, // Sort by the number of associated reviews in ascending order
+            associatedReviewCount: 1, // Sort by the number of associated reviews in ascending order (primary)
+            createdAt: 1, // Then by creation date ascending (oldest first) for deterministic ordering
+            _id: 1, // Finally by _id for absolute consistency when all else is equal
+          },
+        },
+        // Add a deterministic assignment system to prevent refresh gaming
+        {
+          $addFields: {
+            // Create a user-specific deterministic ordering using string concatenation
+            userReturnHash: {
+              $concat: [
+                { $toString: userId },
+                "_",
+                { $toString: "$_id" }
+              ]
+            }
+          },
+        },
+        {
+          $sort: {
+            associatedReviewCount: 1, // Primary: fewest reviews first
+            userReturnHash: 1, // Secondary: user-specific deterministic assignment (string sort)
+            createdAt: 1, // Tertiary: oldest first for equal hash values
+            _id: 1, // Final tiebreaker
+          },
+        },
+        {
+          $project: {
+            userReturnHash: 0, // Remove the temporary field
           },
         },
       ],
