@@ -11,9 +11,10 @@ import {
   Background
 } from "./globalStyles/layout";
 import { auth } from "../auth";
-import LoginPage from "pages/login/page";
+import { LoginOrRegister } from "components/loginOrRegister/LoginOrRegister";
 import { NavBar } from "components/navigation/NavBar";
 import TopBar from "components/topBar";
+import { headers } from "next/headers";
 
 const SourceSans3 = Source_Sans_3({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
@@ -30,29 +31,38 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   const shouldShowAvatar = !!session?.user
+  
+  // Get the current pathname to determine if this is a public route
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  
+  // Define public routes that don't require authentication (only guides are public)
+  const isPublicRoute = pathname.startsWith('/guides');
 
   return (
     <html lang="en">
       <body className={SourceSans3.className}>
         <StyledComponentsRegistry>
           
-          {session?.user ? (
+          {session?.user || isPublicRoute ? (
             <>
             <Background src={BackgroundImg} alt="Background image"/>
             <LayoutGrid>
             <TopbarContainer>
                 <TopBar showAvatar={shouldShowAvatar}/>
               </TopbarContainer>
-              <NavigationContainer>
-                <NavBar/>
-              </NavigationContainer>
-              <Main>{children}</Main>
+              {session?.user && (
+                <NavigationContainer>
+                  <NavBar/>
+                </NavigationContainer>
+              )}
+              <Main style={!session?.user ? {gridColumn: "1 / -1"} : {}}>{children}</Main>
             </LayoutGrid>
             </>
           ) : (
             <>
             <TopBar showAvatar={shouldShowAvatar}/>
-            <LoginPage />
+            <LoginOrRegister session={session} />
             </>
           )}
         </StyledComponentsRegistry>

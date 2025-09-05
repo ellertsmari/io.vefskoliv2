@@ -9,7 +9,7 @@ type Props = {
 }
 
 const TopBar = async ({showAvatar}:Props) => {
-    const session = await auth();
+    const session = showAvatar ? await auth() : null;
     return (
         <Container>
             <Logo src={logoSvg} alt="logo"/>
