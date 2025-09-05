@@ -36,10 +36,8 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   
-  // Define public routes that don't require authentication
-  const isPublicRoute = pathname.startsWith('/guides') || pathname.startsWith('/resources') || 
-                        pathname.startsWith('/halloffame') || pathname.startsWith('/people') || 
-                        pathname.startsWith('/calendar');
+  // Define public routes that don't require authentication (only guides are public)
+  const isPublicRoute = pathname.startsWith('/guides');
 
   return (
     <html lang="en">
