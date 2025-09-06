@@ -40,7 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
   },
-  secret: process.env.AUTH_SECRET || "fallback-secret-key-for-development",
+  secret: process.env.AUTH_SECRET,
 
   callbacks: {
     async jwt({ token, user }) {
