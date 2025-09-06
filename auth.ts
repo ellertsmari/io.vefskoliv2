@@ -37,32 +37,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.AUTH_SECRET || "fallback-secret-key-for-development",
 
   callbacks: {
-    async session({ session }) {
-      await connectToDatabase();
-      const dbuser: UserDocument | null = await User.findOne({
-        email: session.user.email,
-      });
-      //add user to session
-      if (!dbuser) {
-        return session;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
       }
-      
-      if (session.user && dbuser) {
-        session.user = {
-          ...session.user,
-          avatarUrl: dbuser.avatarUrl,
-          background: dbuser.background,
-          careerGoals: dbuser.careerGoals,
-          email: dbuser.email,
-          favoriteArtists: dbuser.favoriteArtists,
-          interests: dbuser.interests,
-          name: dbuser.name,
-          role: dbuser.role,
-          id: dbuser.id.toString(),
-          emailVerified: new Date(),
-        };
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        await connectToDatabase();
+        const dbuser: UserDocument | null = await User.findOne({
+          email: session.user.email,
+        });
+        //add user to session
+        if (!dbuser) {
+          return session;
+        }
+        
+        if (session.user && dbuser) {
+          session.user = {
+            ...session.user,
+            avatarUrl: dbuser.avatarUrl,
+            background: dbuser.background,
+            careerGoals: dbuser.careerGoals,
+            email: dbuser.email,
+            favoriteArtists: dbuser.favoriteArtists,
+            interests: dbuser.interests,
+            name: dbuser.name,
+            role: dbuser.role,
+            id: dbuser.id.toString(),
+            emailVerified: new Date(),
+          };
+        }
       }
 
       return session;

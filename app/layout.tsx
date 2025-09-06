@@ -11,9 +11,10 @@ import {
   Background
 } from "./globalStyles/layout";
 import { auth } from "../auth";
-import LoginPage from "pages/login/page";
-import { NavBar } from "components/navigation/NavBar";
-import TopBar from "components/topBar";
+import { LoginOrRegister } from "./components/auth/loginOrRegister/LoginOrRegister";
+import { NavBar } from "./components/navigation/NavBar/NavBar";
+import TopBar from "./components/navigation/TopBar";
+import { headers } from "next/headers";
 
 const SourceSans3 = Source_Sans_3({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
@@ -29,30 +30,39 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  const shouldShowAvatar = !!session?.user
+  const isLoggedIn = !!session?.user
+  
+  // Get the current pathname to determine if this is a public route
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  
+  // Define public routes that don't require authentication (only guides are public)
+  const isPublicRoute = pathname.startsWith('/guides');
 
   return (
     <html lang="en">
       <body className={SourceSans3.className}>
         <StyledComponentsRegistry>
           
-          {session?.user ? (
+          {isLoggedIn || isPublicRoute ? (
             <>
             <Background src={BackgroundImg} alt="Background image"/>
             <LayoutGrid>
             <TopbarContainer>
-                <TopBar showAvatar={shouldShowAvatar}/>
+                <TopBar showAvatar={isLoggedIn}/>
               </TopbarContainer>
-              <NavigationContainer>
-                <NavBar/>
-              </NavigationContainer>
-              <Main>{children}</Main>
+              {isLoggedIn && (
+                <NavigationContainer>
+                  <NavBar/>
+                </NavigationContainer>
+              )}
+              <Main style={!isLoggedIn ? {gridColumn: "1 / -1"} : {}}>{children}</Main>
             </LayoutGrid>
             </>
           ) : (
             <>
-            <TopBar showAvatar={shouldShowAvatar}/>
-            <LoginPage />
+            <TopBar showAvatar={isLoggedIn}/>
+            <LoginOrRegister session={session} />
             </>
           )}
         </StyledComponentsRegistry>

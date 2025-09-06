@@ -7,6 +7,15 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      const { pathname } = nextUrl;
+
+      // Public routes that don't require authentication
+      const publicRoutes = ['/guides', '/login', '/register'];
+      const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+
+      if (isPublicRoute) {
+        return true;
+      }
 
       if (isLoggedIn) {
         return true;

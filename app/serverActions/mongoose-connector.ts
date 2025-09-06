@@ -16,6 +16,7 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     throw new Error('Please define the MONGODB_CONNECTION environment variable inside .env.local');
   }
 
+  // Check if we have a valid cached connection
   if (cachedConnection && cachedConnection.connection.readyState === 1) {
     console.log('✅ Using cached connection');
     return cachedConnection;
@@ -23,16 +24,24 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
 
   try {
     console.log('🔄 Creating new connection...');
+    
+    // Disconnect any existing connection
     if (cachedConnection) {
-      await cachedConnection.disconnect();
+      try {
+        await cachedConnection.disconnect();
+      } catch (disconnectError) {
+        console.log('⚠️ Error disconnecting previous connection:', disconnectError);
+      }
+      cachedConnection = null;
     }
 
     const connection = await mongoose.connect(MONGODB_URI as string, {
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 30000, // Increased from 5000ms to 30000ms (30 seconds)
+      serverSelectionTimeoutMS: 30000, // 30 seconds
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000, // Added connection timeout
-      heartbeatFrequencyMS: 10000, // Keep heartbeat frequency
+      connectTimeoutMS: 30000, // 30 seconds
+      heartbeatFrequencyMS: 10000,
+      bufferCommands: false, // Disable mongoose buffering
     });
 
     console.log('✅ MongoDB connected successfully!');
@@ -49,6 +58,13 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
       console.log('⚠️ MongoDB disconnected');
       cachedConnection = null;
     });
+
+    connection.connection.on('reconnected', () => {
+      console.log('✅ MongoDB reconnected');
+    });
+
+    // Wait a moment to ensure connection is fully established
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     return connection;
   } catch (error) {
