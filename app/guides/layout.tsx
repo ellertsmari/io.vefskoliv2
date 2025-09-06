@@ -5,7 +5,7 @@ import {
   TopbarContainer,
   Main,
   Background
-} from "../globalStyles/layout";
+} from "../globalStyles/layoutStyles";
 import TopBar from "../components/navigation/TopBar";
 
 export const metadata: Metadata = {

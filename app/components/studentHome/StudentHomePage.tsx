@@ -57,61 +57,73 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
     };
   }, [extendedGuides]);
 
-  // Calculate progress for each module
+  // Calculate progress for each module (exclude modules 0 and 2)
   const moduleProgress = useMemo(() => {
-    return modules.map(module => {
-      const moduleGuides = extendedGuides.filter(guide => guide.module.number === module.number);
-      const completedGuides = moduleGuides.filter(guide => 
-        guide.returnStatus === ReturnStatus.PASSED || 
-        guide.returnStatus === ReturnStatus.HALL_OF_FAME
-      );
-      const progress = (completedGuides.length / moduleGuides.length) * 100;
-      
-      return {
-        ...module,
-        totalGuides: moduleGuides.length,
-        completedGuides: completedGuides.length,
-        progress: Math.round(progress)
-      };
-    });
+    return modules
+      .filter(module => module.number !== 0 && module.number !== 2)
+      .map(module => {
+        const moduleGuides = extendedGuides.filter(guide => 
+          +guide.module.title[0] === module.number
+        );
+        const completedGuides = moduleGuides.filter(guide => 
+          guide.returnStatus === ReturnStatus.PASSED ||
+          guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
+          guide.returnStatus === ReturnStatus.AWAITING_FEEDBACK
+        );
+        const progress = moduleGuides.length > 0 ? (completedGuides.length / moduleGuides.length) * 100 : 0;
+        
+        return {
+          ...module,
+          totalGuides: moduleGuides.length,
+          completedGuides: completedGuides.length,
+          progress: Math.round(progress)
+        };
+      });
   }, [extendedGuides, modules]);
 
-  // Calculate overall course progress
+  // Calculate overall course progress (exclude modules 0 and 2)
   const overallProgress = useMemo(() => {
-    const totalGuides = extendedGuides.length;
-    const completedGuides = extendedGuides.filter(guide => 
-      guide.returnStatus === ReturnStatus.PASSED || 
-      guide.returnStatus === ReturnStatus.HALL_OF_FAME
+    const relevantGuides = extendedGuides.filter(guide => 
+      +guide.module.title[0] !== 0 && +guide.module.title[0] !== 2
+    );
+    const totalGuides = relevantGuides.length;
+    const completedGuides = relevantGuides.filter(guide => 
+      guide.returnStatus === ReturnStatus.PASSED ||
+      guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
+      guide.returnStatus === ReturnStatus.AWAITING_FEEDBACK
     ).length;
-    return Math.round((completedGuides / totalGuides) * 100);
+    return totalGuides > 0 ? Math.round((completedGuides / totalGuides) * 100) : 0;
   }, [extendedGuides]);
 
-  // Calculate average grades by module and category
+  // Calculate average grades by module and category with specialty guide logic
   const moduleGrades = useMemo(() => {
-    return modules.map(module => {
-      const moduleGuides = extendedGuides.filter(guide => guide.module.number === module.number);
-      
-      const codingGuides = moduleGuides.filter(guide => guide.category === 'coding');
-      const designGuides = moduleGuides.filter(guide => guide.category === 'design');
-      
-      const codingGrades = codingGuides
-        .map(guide => guide.grade)
-        .filter(grade => grade !== undefined) as number[];
-      
-      const designGrades = designGuides
-        .map(guide => guide.grade)
-        .filter(grade => grade !== undefined) as number[];
-      
-      return {
-        module,
-        codingAverage: codingGrades.length > 0 
-          ? Math.round(codingGrades.reduce((a, b) => a + b, 0) / codingGrades.length * 10) / 10
-          : null,
-        designAverage: designGrades.length > 0 
-          ? Math.round(designGrades.reduce((a, b) => a + b, 0) / designGrades.length * 10) / 10
-          : null
-      };
-    });
+    return modules
+      .filter(module => module.number !== 0 && module.number !== 2) // Exclude modules 0 and 2
+      .map(module => {
+        const moduleGuides = extendedGuides.filter(guide => 
+          +guide.module.title[0] === module.number
+        );
+        
+        // Separate regular and specialty guides
+        const regularCodingGuides = moduleGuides.filter(guide => guide.category === 'code');
+        const specialtyCodingGuides = moduleGuides.filter(guide => guide.category === 'codeSpeciality');
+        const regularDesignGuides = moduleGuides.filter(guide => guide.category === 'design');
+        const specialtyDesignGuides = moduleGuides.filter(guide => guide.category === 'designSpeciality');
+        
+        // Calculate final coding grades with specialty logic
+        const finalCodingGrades = calculateFinalGrades(regularCodingGuides, specialtyCodingGuides);
+        const finalDesignGrades = calculateFinalGrades(regularDesignGuides, specialtyDesignGuides);
+        
+        return {
+          module,
+          codingAverage: finalCodingGrades.length > 0 
+            ? Math.round(finalCodingGrades.reduce((a, b) => a + b, 0) / finalCodingGrades.length * 10) / 10
+            : null,
+          designAverage: finalDesignGrades.length > 0 
+            ? Math.round(finalDesignGrades.reduce((a, b) => a + b, 0) / finalDesignGrades.length * 10) / 10
+            : null
+        };
+      });
   }, [extendedGuides, modules]);
 
   return (
@@ -204,7 +216,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
             {/* Module Progress */}
             <div style={{ marginBottom: '1rem' }}>
               <ProgressLabel style={{ fontSize: '0.9rem' }}>By Module</ProgressLabel>
-              {moduleProgress.slice(0, 4).map((module) => (
+              {moduleProgress.map((module) => (
                 <ModuleProgress key={module.number} style={{ marginBottom: '0.5rem' }}>
                   <ModuleProgressLabel style={{ fontSize: '0.8rem' }}>
                     Module {module.number} ({module.completedGuides}/{module.totalGuides})
@@ -250,6 +262,53 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
     </HomeContainer>
   );
 };
+
+// Helper function to calculate final grades with specialty guide replacement logic
+function calculateFinalGrades(regularGuides: ExtendedGuideInfo[], specialtyGuides: ExtendedGuideInfo[]): number[] {
+  // Get grades from regular guides that have grades
+  const regularGuidesWithGrades = regularGuides
+    .filter(guide => guide.grade !== undefined)
+    .map(guide => ({ guide, grade: guide.grade! }));
+  
+  // Get grades from specialty guides that have grades
+  const specialtyGuidesWithGrades = specialtyGuides
+    .filter(guide => guide.grade !== undefined)
+    .map(guide => ({ guide, grade: guide.grade! }));
+  
+  // If no specialty guides, just return regular grades
+  if (specialtyGuidesWithGrades.length === 0) {
+    return regularGuidesWithGrades.map(item => item.grade);
+  }
+  
+  // Start with regular guides
+  let finalGrades = [...regularGuidesWithGrades];
+  
+  // For each specialty guide, apply replacement logic
+  for (const specialtyItem of specialtyGuidesWithGrades) {
+    // Check if there are unreturned regular guides (guides without grades)
+    const unreturnedRegularGuides = regularGuides.filter(guide => guide.grade === undefined);
+    
+    if (unreturnedRegularGuides.length > 0) {
+      // Replace an unreturned guide by just adding the specialty grade
+      finalGrades.push(specialtyItem);
+    } else {
+      // All regular guides are returned, replace the lowest grade if specialty grade is better
+      if (finalGrades.length > 0) {
+        const lowestGradeIndex = finalGrades.reduce((minIndex, current, index, array) => 
+          current.grade < array[minIndex].grade ? index : minIndex, 0);
+        
+        if (specialtyItem.grade > finalGrades[lowestGradeIndex].grade) {
+          finalGrades[lowestGradeIndex] = specialtyItem;
+        }
+      } else {
+        // No regular guides with grades, just add specialty grade
+        finalGrades.push(specialtyItem);
+      }
+    }
+  }
+  
+  return finalGrades.map(item => item.grade);
+}
 
 // Helper function to get the most recently returned module
 function getMostRecentModule(guides: ExtendedGuideInfo[]): Module | null {

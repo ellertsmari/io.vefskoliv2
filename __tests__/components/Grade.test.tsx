@@ -1,6 +1,6 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react";
-import { Grade } from "../../app/LMS/components/grade/Grade";
+import { Grade } from "../../app/LMS/components/grading/grade/Grade";
 import { returnGrade } from "serverActions/returnGrade";
 
 jest.mock("serverActions/returnGrade", () => ({

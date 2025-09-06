@@ -6,7 +6,7 @@ import { auth } from "../../auth";
 import { Review } from "../models/review";
 import { z } from "zod";
 
-type GradeDataType = {
+export type GradeDataType = {
   grade: number | undefined;
   reviewId: string | undefined;
 };

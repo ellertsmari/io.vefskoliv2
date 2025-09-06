@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useGuide } from "providers/GuideProvider";
-import { FeedbackOverview } from "../../app/LMS/components/feedbackOverview/FeedbackOverview";
+import { FeedbackOverview } from "../../app/LMS/components/feedback/feedbackOverview/FeedbackOverview";
 import { FeedbackDocumentWithReturn } from "types/guideTypes";
 import { ReturnDocument } from "models/return";
 import { FeedbackDocument } from "models/review";

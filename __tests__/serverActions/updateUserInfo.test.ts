@@ -41,9 +41,9 @@ describe("updateUserInfo", () => {
       ...updatedUserInfo, // Merge in the updated fields
     };
 
-    const actualUser = (await User.findById(
+    const actualUser = await User.findById(
       mockUser._id
-    ).lean()) as UserDocument;
+    ).lean();
 
     // Type assertion to inform TypeScript that these properties can be deleted
     delete (actualUser as any).updatedAt;

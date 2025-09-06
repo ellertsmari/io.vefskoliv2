@@ -3,7 +3,7 @@
  */
 
 import { render, fireEvent, waitFor } from "@testing-library/react";
-import { RegisterForm } from "app/LMS/components/registerForm/RegisterForm";
+import { RegisterForm } from "app/components/auth/registerForm/RegisterForm";
 import { signUp } from "serverActions/signUp";
 
 jest.mock("serverActions/signUp", () => ({

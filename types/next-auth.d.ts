@@ -7,28 +7,36 @@ declare module "@auth/core/adapters" {
       Omit<UserType, "_id" | "password" | "createdAt" | "updatedAt"> {}
 }
 
-// import 'next-auth';
-// import { JWT } from 'next-auth/jwt';
+declare module "next-auth" {
+  interface User {
+    role: string;
+  }
 
-// declare module 'next-auth' {
-//   interface Session {
-//     user: {
-//       id: string;
-//       email: string;
-//       background: string;
-//       // Add any other custom properties here
-//     };
-//   }
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      avatarUrl?: string;
+      background?: string;
+      careerGoals?: string;
+      favoriteArtists?: string;
+      interests?: string;
+      image?: string | null;
+      emailVerified?: Date | null;
+    };
+  }
+}
 
-//   interface User {
-//     background: string;
-//     // Add any other custom properties here
-//   }
-// }
-
-// declare module 'next-auth/jwt' {
-//   interface JWT {
-//     background?: string;
-//     // Add any other custom properties here
-//   }
-// }
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string;
+    role?: string;
+    avatarUrl?: string;
+    background?: string;
+    careerGoals?: string;
+    favoriteArtists?: string;
+    interests?: string;
+  }
+}

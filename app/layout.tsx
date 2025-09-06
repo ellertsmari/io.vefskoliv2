@@ -9,7 +9,7 @@ import {
   TopbarContainer,
   Main,
   Background
-} from "./globalStyles/layout";
+} from "./globalStyles/layoutStyles";
 import { auth } from "../auth";
 import { LoginOrRegister } from "./components/auth/loginOrRegister/LoginOrRegister";
 import { NavBar } from "./components/navigation/NavBar/NavBar";
