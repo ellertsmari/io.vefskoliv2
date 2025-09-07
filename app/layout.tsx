@@ -15,6 +15,7 @@ import { LoginOrRegister } from "./components/auth/loginOrRegister/LoginOrRegist
 import { NavBar } from "./components/navigation/NavBar/NavBar";
 import TopBar from "./components/navigation/TopBar";
 import { headers } from "next/headers";
+import HomePage from "./page";
 
 const SourceSans3 = Source_Sans_3({ weight: "400", style: "normal", subsets: ["latin"] });
 // trigger rebuild
@@ -37,7 +38,7 @@ export default async function RootLayout({
   const pathname = headersList.get('x-pathname') || '';
   
   // Define public routes that don't require authentication (only guides are public)
-  const isPublicRoute = pathname.startsWith('/guides');
+  const isPublicRoute = pathname.startsWith('/guides') || pathname === "/signin";
 
   return (
     <html lang="en">
@@ -61,8 +62,7 @@ export default async function RootLayout({
             </>
           ) : (
             <>
-            <TopBar showAvatar={shouldShowAvatar}/>
-            <LoginOrRegister session={session} />
+              <HomePage/>
             </>
           )}
         </StyledComponentsRegistry>

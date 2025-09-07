@@ -11,7 +11,7 @@ type Link = { page: string; title: string; icon: string; };
 export type NavBarProps = { links: Link[] };
 
 const links: Link[] = [
-  { page: "/", title: "HOME", icon: HomeIcon },
+  { page: "/LMS/dashboard", title: "HOME", icon: HomeIcon },
   { page: "/guides", title: "GUIDES", icon: GuidesIcon },
   { page: "/LMS/resources", title: "RESOURCES", icon: ResourcesIcon },
   { page: "/halloffame", title: "GALLERY", icon: GalleryIcon },

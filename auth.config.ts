@@ -2,7 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
   pages: {
-    signIn: "/login",
+    signIn: "/signin",
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
@@ -10,7 +10,7 @@ export const authConfig = {
       const { pathname } = nextUrl;
 
       // Public routes that don't require authentication
-      const publicRoutes = ['/guides', '/login', '/register'];
+      const publicRoutes = ['/guides', '/signin', '/'];
       const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
       if (isPublicRoute) {
