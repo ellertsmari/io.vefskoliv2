@@ -31,7 +31,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  const shouldShowAvatar = !!session?.user
+  const isLoggedIn = !!session?.user
   
   // Get the current pathname to determine if this is a public route
   const headersList = await headers();
@@ -45,19 +45,19 @@ export default async function RootLayout({
       <body className={SourceSans3.className}>
         <StyledComponentsRegistry>
           
-          {session?.user || isPublicRoute ? (
+          {isLoggedIn || isPublicRoute ? (
             <>
             <Background src={BackgroundImg} alt="Background image"/>
             <LayoutGrid>
             <TopbarContainer>
-                <TopBar showAvatar={shouldShowAvatar}/>
+                <TopBar showAvatar={isLoggedIn}/>
               </TopbarContainer>
-              {session?.user && (
+              {isLoggedIn && (
                 <NavigationContainer>
                   <NavBar/>
                 </NavigationContainer>
               )}
-              <Main style={!session?.user ? {gridColumn: "1 / -1"} : {}}>{children}</Main>
+              <Main style={!isLoggedIn ? {gridColumn: "1 / -1"} : {}}>{children}</Main>
             </LayoutGrid>
             </>
           ) : (
