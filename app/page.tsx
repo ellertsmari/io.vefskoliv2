@@ -1,5 +1,7 @@
-import { redirect } from 'next/navigation';
-
-export default function HomePage() {
-  redirect('/guides');
+const HomePage = () => {
+  return (
+    <div>yo</div>
+  )
 }
+
+export default HomePage
