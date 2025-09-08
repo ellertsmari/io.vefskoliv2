@@ -16,7 +16,7 @@ const Reports = async () => {
   }
 
   // Fetch students on server side and serialize properly
-  const students = await getUsersWithIds({ role: "student" });
+  const students = await getUsersWithIds({ role: "user" });
   const serializedStudents = safeSerialize(students);
 
   return <ReportsPage students={serializedStudents} />;
