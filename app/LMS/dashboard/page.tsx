@@ -3,19 +3,29 @@
 import { auth } from "../../../auth";
 import { StudentHomePage } from "../../components/studentHome/StudentHomePage";
 import { TeacherHomePage } from "../../components/teacherHome/TeacherHomePage";
-import { Module } from "../../../types/guideTypes";
-import { getGuides } from "../../../serverActions/getGuides";
-import { extendGuides, fetchModules } from "../../../utils/guideUtils";
-import { safeSerialize } from "../../../utils/serialization";
+import { Module } from "../../../../types/guideTypes";
+import { getGuides } from "../../serverActions/getGuides";
+import { extendGuides, fetchModules } from "../../utils/guideUtils";
+import { safeSerialize } from "../../utils/serialization";
 import { Session } from "next-auth";
 import { redirect } from 'next/navigation';
 
 const Dashboard = async () => {
   const session: Session | null = await auth();
   
+  console.log('Dashboard session:', session);
+  console.log('User ID:', session?.user?.id);
+  console.log('User role:', session?.user?.role);
+  
+  // Let middleware handle authentication, but still check for safety
   if (!session?.user?.id) {
-    // Redirect unauthenticated users to login
-    redirect('/login');
+    console.log('No session or user ID found');
+    return (
+      <div>
+        <h1>Authentication Required</h1>
+        <p>Please sign in to access the dashboard.</p>
+      </div>
+    );
   }
 
   // Authenticated user - show personalized home page based on role
