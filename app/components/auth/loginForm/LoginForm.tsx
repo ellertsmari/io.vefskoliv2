@@ -51,7 +51,7 @@ export function LoginForm({
   return (
     <FullScreenWrapper>
       
-      <Form ref={formRef}>
+      <Form ref={formRef} method="post" action={formAction}>
       <Heading1>SIGN IN</Heading1>
         <Input id="email" type="email" name="email" label="EMAIL" required />
         <Input
