@@ -65,7 +65,8 @@ export const calculateReturnStatus = async (
     }
   );
   const feedbackOnLatestSubmission = feedbackReceived.filter((feedback) => {
-    return feedback.return === latestSubmission._id;
+    // Convert both to strings for comparison to handle serialized ObjectIds
+    return feedback.return.toString() === latestSubmission._id.toString();
   });
 
   if (

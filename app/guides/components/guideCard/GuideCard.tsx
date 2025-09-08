@@ -13,7 +13,7 @@ import { NotificationIcon } from "assets/Icons";
 import { Suspense, lazy } from "react";
 
 const GuideModal = lazy(() =>
-  import("../guideModal.tsx/GuideModal").then((mod) => ({
+  import("../guideModal/GuideModal").then((mod) => ({
     default: mod.GuideModal,
   }))
 );

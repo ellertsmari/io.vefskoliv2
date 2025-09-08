@@ -22,7 +22,7 @@ import { Vote } from "models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
 import { FeedbackInfoContainer } from "./style";
-import { useLocalState } from "react-session-hooks";
+import { useLocalState } from "utils/hooks/useStorage";
 import { set } from "mongoose";
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
@@ -40,7 +40,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
 
   useEffect(() => {
     if (state?.success) {
-      setComment(null);
+      setComment("");
       window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
     }
   }, [state?.success, setComment]);

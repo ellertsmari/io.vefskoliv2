@@ -293,14 +293,47 @@ export async function getGuides(
 ): Promise<GuideInfo[] | null> {
   if (!userIdString) return null;
 
-  await connectToDatabase();
-  const userId = new ObjectId(userIdString);
-  const pipeline = getGuidesPipelines(userId);
-
   try {
-    return (await Guide.aggregate(pipeline).exec()) as GuideInfo[];
+    // Ensure database connection is established
+    const connection = await connectToDatabase();
+    console.log("🔍 Database connection state:", connection.connection.readyState);
+    
+    // Wait for connection to be ready (readyState 1 = connected)
+    if (connection.connection.readyState !== 1) {
+      console.log("⏳ Waiting for database connection...");
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Database connection timeout"));
+        }, 10000);
+
+        if (connection.connection.readyState === 1) {
+          clearTimeout(timeout);
+          resolve(true);
+        } else {
+          connection.connection.once('connected', () => {
+            clearTimeout(timeout);
+            resolve(true);
+          });
+          connection.connection.once('error', (error) => {
+            clearTimeout(timeout);
+            reject(error);
+          });
+        }
+      });
+    }
+
+    const userId = new ObjectId(userIdString);
+    const pipeline = getGuidesPipelines(userId);
+
+    console.log("🔍 Executing aggregation pipeline...");
+    const result = await Guide.aggregate(pipeline).exec();
+    console.log("✅ Successfully fetched guides:", result.length);
+    
+    return result as GuideInfo[];
   } catch (e) {
-    console.error("Failed to fetch guides:", e);
+    console.error("❌ Failed to fetch guides:", e);
+    console.error("❌ Error type:", (e as any)?.constructor?.name);
+    console.error("❌ Error message:", (e as Error).message);
     throw e;
   }
 }

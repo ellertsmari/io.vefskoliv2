@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useRef, useTransition } from "react";
+import { startTransition, useActionState, useRef } from "react";
 import { authenticate } from "serverActions/authenticate";
 import { Input } from "UIcomponents/input/Input";
 import DefaultButton from "globalStyles/buttons/default";
@@ -27,10 +27,20 @@ export function LoginForm({
   const handleLogin = (event: any) => {
     event.preventDefault();
 
-    startTransition(() => {
-      if (formRef.current !== null)
-        return formAction(new FormData(formRef.current));
-    });
+    if (!formRef.current) {
+      console.error("Form ref is null");
+      return;
+    }
+
+    try {
+      startTransition(() => {
+        if (formRef.current) {
+          formAction(new FormData(formRef.current));
+        }
+      });
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
   };
 
   const handleGoToRegister = (event: any) => {

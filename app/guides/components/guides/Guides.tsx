@@ -3,7 +3,7 @@
 import { Container, GuideDropdownContainer } from "./style";
 import { ModuleOptions } from "UIcomponents/dropdown/Dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
-import { useLocalState } from "react-session-hooks";
+import { useLocalState } from "utils/hooks/useStorage";
 import { GuidesClient } from "../guidesClient/GuidesClient";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
@@ -42,7 +42,7 @@ export const Guides = ({
 
 const createOptions = (
   modules: Module[],
-  setSelectedModule: React.Dispatch<number | null>
+  setSelectedModule: (value: number) => void
 ) => {
   console.log(modules)
   return modules.map((module) => ({

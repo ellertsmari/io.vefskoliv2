@@ -1,5 +1,5 @@
 import { render, fireEvent } from "@testing-library/react";
-import { UserInfoCards } from "../../app/LMS/components/userInfoCards/UserInfoCards";
+import { UserInfoCards } from "../../app/LMS/people/components/userInfoCards/UserInfoCards";
 import { ShareableUserInfo } from "types/types";
 
 describe("UserInfoCards", () => {

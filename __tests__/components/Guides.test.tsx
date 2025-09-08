@@ -1,4 +1,4 @@
-import { Guides, exportedForTesting } from "app/LMS/components/guides/Guides";
+import { Guides, exportedForTesting } from "app/guides/components/guides/Guides";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import {
@@ -11,8 +11,8 @@ import {
 } from "../__mocks__/mongoHandler";
 import { fetchModules } from "utils/guideUtils";
 
-// Mocking react-session-hooks as it is not needed for this test and causes ES6 import error that I can't solve yet
-jest.mock("react-session-hooks", () => ({
+// Mocking custom useStorage hooks as they are not needed for this test
+jest.mock("utils/hooks/useStorage", () => ({
   useLocalState: jest.fn(() => [null, jest.fn(), false]),
 }));
 
