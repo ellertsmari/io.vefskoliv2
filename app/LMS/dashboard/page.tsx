@@ -3,7 +3,7 @@
 import { auth } from "../../../auth";
 import { StudentHomePage } from "../../components/studentHome/StudentHomePage";
 import { TeacherHomePage } from "../../components/teacherHome/TeacherHomePage";
-import { Module } from "../../../../types/guideTypes";
+import { Module } from "../../../types/guideTypes";
 import { getGuides } from "../../serverActions/getGuides";
 import { extendGuides, fetchModules } from "../../utils/guideUtils";
 import { safeSerialize } from "../../utils/serialization";
