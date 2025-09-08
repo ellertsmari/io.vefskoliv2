@@ -53,6 +53,8 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
 
   const { guide } = useGuide();
   const { availableForFeedback } = guide;
+  // Take the first return - it's deterministically assigned to this user by the backend
+  // (sorted by: fewest reviews → user-specific assignment → oldest first → consistent tiebreaker)
   const theReturn = availableForFeedback[0];
   const canSubmit = comment && comment.length >= 2;
 
