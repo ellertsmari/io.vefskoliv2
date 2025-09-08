@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "../../auth";
+import { auth } from "../../../auth";
 import { redirect } from 'next/navigation';
 import { Session } from "next-auth";
 import { ReportsPage } from "./components/ReportsPage";
