@@ -12,8 +12,8 @@ export const Wrapper = styled.div`
 export const FullScreenWrapper = styled(Wrapper)`
   align-items: center;
   justify-content: center;
-  width: 100dvw;
-  height: 100dvh;
+  width: 100%;
+  height: 100%;
 `;
 
 export const Border = styled(Wrapper)`
