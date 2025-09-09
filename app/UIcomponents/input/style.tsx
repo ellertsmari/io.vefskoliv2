@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Paragraph } from "globalStyles/text";
 
 const deskTopWidth = "382px";
 const mobileWidth = "240px";
@@ -61,4 +62,9 @@ export const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   max-width: fit-content;
+`;
+
+export const ErrorMessage = styled(Paragraph)`
+  color: var(--error-failure-100);
+  font-size: 14px;
 `;

@@ -1,7 +1,5 @@
 "use client";
-import styled from "styled-components";
-import { Wrapper, Label, ReusableInput, ReusableTextarea } from "./style";
-import { Paragraph } from "globalStyles/text";
+import { Wrapper, Label, ReusableInput, ReusableTextarea, ErrorMessage } from "./style";
 
 type InputProps = {
   label: string;
@@ -33,8 +31,3 @@ export const Input = ({ label, id, error, ...props }: InputProps) => {
     </Wrapper>
   );
 };
-
-export const ErrorMessage = styled(Paragraph)`
-  color: var(--error-failure-100);
-  font-size: 14px;
-`;
