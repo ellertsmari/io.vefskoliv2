@@ -5,6 +5,14 @@ export const authConfig = {
     signIn: "/signin",
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      // Default redirect after login
+      return `${baseUrl}/LMS/dashboard`;
+    },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const { pathname } = nextUrl;

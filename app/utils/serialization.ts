@@ -14,18 +14,40 @@ export function safeSerialize<T>(obj: T): T {
         visited.add(value);
       }
       
-      // Handle MongoDB ObjectId
-      if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'ObjectId') {
-        return value.toString();
+      // Handle MongoDB ObjectId - be more aggressive in detecting them
+      if (value && typeof value === 'object') {
+        // Check for ObjectId by various means
+        if (value.constructor && value.constructor.name === 'ObjectId') {
+          return value.toString();
+        }
+        // Check if it has a buffer property (common in ObjectIds)
+        if (value.buffer && typeof value.toString === 'function') {
+          return value.toString();
+        }
+        // Check if it's a mongoose document
+        if (value._id && typeof value.toObject === 'function') {
+          return safeSerialize(value.toObject());
+        }
+        // Handle arrays that might contain ObjectIds
+        if (Array.isArray(value)) {
+          return value.map(item => safeSerialize(item));
+        }
       }
+      
       // Handle Date objects
       if (value instanceof Date) {
         return value.toISOString();
       }
+      
       // Handle other objects with toJSON method (but check for circular refs first)
       if (value && typeof value === 'object' && typeof value.toJSON === 'function' && !visited.has(value)) {
-        return value.toJSON();
+        try {
+          return safeSerialize(value.toJSON());
+        } catch (e) {
+          return value.toString();
+        }
       }
+      
       return value;
     }));
   } catch (error) {

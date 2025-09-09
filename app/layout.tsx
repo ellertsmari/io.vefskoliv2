@@ -11,7 +11,7 @@ import {
   Background
 } from "./globalStyles/layoutStyles";
 import { auth } from "../auth";
-import { LoginOrRegister } from "./components/auth/loginOrRegister/LoginOrRegister";
+import { redirect } from "next/navigation";
 import { NavBar } from "./components/navigation/NavBar/NavBar";
 import TopBar from "./components/navigation/TopBar";
 import { headers } from "next/headers";
@@ -39,6 +39,8 @@ export default async function RootLayout({
   
   // Define public routes that don't require authentication (only guides are public)
   const isPublicRoute = pathname.startsWith('/guides') || pathname === "/signin";
+
+
 
   return (
     <html lang="en">
