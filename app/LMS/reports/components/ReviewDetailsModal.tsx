@@ -1,129 +1,29 @@
-import styled from "styled-components";
 import { ExtendedGuideInfo } from "types/guideTypes";
-import { FeedbackDocument, GradedFeedbackDocument, Vote } from "models/review";
-
-const ModalWrapper = styled.div`
-  max-width: 800px;
-  max-height: 80vh;
-  overflow-y: auto;
-  padding: 1.5rem;
-`;
-
-const ModalHeader = styled.div`
-  border-bottom: 1px solid #e9ecef;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
-`;
-
-const ModalTitle = styled.h2`
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #000;
-  margin: 0 0 0.5rem 0;
-`;
-
-const ModuleBadge = styled.span`
-  display: inline-block;
-  background: #e9ecef;
-  color: #495057;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-`;
-
-const Section = styled.div`
-  margin-bottom: 2rem;
-`;
-
-const SectionTitle = styled.h3`
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #000;
-  margin: 0 0 1rem 0;
-  border-bottom: 1px solid #e9ecef;
-  padding-bottom: 0.5rem;
-`;
-
-const ReviewCard = styled.div`
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-`;
-
-const ReviewHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-`;
-
-const VoteBadge = styled.span<{ vote: Vote }>`
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  
-  background: ${props => {
-    switch (props.vote) {
-      case Vote.PASS:
-        return '#d4edda';
-      case Vote.RECOMMEND_TO_GALLERY:
-        return '#fff3cd';
-      case Vote.NO_PASS:
-        return '#f8d7da';
-      default:
-        return '#e9ecef';
-    }
-  }};
-  
-  color: ${props => {
-    switch (props.vote) {
-      case Vote.PASS:
-        return '#155724';
-      case Vote.RECOMMEND_TO_GALLERY:
-        return '#856404';
-      case Vote.NO_PASS:
-        return '#721c24';
-      default:
-        return '#495057';
-    }
-  }};
-`;
-
-const GradeBadge = styled.span`
-  background: #007bff;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-left: 0.5rem;
-`;
-
-const ReviewComment = styled.div`
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: #212529;
-  white-space: pre-wrap;
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  color: #6c757d;
-  padding: 2rem;
-  font-style: italic;
-`;
+import { FeedbackDocument, GradedFeedbackDocument } from "models/review";
+import {
+  ModalWrapper,
+  ModalContent,
+  LeftColumn,
+  RightColumn,
+  ModalHeader,
+  ModalTitle,
+  ModuleBadge,
+  Section,
+  SectionTitle,
+  ReviewCard,
+  ReviewHeader,
+  VoteBadge,
+  GradeBadge,
+  ReviewComment,
+  EmptyState,
+  ReturnCard,
+  ReturnHeader,
+  ProjectName,
+  LinkRow,
+  ProjectLink,
+  DateInfo,
+  ReturnComment,
+} from "./styles.ReviewDetailsModal";
 
 interface ReviewDetailsModalProps {
   guide: ExtendedGuideInfo;
@@ -134,6 +34,7 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
   const reviewsReceived = guide.feedbackReceived || [];
   const reviewsGiven = guide.feedbackGiven || [];
   const gradesGiven = guide.gradesGiven || [];
+  const studentReturns = guide.returnsSubmitted || [];
 
   return (
     <ModalWrapper>
@@ -145,56 +46,95 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
         </p>
       </ModalHeader>
 
-      {/* Reviews Received Section */}
-      <Section>
-        <SectionTitle>Reviews Received ({reviewsReceived.length})</SectionTitle>
-        {reviewsReceived.length > 0 ? (
-          reviewsReceived.map((review: FeedbackDocument, index: number) => (
-            <ReviewCard key={review._id.toString()}>
-              <ReviewHeader>
-                <VoteBadge vote={review.vote}>{review.vote}</VoteBadge>
-                {review.grade && <GradeBadge>Grade: {review.grade}</GradeBadge>}
-              </ReviewHeader>
-              <ReviewComment>{review.comment}</ReviewComment>
-            </ReviewCard>
-          ))
-        ) : (
-          <EmptyState>No reviews received for this guide</EmptyState>
-        )}
-      </Section>
+      <ModalContent>
+        <LeftColumn>
+          {/* Reviews Received Section */}
+          <Section>
+            <SectionTitle>Reviews Received ({reviewsReceived.length})</SectionTitle>
+            {reviewsReceived.length > 0 ? (
+              reviewsReceived.map((review: FeedbackDocument, index: number) => (
+                <ReviewCard key={review._id.toString()}>
+                  <ReviewHeader>
+                    <VoteBadge vote={review.vote}>{review.vote}</VoteBadge>
+                    {review.grade && <GradeBadge>Grade: {review.grade}</GradeBadge>}
+                  </ReviewHeader>
+                  <ReviewComment>{review.comment}</ReviewComment>
+                </ReviewCard>
+              ))
+            ) : (
+              <EmptyState>No reviews received for this guide</EmptyState>
+            )}
+          </Section>
 
-      {/* Reviews Given Section */}
-      <Section>
-        <SectionTitle>Reviews Given ({reviewsGiven.length})</SectionTitle>
-        {reviewsGiven.length > 0 ? (
-          reviewsGiven.map((review: FeedbackDocument, index: number) => {
-            // Find corresponding grade given by this student
-            const gradeGiven = gradesGiven.find((grade: GradedFeedbackDocument) => 
-              grade._id.toString() === review._id.toString()
-            );
-            
-            // Find corresponding grade received for this feedback
-            const gradeReceived = guide.gradesReceived.find((grade: GradedFeedbackDocument) => 
-              grade._id.toString() === review._id.toString()
-            );
-            
-            return (
-              <ReviewCard key={review._id.toString()}>
-                <ReviewHeader>
-                  <VoteBadge vote={review.vote}>{review.vote}</VoteBadge>
-                  <div>
-                    {gradeGiven && <GradeBadge>Grade Given: {gradeGiven.grade}</GradeBadge>}
-                    {gradeReceived && <GradeBadge style={{ backgroundColor: '#28a745' }}>Grade Received: {gradeReceived.grade}</GradeBadge>}
-                  </div>
-                </ReviewHeader>
-                <ReviewComment>{review.comment}</ReviewComment>
-              </ReviewCard>
-            );
-          })
-        ) : (
-          <EmptyState>No reviews given for this guide</EmptyState>
-        )}
-      </Section>
+          {/* Reviews Given Section */}
+          <Section>
+            <SectionTitle>Reviews Given ({reviewsGiven.length})</SectionTitle>
+            {reviewsGiven.length > 0 ? (
+              reviewsGiven.map((review: FeedbackDocument, index: number) => {
+                // Find corresponding grade given by this student
+                const gradeGiven = gradesGiven.find((grade: GradedFeedbackDocument) => 
+                  grade._id.toString() === review._id.toString()
+                );
+                
+                // Find corresponding grade received for this feedback
+                const gradeReceived = guide.gradesReceived.find((grade: GradedFeedbackDocument) => 
+                  grade._id.toString() === review._id.toString()
+                );
+                
+                return (
+                  <ReviewCard key={review._id.toString()}>
+                    <ReviewHeader>
+                      <VoteBadge vote={review.vote}>{review.vote}</VoteBadge>
+                      <div>
+                        {gradeGiven && <GradeBadge>Grade Given: {gradeGiven.grade}</GradeBadge>}
+                        {gradeReceived && <GradeBadge style={{ backgroundColor: '#28a745' }}>Grade Received: {gradeReceived.grade}</GradeBadge>}
+                      </div>
+                    </ReviewHeader>
+                    <ReviewComment>{review.comment}</ReviewComment>
+                  </ReviewCard>
+                );
+              })
+            ) : (
+              <EmptyState>No reviews given for this guide</EmptyState>
+            )}
+          </Section>
+        </LeftColumn>
+
+        <RightColumn>
+          {/* Student Returns Section */}
+          <Section>
+            <SectionTitle>Student Returns ({studentReturns.length})</SectionTitle>
+            {studentReturns.length > 0 ? (
+              studentReturns.map((returnDoc, index: number) => (
+                <ReturnCard key={returnDoc._id.toString()}>
+                  <ReturnHeader>
+                    <ProjectName>{returnDoc.projectName}</ProjectName>
+                    <LinkRow>
+                      <ProjectLink href={returnDoc.projectUrl} target="_blank" rel="noopener noreferrer">
+                        Project URL
+                      </ProjectLink>
+                      <ProjectLink href={returnDoc.liveVersion} target="_blank" rel="noopener noreferrer">
+                        Live Version
+                      </ProjectLink>
+                      {returnDoc.pictureUrl && (
+                        <ProjectLink href={returnDoc.pictureUrl} target="_blank" rel="noopener noreferrer">
+                          Picture
+                        </ProjectLink>
+                      )}
+                    </LinkRow>
+                    <DateInfo>
+                      Submitted: {new Date(returnDoc.createdAt).toLocaleDateString()}
+                    </DateInfo>
+                  </ReturnHeader>
+                  <ReturnComment>{returnDoc.comment}</ReturnComment>
+                </ReturnCard>
+              ))
+            ) : (
+              <EmptyState>No returns submitted for this guide</EmptyState>
+            )}
+          </Section>
+        </RightColumn>
+      </ModalContent>
     </ModalWrapper>
   );
 };
