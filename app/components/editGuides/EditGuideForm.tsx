@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { GuideType } from "../../models/guide";
 import { GUIDE_CATEGORIES } from "../../constants/guideCategories";
+import { MODULE_TITLES } from "../../constants/moduleTitles";
 import {
   FormContainer,
   BackLink,
@@ -221,12 +222,19 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
           
           <InputGroup>
             <Label htmlFor="moduleTitle">Module Title</Label>
-            <Input
+            <Select
               id="moduleTitle"
               value={formData.module.title}
               onChange={(e) => handleNestedChange('module', 'title', e.target.value)}
               required
-            />
+            >
+              <option value="">Select a module</option>
+              {MODULE_TITLES.map(moduleTitle => (
+                <option key={moduleTitle} value={moduleTitle}>
+                  {moduleTitle}
+                </option>
+              ))}
+            </Select>
           </InputGroup>
 
           <InputGroup>

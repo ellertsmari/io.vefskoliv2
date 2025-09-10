@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { GuideType } from "../../models/guide";
 import { GUIDE_CATEGORIES } from "../../constants/guideCategories";
+import { MODULE_TITLES } from "../../constants/moduleTitles";
 import { 
   PageContainer, 
   Header, 
@@ -34,21 +35,11 @@ export const EditGuidesPage = ({ guides }: EditGuidesPageProps) => {
     return title;
   }))]
     .sort((a, b) => {
-      // Define a custom sort order for module titles since numbers are unreliable
-      const moduleOrder = [
-        'Preparation',
-        'Introductory Course', 
-        'The fundamentals',
-        'Connecting to the World',
-        'Back-end & Infrastructure',
-        'Growing complexity',
-        'Exploration',
-        'Community & Networking',
-        'Untitled Module'
-      ];
+      // Use the predefined MODULE_TITLES order since numbers are unreliable
+      const moduleOrder = [...MODULE_TITLES, 'Untitled Module'];
       
-      const indexA = moduleOrder.indexOf(a);
-      const indexB = moduleOrder.indexOf(b);
+      const indexA = moduleOrder.indexOf(a as any);
+      const indexB = moduleOrder.indexOf(b as any);
       
       // If both are in the order array, sort by their position
       if (indexA !== -1 && indexB !== -1) {
