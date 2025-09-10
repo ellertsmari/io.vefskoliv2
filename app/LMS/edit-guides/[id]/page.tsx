@@ -32,7 +32,7 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
       return (
         <div>
           <h1>Guide Not Found</h1>
-          <p>The guide you&apos;re looking for doesn&apos;t exist.</p>
+          <p>The guide you're looking for doesn't exist.</p>
           <Link href="/LMS/edit-guides">← Back to Edit Guides</Link>
         </div>
       );
@@ -46,7 +46,7 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
     return (
       <div>
         <h1>Error</h1>
-        <p>Something went wrong loading the guide: {error instanceof Error ? error.message : &apos;Unknown error&apos;}</p>
+        <p>Something went wrong loading the guide: {error instanceof Error ? error.message : 'Unknown error'}</p>
         <Link href="/LMS/edit-guides">← Back to Edit Guides</Link>
       </div>
     );
