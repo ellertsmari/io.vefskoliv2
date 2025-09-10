@@ -1,8 +1,8 @@
 export const GUIDE_CATEGORIES = [
   "code",
   "design", 
-  "speciality code",
-  "speciality design"
+  "codeSpeciality",
+  "designSpeciality"
 ] as const;
 
 export type GuideCategory = typeof GUIDE_CATEGORIES[number];
