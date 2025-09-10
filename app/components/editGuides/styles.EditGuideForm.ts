@@ -195,7 +195,7 @@ export const Button = styled.button<ButtonProps>`
     }
   `}
   
-  ${props => !props.$variant || props.$variant === 'secondary' && `
+  ${props => (!props.$variant || props.$variant === 'secondary') ? `
     background: #f3f4f6;
     color: #374151;
     border: 1px solid #d1d5db;
@@ -203,5 +203,5 @@ export const Button = styled.button<ButtonProps>`
     &:hover:not(:disabled) {
       background: #e5e7eb;
     }
-  `}
+  ` : ''}
 `;

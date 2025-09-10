@@ -5,10 +5,11 @@ import { connectToDatabase } from "../../../serverActions/mongoose-connector";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log("Starting PUT request for guide:", params.id);
+    const { id } = await params;
+    console.log("Starting PUT request for guide:", id);
     const session = await auth();
     console.log("Session:", session ? { userId: session.user?.id, role: session.user?.role } : null);
     
@@ -16,7 +17,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const guideId = params.id;
+    const guideId = id;
     const updateData = await request.json();
 
     await connectToDatabase();
@@ -60,10 +61,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log("Starting DELETE request for guide:", params.id);
+    const { id } = await params;
+    console.log("Starting DELETE request for guide:", id);
     const session = await auth();
     console.log("Session:", session ? { userId: session.user?.id, role: session.user?.role } : null);
     
@@ -71,7 +73,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const guideId = params.id;
+    const guideId = id;
 
     await connectToDatabase();
 

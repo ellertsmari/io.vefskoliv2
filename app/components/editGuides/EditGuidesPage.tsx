@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GuideType } from "../../models/guide";
+import { GuideInfo } from "../../../types/guideTypes";
 import { GUIDE_CATEGORIES } from "../../constants/guideCategories";
 import { MODULE_TITLES } from "../../constants/moduleTitles";
 import { 
@@ -21,7 +21,7 @@ import {
 } from "./styles.EditGuidesPage";
 
 interface EditGuidesPageProps {
-  guides: GuideType[];
+  guides: GuideInfo[];
 }
 
 export const EditGuidesPage = ({ guides }: EditGuidesPageProps) => {
