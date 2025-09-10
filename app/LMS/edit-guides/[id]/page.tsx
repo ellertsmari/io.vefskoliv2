@@ -2,6 +2,7 @@
 
 import { auth } from "../../../../auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { EditGuideForm } from "../../../components/editGuides/EditGuideForm";
 import { getGuide } from "../../../serverActions/getGuide";
 import { safeSerialize } from "../../../utils/serialization";
@@ -31,8 +32,8 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
       return (
         <div>
           <h1>Guide Not Found</h1>
-          <p>The guide you're looking for doesn't exist.</p>
-          <a href="/LMS/edit-guides">← Back to Edit Guides</a>
+          <p>The guide you&apos;re looking for doesn&apos;t exist.</p>
+          <Link href="/LMS/edit-guides">← Back to Edit Guides</Link>
         </div>
       );
     }
@@ -45,8 +46,8 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
     return (
       <div>
         <h1>Error</h1>
-        <p>Something went wrong loading the guide: {error instanceof Error ? error.message : 'Unknown error'}</p>
-        <a href="/LMS/edit-guides">← Back to Edit Guides</a>
+        <p>Something went wrong loading the guide: {error instanceof Error ? error.message : &apos;Unknown error&apos;}</p>
+        <Link href="/LMS/edit-guides">← Back to Edit Guides</Link>
       </div>
     );
   }
