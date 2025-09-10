@@ -54,10 +54,42 @@ Uses path aliases configured in both `jest.config.ts` and likely `tsconfig.json`
 ### Authentication
 NextAuth v5 beta with custom pages and authorization callbacks in `auth.config.ts`.
 
+## Guide Organization & Categorization
+
+**IMPORTANT**: All guides must be organized by both category and module:
+
+### Categories (Required)
+Guides MUST be categorized into one of these 4 types:
+- **"code"**: Programming and development guides
+- **"design"**: Visual design and UI/UX guides  
+- **"speciality code"**: Advanced/specialized programming topics
+- **"speciality design"**: Advanced/specialized design topics
+
+Defined in: `app/constants/guideCategories.ts`
+
+### Modules (Required)
+Guides MUST be assigned to a module with:
+- **number**: Module sequence number (integer) - **⚠️ WARNING: Often undefined in database**
+- **title**: Module name (e.g., "Preparation", "Introductory Course", "The fundamentals")
+
+Structure defined in: `app/models/guide.ts` → `guideModuleSchema`
+
+**⚠️ CRITICAL DATABASE ISSUE**: 
+- `module.number` is frequently undefined/null in the database
+- **NEVER rely on `module.number` for sorting or logic**
+- **ALWAYS use `module.title` as the primary identifier**
+- **ALWAYS provide fallbacks**: `guide.module?.number || 0`
+- Use `module.title` for grouping and filtering instead
+
+### Edit Guides Feature
+Teachers can manage guides via `/LMS/edit-guides`:
+- Filter by category and module
+- Edit guide properties including category selection
+- Categories are enforced via dropdown (no free text)
+
 ## Current Branch Context
 
-Working on `feature/open-guides` branch with modifications to:
-- Guide pages and routing
-- Top bar navigation
-- Server actions and MongoDB connection
-- Public guide utilities and serialization
+Working on `feature/teacher-edit-guides` branch with:
+- Complete edit guides functionality for teachers
+- Category and module filtering
+- Form validation with predefined categories
