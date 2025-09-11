@@ -2,6 +2,7 @@ import React, { useState, useActionState, startTransition } from "react";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { FeedbackDocument, GradedFeedbackDocument } from "models/review";
 import { returnGrade } from "serverActions/returnGrade";
+import MarkdownReader from "UIcomponents/markdown/reader";
 import {
   ModalWrapper,
   ModalContent,
@@ -197,7 +198,9 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
                     <VoteBadge vote={review.vote}>{review.vote}</VoteBadge>
                     {review.grade && <GradeBadge>Grade: {review.grade}</GradeBadge>}
                   </ReviewHeader>
-                  <ReviewComment>{review.comment}</ReviewComment>
+                  <ReviewComment>
+                    <MarkdownReader>{review.comment}</MarkdownReader>
+                  </ReviewComment>
                   <GradeAdjustment 
                     review={review} 
                     currentGrade={review.grade} 
@@ -233,7 +236,9 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
                         {gradeReceived && <GradeBadge style={{ backgroundColor: '#28a745' }}>Grade Received: {gradeReceived.grade}</GradeBadge>}
                       </div>
                     </ReviewHeader>
-                    <ReviewComment>{review.comment}</ReviewComment>
+                    <ReviewComment>
+                    <MarkdownReader>{review.comment}</MarkdownReader>
+                  </ReviewComment>
                     <GradeAdjustment 
                       review={review} 
                       currentGrade={gradeReceived?.grade} 
@@ -273,7 +278,9 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
                       Submitted: {new Date(returnDoc.createdAt).toLocaleDateString()}
                     </DateInfo>
                   </ReturnHeader>
-                  <ReturnComment>{returnDoc.comment}</ReturnComment>
+                  <ReturnComment>
+                    <MarkdownReader>{returnDoc.comment}</MarkdownReader>
+                  </ReturnComment>
                 </ReturnCard>
               ))
             ) : (
