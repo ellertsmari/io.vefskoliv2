@@ -1,6 +1,6 @@
 import { auth } from "auth";
 import { redirect } from "next/navigation";
-import HomePageContent from "./HomePageContent";
+import LandingPageContent from "./landingPage/LandingPageContent";
 
 const HomePage = async () => {
   const session = await auth();
@@ -11,7 +11,7 @@ const HomePage = async () => {
   }
   
   // If not logged in, show the regular homepage content
-  return <HomePageContent />;
+  return <LandingPageContent />;
 }
 
 export default HomePage;
