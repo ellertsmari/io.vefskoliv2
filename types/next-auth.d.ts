@@ -25,6 +25,19 @@ declare module "next-auth" {
       interests?: string;
       image?: string | null;
       emailVerified?: Date | null;
+      isAliased?: boolean;
+      aliasedUserId?: string;
+      originalUser?: {
+        id: string;
+        role: string;
+        avatarUrl?: string;
+        background?: string;
+        careerGoals?: string;
+        email: string;
+        favoriteArtists?: string;
+        interests?: string;
+        name: string;
+      };
     };
   }
 }
@@ -38,5 +51,18 @@ declare module "next-auth/jwt" {
     careerGoals?: string;
     favoriteArtists?: string;
     interests?: string;
+    isAliased?: boolean;
+    aliasedUserId?: string;
+    originalUser?: {
+      id: string;
+      role: string;
+      avatarUrl?: string;
+      background?: string;
+      careerGoals?: string;
+      email: string;
+      favoriteArtists?: string;
+      interests?: string;
+      name: string;
+    };
   }
 }

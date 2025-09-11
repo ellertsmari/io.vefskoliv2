@@ -20,6 +20,7 @@ import { Wrapper } from "globalStyles/globalStyles";
 import { Session } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
 import { useState } from "react";
+import { UserAliasDropdown } from "../userAliasDropdown/UserAliasDropdown";
 
 export const Profile = ({ session }: { session: Session | null }) => {
   const user = session?.user as AdapterUser;
@@ -33,10 +34,13 @@ export const Profile = ({ session }: { session: Session | null }) => {
   return (
     <Wrapper>
       {user ? (
-        <Modal
-          modalTrigger={<ProfilePictureContainer />}
-          modalContent={<EditProfileScreen user={user} />}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <UserAliasDropdown session={session} />
+          <Modal
+            modalTrigger={<ProfilePictureContainer />}
+            modalContent={<EditProfileScreen user={user} />}
+          />
+        </div>
       ) : (
         <div>loading...</div>
       )}
