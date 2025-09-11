@@ -6,6 +6,7 @@ import type { UserDocument } from "models/user";
 import { User } from "models/user";
 import bcrypt from "bcrypt";
 import { connectToDatabase } from "serverActions/mongoose-connector";
+import { cookies } from "next/headers";
 
 export async function getUser(email: string): Promise<UserDocument | null> {
   try {
@@ -17,7 +18,7 @@ export async function getUser(email: string): Promise<UserDocument | null> {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuth = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
@@ -69,25 +70,74 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Return token as-is if database lookup fails
         }
       }
+
       return token;
     },
     async session({ session, token }) {
       // Use data from the token instead of making database calls
       if (token && session.user) {
-        session.user = {
-          ...session.user,
-          id: token.id as string,
-          role: token.role as string,
-          avatarUrl: token.avatarUrl as string | undefined,
-          background: token.background as string | undefined,
-          careerGoals: token.careerGoals as string | undefined,
-          email: token.email as string,
-          favoriteArtists: token.favoriteArtists as string | undefined,
-          interests: token.interests as string | undefined,
-          name: token.name as string,
-        };
+        // Check for alias cookie
+        const cookieStore = await cookies();
+        const aliasedUserId = cookieStore.get('aliased-user')?.value;
+        
+        // If teacher has set an alias, override the session with the aliased user
+        if (aliasedUserId && token.role === "teacher") {
+          try {
+            await connectToDatabase();
+            const aliasUser = await User.findById(aliasedUserId);
+            
+            if (aliasUser) {
+              session.user = {
+                ...session.user,
+                id: aliasUser.id.toString(),
+                role: aliasUser.role,
+                avatarUrl: aliasUser.avatarUrl,
+                background: aliasUser.background,
+                careerGoals: aliasUser.careerGoals,
+                email: aliasUser.email,
+                favoriteArtists: aliasUser.favoriteArtists,
+                interests: aliasUser.interests,
+                name: aliasUser.name,
+                isAliased: true,
+                aliasedUserId: aliasUser.id.toString(),
+                originalUser: {
+                  id: token.id as string,
+                  role: token.role as string,
+                  avatarUrl: token.avatarUrl as string | undefined,
+                  background: token.background as string | undefined,
+                  careerGoals: token.careerGoals as string | undefined,
+                  email: token.email as string,
+                  favoriteArtists: token.favoriteArtists as string | undefined,
+                  interests: token.interests as string | undefined,
+                  name: token.name as string,
+                },
+              };
+            }
+          } catch (error) {
+            console.error("Error loading alias user:", error);
+          }
+        } else {
+          // Normal user session
+          session.user = {
+            ...session.user,
+            id: token.id as string,
+            role: token.role as string,
+            avatarUrl: token.avatarUrl as string | undefined,
+            background: token.background as string | undefined,
+            careerGoals: token.careerGoals as string | undefined,
+            email: token.email as string,
+            favoriteArtists: token.favoriteArtists as string | undefined,
+            interests: token.interests as string | undefined,
+            name: token.name as string,
+            isAliased: false,
+            aliasedUserId: undefined,
+            originalUser: undefined,
+          };
+        }
       }
       return session;
     },
   },
 });
+
+export const { handlers, auth, signIn, signOut } = nextAuth;
