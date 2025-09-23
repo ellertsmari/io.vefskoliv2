@@ -11,7 +11,6 @@ import {
   Background
 } from "./globalStyles/layoutStyles";
 import { auth } from "../auth";
-import { redirect } from "next/navigation";
 import { NavBar } from "./components/navigation/NavBar/NavBar";
 import TopBar from "./components/navigation/TopBar";
 import { headers } from "next/headers";
