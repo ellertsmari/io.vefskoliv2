@@ -1,6 +1,6 @@
 import { Container, Logo, LogoSymbol } from "./style";
-import logoSvg from "../../../assets/logo.svg"
-import logoSymbolSvg from "../../../assets/logoSymbol.svg"
+import logoSvg from "../../../assets/logoFilled.svg"
+import logoSymbolSvg from "../../../assets/logoSymbolFilled.svg"
 import { Profile } from "../../user/profile/profile";
 import { auth } from "auth";
 
