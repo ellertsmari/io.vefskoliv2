@@ -31,7 +31,8 @@ export async function getPublicGuides(): Promise<GuideType[] | null> {
       .sort({ order: 1 })
       .exec();
 
-    return guides;
+    // Serialize MongoDB documents to plain objects for client components
+    return JSON.parse(JSON.stringify(guides));
   } catch (e) {
     console.error("Failed to fetch public guides:", e);
     
