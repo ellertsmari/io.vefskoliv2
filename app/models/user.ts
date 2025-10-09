@@ -14,6 +14,7 @@ export interface RequiredUserInfo {
   password: string;
   role: string;
   createdAt: Date;
+  ltiId?: string;
 }
 
 export enum OptionalUserInfoKeys {
@@ -49,6 +50,7 @@ const userSchema = new Schema(
     favoriteArtists: { type: Schema.Types.String, required: false },
     role: { type: Schema.Types.String, required: true },
     avatarUrl: { type: Schema.Types.String, required: false },
+    ltiId: { type: Schema.Types.String, required: false, index: true },
   },
   { timestamps: true }
 );

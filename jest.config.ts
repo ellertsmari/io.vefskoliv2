@@ -25,9 +25,12 @@ const config: Config = {
     "^models/(.*)$": "<rootDir>/app/models/$1",
     "^providers/(.*)$": "<rootDir>/app/providers/$1",
     "^types/(.*)$": "<rootDir>/types/$1",
+    "^utils/(.*)$": "<rootDir>/app/utils/$1",
   },
   testPathIgnorePatterns: ["<rootDir>/__tests__/__mocks__/mongoHandler.ts"],
-  transformIgnorePatterns: ["/node_modules/(?!(react-session-hooks)/)"],
+  transformIgnorePatterns: [
+    "/node_modules/(?!(react-session-hooks|bson|mongodb|jose)/)"
+  ],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

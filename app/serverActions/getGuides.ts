@@ -329,7 +329,10 @@ export async function getGuides(
     const result = await Guide.aggregate(pipeline).exec();
     console.log("✅ Successfully fetched guides:", result.length);
     
-    return result as GuideInfo[];
+    // Serialize MongoDB documents to plain objects for client components
+    const serializedResult = JSON.parse(JSON.stringify(result));
+    
+    return serializedResult as GuideInfo[];
   } catch (e) {
     console.error("❌ Failed to fetch guides:", e);
     console.error("❌ Error type:", (e as any)?.constructor?.name);

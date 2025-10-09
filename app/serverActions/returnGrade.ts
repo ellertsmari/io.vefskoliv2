@@ -5,6 +5,7 @@ import type { GradedFeedbackDocument } from "../models/review";
 import { auth } from "../../auth";
 import { Review } from "../models/review";
 import { z } from "zod";
+import { safeSerialize } from "../utils/serialization";
 
 export type GradeDataType = {
   grade: number | undefined;
@@ -60,7 +61,7 @@ export async function returnGrade(state: GradeFormState, data: GradeDataType) {
 
     return {
       success: true,
-      data: gradedDocument.toObject(),
+      data: safeSerialize(gradedDocument.toObject()),
       message: "Grade submitted successfully",
     };
   } catch (e) {
