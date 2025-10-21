@@ -215,16 +215,47 @@ const lookupFeedbackReceived = (userId: ObjectId): PipelineStage => {
 };
 
 // grab feedback available for reviewing by user
-const addAvailableToGrade = (): PipelineStage => {
+const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
   return {
-    $addFields: {
-      availableToGrade: {
-        $filter: {
-          input: "$feedbackReceived",
-          as: "feedback",
-          cond: { $eq: [{ $ifNull: ["$$feedback.grade", null] }, null] }, // Filter where grade is null
+    $lookup: {
+      from: "reviews",
+      let: { userId: userId },
+      pipeline: [
+        // Find feedback that hasn't been graded yet
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: [{ $ifNull: ["$grade", null] }, null] }, // No grade given yet
+                { $ne: ["$owner", "$$userId"] }, // Not the user's own feedback
+              ],
+            },
+          },
         },
-      },
+        // Join with returns to get project info
+        {
+          $lookup: {
+            from: "returns",
+            localField: "return",
+            foreignField: "_id",
+            as: "associatedReturn",
+          },
+        },
+        { $unwind: "$associatedReturn" },
+        // Exclude feedback on the user's own projects
+        {
+          $match: {
+            $expr: {
+              $ne: ["$associatedReturn.owner", "$$userId"],
+            },
+          },
+        },
+        // Sort by creation date (oldest first) for fairness
+        { $sort: { createdAt: 1 } },
+        // Limit to prevent overwhelming the user
+        { $limit: 10 },
+      ],
+      as: "availableToGrade",
     },
   };
 };
@@ -277,7 +308,7 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
     addGradesReceived(),
     lookupFeedbackReceived(userId),
     addGradesGiven(),
-    addAvailableToGrade(),
+    addAvailableToGrade(userId), // Pass userId to the function
     lookupAvailableForFeedback(userId),
     defineProject,
     {

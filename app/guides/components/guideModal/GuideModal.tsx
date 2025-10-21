@@ -1,6 +1,6 @@
 import { Paragraph, Heading1 } from "globalStyles/text";
 import { useGuide } from "providers/GuideProvider";
-import { FeedbackStatus } from "types/guideTypes";
+import { FeedbackStatus, ReturnStatus } from "types/guideTypes";
 import { calculateReturnStyle } from "./calculateReturnStyle";
 import { Button } from "globalStyles/buttons/default/style";
 import { FeedbackOverview } from "../../../LMS/components/feedback/feedbackOverview/FeedbackOverview";
@@ -21,7 +21,8 @@ export const GuideModal = () => {
   const { link, returnStatus, title, feedbackStatus } = guide;
 
   const RenderedContent = () => {
-    if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {
+    const { availableForFeedback } = guide;
+    if (returnStatus !== ReturnStatus.NOT_RETURNED && availableForFeedback.length > 0) {
       return <GiveFeedbackView guideTitle={title} />;
     }
     return <FeedbackOverview />;

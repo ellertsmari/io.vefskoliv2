@@ -37,7 +37,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
 
     if (!guideId || loading) return null;
 
-    const handleSubmit = (event: React.FormEvent<HTMLButtonElement>) => {
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       startTransition(() => {
         formAction({ ...formData, guideId });
@@ -49,7 +49,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
     };
 
     return (
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <Input
           id={"projectUrl"}
           type={"text"}
@@ -120,7 +120,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
               : undefined
           }
         />
-        <Button style="default" onClick={handleSubmit}>
+        <Button style="default" type="submit">
           SUBMIT
         </Button>
       </Form>

@@ -44,10 +44,9 @@ const createOptions = (
   modules: Module[],
   setSelectedModule: (value: number) => void
 ) => {
-  console.log(modules)
   return modules.map((module) => ({
     optionName: "Module " + module.number,
-    onClick: () => {console.log(module.number); setSelectedModule(module.number)},
+    onClick: () => setSelectedModule(module.number),
   }));
 };
 
