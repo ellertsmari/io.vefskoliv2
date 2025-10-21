@@ -129,7 +129,8 @@ export const calculateGradesGivenStatus = async (
   gradesGiven: GradedFeedbackDocument[],
   availableToGrade: FeedbackDocument[]
 ): Promise<GradesGivenStatus> => {
-  if (availableToGrade.length) return GradesGivenStatus.NEED_TO_GRADE;
+  if (gradesGiven.length < 2 && availableToGrade.length)
+    return GradesGivenStatus.NEED_TO_GRADE;
 
   if (gradesGiven.length < 2) return GradesGivenStatus.AWAITING_FEEDBACK;
 

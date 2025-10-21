@@ -3,12 +3,15 @@ import { useMemo, useState } from "react";
 import {
   FeedbackDocumentWithReturn,
   GradesGivenStatus,
+  ReturnStatus,
 } from "types/guideTypes";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import { Toggle, ToggleOption } from "UIcomponents/toggle/Toggle";
 import { OptionNavigator } from "UIcomponents/optionNavigator/OptionNavigator";
 import { useGuide } from "providers/GuideProvider";
 import { ReturnOverview } from "../returnOverview/ReturnOverview";
+import { GiveFeedbackView } from "../giveFeedbackView/GiveFeedbackView";
+import { Button } from "globalStyles/buttons/default/style";
 import {
   FeedbackContainer,
   FeedbackInfoContainer,
@@ -38,6 +41,7 @@ export const FeedbackOverview = () => {
 
   const [selectedGivenIndex, setSelectedGivenIndex] = useState<number>(0);
   const [selectedReceivedIndex, setSelectedReceivedIndex] = useState<number>(0);
+  const [showFeedbackForm, setShowFeedbackForm] = useState<boolean>(false);
 
   if (!guide) return null;
   const {
@@ -89,6 +93,10 @@ export const FeedbackOverview = () => {
     });
   };
 
+  if (showFeedbackForm) {
+    return <GiveFeedbackView guideTitle={guide.title} />;
+  }
+
   return (
     <FeedbackContainer>
       <ToggleContainer>
@@ -96,6 +104,15 @@ export const FeedbackOverview = () => {
           currentSelection={showGivenOrReceived}
           options={toggleOptions()}
         />
+        {guide.returnStatus !== ReturnStatus.NOT_RETURNED && guide.availableForFeedback.length > 0 && (
+          <Button
+            $styletype="outlined"
+            onClick={() => setShowFeedbackForm(true)}
+            style={{ marginLeft: 'auto' }}
+          >
+            Give More Feedback
+          </Button>
+        )}
       </ToggleContainer>
       <FeedbackInfoContainer>
         <ReturnOverview
