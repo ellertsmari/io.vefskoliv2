@@ -35,11 +35,11 @@ const getModuleFromTitle = (title: string): string | null => {
 };
 
 const getColorScheme = (title: string) => {
-  const module = getModuleFromTitle(title);
-  if (module && moduleColors[module]) {
-    return { ...moduleColors[module], module };
+  const moduleNum = getModuleFromTitle(title);
+  if (moduleNum && moduleColors[moduleNum]) {
+    return { ...moduleColors[moduleNum], moduleNum };
   }
-  return { ...moduleColors.default, module: null };
+  return { ...moduleColors.default, moduleNum: null };
 };
 
 const formatDate = (dateString?: string) => {
@@ -61,12 +61,12 @@ const formatDuration = (minutes?: number) => {
 };
 
 const VideoCard = ({ link, title, date, duration }: Props) => {
-  const { gradient, badge, module } = getColorScheme(title);
+  const { gradient, badge, moduleNum } = getColorScheme(title);
 
   return (
     <CardContainer href={link} target="_blank" rel="noopener noreferrer">
       <ThumbnailArea style={{ background: gradient }}>
-        {module && <ModuleBadge style={{ background: badge }}>M{module}</ModuleBadge>}
+        {moduleNum && <ModuleBadge style={{ background: badge }}>M{moduleNum}</ModuleBadge>}
         <PlayIconWrapper>
           <FaPlay size={24} />
         </PlayIconWrapper>

@@ -2,6 +2,23 @@
 import styled from "styled-components";
 import Link from "next/link";
 
+export const PlayIconWrapper = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e3a5f;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  padding-left: 4px; /* Optical centering for play icon */
+
+  svg {
+    transition: color 0.2s ease;
+  }
+`;
+
 export const CardContainer = styled(Link)`
   display: flex;
   flex-direction: column;
@@ -18,9 +35,10 @@ export const CardContainer = styled(Link)`
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   }
 
-  &:hover [data-play-icon] {
+  &:hover ${PlayIconWrapper} {
     transform: scale(1.1);
     background: var(--primary-blue-100, #2563eb);
+    color: white;
   }
 `;
 
@@ -32,27 +50,6 @@ export const ThumbnailArea = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-`;
-
-export const PlayIconWrapper = styled.div.attrs({ 'data-play-icon': true })`
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1e3a5f;
-  transition: transform 0.2s ease, background 0.2s ease;
-  padding-left: 4px; /* Optical centering for play icon */
-
-  svg {
-    transition: color 0.2s ease;
-  }
-
-  ${CardContainer}:hover & {
-    color: white;
-  }
 `;
 
 export const DurationBadge = styled.span`
