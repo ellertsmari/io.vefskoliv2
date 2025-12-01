@@ -24,14 +24,15 @@ const getFigmaFileKey = (url: string): string | null => {
   // Matches URLs like:
   // https://www.figma.com/file/ABC123/...
   // https://www.figma.com/design/ABC123/...
+  // https://www.figma.com/proto/ABC123/...
   // https://figma.com/file/ABC123/...
-  const match = url.match(/figma\.com\/(?:file|design)\/([a-zA-Z0-9]+)/);
+  const match = url.match(/figma\.com\/(?:file|design|proto)\/([a-zA-Z0-9]+)/);
   return match ? match[1] : null;
 };
 
 // Check if URL is a Figma URL
 const isFigmaUrl = (url: string): boolean => {
-  return url.includes('figma.com/file') || url.includes('figma.com/design');
+  return url.includes('figma.com/file') || url.includes('figma.com/design') || url.includes('figma.com/proto');
 };
 
 // Check if URL is a website (not GitHub, not Figma)
