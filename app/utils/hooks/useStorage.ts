@@ -24,7 +24,7 @@ export function useLocalState<T>(
   // Initialize from localStorage
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
         const item = window.localStorage.getItem(key);
         if (item !== null) {
           if (serializer) {
@@ -45,7 +45,7 @@ export function useLocalState<T>(
   const setValue = useCallback((value: T) => {
     try {
       setState(value);
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
         if (serializer) {
           window.localStorage.setItem(key, serializer(value));
         } else {
@@ -73,7 +73,7 @@ export function useSessionState<T>(
   // Initialize from sessionStorage
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.sessionStorage && typeof window.sessionStorage.getItem === 'function') {
         const item = window.sessionStorage.getItem(key);
         if (item !== null) {
           setState(JSON.parse(item));
@@ -89,7 +89,7 @@ export function useSessionState<T>(
   const setValue = useCallback((value: T) => {
     try {
       setState(value);
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.sessionStorage && typeof window.sessionStorage.setItem === 'function') {
         window.sessionStorage.setItem(key, JSON.stringify(value));
       }
     } catch (error) {

@@ -1,20 +1,20 @@
 "use client";
 
 import { Button } from "globalStyles/buttons/default/style";
-import { 
-  StyledVideo, 
-  Section, 
-  Footer, 
-  Hero, 
-  NavBar, 
-  Logo, 
-  NavBarButtons, 
+import {
+  StyledVideo,
+  Section,
+  Footer,
+  Hero,
+  NavBar,
+  Logo,
+  NavBarButtons,
   MobileMenuButton,
   MobileMenu,
   MobileMenuCloseButton,
-  Title, 
-  TitleContainer, 
-  Subtitle, 
+  Title,
+  TitleContainer,
+  Subtitle,
   SectionTitle,
   VideoControlButton,
   AboutUsText,
@@ -54,7 +54,15 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
   // Check if user was previously scrolled past hero (from sessionStorage)
   useEffect(() => {
     // Check if user was previously scrolled past hero (from sessionStorage)
-    const wasScrolledPastHero = sessionStorage.getItem('scrolledPastHero') === 'true';
+    let wasScrolledPastHero = false;
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage && typeof window.sessionStorage.getItem === 'function') {
+        wasScrolledPastHero = window.sessionStorage.getItem('scrolledPastHero') === 'true';
+      }
+    } catch (e) {
+      console.error("Error reading sessionStorage", e);
+    }
+
     if (wasScrolledPastHero) {
       setIsScrolled(true);
     }
@@ -62,15 +70,21 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
     const handleScroll = () => {
       const heroHeight = window.innerHeight; // Hero section is 100vh
       const scrollPosition = window.scrollY;
-      
+
       // Change navbar when scrolled past hero section
       const scrolledPastHero = scrollPosition > heroHeight * 0.9;
       setIsScrolled(scrolledPastHero);
-      
+
       // Store in sessionStorage so it persists across page navigations and refreshes
-      sessionStorage.setItem('scrolledPastHero', scrolledPastHero.toString());
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage && typeof window.sessionStorage.setItem === 'function') {
+          window.sessionStorage.setItem('scrolledPastHero', scrolledPastHero.toString());
+        }
+      } catch (e) {
+        console.error("Error writing to sessionStorage", e);
+      }
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -103,7 +117,7 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
   const handleSmoothScroll = (sectiontId: string) => {
     const section = document.getElementById(sectiontId);
     if (section) {
-      section.scrollIntoView({ 
+      section.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
@@ -114,13 +128,13 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
     <>
       <Hero id="hero">
         <NavBar $isScrolled={isScrolled}>
-          <Logo onClick={() => {handleSmoothScroll("hero");}} src={logo} alt="Vefskólinn" />
+          <Logo onClick={() => { handleSmoothScroll("hero"); }} src={logo} alt="Vefskólinn" />
           <NavBarButtons>
-            <Button onClick={() => {handleSmoothScroll("about-us");}} $styletype="textButton">ABOUT US</Button>
-            <Button onClick={() => {handleSmoothScroll("the-program");}} $styletype="textButton">THE PROGRAM</Button>
-            <Button onClick={() => {handleSmoothScroll("gallery-of-projects");}} $styletype="textButton">GALLERY</Button>
-            <Button onClick={() => {handleRedirect("/signin")}} $styletype="textButton">LOG IN</Button>
-            <Button onClick={() => {handleRedirect("https://umsokn.inna.is/#!/login/id/1102/23560")}} $styletype="defaultWhite">APPLY</Button>
+            <Button onClick={() => { handleSmoothScroll("about-us"); }} $styletype="textButton">ABOUT US</Button>
+            <Button onClick={() => { handleSmoothScroll("the-program"); }} $styletype="textButton">THE PROGRAM</Button>
+            <Button onClick={() => { handleSmoothScroll("gallery-of-projects"); }} $styletype="textButton">GALLERY</Button>
+            <Button onClick={() => { handleRedirect("/signin") }} $styletype="textButton">LOG IN</Button>
+            <Button onClick={() => { handleRedirect("https://umsokn.inna.is/#!/login/id/1102/23560") }} $styletype="defaultWhite">APPLY</Button>
           </NavBarButtons>
           <MobileMenuButton onClick={toggleMobileMenu}>
             ☰
@@ -130,11 +144,11 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
           <MobileMenuCloseButton onClick={() => setIsMobileMenuOpen(false)}>
             ✕
           </MobileMenuCloseButton>
-          <Button onClick={() => {handleSmoothScroll("about-us"); setIsMobileMenuOpen(false);}} $styletype="textButton">ABOUT US</Button>
-          <Button onClick={() => {handleSmoothScroll("the-program"); setIsMobileMenuOpen(false);}} $styletype="textButton">THE PROGRAM</Button>
-          <Button onClick={() => {handleSmoothScroll("gallery-of-projects"); setIsMobileMenuOpen(false);}} $styletype="textButton">GALLERY</Button>
-          <Button onClick={() => {handleRedirect("/signin"); setIsMobileMenuOpen(false);}} $styletype="textButton">LOG IN</Button>
-          <Button onClick={() => {handleRedirect("https://umsokn.inna.is/#!/login/id/1102/23560"); setIsMobileMenuOpen(false);}} $styletype="defaultWhite">APPLY</Button>
+          <Button onClick={() => { handleSmoothScroll("about-us"); setIsMobileMenuOpen(false); }} $styletype="textButton">ABOUT US</Button>
+          <Button onClick={() => { handleSmoothScroll("the-program"); setIsMobileMenuOpen(false); }} $styletype="textButton">THE PROGRAM</Button>
+          <Button onClick={() => { handleSmoothScroll("gallery-of-projects"); setIsMobileMenuOpen(false); }} $styletype="textButton">GALLERY</Button>
+          <Button onClick={() => { handleRedirect("/signin"); setIsMobileMenuOpen(false); }} $styletype="textButton">LOG IN</Button>
+          <Button onClick={() => { handleRedirect("https://umsokn.inna.is/#!/login/id/1102/23560"); setIsMobileMenuOpen(false); }} $styletype="defaultWhite">APPLY</Button>
         </MobileMenu>
         <StyledVideo
           ref={videoRef}
@@ -172,7 +186,7 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
           <SectionTitle>THE PROGRAM</SectionTitle>
           <p>{aboutVefskolinn.theProgram}</p>
         </TheProgramText>
-        <Button onClick={() => {handleRedirect("/guides")}} $styletype="default">CLICK HERE TO VIEW THE ASSIGNMENTS</Button>
+        <Button onClick={() => { handleRedirect("/guides") }} $styletype="default">CLICK HERE TO VIEW THE ASSIGNMENTS</Button>
       </Section>
       <Section id="gallery-of-projects">
         <SectionTitle>GALLERY OF PROJECTS</SectionTitle>
@@ -181,27 +195,27 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
       <Footer>
         <FooterContent>
           <FooterText>
-            <strong style={{ fontSize: '24px'}}>LOCATION</strong>
+            <strong style={{ fontSize: '24px' }}>LOCATION</strong>
             <p>TÆKNISKÓLINN IN HAFNARFJÖRDUR</p>
             <p>FLATARHRAUN 12</p>
             <p>220, HAFNARFJÖRDUR</p>
           </FooterText>
           <FooterText>
-            <strong style={{ fontSize: '24px'}}>CONTACT US</strong>
+            <strong style={{ fontSize: '24px' }}>CONTACT US</strong>
             <p>esm@tskoli.is</p>
             <p>jmi@tskoli.is</p>
           </FooterText>
           <FooterText>
-            <strong style={{ fontSize: '24px'}}>FOLLOW US</strong>
+            <strong style={{ fontSize: '24px' }}>FOLLOW US</strong>
             <FooterSocials>
               <Link href="https://www.instagram.com/vefskolinn/" target="_blank">
                 <FooterSocialIcon src={instagram} alt="Instagram" />
               </Link>
               <Link href="https://www.facebook.com/vefskolinn/" target="_blank">
-                <FooterSocialIcon src={facebook} alt="Facebook"/>
+                <FooterSocialIcon src={facebook} alt="Facebook" />
               </Link>
               <Link href="https://www.linkedin.com/company/vefskolinn/" target="_blank">
-                <FooterSocialIcon src={twitter} alt="LinkedIn"/>
+                <FooterSocialIcon src={twitter} alt="LinkedIn" />
               </Link>
             </FooterSocials>
           </FooterText>

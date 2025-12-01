@@ -35,8 +35,8 @@ export type GalleryItem = {
   returnUrl: string | null;
 };
 
-const buildPipeline = (): PipelineStage[] => {
-  return [
+const buildPipeline = (limit?: number): PipelineStage[] => {
+  const pipeline: PipelineStage[] = [
     {
       $lookup: {
         from: "reviews",
@@ -107,10 +107,13 @@ const buildPipeline = (): PipelineStage[] => {
         returnId: 1,
       },
     },
-    {
-      $limit: 4,
-    },
   ];
+
+  if (limit) {
+    pipeline.push({ $limit: limit });
+  }
+
+  return pipeline;
 };
 
 const parseMedia = (url?: string): { image: string | null; gif: string | null } => {
@@ -153,7 +156,7 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
       return [];
     }
 
-    const pipeline = buildPipeline();
+    const pipeline = buildPipeline(4);
     const results = await Return.aggregate<GalleryAggregateResult>(pipeline);
 
     return results.map(mapAggregateToItem);
@@ -163,6 +166,28 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
       return [];
     }
     console.error("Failed to fetch gallery items:", error);
+    return [];
+  }
+}
+
+export async function getAllGalleryItems(): Promise<GalleryItem[]> {
+  try {
+    await connectToDatabase();
+    if (mongoose.connection.readyState !== 1) {
+      console.warn("MongoDB not connected. Skipping gallery fetch.");
+      return [];
+    }
+
+    const pipeline = buildPipeline();
+    const results = await Return.aggregate<GalleryAggregateResult>(pipeline);
+
+    return results.map(mapAggregateToItem);
+  } catch (error) {
+    if (error instanceof Error && error.name === "MongoNotConnectedError") {
+      console.warn("MongoDB connection unavailable during gallery fetch. Returning empty list.");
+      return [];
+    }
+    console.error("Failed to fetch all gallery items:", error);
     return [];
   }
 }

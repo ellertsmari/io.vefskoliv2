@@ -1,3 +1,4 @@
+"use client";
 import styled from "styled-components";
 
 export const GalleryItemContainer = styled.div`
@@ -133,5 +134,78 @@ export const GalleryEmpty = styled.div`
     font-size: 16px;
     margin: 0;
   }
+`;
+
+// Iframe preview for live websites (zoomed out view)
+export const IframePreviewContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #f5f5f5;
+
+  iframe {
+    width: 400%;
+    height: 400%;
+    transform: scale(0.25);
+    transform-origin: top left;
+    border: none;
+    pointer-events: none;
+  }
+
+  @media (min-width: 768px) {
+    height: 240px;
+  }
+`;
+
+// Figma thumbnail preview
+export const FigmaPreviewContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (min-width: 768px) {
+    height: 240px;
+  }
+`;
+
+// Overlay for preview badges
+export const PreviewOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+`;
+
+// Badge to indicate preview type
+export const PreviewBadge = styled.span<{ $type: 'figma' | 'website' }>`
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: white;
+  background: ${({ $type }) =>
+    $type === 'figma'
+      ? 'linear-gradient(135deg, #f24e1e 0%, #a259ff 100%)'
+      : 'linear-gradient(135deg, #059669 0%, #34d399 100%)'
+  };
 `;
 
