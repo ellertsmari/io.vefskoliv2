@@ -13,11 +13,15 @@ const returnSchema = new Schema({
   pictureUrl: { type: Schema.Types.String, required: false },
   projectName: { type: Schema.Types.String, required: true },
   comment: { type: Schema.Types.String, required: true },
-  owner: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+  owner: { type: Schema.Types.ObjectId, required: true, ref: "User", index: true },
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
   reviewedAt: { type: Schema.Types.Date, required: false },
-  guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide" },
+  guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide", index: true },
 });
+
+// Compound indexes for common query patterns
+returnSchema.index({ guide: 1, owner: 1 });
+returnSchema.index({ guide: 1, createdAt: -1 });
 
 export type ReturnType = InferSchemaType<typeof returnSchema> & {
   _id: Types.ObjectId;

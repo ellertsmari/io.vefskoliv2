@@ -71,18 +71,24 @@ const returnsSubmitted = [
   { projectUrl: "a link to project", liveVersion: "link to live version" },
 ];
 
+// Base mock guide data with all required fields
+const createMockGuide = (overrides = {}) => ({
+  feedbackGiven: [],
+  feedbackReceived: [],
+  returnsSubmitted,
+  link: "someLink",
+  returnStatus: "awaiting feedback",
+  availableForFeedback: [],
+  ...overrides,
+});
+
 describe("Feedback", () => {
   afterEach(() => {
     jest.resetAllMocks();
   });
   it("renders without crashing", () => {
     (useGuide as jest.Mock).mockReturnValue({
-      guide: {
-        feedbackGiven: [],
-        feedbackReceived: [],
-        returnsSubmitted,
-        link: "someLink",
-      },
+      guide: createMockGuide(),
     });
 
     render(<FeedbackOverview />);
@@ -93,11 +99,10 @@ describe("Feedback", () => {
     const mockFeedbackReceived = createMockFeedbacksWithReturn(3);
 
     (useGuide as jest.Mock).mockReturnValue({
-      guide: {
+      guide: createMockGuide({
         feedbackGiven: mockFeedbackGiven,
         feedbackReceived: mockFeedbackReceived,
-        returnsSubmitted,
-      },
+      }),
     });
 
     const { getByText, debug } = render(<FeedbackOverview />);
@@ -132,11 +137,10 @@ describe("Feedback", () => {
     const mockFeedbackReceived = createMockFeedbacksWithReturn(3, "received");
 
     (useGuide as jest.Mock).mockReturnValue({
-      guide: {
+      guide: createMockGuide({
         feedbackGiven: mockFeedbackGiven,
         feedbackReceived: mockFeedbackReceived,
-        returnsSubmitted,
-      },
+      }),
     });
 
     const { getByRole, queryByText } = render(<FeedbackOverview />);
@@ -164,38 +168,37 @@ describe("Feedback", () => {
     const mockFeedbackReceived = createMockFeedbacksWithReturn(3, "received");
 
     (useGuide as jest.Mock).mockReturnValue({
-      guide: {
+      guide: createMockGuide({
         feedbackGiven: mockFeedbackGiven,
         feedbackReceived: mockFeedbackReceived,
-        returnsSubmitted,
-      },
+      }),
     });
 
     const { getByText, queryByText } = render(<FeedbackOverview />);
 
-    // Click the "next" button in the OptionNavigator
-    const nextButton = screen.getByRole("button", {
-      name: "Select Next Option",
+    // Click "Option 2" button in the OptionNavigator
+    const option2Button = screen.getByRole("button", {
+      name: "Select Option 2",
     });
-    fireEvent.click(nextButton);
+    fireEvent.click(option2Button);
 
-    // Check that the second feedback given is now displayed
+    // Check that the second feedback received is now displayed
     const secondFeedbackReceived = getByText(mockFeedbackReceived[1].comment);
     expect(secondFeedbackReceived).toBeDefined();
 
-    // Check that the first feedback given is not displayed
-    const firstFeedbackGiven = queryByText(mockFeedbackReceived[0].comment);
-    expect(firstFeedbackGiven).toBeNull();
+    // Check that the first feedback received is not displayed
+    const firstFeedbackReceived = queryByText(mockFeedbackReceived[0].comment);
+    expect(firstFeedbackReceived).toBeNull();
 
     // go to given feedback
     const givenToggle = screen.getByRole("button", { name: /given/i });
     fireEvent.click(givenToggle);
 
-    // Click the "previous" button in the OptionNavigator
-    const NextButton = screen.getByRole("button", {
-      name: "Select Next Option",
+    // Click "Option 2" button in the OptionNavigator for given feedback
+    const option2ButtonGiven = screen.getByRole("button", {
+      name: "Select Option 2",
     });
-    fireEvent.click(NextButton);
+    fireEvent.click(option2ButtonGiven);
     expect(getByText(mockFeedbackGiven[1].comment)).toBeDefined();
   });
 
@@ -205,11 +208,10 @@ describe("Feedback", () => {
     mockFeedbackGiven[0].grade = 5;
 
     (useGuide as jest.Mock).mockReturnValue({
-      guide: {
+      guide: createMockGuide({
         feedbackGiven: mockFeedbackGiven,
         feedbackReceived: mockFeedbackReceived,
-        returnsSubmitted,
-      },
+      }),
     });
 
     const { getByText, debug } = render(<FeedbackOverview />);
@@ -225,11 +227,10 @@ describe("Feedback", () => {
     const mockFeedbackReceived = createMockFeedbacksWithReturn(1, "received");
 
     (useGuide as jest.Mock).mockReturnValue({
-      guide: {
+      guide: createMockGuide({
         feedbackGiven: mockFeedbackGiven,
         feedbackReceived: mockFeedbackReceived,
-        returnsSubmitted,
-      },
+      }),
     });
 
     const { queryByText } = render(<FeedbackOverview />);

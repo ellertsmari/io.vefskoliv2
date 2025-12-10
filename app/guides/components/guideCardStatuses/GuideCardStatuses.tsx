@@ -6,7 +6,7 @@ import {
 } from "types/guideTypes";
 import { Grade, IconContainer, Status, StatusesWrapper } from "./style";
 
-import { Bell, GreenTick, PurpleStar, RedCross, Hourglass } from "assets/Icons";
+import { Bell, GreenTick, PurpleStar, RedCross, Hourglass, HatIcon } from "assets/Icons";
 
 export const GuideCardStatuses = ({
   returnStatus,
@@ -93,7 +93,7 @@ const FeedbackAndGradeStatus = ({
     return (
       <>
         <IconContainer>
-          <Bell />
+          <HatIcon />
         </IconContainer>
         <Paragraph>GRADE</Paragraph>
         <Grade>{grade}</Grade>

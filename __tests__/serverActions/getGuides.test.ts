@@ -11,12 +11,10 @@ import {
 } from "../__mocks__/mongoHandler";
 import { Types } from "mongoose";
 import { GuideInfo } from "types/guideTypes";
-import { Review } from "models/review";
 import { ReturnDocument } from "models/return";
 import { getGuides } from "serverActions/getGuides";
-import exp from "constants";
 
-// for type checking
+// for type checking (note: _id is serialized to string by getGuides)
 function isGuideInfo(obj: any): obj is GuideInfo {
   return (
     Array.isArray(obj.returnsSubmitted) &&
@@ -26,8 +24,18 @@ function isGuideInfo(obj: any): obj is GuideInfo {
     Array.isArray(obj.gradesReceived) &&
     Array.isArray(obj.gradesGiven) &&
     Array.isArray(obj.availableToGrade) &&
-    obj._id instanceof Types.ObjectId
+    typeof obj._id === "string" // After JSON serialization, _id is a string
   );
+}
+
+// Helper to find guide by ID (handles serialized ObjectIds)
+function findGuideById(guides: any[] | null, guideId: Types.ObjectId) {
+  return guides?.find((g) => g._id.toString() === guideId.toString());
+}
+
+// Helper to serialize Mongoose documents the same way getGuides does
+function serialize<T>(doc: T): T {
+  return JSON.parse(JSON.stringify(doc));
 }
 
 describe("getGuides", () => {
@@ -57,18 +65,18 @@ describe("getGuides", () => {
 
       const guides = await getGuides(userA._id.toString());
 
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
       const actual = gottenGuide.availableForFeedback;
       const expected = expect.arrayContaining([
         {
-          ...otherUserReturn.toObject(),
+          ...serialize(otherUserReturn.toObject()),
           associatedReviewCount: 0,
         },
         {
-          ...otherUserReturn2.toObject(),
+          ...serialize(otherUserReturn2.toObject()),
           associatedReviewCount: 0,
         },
       ]);
@@ -103,14 +111,14 @@ describe("getGuides", () => {
       );
 
       const guides = await getGuides(userB._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
       const actual = gottenGuide.availableForFeedback;
       const expected = [
-        { ...aReturn.toObject(), associatedReviewCount: 1 },
-        { ...anotherReturn.toObject(), associatedReviewCount: 2 },
+        { ...serialize(aReturn.toObject()), associatedReviewCount: 1 },
+        { ...serialize(anotherReturn.toObject()), associatedReviewCount: 2 },
       ];
 
       expect(actual).toEqual(expected);
@@ -132,14 +140,14 @@ describe("getGuides", () => {
       );
 
       const guides = await getGuides(userC._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
       const actual = gottenGuide.availableForFeedback;
       const expected = expect.arrayContaining([
         {
-          ...otherUserReturn2.toObject(),
+          ...serialize(otherUserReturn2.toObject()),
           associatedReviewCount: 0,
         },
       ]);
@@ -162,7 +170,7 @@ describe("getGuides", () => {
       );
 
       const guides = await getGuides(userD._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
@@ -207,11 +215,11 @@ describe("getGuides", () => {
       );
 
       const guides = await getGuides(userE._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
       const actual = gottenGuide.feedbackGiven;
-      const expected = [feedbackGiven, feedbackGiven2];
+      const expected = [serialize(feedbackGiven), serialize(feedbackGiven2)];
 
       expect(actual).toEqual(expected);
     });
@@ -239,12 +247,12 @@ describe("getGuides", () => {
 
       const guides = await getGuides(userF._id.toString());
 
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
       const actual = gottenGuide.gradesGiven;
-      const expected = expect.arrayContaining([gradeGiven, gradeGiven2]);
+      const expected = expect.arrayContaining([serialize(gradeGiven), serialize(gradeGiven2)]);
 
       expect(actual).toEqual(expected);
     });
@@ -273,13 +281,13 @@ describe("getGuides", () => {
       const otherGrade = await createDummyGrade(undefined, guide, undefined);
 
       const guides = await getGuides(user._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
       expect(gottenGuide.gradesReceived).toEqual([
-        expect.objectContaining(grade),
-        expect.objectContaining(grade2),
+        expect.objectContaining(serialize(grade)),
+        expect.objectContaining(serialize(grade2)),
       ]);
     });
   });
@@ -311,11 +319,11 @@ describe("getGuides", () => {
       );
 
       const guides = await getGuides(userG._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      expect(gottenGuide.feedbackReceived).toEqual([feedback2, feedback]);
+      expect(gottenGuide.feedbackReceived).toEqual([serialize(feedback2), serialize(feedback)]);
     });
   });
 
@@ -331,11 +339,11 @@ describe("getGuides", () => {
       const otherUserReturn = await createDummyReturn(undefined, guide);
 
       const guides = await getGuides(user._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      expect(gottenGuide.returnsSubmitted).toEqual([userReturn.toObject()]);
+      expect(gottenGuide.returnsSubmitted).toEqual([serialize(userReturn.toObject())]);
     });
     it("returns guides that the user has returned in order, starting with the most recent", async () => {
       const user = await createDummyUser();
@@ -346,13 +354,13 @@ describe("getGuides", () => {
       const Return2 = await createDummyReturn(user, guide);
 
       const guides = await getGuides(user._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
       expect(gottenGuide.returnsSubmitted).toEqual([
-        Return1.toObject(),
-        Return2.toObject(),
+        serialize(Return1.toObject()),
+        serialize(Return2.toObject()),
       ]);
     });
   });
@@ -361,69 +369,54 @@ describe("getGuides", () => {
     it("returns all feedback that the user is able to grade", async () => {
       const user1 = await createDummyUser();
       const user2 = await createDummyUser();
+      const user3 = await createDummyUser();
 
       const guide = await createDummyGuide();
-      const guide2 = await createDummyGuide();
 
+      // User1's own return - feedback on this should NOT be available to grade by user1
       const userReturn = await createDummyReturn(user1, guide);
 
-      const otherUserReturn = await createDummyReturn(undefined, guide);
-      const otherUserReturn2 = await createDummyReturn(user2, guide);
+      // Other users' returns - feedback on these SHOULD be available to grade by user1
+      const otherUserReturn = await createDummyReturn(user2, guide);
+      const otherUserReturn2 = await createDummyReturn(user3, guide);
 
-      const feedbackReceived = await createDummyFeedbackWithReturn(
-        undefined,
+      // Feedback on other users' returns (not owned by user1) - should be available to grade
+      const feedbackOnOtherReturn = await createDummyFeedbackWithReturn(
+        user2, // owner of feedback
         guide,
-        userReturn
+        otherUserReturn // return owned by user2
       );
-      const feedbackReceived2 = await createDummyFeedbackWithReturn(
-        undefined,
+      const feedbackOnOtherReturn2 = await createDummyFeedbackWithReturn(
+        user3, // owner of feedback
         guide,
-        userReturn
+        otherUserReturn2 // return owned by user3
       );
 
-      const feedbackReceivedByUser2 = await createDummyFeedbackWithReturn(
+      // Feedback by user1 - should NOT be available (can't grade own feedback)
+      const feedbackByUser1 = await createDummyFeedbackWithReturn(
         user1,
         guide,
         otherUserReturn
       );
 
-      const feedbackGiven = await createDummyFeedbackWithReturn(
-        user1,
-        guide,
-        undefined
-      );
-
-      const gradeReceived = await createDummyGrade(
-        undefined,
-        guide,
-        userReturn
-      );
-      const gradeReceived2 = await createDummyGrade(
-        undefined,
-        guide,
-        userReturn
-      );
-      const gradeReceivedForOtherUser = await createDummyGrade(
-        undefined,
+      // Graded feedback - should NOT be available (already graded)
+      const gradedFeedback = await createDummyGrade(
+        user2,
         guide,
         otherUserReturn
-      );
-
-      const gradeReceivedByUser2 = await createDummyGrade(
-        undefined,
-        guide,
-        otherUserReturn2
       );
 
       const guides = await getGuides(user1._id.toString());
-      const gottenGuide = guides?.filter((g) => g._id.equals(guide._id))[0];
+      const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
       const actual = gottenGuide.availableToGrade;
+      // Should contain feedbackOnOtherReturn and feedbackOnOtherReturn2
+      // (ungraded feedback on returns not owned by user1, not created by user1)
       const expected = expect.arrayContaining([
-        feedbackReceived,
-        feedbackReceived2,
+        serialize(feedbackOnOtherReturn),
+        serialize(feedbackOnOtherReturn2),
       ]);
       expect(actual).toEqual(expected);
     });

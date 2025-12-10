@@ -14,10 +14,9 @@ import { auth } from "../auth";
 import { NavBar } from "./components/navigation/NavBar/NavBar";
 import TopBar from "./components/navigation/TopBar";
 import { headers } from "next/headers";
-import HomePage from "./page";
 
 const SourceSans3 = Source_Sans_3({ weight: "400", style: "normal", subsets: ["latin"] });
-// trigger rebuild
+
 export const metadata: Metadata = {
   title: "Vefskólinn LMS",
   description:
@@ -31,39 +30,39 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   const isLoggedIn = !!session?.user
-  
+
   // Get the current pathname to determine if this is a public route
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
-  
-  // Define public routes that don't require authentication (only guides are public)
+
+  // Define public routes that use the LMS layout (guides, signin)
   const isPublicRoute = pathname.startsWith('/guides') || pathname === "/signin";
 
-
+  // Landing page (/) when not logged in should render without the LMS layout
+  const isLandingPage = pathname === "/" && !isLoggedIn;
 
   return (
     <html lang="en">
       <body className={SourceSans3.className}>
         <StyledComponentsRegistry>
-          
-          {isLoggedIn || isPublicRoute ? (
-            <>
-            <Background src={BackgroundImg} alt="Background image"/>
-            <LayoutGrid>
-            <TopbarContainer>
-                <TopBar showAvatar={isLoggedIn}/>
-              </TopbarContainer>
-              {isLoggedIn && (
-                <NavigationContainer>
-                  <NavBar/>
-                </NavigationContainer>
-              )}
-              <Main style={!isLoggedIn ? {gridColumn: "1 / -1"} : {}}>{children}</Main>
-            </LayoutGrid>
-            </>
+          {isLandingPage ? (
+            // Landing page renders without the LMS layout wrapper
+            <>{children}</>
           ) : (
+            // All other pages use the LMS layout
             <>
-              <HomePage/>
+              <Background src={BackgroundImg} alt="Background image"/>
+              <LayoutGrid>
+                <TopbarContainer>
+                  <TopBar showAvatar={isLoggedIn}/>
+                </TopbarContainer>
+                {isLoggedIn && (
+                  <NavigationContainer>
+                    <NavBar/>
+                  </NavigationContainer>
+                )}
+                <Main style={!isLoggedIn ? {gridColumn: "1 / -1"} : {}}>{children}</Main>
+              </LayoutGrid>
             </>
           )}
         </StyledComponentsRegistry>

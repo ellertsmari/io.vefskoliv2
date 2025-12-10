@@ -84,7 +84,7 @@ describe("signUp", () => {
     const result = await signUp({}, formData);
     expect(result).toEqual({
       success: false,
-      message: "Failed to create user. May already exist.",
+      message: "Failed to create user. Please try again later.",
     });
     expect(signIn).not.toHaveBeenCalled();
   });

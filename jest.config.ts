@@ -26,10 +26,12 @@ const config: Config = {
     "^providers/(.*)$": "<rootDir>/app/providers/$1",
     "^types/(.*)$": "<rootDir>/types/$1",
     "^utils/(.*)$": "<rootDir>/app/utils/$1",
+    // Map bson to CommonJS version
+    "^bson$": "<rootDir>/node_modules/bson/lib/bson.cjs",
   },
-  testPathIgnorePatterns: ["<rootDir>/__tests__/__mocks__/mongoHandler.ts"],
+  testPathIgnorePatterns: ["<rootDir>/__tests__/__mocks__/"],
   transformIgnorePatterns: [
-    "/node_modules/(?!(react-session-hooks|bson|mongodb|jose)/)"
+    "/node_modules/(?!(react-session-hooks|jose)/)"
   ],
 };
 

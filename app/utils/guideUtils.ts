@@ -1,4 +1,3 @@
-"use server";
 import { ReturnDocument } from "models/return";
 import { FeedbackDocument, GradedFeedbackDocument, Vote } from "models/review";
 import {
@@ -11,47 +10,41 @@ import {
   Module,
 } from "types/guideTypes";
 
-export const extendGuides = async (
-  guides: GuideInfo[]
-): Promise<ExtendedGuideInfo[]> => {
-  return Promise.all(
-    guides.map(async (guide) => {
-      const returnStatus = await calculateReturnStatus(
-        guide.returnsSubmitted,
-        guide.feedbackReceived
-      );
-      const feedbackStatus = await calculateFeedbackStatus(
-        guide.feedbackGiven,
-        guide.availableForFeedback
-      );
-      const gradesReceivedStatus = await calculateGradesReceivedStatus(
-        guide.gradesReceived
-      );
-      const grade = await calculateGrade(guide.gradesReceived);
-      const gradesGivenStatus = await calculateGradesGivenStatus(
-        guide.gradesGiven,
-        guide.availableToGrade
-      );
+export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
+  return guides.map((guide) => {
+    const returnStatus = calculateReturnStatus(
+      guide.returnsSubmitted,
+      guide.feedbackReceived
+    );
+    const feedbackStatus = calculateFeedbackStatus(
+      guide.feedbackGiven,
+      guide.availableForFeedback
+    );
+    const gradesReceivedStatus = calculateGradesReceivedStatus(
+      guide.gradesReceived
+    );
+    const grade = calculateGrade(guide.gradesReceived);
+    const gradesGivenStatus = calculateGradesGivenStatus(
+      guide.gradesGiven,
+      guide.availableToGrade
+    );
 
-      const extendedGuide = {
-        ...guide,
-        link: `/guides/${guide._id}`,
-        returnStatus,
-        feedbackStatus,
-        gradesReceivedStatus,
-        grade,
-        gradesGivenStatus,
-      };
-
-      return extendedGuide;
-    })
-  );
+    return {
+      ...guide,
+      link: `/guides/${guide._id}`,
+      returnStatus,
+      feedbackStatus,
+      gradesReceivedStatus,
+      grade,
+      gradesGivenStatus,
+    };
+  });
 };
 
-export const calculateReturnStatus = async (
+export const calculateReturnStatus = (
   returnsSubmitted: ReturnDocument[],
   feedbackReceived: FeedbackDocument[]
-): Promise<ReturnStatus> => {
+): ReturnStatus => {
   if (returnsSubmitted.length === 0) {
     return ReturnStatus.NOT_RETURNED;
   }
@@ -91,10 +84,10 @@ export const calculateReturnStatus = async (
   return ReturnStatus.PASSED;
 };
 
-export const calculateFeedbackStatus = async (
+export const calculateFeedbackStatus = (
   feedbackGiven: FeedbackDocument[],
   availableForFeedback: ReturnDocument[]
-): Promise<FeedbackStatus> => {
+): FeedbackStatus => {
   if (feedbackGiven.length < 2 && availableForFeedback.length)
     return FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK;
 
@@ -103,18 +96,18 @@ export const calculateFeedbackStatus = async (
   return FeedbackStatus.FEEDBACK_GIVEN;
 };
 
-export const calculateGradesReceivedStatus = async (
+export const calculateGradesReceivedStatus = (
   gradesReceived: GradedFeedbackDocument[]
-): Promise<GradesReceivedStatus> => {
+): GradesReceivedStatus => {
   if (gradesReceived.length < 2) {
     return GradesReceivedStatus.AWAITING_GRADES;
   }
   return GradesReceivedStatus.GRADES_RECEIVED;
 };
 
-export const calculateGrade = async (
+export const calculateGrade = (
   gradesReceived: GradedFeedbackDocument[]
-): Promise<number | undefined> => {
+): number | undefined => {
   if (gradesReceived.length < 2) {
     return undefined;
   }
@@ -125,10 +118,10 @@ export const calculateGrade = async (
   return (highestTwoGrades[0].grade + highestTwoGrades[1].grade) / 2;
 };
 
-export const calculateGradesGivenStatus = async (
+export const calculateGradesGivenStatus = (
   gradesGiven: GradedFeedbackDocument[],
   availableToGrade: FeedbackDocument[]
-): Promise<GradesGivenStatus> => {
+): GradesGivenStatus => {
   if (gradesGiven.length < 2 && availableToGrade.length)
     return GradesGivenStatus.NEED_TO_GRADE;
 
@@ -137,7 +130,7 @@ export const calculateGradesGivenStatus = async (
   return GradesGivenStatus.GRADES_GIVEN;
 };
 
-export const fetchModules = async (extendedGuides: ExtendedGuideInfo[]) => {
+export const fetchModules = (extendedGuides: ExtendedGuideInfo[]): Module[] => {
   return extendedGuides
     .reduce((acc: Module[], guideToCheck) => {
       if (

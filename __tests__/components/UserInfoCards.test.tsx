@@ -28,8 +28,7 @@ describe("UserInfoCards", () => {
       <UserInfoCards userInfo={mockUsers} title="Test Title" />
     );
 
-    fireEvent.click(getByText("TEST TITLE"));
-
+    // Click on the user name in the dropdown options
     fireEvent.click(getByText("John Doe"));
 
     expect(getByText(background)).toBeDefined();
@@ -43,10 +42,10 @@ describe("UserInfoCards", () => {
       <UserInfoCards userInfo={mockUsers} title="Test Title" />
     );
 
-    fireEvent.click(getByText("TEST TITLE"));
-
+    // First select a user
     fireEvent.click(getByText("John Doe"));
 
+    // Then click None to deselect
     fireEvent.click(getByText("None"));
 
     expect(queryByText(background)).toBeNull();

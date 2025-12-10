@@ -14,11 +14,11 @@ export enum Vote {
 }
 
 const reviewSchema = new Schema({
-  guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide" },
-  return: { type: Schema.Types.ObjectId, required: true, ref: "Return" },
+  guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide", index: true },
+  return: { type: Schema.Types.ObjectId, required: true, ref: "Return", index: true },
 
   // the owner is the user who submitted the feedback and gave a vote and comment
-  owner: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+  owner: { type: Schema.Types.ObjectId, required: true, ref: "User", index: true },
   vote: {
     type: Schema.Types.String,
     required: true,
@@ -32,6 +32,11 @@ const reviewSchema = new Schema({
 
   grade: { type: Schema.Types.Number, required: false },
 });
+
+// Compound indexes for common query patterns
+reviewSchema.index({ guide: 1, owner: 1 });
+reviewSchema.index({ guide: 1, return: 1 });
+reviewSchema.index({ guide: 1, grade: 1 }); // For finding ungraded feedback
 
 export type FeedbackType = InferSchemaType<typeof reviewSchema>;
 

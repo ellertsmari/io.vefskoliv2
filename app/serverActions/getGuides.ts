@@ -135,33 +135,9 @@ const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
         },
         {
           $sort: {
-            associatedReviewCount: 1, // Sort by the number of associated reviews in ascending order (primary)
-            createdAt: 1, // Then by creation date ascending (oldest first) for deterministic ordering
-            _id: 1, // Finally by _id for absolute consistency when all else is equal
-          },
-        },
-        // Add a deterministic assignment system to prevent refresh gaming
-        {
-          $addFields: {
-            // Create a user-specific deterministic ordering using string concatenation
-            userReturnHash: {
-              $concat: [
-                { $toString: userId },
-                "_",
-                { $toString: "$_id" }
-              ]
-            }
-          },
-        },
-        {
-          $sort: {
             associatedReviewCount: 1, // Primary: fewest reviews first
-            createdAt: 1, // secondary: oldest first for equal hash values
-          },
-        },
-        {
-          $project: {
-            userReturnHash: 0, // Remove the temporary field
+            createdAt: 1, // Secondary: oldest first for deterministic ordering
+            _id: 1, // Tertiary: by _id for absolute consistency
           },
         },
       ],
@@ -214,18 +190,19 @@ const lookupFeedbackReceived = (userId: ObjectId): PipelineStage => {
   };
 };
 
-// grab feedback available for reviewing by user
+// grab feedback available for reviewing by user (feedback they received that needs grading)
 const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
       from: "reviews",
-      let: { userId: userId },
+      let: { userId: userId, guideId: "$_id" },
       pipeline: [
-        // Find feedback that hasn't been graded yet
+        // Find feedback on this guide that hasn't been graded yet
         {
           $match: {
             $expr: {
               $and: [
+                { $eq: ["$guide", "$$guideId"] }, // For this specific guide
                 { $eq: [{ $ifNull: ["$grade", null] }, null] }, // No grade given yet
                 { $ne: ["$owner", "$$userId"] }, // Not the user's own feedback
               ],
@@ -242,11 +219,11 @@ const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
           },
         },
         { $unwind: "$associatedReturn" },
-        // Exclude feedback on the user's own projects
+        // Only include feedback on the user's own projects (feedback they received)
         {
           $match: {
             $expr: {
-              $ne: ["$associatedReturn.owner", "$$userId"],
+              $eq: ["$associatedReturn.owner", "$$userId"],
             },
           },
         },
@@ -325,49 +302,20 @@ export async function getGuides(
   if (!userIdString) return null;
 
   try {
-    // Ensure database connection is established
-    const connection = await connectToDatabase();
-    console.log("🔍 Database connection state:", connection.connection.readyState);
-    
-    // Wait for connection to be ready (readyState 1 = connected)
-    if (connection.connection.readyState !== 1) {
-      console.log("⏳ Waiting for database connection...");
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error("Database connection timeout"));
-        }, 10000);
-
-        if (connection.connection.readyState === 1) {
-          clearTimeout(timeout);
-          resolve(true);
-        } else {
-          connection.connection.once('connected', () => {
-            clearTimeout(timeout);
-            resolve(true);
-          });
-          connection.connection.once('error', (error) => {
-            clearTimeout(timeout);
-            reject(error);
-          });
-        }
-      });
-    }
+    await connectToDatabase();
 
     const userId = new ObjectId(userIdString);
     const pipeline = getGuidesPipelines(userId);
 
-    console.log("🔍 Executing aggregation pipeline...");
     const result = await Guide.aggregate(pipeline).exec();
-    console.log("✅ Successfully fetched guides:", result.length);
-    
+
     // Serialize MongoDB documents to plain objects for client components
     const serializedResult = JSON.parse(JSON.stringify(result));
-    
+
     return serializedResult as GuideInfo[];
   } catch (e) {
-    console.error("❌ Failed to fetch guides:", e);
-    console.error("❌ Error type:", (e as any)?.constructor?.name);
-    console.error("❌ Error message:", (e as Error).message);
-    throw e;
+    const error = e instanceof Error ? e : new Error(String(e));
+    console.error("[getGuides] Failed to fetch guides:", error.message);
+    throw error;
   }
 }

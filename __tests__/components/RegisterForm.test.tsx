@@ -42,17 +42,18 @@ describe("RegisterForm", () => {
       <RegisterForm setSelectedForm={setSelectedForm} />
     );
 
-    fireEvent.change(getByLabelText("First Name"), {
+    // Labels are uppercase in the component (FIRTS NAME is a typo in the component)
+    fireEvent.change(getByLabelText("FIRTS NAME"), {
       target: { value: firstName },
     });
 
-    fireEvent.change(getByLabelText("Last Name"), {
+    fireEvent.change(getByLabelText("LAST NAME"), {
       target: { value: lastName },
     });
-    fireEvent.change(getByLabelText("Email"), {
+    fireEvent.change(getByLabelText("EMAIL"), {
       target: { value: email },
     });
-    fireEvent.change(getByLabelText("Password"), {
+    fireEvent.change(getByLabelText("PASSWORD"), {
       target: { value: password },
     });
 

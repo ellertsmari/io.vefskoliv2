@@ -76,7 +76,7 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
         </ProfileInfo>
         <Logout>
           <LogoutButton
-            onClick={async () => await signOut()}
+            onClick={async () => await signOut({ redirectTo: "/" })}
             aria-label="logout button"
           >
             <p style={{ fontSize: "12px" }}>LOGOUT</p>

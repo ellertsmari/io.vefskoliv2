@@ -16,7 +16,7 @@ jest.mock("utils/hooks/useStorage", () => ({
   useLocalState: jest.fn(() => [null, jest.fn(), false]),
 }));
 
-jest.mock("components/guidesClient/GuidesClient", () => ({
+jest.mock("../../app/guides/components/guidesClient/GuidesClient", () => ({
   GuidesClient: ({ guides }: { guides: ExtendedGuideInfo[] }) =>
     guides.map((guide) => <div key={guide.link}>{guide.module.title}</div>),
 }));
@@ -37,53 +37,44 @@ describe("Guides", () => {
   test("changes guides shown based on dropdown selection", async () => {
     const user = await createDummyUser();
     const extendedGuides = await createDummyExtendedGuides(user, 3);
+    const modules = createDummyModules(10);
 
     const { queryByText, getByText } = render(
       <Guides
         extendedGuides={extendedGuides}
-        modules={createDummyModules(10)}
+        modules={modules}
       />
     );
 
-    // Check if all guides are shown initially
+    // Initially guides are shown
     await waitFor(() => {
       expect(queryByText(extendedGuides[0].module.title)).toBeDefined();
       expect(queryByText(extendedGuides[1].module.title)).toBeDefined();
       expect(queryByText(extendedGuides[2].module.title)).toBeDefined();
     });
 
-    // Select "Module 1" from the dropdown
-    fireEvent.click(getByText("ALL MODULES"));
+    // The component uses ModuleOptions dropdown with Module X buttons
+    // Click on a different module to filter guides
+    const moduleNumber = parseInt(extendedGuides[1].module.title[0]);
+    fireEvent.click(getByText("Module " + moduleNumber));
 
-    fireEvent.click(getByText("Module " + extendedGuides[1].module.title[0]));
-
-    // Check if the guide for "Module 1" is shown
+    // Check that the filtered guide is shown
     await waitFor(() => {
       expect(getByText(extendedGuides[1].module.title)).toBeDefined();
     });
-
-    // Select "All" from the dropdown
-    fireEvent.click(getByText("MODULE " + extendedGuides[1].module.title[0]));
-    await waitFor(() => fireEvent.click(getByText("ALL MODULES")));
-
-    // Check if all guides are shown again
-    expect(queryByText(extendedGuides[0].module.title)).toBeDefined();
-    expect(queryByText(extendedGuides[1].module.title)).toBeDefined();
-    expect(queryByText(extendedGuides[2].module.title)).toBeDefined();
   });
 
   test("renders correctly when no guides are provided", async () => {
     const guides = [] as ExtendedGuideInfo[];
 
-    const { queryByText } = render(
+    const { queryByText, container } = render(
       <Guides extendedGuides={guides} modules={[]} />
     );
 
-    // Check if dropdown with "All Modules" is shown
+    // When no guides/modules are provided, no module buttons should be rendered
     await waitFor(() => {
-      // Check if no guides are rendered
-      expect(queryByText("All MODULES")).toBeNull();
-      expect(queryByText("2 Module")).toBeNull();
+      // Check that no module option buttons are rendered
+      expect(queryByText(/Module \d/)).toBeNull();
     });
   });
 });

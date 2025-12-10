@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import type { FeedbackType } from "models/review";
 import { auth } from "../../auth";
 import { Review, Vote } from "models/review";
+import { connectToDatabase } from "./mongoose-connector";
 
 type FeedbackDataType = {
   vote: Vote | undefined;
@@ -63,6 +64,7 @@ export async function returnFeedback(
   };
 
   try {
+    await connectToDatabase();
     await Review.create(reviewData);
 
     return {
@@ -70,6 +72,8 @@ export async function returnFeedback(
       message: "Return feedback submitted successfully",
     };
   } catch (e) {
+    const error = e instanceof Error ? e : new Error(String(e));
+    console.error("[returnFeedback] Failed to submit feedback:", error.message);
     return {
       success: false,
       message: "Failed to submit return feedback",
