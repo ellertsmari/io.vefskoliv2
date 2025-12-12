@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useState } from "react";
+import { createContext } from "react";
 import React from "react";
 import { ExtendedGuideInfo } from "../../types/guideTypes";
 
@@ -13,12 +13,10 @@ const GuideContext = createContext<{
 }>({ guide: {} as ExtendedGuideInfo });
 
 export const GuideProvider = ({ children, guide }: GuideContextProps) => {
-  const [currentGuide, setCurrentGuide] = useState<ExtendedGuideInfo>(guide);
-
-  if (!currentGuide._id) return null;
+  if (!guide._id) return null;
 
   return (
-    <GuideContext.Provider value={{ guide: currentGuide }}>
+    <GuideContext.Provider value={{ guide }}>
       {children}
     </GuideContext.Provider>
   );
