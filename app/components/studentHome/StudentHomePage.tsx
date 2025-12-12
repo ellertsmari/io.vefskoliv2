@@ -4,9 +4,14 @@ import { ExtendedGuideInfo, Module, ReviewStatus, ReturnStatus } from "types/gui
 import GuideCard from "../../guides/components/guideCard/GuideCard";
 import {
   HomeContainer,
+  WelcomeHeader,
+  MainContent,
+  LeftColumn,
+  RightColumn,
   Section,
   SectionTitle,
   SectionSubtitle,
+  GuidesList,
   ProgressSection,
   ProgressBar,
   ProgressLabel,
@@ -16,12 +21,16 @@ import {
   ModuleProgressLabel,
   ModuleProgressValue,
   GradeSection,
+  GradesList,
   GradeCard,
   GradeTitle,
+  GradeValues,
+  GradeItem,
+  GradeLabel,
   GradeValue,
   EmptyState
 } from "./style";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 
 interface StudentHomePageProps {
   extendedGuides: ExtendedGuideInfo[];
@@ -29,8 +38,6 @@ interface StudentHomePageProps {
 }
 
 export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProps) => {
-  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
-
   // Organize guides by priority
   const organizedGuides = useMemo(() => {
     // 1. Guides that need review (only for guides you've already returned)
@@ -126,43 +133,35 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
 
   return (
     <HomeContainer>
-      {/* Header */}
-      <Section>
+      <WelcomeHeader>
         <SectionTitle>Welcome back!</SectionTitle>
         <SectionSubtitle>Here&apos;s what you need to focus on today</SectionSubtitle>
-      </Section>
+      </WelcomeHeader>
 
-      {/* Main Content Area - Two Column Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', alignItems: 'start' }}>
-        
-        {/* Left Column - Action Items */}
-        <div>
+      <MainContent>
+        <LeftColumn>
           {/* Priority 1: Guides needing review */}
           {organizedGuides.guidesNeedingReview.length > 0 && (
-            <Section style={{ marginBottom: '1.5rem' }}>
-              <SectionTitle style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📝 Give Reviews</SectionTitle>
-              <SectionSubtitle style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
-                Help peers by providing reviews.
-              </SectionSubtitle>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <Section>
+              <SectionTitle>Give Reviews</SectionTitle>
+              <SectionSubtitle>Help peers by providing reviews</SectionSubtitle>
+              <GuidesList>
                 {organizedGuides.guidesNeedingReview.map((guide, index) => (
                   <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
                 ))}
-              </div>
+              </GuidesList>
             </Section>
           )}
 
           {/* Priority 2: Next guide to return */}
           {organizedGuides.nextGuideToReturn && (
-            <Section style={{ marginBottom: '1.5rem' }}>
-              <SectionTitle style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📚 Continue Learning</SectionTitle>
-              <SectionSubtitle style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
-                Next guide in your learning sequence.
-              </SectionSubtitle>
-              <GuideCard 
-                key={organizedGuides.nextGuideToReturn._id.toString()} 
-                guide={organizedGuides.nextGuideToReturn} 
-                order={getGuideDisplayOrder(organizedGuides.nextGuideToReturn, extendedGuides)} 
+            <Section>
+              <SectionTitle>Continue Learning</SectionTitle>
+              <SectionSubtitle>Next guide in your learning sequence</SectionSubtitle>
+              <GuideCard
+                key={organizedGuides.nextGuideToReturn._id.toString()}
+                guide={organizedGuides.nextGuideToReturn}
+                order={getGuideDisplayOrder(organizedGuides.nextGuideToReturn, extendedGuides)}
               />
             </Section>
           )}
@@ -171,76 +170,71 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
           {organizedGuides.guidesNeedingReview.length === 0 &&
            !organizedGuides.nextGuideToReturn && (
             <EmptyState>
-              <SectionTitle>🎉 All caught up!</SectionTitle>
+              <SectionTitle>All caught up!</SectionTitle>
               <SectionSubtitle>
                 You&apos;ve completed all your current tasks. Great job!
               </SectionSubtitle>
             </EmptyState>
           )}
-        </div>
+        </LeftColumn>
 
-        {/* Right Column - Progress & Grades */}
-        <div>
+        <RightColumn>
           {/* Progress Section */}
-          <ProgressSection style={{ marginBottom: '2rem' }}>
-            <SectionTitle style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>📊 Progress</SectionTitle>
-            
-            {/* Overall Progress */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <ProgressLabel style={{ fontSize: '0.9rem' }}>Overall Course</ProgressLabel>
+          <ProgressSection>
+            <SectionTitle>Progress</SectionTitle>
+
+            <div style={{ marginBottom: '0.75rem' }}>
+              <ProgressLabel>Overall</ProgressLabel>
               <ProgressBar>
-                <ProgressValue style={{ width: `${overallProgress}%` }}>
+                <ProgressValue style={{ width: `${Math.max(overallProgress, 5)}%` }}>
                   {overallProgress}%
                 </ProgressValue>
               </ProgressBar>
             </div>
 
-            {/* Module Progress */}
-            <div style={{ marginBottom: '1rem' }}>
-              <ProgressLabel style={{ fontSize: '0.9rem' }}>By Module</ProgressLabel>
-              {moduleProgress.map((module) => (
-                <ModuleProgress key={module.number} style={{ marginBottom: '0.5rem' }}>
-                  <ModuleProgressLabel style={{ fontSize: '0.8rem' }}>
-                    Module {module.number} ({module.completedGuides}/{module.totalGuides})
-                  </ModuleProgressLabel>
-                  <ModuleProgressBar>
-                    <ModuleProgressValue style={{ width: `${module.progress}%` }}>
-                      {module.progress}%
-                    </ModuleProgressValue>
-                  </ModuleProgressBar>
-                </ModuleProgress>
-              ))}
-            </div>
+            <ProgressLabel style={{ marginBottom: '0.35rem' }}>By Module</ProgressLabel>
+            {moduleProgress.map((module) => (
+              <ModuleProgress key={module.number}>
+                <ModuleProgressLabel>
+                  M{module.number} ({module.completedGuides}/{module.totalGuides})
+                </ModuleProgressLabel>
+                <ModuleProgressBar>
+                  <ModuleProgressValue style={{ width: `${Math.max(module.progress, 5)}%` }}>
+                    {module.progress}%
+                  </ModuleProgressValue>
+                </ModuleProgressBar>
+              </ModuleProgress>
+            ))}
           </ProgressSection>
 
           {/* Grades Section */}
           <GradeSection>
-            <SectionTitle style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>🎯 Grades</SectionTitle>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {moduleGrades.slice(0, 3).map((moduleGrade) => (
-                <GradeCard key={moduleGrade.module.number} style={{ padding: '0.75rem' }}>
-                  <GradeTitle style={{ fontSize: '0.9rem' }}>Module {moduleGrade.module.number}</GradeTitle>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                    <div>
-                      <span style={{ color: 'var(--primary-black-60)', fontSize: '12px' }}>Coding:</span>
-                      <GradeValue style={{ fontSize: '0.85rem' }}>
-                        {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : 'N/A'}
+            <SectionTitle>Grades</SectionTitle>
+
+            <GradesList>
+              {moduleGrades.map((moduleGrade) => (
+                <GradeCard key={moduleGrade.module.number}>
+                  <GradeTitle>Module {moduleGrade.module.number}</GradeTitle>
+                  <GradeValues>
+                    <GradeItem>
+                      <GradeLabel>Code:</GradeLabel>
+                      <GradeValue>
+                        {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : '-'}
                       </GradeValue>
-                    </div>
-                    <div>
-                      <span style={{ color: 'var(--primary-black-60)', fontSize: '12px' }}>Design:</span>
-                      <GradeValue style={{ fontSize: '0.85rem' }}>
-                        {moduleGrade.designAverage !== null ? moduleGrade.designAverage : 'N/A'}
+                    </GradeItem>
+                    <GradeItem>
+                      <GradeLabel>Design:</GradeLabel>
+                      <GradeValue>
+                        {moduleGrade.designAverage !== null ? moduleGrade.designAverage : '-'}
                       </GradeValue>
-                    </div>
-                  </div>
+                    </GradeItem>
+                  </GradeValues>
                 </GradeCard>
               ))}
-            </div>
+            </GradesList>
           </GradeSection>
-        </div>
-      </div>
+        </RightColumn>
+      </MainContent>
     </HomeContainer>
   );
 };

@@ -6,6 +6,7 @@ import ResourcesIcon from "../../../assets/icons/resources.svg"
 import GalleryIcon from "../../../assets/icons/gallery.svg"
 import PeopleIcon from "../../../assets/icons/people.svg"
 import CalendarIcon from "../../../assets/icons/calendar.svg"
+import DocsIcon from "../../../assets/icons/docs.svg"
 
 type Link = { page: string; title: string; icon: string; };
 export type NavBarProps = { links: Link[] };
@@ -15,8 +16,9 @@ const links: Link[] = [
   { page: "/guides", title: "GUIDES", icon: GuidesIcon },
   { page: "/LMS/resources", title: "RESOURCES", icon: ResourcesIcon },
   { page: "/halloffame", title: "GALLERY", icon: GalleryIcon },
-  { page: "/LMS/people", title: "PEOPLE", icon:PeopleIcon },
+  { page: "/LMS/people", title: "PEOPLE", icon: PeopleIcon },
   { page: "/LMS/calendar", title: "CALENDAR", icon: CalendarIcon },
+  { page: "/LMS/docs", title: "DOCS", icon: DocsIcon },
 ];
 
 export const NavBar = () => {
