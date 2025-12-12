@@ -29,7 +29,7 @@ export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
     const gradesReceivedStatus = calculateGradesReceivedStatus(
       guide.gradesReceived
     );
-    const grade = calculateGrade(guide.gradesReceived);
+    const grade = calculateGrade(guide.gradesReceived, returnStatus);
     const gradesGivenStatus = calculateGradesGivenStatus(
       guide.gradesGiven,
       guide.availableToGrade
@@ -112,17 +112,31 @@ export const calculateGradesReceivedStatus = (
 };
 
 export const calculateGrade = (
-  gradesReceived: GradedReviewDocument[]
+  gradesReceived: GradedReviewDocument[],
+  returnStatus?: ReturnStatus
 ): number | undefined => {
   if (gradesReceived.length < GRADES_TO_AVERAGE) {
     return undefined;
   }
+
+  // If the guide has failed (no pass), no grade is given
+  if (returnStatus === ReturnStatus.FAILED) {
+    return undefined;
+  }
+
   const highestGrades = gradesReceived
     .sort((a, b) => b.grade - a.grade)
     .slice(0, GRADES_TO_AVERAGE);
 
-  const sum = highestGrades.reduce((acc, g) => acc + g.grade, 0);
-  return sum / GRADES_TO_AVERAGE;
+  const reviewGradeSum = highestGrades.reduce((acc, g) => acc + g.grade, 0);
+  const reviewGradeAverage = reviewGradeSum / GRADES_TO_AVERAGE;
+
+  // New formula: 5 points for returning + up to 5 points from reviews
+  // reviewGradeAverage is on a scale of 1-10, so we scale it to 0-5
+  const returnPoints = 5;
+  const reviewPoints = (reviewGradeAverage / 10) * 5;
+
+  return Math.round((returnPoints + reviewPoints) * 10) / 10;
 };
 
 export const calculateGradesGivenStatus = (

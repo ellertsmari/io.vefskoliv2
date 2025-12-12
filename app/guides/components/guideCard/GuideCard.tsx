@@ -105,6 +105,9 @@ const calculateBorderStyle = (
   if (returnStatus === ReturnStatus.HALL_OF_FAME) {
     return "border-color: var(--theme-module3-100); background-color: var(--theme-module3-10); border-width: 3px;";
   }
+  if (returnStatus === ReturnStatus.AWAITING_REVIEWS) {
+    return "border-color: var(--error-success-100); background-color: var(--error-success-10)";
+  }
 };
 
 export default GuideCard;

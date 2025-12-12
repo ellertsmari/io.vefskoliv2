@@ -51,13 +51,17 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
     };
   }, [extendedGuides]);
 
-  // Calculate progress for each module (exclude modules 0 and 2)
+  // Helper to check if a guide is a specialty guide
+  const isSpecialtyGuide = (guide: ExtendedGuideInfo) =>
+    guide.category === 'codeSpeciality' || guide.category === 'designSpeciality';
+
+  // Calculate progress for each module (exclude modules 0, 2 and specialty guides)
   const moduleProgress = useMemo(() => {
     return modules
       .filter(module => module.number !== 0 && module.number !== 2)
       .map(module => {
-        const moduleGuides = extendedGuides.filter(guide => 
-          +guide.module.title[0] === module.number
+        const moduleGuides = extendedGuides.filter(guide =>
+          +guide.module.title[0] === module.number && !isSpecialtyGuide(guide)
         );
         const completedGuides = moduleGuides.filter(guide =>
           guide.returnStatus === ReturnStatus.PASSED ||
@@ -65,7 +69,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
           guide.returnStatus === ReturnStatus.AWAITING_REVIEWS
         );
         const progress = moduleGuides.length > 0 ? (completedGuides.length / moduleGuides.length) * 100 : 0;
-        
+
         return {
           ...module,
           totalGuides: moduleGuides.length,
@@ -75,10 +79,10 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       });
   }, [extendedGuides, modules]);
 
-  // Calculate overall course progress (exclude modules 0 and 2)
+  // Calculate overall course progress (exclude modules 0, 2 and specialty guides)
   const overallProgress = useMemo(() => {
-    const relevantGuides = extendedGuides.filter(guide => 
-      +guide.module.title[0] !== 0 && +guide.module.title[0] !== 2
+    const relevantGuides = extendedGuides.filter(guide =>
+      +guide.module.title[0] !== 0 && +guide.module.title[0] !== 2 && !isSpecialtyGuide(guide)
     );
     const totalGuides = relevantGuides.length;
     const completedGuides = relevantGuides.filter(guide =>

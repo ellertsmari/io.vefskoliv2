@@ -195,7 +195,7 @@ describe("status calculations", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should return the average of the two highest reviews", async () => {
+    it("should return 5 points for return + scaled review grade", async () => {
       const review1 = await createDummyGrade(
         undefined,
         undefined,
@@ -216,7 +216,11 @@ describe("status calculations", () => {
       );
 
       const result = calculateGrade([review1, review2, review3]);
-      expect(result).toBe((review2.grade + review3.grade) / 2);
+      // Two highest grades are 9 and 6, average is 7.5
+      // New formula: 5 (return points) + (7.5 / 10 * 5) = 5 + 3.75 = 8.75
+      const reviewAverage = (review2.grade + review3.grade) / 2;
+      const expected = Math.round((5 + (reviewAverage / 10) * 5) * 10) / 10;
+      expect(result).toBe(expected);
     });
   });
 
