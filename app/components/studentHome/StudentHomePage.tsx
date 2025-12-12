@@ -1,11 +1,11 @@
 "use client";
 
-import { ExtendedGuideInfo, Module, ReviewStatus, GradesGivenStatus, ReturnStatus } from "types/guideTypes";
+import { ExtendedGuideInfo, Module, ReviewStatus, ReturnStatus } from "types/guideTypes";
 import GuideCard from "../../guides/components/guideCard/GuideCard";
-import { 
-  HomeContainer, 
-  Section, 
-  SectionTitle, 
+import {
+  HomeContainer,
+  Section,
+  SectionTitle,
   SectionSubtitle,
   ProgressSection,
   ProgressBar,
@@ -33,12 +33,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
 
   // Organize guides by priority
   const organizedGuides = useMemo(() => {
-    // 1. Most important: Guides that need grading (feedback received but no grade given)
-    const guidesNeedingGrade = extendedGuides.filter(guide => 
-      guide.gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE
-    );
-
-    // 2. Second priority: Guides that need review (only for guides you've already returned)
+    // 1. Guides that need review (only for guides you've already returned)
     const guidesNeedingReview = extendedGuides.filter(guide =>
       guide.reviewStatus === ReviewStatus.NEED_TO_REVIEW &&
       (guide.returnStatus === ReturnStatus.PASSED ||
@@ -47,11 +42,10 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
        guide.returnStatus === ReturnStatus.AWAITING_REVIEWS)
     );
 
-    // 3. Third priority: Next guide in sequence that hasn't been returned
+    // 2. Next guide in sequence that hasn't been returned
     const nextGuideToReturn = getNextGuideToReturn(extendedGuides);
 
     return {
-      guidesNeedingGrade,
       guidesNeedingReview,
       nextGuideToReturn
     };
@@ -139,22 +133,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
         
         {/* Left Column - Action Items */}
         <div>
-          {/* Priority 1: Guides needing grades */}
-          {organizedGuides.guidesNeedingGrade.length > 0 && (
-            <Section style={{ marginBottom: '1.5rem' }}>
-              <SectionTitle style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>🚨 Grade Feedback</SectionTitle>
-              <SectionSubtitle style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
-                Grade the feedback quality on these guides.
-              </SectionSubtitle>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {organizedGuides.guidesNeedingGrade.map((guide, index) => (
-                  <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* Priority 2: Guides needing review */}
+          {/* Priority 1: Guides needing review */}
           {organizedGuides.guidesNeedingReview.length > 0 && (
             <Section style={{ marginBottom: '1.5rem' }}>
               <SectionTitle style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📝 Give Reviews</SectionTitle>
@@ -169,7 +148,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
             </Section>
           )}
 
-          {/* Priority 3: Next guide to return */}
+          {/* Priority 2: Next guide to return */}
           {organizedGuides.nextGuideToReturn && (
             <Section style={{ marginBottom: '1.5rem' }}>
               <SectionTitle style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📚 Continue Learning</SectionTitle>
@@ -185,8 +164,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
           )}
 
           {/* Empty State */}
-          {organizedGuides.guidesNeedingGrade.length === 0 &&
-           organizedGuides.guidesNeedingReview.length === 0 &&
+          {organizedGuides.guidesNeedingReview.length === 0 &&
            !organizedGuides.nextGuideToReturn && (
             <EmptyState>
               <SectionTitle>🎉 All caught up!</SectionTitle>

@@ -57,11 +57,13 @@ const gradeMeanings = [
 interface GradeAdjustmentProps {
   review: FeedbackDocument;
   currentGrade?: number | null;
+  onGradeUpdated?: (reviewId: string, newGrade: number) => void;
 }
 
-const GradeAdjustment = ({ review, currentGrade }: GradeAdjustmentProps) => {
+const GradeAdjustment = ({ review, currentGrade, onGradeUpdated }: GradeAdjustmentProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempGrade, setTempGrade] = useState(currentGrade ?? 5);
+  const [savedGrade, setSavedGrade] = useState(currentGrade);
   const [state, formAction, isPending] = useActionState(returnGrade, undefined);
 
   const handleGradeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,16 +72,10 @@ const GradeAdjustment = ({ review, currentGrade }: GradeAdjustmentProps) => {
   };
 
   const handleSaveGrade = () => {
-    console.log('Saving grade:', {
-      grade: tempGrade,
-      reviewId: review._id.toString(),
-      reviewData: review
-    });
-    
     startTransition(() => {
-      formAction({ 
-        grade: tempGrade, 
-        reviewId: review._id.toString() 
+      formAction({
+        grade: tempGrade,
+        reviewId: review._id.toString()
       });
     });
   };
@@ -87,19 +83,19 @@ const GradeAdjustment = ({ review, currentGrade }: GradeAdjustmentProps) => {
   // Handle the action state changes
   React.useEffect(() => {
     if (state?.success) {
-      console.log('Grade saved successfully:', state);
       setIsEditing(false);
-      // Refresh the page to show updated grade
-      window.location.reload();
+      setSavedGrade(tempGrade);
+      // Notify parent component of the grade update
+      onGradeUpdated?.(review._id.toString(), tempGrade);
     } else if (state && !state.success) {
       console.error('Failed to save grade:', state);
       alert('Failed to save grade. Please try again.');
     }
-  }, [state]);
+  }, [state, tempGrade, review._id, onGradeUpdated]);
 
-  const displayGrade = currentGrade ?? tempGrade;
+  const displayGrade = savedGrade ?? tempGrade;
 
-  if (!isEditing && (currentGrade === null || currentGrade === undefined)) {
+  if (!isEditing && (savedGrade === null || savedGrade === undefined)) {
     return (
       <EditButton onClick={() => setIsEditing(true)}>
         Add Grade
@@ -145,16 +141,16 @@ const GradeAdjustment = ({ review, currentGrade }: GradeAdjustmentProps) => {
         {gradeMeanings[tempGrade - 1]}
       </GradeTooltip>
       <div>
-        <SaveGradeButton 
+        <SaveGradeButton
           onClick={handleSaveGrade}
           disabled={isPending}
         >
           {isPending ? 'Saving...' : 'Save Grade'}
         </SaveGradeButton>
-        <EditButton 
+        <EditButton
           onClick={() => {
             setIsEditing(false);
-            setTempGrade(currentGrade ?? 5);
+            setTempGrade(savedGrade ?? 5);
           }}
           style={{ marginLeft: '0.5rem' }}
         >

@@ -2,7 +2,6 @@ import { SubHeading1 } from "globalStyles/text";
 import { useMemo, useState } from "react";
 import {
   ReviewDocumentWithReturn,
-  GradesGivenStatus,
   ReturnStatus,
 } from "types/guideTypes";
 import MarkdownReader from "UIcomponents/markdown/reader";
@@ -48,7 +47,6 @@ export const FeedbackOverview = () => {
     reviewsGiven,
     reviewsReceived,
     returnsSubmitted,
-    availableToGrade,
   } = guide;
 
   const theReview =
@@ -61,9 +59,6 @@ export const FeedbackOverview = () => {
     return <ReturnOverview theReturn={theReturn} />;
   }
 
-  const gradeable =
-    showGivenOrReceived === "received" && theReview && !theReview.grade;
-
   const toggleOptions = () => {
     let options: ToggleOption[] = [];
     if (isReviewGiven) {
@@ -73,7 +68,6 @@ export const FeedbackOverview = () => {
       options.push([
         "received",
         () => setShowGivenOrReceived("received"),
-        guide.gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE,
       ]);
     }
 
@@ -121,7 +115,6 @@ export const FeedbackOverview = () => {
               ? reviewsGiven[selectedGivenIndex]
               : reviewsReceived[selectedReceivedIndex]
           }
-          gradeable={gradeable}
           showGrade={showGivenOrReceived === "given"}
         />
         <ContentAndNavigatorContainer>

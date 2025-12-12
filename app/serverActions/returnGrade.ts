@@ -47,6 +47,7 @@ export async function returnGrade(
   }
 
   const userId = new ObjectId(session.user.id);
+  const isTeacher = session.user.role === "teacher";
 
   try {
     await connectToDatabase();
@@ -58,30 +59,36 @@ export async function returnGrade(
       return failure(ErrorMessages.NOT_FOUND("Review"));
     }
 
-    // Check if review already has a grade
-    if (review.grade !== null && review.grade !== undefined) {
+    // Teachers can re-grade reviews, students cannot
+    if (!isTeacher && review.grade !== null && review.grade !== undefined) {
       return failure("This review has already been graded");
     }
 
-    // Check if user is trying to grade their own review (not allowed)
-    if (review.owner.equals(userId)) {
-      return failure("You cannot grade your own review");
+    // Only apply ownership restrictions for non-teachers
+    if (!isTeacher) {
+      // Check if user is trying to grade their own review (not allowed)
+      if (review.owner.equals(userId)) {
+        return failure("You cannot grade your own review");
+      }
+
+      // Fetch the return to check ownership
+      const associatedReturn = await Return.findById(review.return);
+
+      if (!associatedReturn) {
+        return failure(ErrorMessages.NOT_FOUND("Associated return"));
+      }
+
+      // Check if user is trying to grade a review on their own return (not allowed for neutral grading)
+      if (associatedReturn.owner.equals(userId)) {
+        return failure("You cannot grade reviews on your own projects");
+      }
     }
 
-    // Fetch the return to check ownership
-    const associatedReturn = await Return.findById(review.return);
-
-    if (!associatedReturn) {
-      return failure(ErrorMessages.NOT_FOUND("Associated return"));
-    }
-
-    // Check if user is trying to grade a review on their own return (not allowed for neutral grading)
-    if (associatedReturn.owner.equals(userId)) {
-      return failure("You cannot grade reviews on your own projects");
-    }
-
-    // All checks passed, update the grade
-    await Review.updateOne({ _id: new ObjectId(reviewId) }, { grade });
+    // All checks passed, update the grade and record who graded it
+    await Review.updateOne(
+      { _id: new ObjectId(reviewId) },
+      { grade, gradedBy: userId }
+    );
 
     const gradedDocument = (await Review.findById(
       new ObjectId(reviewId)

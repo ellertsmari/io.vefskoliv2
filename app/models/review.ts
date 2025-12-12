@@ -29,6 +29,8 @@ const reviewSchema = new Schema({
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
 
   grade: { type: Schema.Types.Number, required: false },
+  // the user who graded this review (for tracking who gave grades)
+  gradedBy: { type: Schema.Types.ObjectId, required: false, ref: "User", index: true },
 });
 
 // Compound indexes for common query patterns

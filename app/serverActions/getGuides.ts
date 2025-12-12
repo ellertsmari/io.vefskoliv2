@@ -238,17 +238,26 @@ const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
   };
 };
 
-// grab grades given by user
-const addGradesGiven = (): PipelineStage => {
+// grab grades given by user (reviews that this user has graded)
+const lookupGradesGiven = (userId: ObjectId): PipelineStage => {
   return {
-    $addFields: {
-      gradesGiven: {
-        $filter: {
-          input: "$reviewsReceived",
-          as: "review",
-          cond: { $ne: [{ $ifNull: ["$$review.grade", null] }, null] }, // Filter where grade exists
+    $lookup: {
+      from: "reviews",
+      let: { guideId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$guide", "$$guideId"] }, // For this specific guide
+                { $eq: ["$gradedBy", userId] }, // Graded by this user
+                { $ne: [{ $ifNull: ["$grade", null] }, null] }, // Has a grade
+              ],
+            },
+          },
         },
-      },
+      ],
+      as: "gradesGiven",
     },
   };
 };
@@ -285,8 +294,8 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
     lookupReviewsGiven(userId),
     addGradesReceived(),
     lookupReviewsReceived(userId),
-    addGradesGiven(),
-    addAvailableToGrade(userId), // Pass userId to the function
+    lookupGradesGiven(userId),
+    addAvailableToGrade(userId),
     lookupAvailableForReview(userId),
     defineProject,
     {

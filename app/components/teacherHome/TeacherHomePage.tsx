@@ -1,16 +1,199 @@
 "use client";
 
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
-import { ActionGrid, ActionCard, ActionIcon, ActionTitle } from "./styles.TeacherHomePage";
+import { useState, useEffect, useActionState, startTransition } from "react";
+import Modal from "UIcomponents/modal/modal";
+import MarkdownReader from "UIcomponents/markdown/reader";
+import { getUngradedReviews, UngradedReviewWithDetails } from "serverActions/getUngradedReviews";
+import { returnGrade } from "serverActions/returnGrade";
+import {
+  ActionGrid,
+  ActionCard,
+  ActionIcon,
+  ActionTitle,
+  BadgeCount,
+  GradingModalWrapper,
+  GradingModalHeader,
+  GradingModalTitle,
+  GradingModalSubtitle,
+  ReviewsList,
+  ReviewItem,
+  ReviewItemHeader,
+  ReviewItemInfo,
+  ReviewGuideTitle,
+  ReviewMeta,
+  ReviewVoteBadge,
+  ReviewComment,
+  GradeInputContainer,
+  GradeSlider,
+  GradeValue,
+  SubmitGradeButton,
+  EmptyGradingState,
+  ProjectLinks,
+  ProjectLink,
+} from "./styles.TeacherHomePage";
 
 interface TeacherHomePageProps {
   extendedGuides: ExtendedGuideInfo[];
   modules: Module[];
 }
 
+const GradingReviewItem = ({
+  review,
+  onGraded
+}: {
+  review: UngradedReviewWithDetails;
+  onGraded: (reviewId: string) => void;
+}) => {
+  const [grade, setGrade] = useState(5);
+  const [state, formAction, isPending] = useActionState(returnGrade, undefined);
+
+  useEffect(() => {
+    if (state?.success) {
+      onGraded(review._id);
+    }
+  }, [state, review._id, onGraded]);
+
+  const handleSubmit = () => {
+    startTransition(() => {
+      formAction({
+        grade,
+        reviewId: review._id
+      });
+    });
+  };
+
+  return (
+    <ReviewItem>
+      <ReviewItemHeader>
+        <ReviewItemInfo>
+          <ReviewGuideTitle>{review.guide.title}</ReviewGuideTitle>
+          <ReviewMeta>
+            Review by <strong>{review.reviewer.name}</strong> on <strong>{review.returnOwner.name}</strong>&apos;s project
+          </ReviewMeta>
+          <ProjectLinks>
+            <ProjectLink href={review.return.projectUrl} target="_blank" rel="noopener noreferrer">
+              Project URL
+            </ProjectLink>
+            <ProjectLink href={review.return.liveVersion} target="_blank" rel="noopener noreferrer">
+              Live Version
+            </ProjectLink>
+          </ProjectLinks>
+        </ReviewItemInfo>
+        <ReviewVoteBadge $vote={review.vote}>{review.vote}</ReviewVoteBadge>
+      </ReviewItemHeader>
+      <ReviewComment>
+        <MarkdownReader>{review.comment}</MarkdownReader>
+      </ReviewComment>
+      <GradeInputContainer>
+        <GradeSlider
+          type="range"
+          min="1"
+          max="10"
+          value={grade}
+          onChange={(e) => setGrade(parseInt(e.target.value))}
+        />
+        <GradeValue>{grade}/10</GradeValue>
+        <SubmitGradeButton onClick={handleSubmit} disabled={isPending}>
+          {isPending ? 'Saving...' : 'Grade'}
+        </SubmitGradeButton>
+      </GradeInputContainer>
+      {state && !state.success && (
+        <p style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+          Error: {state.error}
+        </p>
+      )}
+    </ReviewItem>
+  );
+};
+
+const GradingModal = () => {
+  const [reviews, setReviews] = useState<UngradedReviewWithDetails[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      const data = await getUngradedReviews();
+      setReviews(data);
+      setLoading(false);
+    };
+    fetchReviews();
+  }, []);
+
+  const handleGraded = (reviewId: string) => {
+    setReviews(prev => prev.filter(r => r._id !== reviewId));
+  };
+
+  if (loading) {
+    return (
+      <GradingModalWrapper>
+        <GradingModalHeader>
+          <GradingModalTitle>Grade Reviews</GradingModalTitle>
+        </GradingModalHeader>
+        <EmptyGradingState>Loading reviews...</EmptyGradingState>
+      </GradingModalWrapper>
+    );
+  }
+
+  return (
+    <GradingModalWrapper>
+      <GradingModalHeader>
+        <GradingModalTitle>Grade Reviews</GradingModalTitle>
+        <GradingModalSubtitle>
+          {reviews.length > 0
+            ? `${reviews.length} review${reviews.length === 1 ? '' : 's'} waiting to be graded`
+            : 'All reviews have been graded!'}
+        </GradingModalSubtitle>
+      </GradingModalHeader>
+      {reviews.length > 0 ? (
+        <ReviewsList>
+          {reviews.map(review => (
+            <GradingReviewItem
+              key={review._id}
+              review={review}
+              onGraded={handleGraded}
+            />
+          ))}
+        </ReviewsList>
+      ) : (
+        <EmptyGradingState>
+          All reviews have been graded. Great job!
+        </EmptyGradingState>
+      )}
+    </GradingModalWrapper>
+  );
+};
+
 export const TeacherHomePage = ({ extendedGuides, modules }: TeacherHomePageProps) => {
+  const [ungradedCount, setUngradedCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const reviews = await getUngradedReviews();
+      setUngradedCount(reviews.length);
+    };
+    fetchCount();
+  }, []);
+
   return (
     <ActionGrid>
+      <Modal
+        modalTrigger={
+          <ActionCard>
+            <ActionIcon>
+              <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+              </svg>
+            </ActionIcon>
+            <ActionTitle>GRADE REVIEWS</ActionTitle>
+            {ungradedCount !== null && ungradedCount > 0 && (
+              <BadgeCount>{ungradedCount}</BadgeCount>
+            )}
+          </ActionCard>
+        }
+        modalContent={<GradingModal />}
+      />
+
       <ActionCard>
         <ActionIcon>
           <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5}>

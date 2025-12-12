@@ -2,7 +2,6 @@ import Modal from "UIcomponents/modal/modal";
 import {
   ExtendedGuideInfo,
   ReviewStatus,
-  GradesGivenStatus,
   ReturnStatus,
 } from "types/guideTypes";
 import { GuideProvider } from "providers/GuideProvider";
@@ -25,7 +24,7 @@ const GuideCard = ({
   guide: ExtendedGuideInfo;
   order?: number;
 }) => {
-  const { returnStatus, reviewStatus, gradesGivenStatus, grade } = guide;
+  const { returnStatus, reviewStatus, grade } = guide;
 
   const link =
     guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
@@ -35,8 +34,7 @@ const GuideCard = ({
         <InfoWrapper
           $borderStyle={calculateBorderStyle(
             returnStatus,
-            reviewStatus,
-            gradesGivenStatus
+            reviewStatus
           )}
         >
           {link ? (
@@ -47,13 +45,11 @@ const GuideCard = ({
               order={order}
               returnStatus={returnStatus}
               reviewStatus={reviewStatus}
-              gradesGivenStatus={gradesGivenStatus}
               grade={grade}
             />
           ) : (
             <>
-              {(reviewStatus === ReviewStatus.NEED_TO_REVIEW ||
-                gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) && (
+              {reviewStatus === ReviewStatus.NEED_TO_REVIEW && (
                 <Notification />
               )}
               <Modal
@@ -64,7 +60,6 @@ const GuideCard = ({
                     order={order}
                     returnStatus={returnStatus}
                     reviewStatus={reviewStatus}
-                    gradesGivenStatus={gradesGivenStatus}
                     grade={grade}
                   />
                 }
@@ -92,17 +87,13 @@ const Notification = () => {
 
 const calculateBorderStyle = (
   returnStatus: ReturnStatus,
-  reviewStatus: ReviewStatus,
-  gradesGivenStatus: GradesGivenStatus
+  reviewStatus: ReviewStatus
 ) => {
   if (returnStatus === ReturnStatus.NOT_RETURNED) {
     return undefined;
   }
 
-  if (
-    reviewStatus === ReviewStatus.NEED_TO_REVIEW ||
-    gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE
-  ) {
+  if (reviewStatus === ReviewStatus.NEED_TO_REVIEW) {
     return "border-color: var(--error-warning-100);";
   }
   if (returnStatus === ReturnStatus.PASSED) {

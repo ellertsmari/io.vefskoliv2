@@ -1,7 +1,6 @@
 import { Paragraph } from "globalStyles/text";
 import {
   ReviewStatus,
-  GradesGivenStatus,
   ReturnStatus,
 } from "types/guideTypes";
 import { Grade, IconContainer, Status, StatusesWrapper } from "./style";
@@ -11,12 +10,10 @@ import { Bell, GreenTick, PurpleStar, RedCross, Hourglass, HatIcon } from "asset
 export const GuideCardStatuses = ({
   returnStatus,
   reviewStatus,
-  gradesGivenStatus,
   grade,
 }: {
   returnStatus: ReturnStatus;
   reviewStatus: ReviewStatus;
-  gradesGivenStatus: GradesGivenStatus;
   grade?: number;
 }) => {
   if (returnStatus === ReturnStatus.NOT_RETURNED) return null;
@@ -31,10 +28,8 @@ export const GuideCardStatuses = ({
       </Status>
       <Status>
         <ReviewAndGradeStatus
-          returnStatus={returnStatus}
           grade={grade}
           reviewStatus={reviewStatus}
-          gradesGivenStatus={gradesGivenStatus}
         />
       </Status>
     </StatusesWrapper>
@@ -57,13 +52,9 @@ const ReturnStatusIcon = ({ returnStatus }: { returnStatus: ReturnStatus }) => {
 };
 
 const ReviewAndGradeStatus = ({
-  returnStatus,
-  gradesGivenStatus,
   reviewStatus,
   grade,
 }: {
-  returnStatus: ReturnStatus;
-  gradesGivenStatus: GradesGivenStatus;
   reviewStatus: ReviewStatus;
   grade: number | undefined;
 }) => {
@@ -74,17 +65,6 @@ const ReviewAndGradeStatus = ({
           <Bell />
         </IconContainer>
         <Paragraph>{ReviewStatus.NEED_TO_REVIEW}</Paragraph>
-      </>
-    );
-  }
-
-  if (gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) {
-    return (
-      <>
-        <IconContainer>
-          <Bell />
-        </IconContainer>
-        <Paragraph>{GradesGivenStatus.NEED_TO_GRADE}</Paragraph>
       </>
     );
   }
