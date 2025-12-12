@@ -11,6 +11,7 @@ export const NavBar = styled.nav<{ $isScrolled?: boolean }>`
     backdrop-filter: blur(10px);
     position: fixed;
     top: 16px;
+    left: 16px;
     border-radius: 16px;
     border: 1px solid ${props => props.$isScrolled ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)'};
     z-index: 4;
@@ -21,6 +22,7 @@ export const NavBar = styled.nav<{ $isScrolled?: boolean }>`
     @media (min-width: 768px) {
         width: calc(100% - 64px);
         top: 32px;
+        left: 32px;
         padding: 16px 32px;
     }
 `
@@ -64,6 +66,7 @@ export const MobileMenu = styled.div<{ $isOpen: boolean }>`
     justify-content: center;
     gap: 32px;
     transform: ${props => props.$isOpen ? 'translateY(0)' : 'translateY(-100%)'};
+    pointer-events: ${props => props.$isOpen ? 'auto' : 'none'};
     transition: transform 0.3s ease-in-out;
 
     @media (min-width: 768px) {

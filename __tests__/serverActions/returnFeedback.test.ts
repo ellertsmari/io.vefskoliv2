@@ -3,17 +3,17 @@ import { auth } from "../../auth";
 import {
   closeDatabase,
   clearDatabase,
-  createDummyFeedback,
+  createDummyReview,
   connect,
 } from "../__mocks__/mongoHandler";
 import { Review, Vote } from "models/review";
-import { returnFeedback } from "serverActions/returnFeedback";
+import { returnReview } from "serverActions/returnFeedback";
 
 jest.mock("../../auth", () => ({
   auth: jest.fn(),
 }));
 
-describe("returnFeedback", () => {
+describe("returnReview", () => {
   beforeAll(async () => await connect());
   afterAll(async () => await closeDatabase());
   beforeEach(async () => {
@@ -22,8 +22,8 @@ describe("returnFeedback", () => {
   });
   const returnId = new Types.ObjectId().toString();
   const guideId = new Types.ObjectId().toString();
-  const feedbackUserId = new Types.ObjectId();
-  it("should return feedback", async () => {
+  const reviewUserId = new Types.ObjectId();
+  it("should submit a review", async () => {
     const vote = Vote.RECOMMEND_TO_GALLERY;
     const comment = "Great job!";
     const input = {
@@ -34,35 +34,36 @@ describe("returnFeedback", () => {
     };
     Review.create = jest.fn();
     (auth as jest.Mock).mockResolvedValueOnce({
-      user: { id: feedbackUserId },
+      user: { id: reviewUserId },
     });
-    const result = await returnFeedback({}, input);
+    const result = await returnReview(undefined, input);
     expect(Review.create).toHaveBeenCalledWith({
       vote,
       comment,
-      owner: feedbackUserId,
+      owner: reviewUserId,
       return: new Types.ObjectId(returnId),
       guide: new Types.ObjectId(guideId),
     });
     expect(result).toEqual({
       success: true,
-      message: "Return feedback submitted successfully",
+      data: undefined,
+      message: "Review submitted successfully",
     });
   });
   it("should return an error if form validation fails", async () => {
-    const vote = Vote.PASS;
-    const comment = "Great job!";
     const input = {
       vote: undefined,
       comment: undefined,
       returnId: undefined,
       guideId: undefined,
     };
-    const result = await returnFeedback({}, input);
+    const result = await returnReview(undefined, input);
     expect(result.success).toBe(false);
-    expect(result.errors).toBeDefined();
+    if (!result.success) {
+      expect(result.errors).toBeDefined();
+    }
   });
-  it("should return an error if feedback submission fails", async () => {
+  it("should return an error if review submission fails", async () => {
     const vote = Vote.PASS;
     const comment = "Great job!";
     const input = {
@@ -72,7 +73,7 @@ describe("returnFeedback", () => {
       guideId: new Types.ObjectId().toString(),
     };
     Review.create = jest.fn().mockRejectedValue(new Error("Database error"));
-    const result = await returnFeedback({}, input);
+    const result = await returnReview(undefined, input);
     expect(result).toEqual(expect.objectContaining({ success: false }));
   });
 });

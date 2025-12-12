@@ -2,7 +2,7 @@
 
 import { auth } from "../../auth";
 import { Guides } from "./components/guides/Guides";
-import { Module, ReturnStatus, FeedbackStatus, GradesReceivedStatus, GradesGivenStatus } from "types/guideTypes";
+import { Module, ReturnStatus, ReviewStatus, GradesReceivedStatus, GradesGivenStatus } from "types/guideTypes";
 import { getGuides } from "serverActions/getGuides";
 import { getPublicGuides } from "serverActions/getPublicGuides";
 import { extendGuides, fetchModules } from "utils/guideUtils";
@@ -54,10 +54,10 @@ const GuidesPage = async () => {
         link: `/guides/${guide._id}`,
         // Add status properties with default values (no status needed for public view)
         returnStatus: ReturnStatus.NOT_RETURNED,
-        feedbackStatus: FeedbackStatus.AWAITING_PROJECTS,
+        reviewStatus: ReviewStatus.AWAITING_PROJECTS,
         gradesReceivedStatus: GradesReceivedStatus.AWAITING_GRADES,
         grade: undefined,
-        gradesGivenStatus: GradesGivenStatus.AWAITING_FEEDBACK,
+        gradesGivenStatus: GradesGivenStatus.AWAITING_REVIEWS,
       }));
 
       const modules: Module[] = await fetchPublicModules(publicGuides);

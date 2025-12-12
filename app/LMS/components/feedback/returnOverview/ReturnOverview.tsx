@@ -1,5 +1,5 @@
 import { SubHeading1 } from "globalStyles/text";
-import { FeedbackDocumentWithReturn } from "types/guideTypes";
+import { ReviewDocumentWithReturn } from "types/guideTypes";
 import { ReturnDocument } from "models/return";
 import { Grade } from "../../grading/grade/Grade";
 import {
@@ -10,22 +10,24 @@ import {
 import { OverviewWrapper, ReturnLinksWrapper } from "./style";
 
 export const ReturnOverview = ({
-  theFeedback,
+  theReview,
   theReturn,
   gradeable = false,
+  showGrade = true,
 }: {
-  theFeedback?: FeedbackDocumentWithReturn;
+  theReview?: ReviewDocumentWithReturn;
   theReturn?: ReturnDocument;
   gradeable?: boolean;
+  showGrade?: boolean;
 }) => {
-  if (theFeedback && theReturn)
+  if (theReview && theReturn)
     throw new Error(
-      "ReturnOverview can only have one of the two props: theFeedback or theReturn"
+      "ReturnOverview can only have one of the two props: theReview or theReturn"
     );
-  if (theFeedback) theReturn = theFeedback.associatedReturn;
+  if (theReview) theReturn = theReview.associatedReturn;
 
   if (!theReturn) {
-    console.warn("No return found for this feedback");
+    console.warn("No return found for this review");
     return null;
   }
 
@@ -35,7 +37,7 @@ export const ReturnOverview = ({
         <SubHeading1>RETURN DETAILS</SubHeading1>
         <ReturnLinks
           theReturn={theReturn}
-          linkStyle={theFeedback ? "outlined" : "default"}
+          linkStyle={theReview ? "outlined" : "default"}
         />
       </Wrapper>
       <Wrapper>
@@ -46,13 +48,13 @@ export const ReturnOverview = ({
         <SubHeading1>PROJECT COMMENT</SubHeading1>
         {theReturn.comment}
       </Wrapper>
-      {theFeedback && (
+      {theReview && showGrade && (
         <Wrapper>
           <Grade
-            grade={theFeedback.grade}
+            grade={theReview.grade}
             gradeable={gradeable}
-            reviewId={theFeedback._id.toString()}
-            key={theFeedback._id.toString()}
+            reviewId={theReview._id.toString()}
+            key={theReview._id.toString()}
           />
         </Wrapper>
       )}

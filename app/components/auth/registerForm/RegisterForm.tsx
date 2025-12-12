@@ -44,6 +44,9 @@ export function RegisterForm({
     }
   }, [state?.success, setSelectedForm]);
 
+  // Extract errors from state (only present when success is false)
+  const errors = state && !state.success ? state.errors : undefined;
+
   return (
     <FullScreenWrapper>
       <Form ref={formRef}>
@@ -67,9 +70,7 @@ export function RegisterForm({
           aria-disabled={isPending || state?.success}
           disabled={isPending || state?.success}
           error={
-            state?.errors?.firstName && !isPending
-              ? state?.errors.firstName[0]
-              : undefined
+            errors?.firstName && !isPending ? errors.firstName[0] : undefined
           }
         />
 
@@ -82,9 +83,7 @@ export function RegisterForm({
           aria-disabled={isPending || state?.success}
           disabled={isPending || state?.success}
           error={
-            state?.errors?.lastName && !isPending
-              ? state?.errors.lastName[0]
-              : undefined
+            errors?.lastName && !isPending ? errors.lastName[0] : undefined
           }
         />
         <Input
@@ -95,11 +94,7 @@ export function RegisterForm({
           required
           aria-disabled={isPending || state?.success}
           disabled={isPending || state?.success}
-          error={
-            state?.errors?.email && !isPending
-              ? state?.errors.email[0]
-              : undefined
-          }
+          error={errors?.email && !isPending ? errors.email[0] : undefined}
         />
 
         <Input
@@ -111,9 +106,7 @@ export function RegisterForm({
           disabled={isPending || state?.success}
           required
           error={
-            state?.errors?.password && !isPending
-              ? state?.errors.password[0]
-              : undefined
+            errors?.password && !isPending ? errors.password[0] : undefined
           }
         />
 

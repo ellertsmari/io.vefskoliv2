@@ -103,7 +103,7 @@ describe("fetchModules", () => {
     expect(result).toEqual([]);
   });
 
-  it("should handle guides with non-numeric module titles", () => {
+  it("should handle guides with non-numeric module titles by defaulting to 0", () => {
     const fetchedGuides = [
       { module: { title: "Module A" }, link: "link1" },
       { module: { title: "Module B" }, link: "link2" },
@@ -112,10 +112,8 @@ describe("fetchModules", () => {
     // Act
     const result = fetchModules(fetchedGuides);
 
-    expect(result).toEqual([
-      { title: "Module A", number: NaN },
-      { title: "Module B", number: NaN },
-    ]);
+    // Non-numeric titles default to module number 0, so they get de-duplicated
+    expect(result).toEqual([{ title: "Module A", number: 0 }]);
   });
 
   it("should only store first result encountered when 2 modules with the same number but different titles", () => {

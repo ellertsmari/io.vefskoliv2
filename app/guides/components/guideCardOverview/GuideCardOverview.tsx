@@ -1,5 +1,5 @@
 import {
-  FeedbackStatus,
+  ReviewStatus,
   GradesGivenStatus,
   ReturnStatus,
 } from "types/guideTypes";
@@ -19,7 +19,7 @@ export const GuideCardOverview = ({
   order,
   link,
   returnStatus,
-  feedbackStatus,
+  reviewStatus,
   grade,
   gradesGivenStatus,
 }: {
@@ -28,7 +28,7 @@ export const GuideCardOverview = ({
   order?: number;
   link?: string;
   returnStatus: ReturnStatus;
-  feedbackStatus: FeedbackStatus;
+  reviewStatus: ReviewStatus;
   gradesGivenStatus: GradesGivenStatus;
   grade?: number;
 }) => {
@@ -43,7 +43,7 @@ export const GuideCardOverview = ({
         </GuideDescription>
         <GuideCardStatuses
           returnStatus={returnStatus}
-          feedbackStatus={feedbackStatus}
+          reviewStatus={reviewStatus}
           gradesGivenStatus={gradesGivenStatus}
           grade={grade}
         />

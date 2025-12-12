@@ -17,7 +17,7 @@ const reviewSchema = new Schema({
   guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide", index: true },
   return: { type: Schema.Types.ObjectId, required: true, ref: "Return", index: true },
 
-  // the owner is the user who submitted the feedback and gave a vote and comment
+  // the owner is the user who submitted the review (vote + comment)
   owner: { type: Schema.Types.ObjectId, required: true, ref: "User", index: true },
   vote: {
     type: Schema.Types.String,
@@ -27,8 +27,6 @@ const reviewSchema = new Schema({
   comment: { type: Schema.Types.String, required: true },
 
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
-  updatedAt: { type: Schema.Types.Date, required: false },
-  commentAnswer: { type: Schema.Types.String, required: false },
 
   grade: { type: Schema.Types.Number, required: false },
 });
@@ -36,22 +34,34 @@ const reviewSchema = new Schema({
 // Compound indexes for common query patterns
 reviewSchema.index({ guide: 1, owner: 1 });
 reviewSchema.index({ guide: 1, return: 1 });
-reviewSchema.index({ guide: 1, grade: 1 }); // For finding ungraded feedback
+reviewSchema.index({ guide: 1, grade: 1 }); // For finding ungraded reviews
 
-export type FeedbackType = InferSchemaType<typeof reviewSchema>;
+export type ReviewType = InferSchemaType<typeof reviewSchema>;
 
-export type FeedbackTypeWithId = FeedbackType & {
+export type ReviewTypeWithId = ReviewType & {
   _id: Types.ObjectId;
 };
 
-// after someone has reviewed the feedback it becomes a reviewed feedback
-export type GradedFeedbackType = FeedbackTypeWithId & {
+// After someone has graded the review, it becomes a graded review
+export type GradedReviewType = ReviewTypeWithId & {
   grade: number;
 };
 
-export type FeedbackDocument = FeedbackTypeWithId & Document;
+export type ReviewDocument = ReviewTypeWithId & Document;
 
-export type GradedFeedbackDocument = GradedFeedbackType & Document;
+export type GradedReviewDocument = GradedReviewType & Document;
 
 export const Review =
-  models?.Review || model<FeedbackDocument>("Review", reviewSchema);
+  models?.Review || model<ReviewDocument>("Review", reviewSchema);
+
+// Legacy type aliases for backwards compatibility during migration
+/** @deprecated Use ReviewType instead */
+export type FeedbackType = ReviewType;
+/** @deprecated Use ReviewTypeWithId instead */
+export type FeedbackTypeWithId = ReviewTypeWithId;
+/** @deprecated Use GradedReviewType instead */
+export type GradedFeedbackType = GradedReviewType;
+/** @deprecated Use ReviewDocument instead */
+export type FeedbackDocument = ReviewDocument;
+/** @deprecated Use GradedReviewDocument instead */
+export type GradedFeedbackDocument = GradedReviewDocument;

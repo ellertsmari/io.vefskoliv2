@@ -26,6 +26,7 @@ const config: Config = {
     "^providers/(.*)$": "<rootDir>/app/providers/$1",
     "^types/(.*)$": "<rootDir>/types/$1",
     "^utils/(.*)$": "<rootDir>/app/utils/$1",
+    "^constants/(.*)$": "<rootDir>/app/constants/$1",
     // Map bson to CommonJS version
     "^bson$": "<rootDir>/node_modules/bson/lib/bson.cjs",
   },

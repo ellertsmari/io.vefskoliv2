@@ -48,6 +48,9 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Extract errors from state (only present when success is false)
+    const errors = state && !state.success ? state.errors : undefined;
+
     return (
       <Form onSubmit={handleSubmit}>
         <Input
@@ -60,8 +63,8 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           value={formData?.projectUrl || ""}
           onChange={handleInputChange}
           error={
-            state?.errors?.projectUrl && !isPending
-              ? state.errors.projectUrl[0]
+            errors?.projectUrl && !isPending
+              ? errors.projectUrl[0]
               : undefined
           }
         />
@@ -75,16 +78,16 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           required={true}
           disabled={isPending}
           error={
-            state?.errors?.liveVersion && !isPending
-              ? state.errors.liveVersion[0]
+            errors?.liveVersion && !isPending
+              ? errors.liveVersion[0]
               : undefined
           }
         />
         <Input
-          id={"imageOfProject"}
+          id={"pictureUrl"}
           type={"text"}
-          name={"imageOfProject"}
-          value={formData?.imageOfProject || ""}
+          name={"pictureUrl"}
+          value={formData?.pictureUrl || ""}
           onChange={handleInputChange}
           label={"Image that suits your project (optional)"}
           required={false}
@@ -100,8 +103,8 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           required={true}
           disabled={false}
           error={
-            state?.errors?.projectName && !isPending
-              ? state.errors.projectName[0]
+            errors?.projectName && !isPending
+              ? errors.projectName[0]
               : undefined
           }
         />
@@ -115,9 +118,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
           required={true}
           disabled={false}
           error={
-            state?.errors?.comment && !isPending
-              ? state.errors.comment[0]
-              : undefined
+            errors?.comment && !isPending ? errors.comment[0] : undefined
           }
         />
         <Button style="default" type="submit">

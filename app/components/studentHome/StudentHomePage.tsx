@@ -1,6 +1,6 @@
 "use client";
 
-import { ExtendedGuideInfo, Module, FeedbackStatus, GradesGivenStatus, ReturnStatus } from "types/guideTypes";
+import { ExtendedGuideInfo, Module, ReviewStatus, GradesGivenStatus, ReturnStatus } from "types/guideTypes";
 import GuideCard from "../../guides/components/guideCard/GuideCard";
 import { 
   HomeContainer, 
@@ -38,13 +38,13 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       guide.gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE
     );
 
-    // 2. Second priority: Guides that need feedback (only for guides you've already returned)
-    const guidesNeedingFeedback = extendedGuides.filter(guide => 
-      guide.feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK &&
-      (guide.returnStatus === ReturnStatus.PASSED || 
-       guide.returnStatus === ReturnStatus.HALL_OF_FAME || 
+    // 2. Second priority: Guides that need review (only for guides you've already returned)
+    const guidesNeedingReview = extendedGuides.filter(guide =>
+      guide.reviewStatus === ReviewStatus.NEED_TO_REVIEW &&
+      (guide.returnStatus === ReturnStatus.PASSED ||
+       guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
        guide.returnStatus === ReturnStatus.FAILED ||
-       guide.returnStatus === ReturnStatus.AWAITING_FEEDBACK)
+       guide.returnStatus === ReturnStatus.AWAITING_REVIEWS)
     );
 
     // 3. Third priority: Next guide in sequence that hasn't been returned
@@ -52,7 +52,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
 
     return {
       guidesNeedingGrade,
-      guidesNeedingFeedback,
+      guidesNeedingReview,
       nextGuideToReturn
     };
   }, [extendedGuides]);
@@ -65,10 +65,10 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
         const moduleGuides = extendedGuides.filter(guide => 
           +guide.module.title[0] === module.number
         );
-        const completedGuides = moduleGuides.filter(guide => 
+        const completedGuides = moduleGuides.filter(guide =>
           guide.returnStatus === ReturnStatus.PASSED ||
           guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-          guide.returnStatus === ReturnStatus.AWAITING_FEEDBACK
+          guide.returnStatus === ReturnStatus.AWAITING_REVIEWS
         );
         const progress = moduleGuides.length > 0 ? (completedGuides.length / moduleGuides.length) * 100 : 0;
         
@@ -87,10 +87,10 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       +guide.module.title[0] !== 0 && +guide.module.title[0] !== 2
     );
     const totalGuides = relevantGuides.length;
-    const completedGuides = relevantGuides.filter(guide => 
+    const completedGuides = relevantGuides.filter(guide =>
       guide.returnStatus === ReturnStatus.PASSED ||
       guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-      guide.returnStatus === ReturnStatus.AWAITING_FEEDBACK
+      guide.returnStatus === ReturnStatus.AWAITING_REVIEWS
     ).length;
     return totalGuides > 0 ? Math.round((completedGuides / totalGuides) * 100) : 0;
   }, [extendedGuides]);
@@ -154,15 +154,15 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
             </Section>
           )}
 
-          {/* Priority 2: Guides needing feedback */}
-          {organizedGuides.guidesNeedingFeedback.length > 0 && (
+          {/* Priority 2: Guides needing review */}
+          {organizedGuides.guidesNeedingReview.length > 0 && (
             <Section style={{ marginBottom: '1.5rem' }}>
-              <SectionTitle style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📝 Give Feedback</SectionTitle>
+              <SectionTitle style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📝 Give Reviews</SectionTitle>
               <SectionSubtitle style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
-                Help peers by providing feedback.
+                Help peers by providing reviews.
               </SectionSubtitle>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {organizedGuides.guidesNeedingFeedback.map((guide, index) => (
+                {organizedGuides.guidesNeedingReview.map((guide, index) => (
                   <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
                 ))}
               </div>
@@ -185,8 +185,8 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
           )}
 
           {/* Empty State */}
-          {organizedGuides.guidesNeedingGrade.length === 0 && 
-           organizedGuides.guidesNeedingFeedback.length === 0 && 
+          {organizedGuides.guidesNeedingGrade.length === 0 &&
+           organizedGuides.guidesNeedingReview.length === 0 &&
            !organizedGuides.nextGuideToReturn && (
             <EmptyState>
               <SectionTitle>🎉 All caught up!</SectionTitle>
@@ -396,11 +396,11 @@ function getNextGuideToReturn(guides: ExtendedGuideInfo[]): ExtendedGuideInfo | 
 // Helper function to calculate a meaningful display order for the guide
 function getGuideDisplayOrder(guide: ExtendedGuideInfo, allGuides: ExtendedGuideInfo[]): number {
   // Count how many guides have been completed + 1 for the next guide
-  const completedGuides = allGuides.filter(g => 
-    g.returnStatus === ReturnStatus.PASSED || 
+  const completedGuides = allGuides.filter(g =>
+    g.returnStatus === ReturnStatus.PASSED ||
     g.returnStatus === ReturnStatus.HALL_OF_FAME ||
     g.returnStatus === ReturnStatus.FAILED ||
-    g.returnStatus === ReturnStatus.AWAITING_FEEDBACK
+    g.returnStatus === ReturnStatus.AWAITING_REVIEWS
   );
   
   // This should be the next guide in sequence

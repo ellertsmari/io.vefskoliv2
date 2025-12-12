@@ -42,8 +42,12 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const allUsers = await getAllUsers();
-      setUsers(allUsers);
+      const result = await getAllUsers();
+      if (result.success) {
+        setUsers(result.data);
+      } else {
+        console.error("Failed to load users:", result.message);
+      }
     } catch (error) {
       console.error("Failed to load users:", error);
     } finally {
@@ -54,10 +58,14 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
   const handleUserSelect = async (userId: string) => {
     try {
       setLoading(true);
-      await setAlias(userId);
-      setIsOpen(false);
-      // Refresh the page to update the session
-      window.location.reload();
+      const result = await setAlias(userId);
+      if (result.success) {
+        setIsOpen(false);
+        // Refresh the page to update the session
+        window.location.reload();
+      } else {
+        console.error("Failed to set alias:", result.message);
+      }
     } catch (error) {
       console.error("Failed to set alias:", error);
     } finally {
@@ -68,10 +76,14 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
   const handleClearAlias = async () => {
     try {
       setLoading(true);
-      await clearAlias();
-      setIsOpen(false);
-      // Refresh the page to update the session
-      window.location.reload();
+      const result = await clearAlias();
+      if (result.success) {
+        setIsOpen(false);
+        // Refresh the page to update the session
+        window.location.reload();
+      } else {
+        console.error("Failed to clear alias:", result.message);
+      }
     } catch (error) {
       console.error("Failed to clear alias:", error);
     } finally {

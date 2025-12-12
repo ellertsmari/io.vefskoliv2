@@ -32,7 +32,6 @@ describe("returnGuide", () => {
       user: { id: returnUserId },
     });
 
-    const state = {};
     const formData = {
       projectUrl,
       liveVersion,
@@ -40,7 +39,7 @@ describe("returnGuide", () => {
       comment,
       guideId,
     };
-    const result = await returnGuide(state, formData);
+    const result = await returnGuide(undefined, formData);
     expect(result).toEqual({
       success: true,
       message: "Return submitted successfully",
@@ -60,7 +59,6 @@ describe("returnGuide", () => {
     expect(actualReturn).toMatchObject(expectedReturn);
   });
   it("should handle form parsing errors", async () => {
-    const state = {};
     const formData = {
       projectUrl: "",
       liveVersion: "",
@@ -68,15 +66,17 @@ describe("returnGuide", () => {
       comment: "",
       guideId: "",
     };
-    const result = await returnGuide(state, formData);
-    expect(result).toEqual({
-      errors: {
-        projectUrl: [expect.any(String)],
-        liveVersion: [expect.any(String)],
-        projectName: [expect.any(String)],
-        comment: [expect.any(String)],
-      },
-      success: false,
-    });
+    const result = await returnGuide(undefined, formData);
+    expect(result).toEqual(
+      expect.objectContaining({
+        errors: {
+          projectUrl: [expect.any(String)],
+          liveVersion: [expect.any(String)],
+          projectName: [expect.any(String)],
+          comment: [expect.any(String)],
+        },
+        success: false,
+      })
+    );
   });
 });

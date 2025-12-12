@@ -152,7 +152,7 @@ export const GuideStatus = styled.span<{ status: ReturnStatus }>`
         return '#fff3cd';
       case ReturnStatus.FAILED:
         return '#f8d7da';
-      case ReturnStatus.AWAITING_FEEDBACK:
+      case ReturnStatus.AWAITING_REVIEWS:
         return '#cce5ff';
       default:
         return '#e9ecef';
@@ -167,7 +167,7 @@ export const GuideStatus = styled.span<{ status: ReturnStatus }>`
         return '#856404';
       case ReturnStatus.FAILED:
         return '#721c24';
-      case ReturnStatus.AWAITING_FEEDBACK:
+      case ReturnStatus.AWAITING_REVIEWS:
         return '#004085';
       default:
         return '#495057';

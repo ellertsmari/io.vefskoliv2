@@ -2,16 +2,25 @@
 
 import { auth } from "auth";
 import { connectToDatabase } from "./mongoose-connector";
-import { User, UserDocument } from "models/user";
+import { User } from "models/user";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { hasTeacherPermissions } from "utils/userUtils";
+import {
+  failure,
+  success,
+  successNoData,
+  handleActionError,
+  ErrorMessages,
+  type ActionResult,
+} from "../utils/errors";
 
-export async function getAllUsers(): Promise<{ id: string; name: string; email: string; role: string }[]> {
+type UserListItem = { id: string; name: string; email: string; role: string };
+
+export async function getAllUsers(): Promise<ActionResult<UserListItem[]>> {
   const session = await auth();
-  
+
   if (!hasTeacherPermissions(session)) {
-    throw new Error("Unauthorized: Only teachers can access user list");
+    return failure(ErrorMessages.NOT_AUTHORIZED);
   }
 
   try {
@@ -20,62 +29,67 @@ export async function getAllUsers(): Promise<{ id: string; name: string; email: 
       .sort({ name: 1 })
       .lean();
 
-    return users.map(user => ({
-      id: (user._id as any).toString(),
+    const userList = users.map((user) => ({
+      id: (user._id as unknown as { toString(): string }).toString(),
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
     }));
+
+    return success(userList);
   } catch (error) {
-    console.error("Error fetching users:", error);
-    throw new Error("Failed to fetch users");
+    return handleActionError(
+      "getAllUsers",
+      error,
+      ErrorMessages.FAILED_TO_FETCH("users")
+    );
   }
 }
 
-export async function setAlias(userId: string) {
+export async function setAlias(userId: string): Promise<ActionResult<void>> {
   const session = await auth();
-  
+
   if (!hasTeacherPermissions(session)) {
-    throw new Error("Unauthorized: Only teachers can set alias");
+    return failure(ErrorMessages.NOT_AUTHORIZED);
   }
 
   try {
     await connectToDatabase();
     const targetUser = await User.findById(userId);
-    
+
     if (!targetUser) {
-      throw new Error("User not found");
+      return failure(ErrorMessages.NOT_FOUND("User"));
     }
 
     // Store the aliased user ID in a cookie
     const cookieStore = await cookies();
-    cookieStore.set('aliased-user', userId, {
+    cookieStore.set("aliased-user", userId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 // 24 hours
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24, // 24 hours
     });
 
+    return successNoData("Alias set successfully");
   } catch (error) {
-    console.error("Error setting alias:", error);
-    throw new Error("Failed to set alias");
+    return handleActionError("setAlias", error, "Failed to set alias");
   }
 }
 
-export async function clearAlias() {
+export async function clearAlias(): Promise<ActionResult<void>> {
   const session = await auth();
-  
+
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    return failure(ErrorMessages.NOT_LOGGED_IN);
   }
 
   try {
     // Remove the aliased user cookie
     const cookieStore = await cookies();
-    cookieStore.delete('aliased-user');
+    cookieStore.delete("aliased-user");
 
+    return successNoData("Alias cleared successfully");
   } catch (error) {
-    console.error("Error clearing alias:", error);
-    throw new Error("Failed to clear alias");
+    return handleActionError("clearAlias", error, "Failed to clear alias");
   }
 }

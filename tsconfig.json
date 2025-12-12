@@ -30,7 +30,8 @@
       "models/*": ["./app/models/*"],
       "providers/*": ["./app/providers/*"],
       "types/*": ["./types/*"],
-      "utils/*": ["./app/utils/*"]
+      "utils/*": ["./app/utils/*"],
+      "constants/*": ["./app/constants/*"]
     },
     "target": "ES2017"
   },

@@ -28,8 +28,8 @@ const lookupReturnsSubmitted = (userId: ObjectId): PipelineStage => {
   };
 };
 
-// grab feedback given by user
-const lookupFeedbackGiven = (userId: ObjectId): PipelineStage => {
+// grab reviews given by user
+const lookupReviewsGiven = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
       from: "reviews",
@@ -55,7 +55,7 @@ const lookupFeedbackGiven = (userId: ObjectId): PipelineStage => {
         },
         { $unwind: "$associatedReturn" },
       ],
-      as: "feedbackGiven",
+      as: "reviewsGiven",
     },
   };
 };
@@ -66,9 +66,9 @@ const addGradesReceived = (): PipelineStage => {
     $addFields: {
       gradesReceived: {
         $filter: {
-          input: "$feedbackGiven",
-          as: "feedback",
-          cond: { $ne: [{ $ifNull: ["$$feedback.grade", null] }, null] }, // Filter where grade is null
+          input: "$reviewsGiven",
+          as: "review",
+          cond: { $ne: [{ $ifNull: ["$$review.grade", null] }, null] }, // Filter where grade is not null
         },
       },
       as: "gradesReceived",
@@ -76,12 +76,12 @@ const addGradesReceived = (): PipelineStage => {
   };
 };
 
-// grab the latest return from each user which has received less than 2 pieces of feedback (reviews)
-const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
+// grab the latest return from each user which has received less than 2 reviews
+const lookupAvailableForReview = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
       from: "returns",
-      let: { guideId: "$_id", feedbackGivenReturns: "$feedbackGiven.return" }, // Guide ID from the current document
+      let: { guideId: "$_id", reviewsGivenReturns: "$reviewsGiven.return" }, // Guide ID from the current document
       pipeline: [
         {
           $match: {
@@ -89,7 +89,7 @@ const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
                 { $ne: ["$owner", userId] }, // exclude the user
-                { $not: { $in: ["$_id", "$$feedbackGivenReturns"] } }, // Exclude returns user has already given feedback on
+                { $not: { $in: ["$_id", "$$reviewsGivenReturns"] } }, // Exclude returns user has already reviewed
               ],
             },
           },
@@ -141,13 +141,13 @@ const lookupAvailableForFeedback = (userId: ObjectId): PipelineStage => {
           },
         },
       ],
-      as: "availableForFeedback", // Store the filtered returns in this field
+      as: "availableForReview", // Store the filtered returns in this field
     },
   };
 };
 
-// grab feedbackReceived from others
-const lookupFeedbackReceived = (userId: ObjectId): PipelineStage => {
+// grab reviewsReceived from others
+const lookupReviewsReceived = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
       from: "reviews",
@@ -185,26 +185,26 @@ const lookupFeedbackReceived = (userId: ObjectId): PipelineStage => {
           },
         },
       ],
-      as: "feedbackReceived",
+      as: "reviewsReceived",
     },
   };
 };
 
-// grab feedback available for reviewing by user (feedback they received that needs grading)
+// grab reviews available for grading by user (reviews on OTHER users' returns, for neutral grading)
 const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
       from: "reviews",
       let: { userId: userId, guideId: "$_id" },
       pipeline: [
-        // Find feedback on this guide that hasn't been graded yet
+        // Find reviews on this guide that haven't been graded yet
         {
           $match: {
             $expr: {
               $and: [
                 { $eq: ["$guide", "$$guideId"] }, // For this specific guide
                 { $eq: [{ $ifNull: ["$grade", null] }, null] }, // No grade given yet
-                { $ne: ["$owner", "$$userId"] }, // Not the user's own feedback
+                { $ne: ["$owner", "$$userId"] }, // Not the user's own review (they didn't write it)
               ],
             },
           },
@@ -219,11 +219,12 @@ const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
           },
         },
         { $unwind: "$associatedReturn" },
-        // Only include feedback on the user's own projects (feedback they received)
+        // Only include reviews on OTHER users' projects (not reviews on the user's own returns)
+        // This ensures neutral grading - users grade reviews given to others, not to themselves
         {
           $match: {
             $expr: {
-              $eq: ["$associatedReturn.owner", "$$userId"],
+              $ne: ["$associatedReturn.owner", "$$userId"],
             },
           },
         },
@@ -243,9 +244,9 @@ const addGradesGiven = (): PipelineStage => {
     $addFields: {
       gradesGiven: {
         $filter: {
-          input: "$feedbackReceived",
-          as: "feedback",
-          cond: { $ne: [{ $ifNull: ["$$feedback.grade", null] }, null] }, // Filter where grade exists
+          input: "$reviewsReceived",
+          as: "review",
+          cond: { $ne: [{ $ifNull: ["$$review.grade", null] }, null] }, // Filter where grade exists
         },
       },
     },
@@ -265,28 +266,28 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
 
       // this user's project returns
       returnsSubmitted: 1,
-      feedbackReceived: 1,
+      reviewsReceived: 1,
 
-      // giving feedback on others' returns
-      availableForFeedback: 1,
-      feedbackGiven: 1,
+      // giving reviews on others' returns
+      availableForReview: 1,
+      reviewsGiven: 1,
 
-      // grades received by others on feedback given by this user
+      // grades received by others on reviews given by this user
       gradesReceived: 1,
 
-      // reviewing others' feedback
+      // grading others' reviews
       gradesGiven: 1,
       availableToGrade: 1,
     },
   };
   return [
     lookupReturnsSubmitted(userId),
-    lookupFeedbackGiven(userId),
+    lookupReviewsGiven(userId),
     addGradesReceived(),
-    lookupFeedbackReceived(userId),
+    lookupReviewsReceived(userId),
     addGradesGiven(),
     addAvailableToGrade(userId), // Pass userId to the function
-    lookupAvailableForFeedback(userId),
+    lookupAvailableForReview(userId),
     defineProject,
     {
       $sort: {

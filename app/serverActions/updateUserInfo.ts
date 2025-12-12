@@ -8,33 +8,47 @@ import {
 import { objOnlyHasEnumKeys } from "utils/typeGuards";
 import { ObjectId } from "mongodb";
 import { auth } from "../../auth";
+import {
+  failure,
+  successNoData,
+  handleActionError,
+  ErrorMessages,
+  type ActionResult,
+} from "../utils/errors";
 
-export const updateUserInfo = async (updatedUserInfo: OptionalUserInfo) => {
+export const updateUserInfo = async (
+  updatedUserInfo: OptionalUserInfo
+): Promise<ActionResult<void>> => {
   const session = await auth();
+
+  if (!session?.user) {
+    return failure(ErrorMessages.NOT_LOGGED_IN);
+  }
 
   const isValid = await objOnlyHasEnumKeys(
     updatedUserInfo,
     OptionalUserInfoKeys
   );
   if (!isValid) {
-    throw new Error("Invalid user info");
+    return failure(ErrorMessages.INVALID_INPUT);
   }
 
-  let user;
   try {
-    user = (await User.findById(
-      new ObjectId(session?.user?.id)
+    const user = (await User.findById(
+      new ObjectId(session.user.id)
     )) as UserDocument;
-    if (!user) {
-      throw new Error();
-    }
-  } catch (error) {
-    throw new Error("User not found");
-  }
 
-  try {
+    if (!user) {
+      return failure(ErrorMessages.NOT_FOUND("User"));
+    }
+
     await user.updateUserInfo(updatedUserInfo);
+    return successNoData("User info updated successfully");
   } catch (error) {
-    throw new Error("Failed to update user info");
+    return handleActionError(
+      "updateUserInfo",
+      error,
+      ErrorMessages.FAILED_TO_UPDATE("user info")
+    );
   }
 };

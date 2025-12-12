@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import {
-  FeedbackStatus,
+  ReviewStatus,
   GradesGivenStatus,
   ReturnStatus,
 } from "../../types/guideTypes";
@@ -12,8 +12,8 @@ describe("Statuses", () => {
     const { getByText, getByLabelText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.PASSED}
-        feedbackStatus={FeedbackStatus.AWAITING_PROJECTS}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_FEEDBACK}
+        reviewStatus={ReviewStatus.AWAITING_PROJECTS}
+        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
@@ -27,8 +27,8 @@ describe("Statuses", () => {
     const { getByText, getByLabelText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.HALL_OF_FAME}
-        feedbackStatus={FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_FEEDBACK}
+        reviewStatus={ReviewStatus.NEED_TO_REVIEW}
+        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
@@ -42,8 +42,8 @@ describe("Statuses", () => {
     const { getByText, getByLabelText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.FAILED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_FEEDBACK}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
+        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
@@ -57,25 +57,25 @@ describe("Statuses", () => {
     const { container } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.NOT_RETURNED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_FEEDBACK}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
+        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("renders the correct icon and text for feedback status NEED_TO_PROVIDE_FEEDBACK", () => {
+  it("renders the correct icon and text for review status NEED_TO_REVIEW", () => {
     const { getByText, getByLabelText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.PASSED}
-        feedbackStatus={FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK}
+        reviewStatus={ReviewStatus.NEED_TO_REVIEW}
         gradesGivenStatus={GradesGivenStatus.NEED_TO_GRADE}
       />
     );
 
     expect(
-      getByText(FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK)
+      getByText(ReviewStatus.NEED_TO_REVIEW)
     ).toBeInTheDocument();
     expect(
       getByLabelText(exportedForTesting.bellIconLabel)
@@ -86,7 +86,7 @@ describe("Statuses", () => {
     const { getByText, getByLabelText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.PASSED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
         gradesGivenStatus={GradesGivenStatus.NEED_TO_GRADE}
       />
     );
@@ -102,7 +102,7 @@ describe("Statuses", () => {
     const { queryByText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.PASSED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
         gradesGivenStatus={GradesGivenStatus.NEED_TO_GRADE}
         grade={grade}
       />
@@ -111,12 +111,12 @@ describe("Statuses", () => {
     expect(queryByText(grade)).toBeNull();
   });
 
-  it("does not render grade when provided but status is NEED_TO_PROVIDE_FEEDBACK", () => {
+  it("does not render grade when provided but status is NEED_TO_REVIEW", () => {
     const grade = 10;
     const { queryByText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.PASSED}
-        feedbackStatus={FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK}
+        reviewStatus={ReviewStatus.NEED_TO_REVIEW}
         gradesGivenStatus={GradesGivenStatus.NEED_TO_GRADE}
         grade={grade}
       />
@@ -130,7 +130,7 @@ describe("Statuses", () => {
     const { getByText } = render(
       <GuideCardStatuses
         returnStatus={ReturnStatus.PASSED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
         gradesGivenStatus={GradesGivenStatus.GRADES_GIVEN}
         grade={grade}
       />

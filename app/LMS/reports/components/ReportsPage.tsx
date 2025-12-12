@@ -84,17 +84,17 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
 
     // Add review information to existing guides or create new entries
     studentGuides.forEach(guide => {
-      const feedbackCount = guide.feedbackGiven?.length || 0;
+      const reviewCount = guide.reviewsGiven?.length || 0;
       const gradeCount = guide.gradesGiven?.length || 0;
       
-      if (feedbackCount > 0 || gradeCount > 0) {
+      if (reviewCount > 0 || gradeCount > 0) {
         const guideId = guide._id.toString();
         const existing = guidesMap.get(guideId);
-        
+
         if (existing) {
           // Update existing guide with review data
           existing.hasReviewed = true;
-          existing.reviewCount = feedbackCount;
+          existing.reviewCount = reviewCount;
           existing.gradeCount = gradeCount;
         } else {
           // Add guide that only has review activity
@@ -102,7 +102,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
             ...guide,
             hasReturned: false,
             hasReviewed: true,
-            reviewCount: feedbackCount,
+            reviewCount: reviewCount,
             gradeCount: gradeCount
           });
         }

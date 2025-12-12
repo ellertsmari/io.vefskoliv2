@@ -4,19 +4,20 @@ import bcrypt from "bcrypt";
 import { signIn, getUser } from "../../auth";
 import { User } from "../models/user";
 import { z } from "zod";
+import {
+  failure,
+  successNoData,
+  logError,
+  ErrorMessages,
+  type ActionResult,
+} from "../utils/errors";
 
-type SignupFormState =
-  | {
-      errors?: {
-        name?: string[];
-        email?: string[];
-        password?: string[];
-      };
-      message?: string;
-    }
-  | undefined;
+type SignupFormState = ActionResult<void> | undefined;
 
-export async function signUp(state: SignupFormState, formData: FormData) {
+export async function signUp(
+  state: SignupFormState,
+  formData: FormData
+): Promise<ActionResult<void>> {
   // Validate form fields
   const validatedFields = SignupFormSchema.safeParse({
     firstName: formData.get("firstName"),
@@ -27,11 +28,12 @@ export async function signUp(state: SignupFormState, formData: FormData) {
 
   // If any form fields are invalid, return early
   if (!validatedFields.success) {
-    return {
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+    return failure(
+      ErrorMessages.INVALID_INPUT,
+      validatedFields.error.flatten().fieldErrors
+    );
   }
+
   const {
     firstName,
     lastName,
@@ -47,47 +49,43 @@ export async function signUp(state: SignupFormState, formData: FormData) {
       password,
       role: "user",
     });
-  } catch (error: any) {
-    if (error.code === 11000) {
-      return {
-        success: false,
-        message: "User with this email already exists.",
-      };
+  } catch (error: unknown) {
+    // Check for duplicate email (MongoDB error code 11000)
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === 11000
+    ) {
+      return failure("User with this email already exists.");
     }
-    
-    console.error('User creation error:', error);
-    return {
-      success: false,
-      message: "Failed to create user. Please try again later.",
-    };
+
+    logError("signUp", error, { email });
+    return failure(ErrorMessages.FAILED_TO_CREATE("user"));
   }
 
   try {
     const user = await getUser(email);
     if (!user) {
-      return {
-        success: false,
-        message: "User created but failed to retrieve. Please try logging in.",
-      };
+      return failure(
+        "User created but failed to retrieve. Please try logging in."
+      );
     }
-    
+
     await signIn("credentials", {
       email,
       password: rawPassword,
     });
   } catch (error) {
-    console.error('Sign in error after signup:', error);
-    return {
-      success: false,
-      message: "Account created successfully, but automatic login failed. Please log in manually.",
-    };
+    logError("signUp:autoLogin", error, { email });
+    return failure(
+      "Account created successfully, but automatic login failed. Please log in manually."
+    );
   }
 
-  return {
-    success: true,
-    message:
-      "Successfully registered. Now logging you in. If it fails you will be redirected to the login page.",
-  };
+  return successNoData(
+    "Successfully registered. Now logging you in. If it fails you will be redirected to the login page."
+  );
 }
 
 const SignupFormSchema = z.object({

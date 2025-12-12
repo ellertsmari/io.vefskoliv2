@@ -1,6 +1,6 @@
 import { Paragraph } from "globalStyles/text";
 import {
-  FeedbackStatus,
+  ReviewStatus,
   GradesGivenStatus,
   ReturnStatus,
 } from "types/guideTypes";
@@ -10,12 +10,12 @@ import { Bell, GreenTick, PurpleStar, RedCross, Hourglass, HatIcon } from "asset
 
 export const GuideCardStatuses = ({
   returnStatus,
-  feedbackStatus,
+  reviewStatus,
   gradesGivenStatus,
   grade,
 }: {
   returnStatus: ReturnStatus;
-  feedbackStatus: FeedbackStatus;
+  reviewStatus: ReviewStatus;
   gradesGivenStatus: GradesGivenStatus;
   grade?: number;
 }) => {
@@ -30,10 +30,10 @@ export const GuideCardStatuses = ({
         <Paragraph>{returnStatus}</Paragraph>
       </Status>
       <Status>
-        <FeedbackAndGradeStatus
+        <ReviewAndGradeStatus
           returnStatus={returnStatus}
           grade={grade}
-          feedbackStatus={feedbackStatus}
+          reviewStatus={reviewStatus}
           gradesGivenStatus={gradesGivenStatus}
         />
       </Status>
@@ -49,31 +49,31 @@ const ReturnStatusIcon = ({ returnStatus }: { returnStatus: ReturnStatus }) => {
       return <PurpleStar />;
     case ReturnStatus.FAILED:
       return <RedCross />;
-    case ReturnStatus.AWAITING_FEEDBACK:
+    case ReturnStatus.AWAITING_REVIEWS:
       return <Hourglass />;
     default:
       return null;
   }
 };
 
-const FeedbackAndGradeStatus = ({
+const ReviewAndGradeStatus = ({
   returnStatus,
   gradesGivenStatus,
-  feedbackStatus,
+  reviewStatus,
   grade,
 }: {
   returnStatus: ReturnStatus;
   gradesGivenStatus: GradesGivenStatus;
-  feedbackStatus: FeedbackStatus;
+  reviewStatus: ReviewStatus;
   grade: number | undefined;
 }) => {
-  if (feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK) {
+  if (reviewStatus === ReviewStatus.NEED_TO_REVIEW) {
     return (
       <>
         <IconContainer>
           <Bell />
         </IconContainer>
-        <Paragraph>{FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK}</Paragraph>
+        <Paragraph>{ReviewStatus.NEED_TO_REVIEW}</Paragraph>
       </>
     );
   }

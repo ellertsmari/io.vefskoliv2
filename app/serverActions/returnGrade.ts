@@ -1,74 +1,102 @@
 "use server";
 
 import { ObjectId } from "mongodb";
-import type { GradedFeedbackDocument } from "../models/review";
+import type { GradedReviewDocument } from "../models/review";
 import { auth } from "../../auth";
 import { Review } from "../models/review";
+import { Return } from "../models/return";
 import { z } from "zod";
 import { safeSerialize } from "../utils/serialization";
+import { connectToDatabase } from "./mongoose-connector";
+import {
+  failure,
+  success,
+  handleActionError,
+  ErrorMessages,
+  type ActionResult,
+} from "../utils/errors";
 
 export type GradeDataType = {
   grade: number | undefined;
   reviewId: string | undefined;
 };
 
-type GradeFormState =
-  | {
-      errors?: {
-        reviewId?: string[];
-        grade?: string[];
-      };
-      message?: string;
-    }
-  | undefined;
+type GradeFormState = ActionResult<GradedReviewDocument> | undefined;
 
-export async function returnGrade(state: GradeFormState, data: GradeDataType) {
+export async function returnGrade(
+  state: GradeFormState,
+  data: GradeDataType
+): Promise<ActionResult<GradedReviewDocument>> {
   const validatedFields = GradeFormSchema.safeParse({
     grade: data.grade,
     reviewId: data.reviewId,
   });
 
   if (!validatedFields.success) {
-    return {
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+    return failure(
+      ErrorMessages.INVALID_INPUT,
+      validatedFields.error.flatten().fieldErrors
+    );
   }
 
   const { grade, reviewId } = validatedFields.data;
   const session = await auth();
 
   if (!session?.user) {
-    return {
-      success: false,
-      message: "You must be logged in to give a grade",
-    };
+    return failure("You must be logged in to give a grade");
   }
 
+  const userId = new ObjectId(session.user.id);
+
   try {
-    await Review.updateOne({ _id: new ObjectId(reviewId) }, { grade });
+    await connectToDatabase();
 
-    const gradedDocument: GradedFeedbackDocument = (await Review.findById(
-      new ObjectId(reviewId)
-    )) as GradedFeedbackDocument;
+    // Fetch the review to validate authorization
+    const review = await Review.findById(new ObjectId(reviewId));
 
-    if (!gradedDocument) {
-      return {
-        success: false,
-        message: "Failed to submit grade",
-      };
+    if (!review) {
+      return failure(ErrorMessages.NOT_FOUND("Review"));
     }
 
-    return {
-      success: true,
-      data: safeSerialize(gradedDocument.toObject()),
-      message: "Grade submitted successfully",
-    };
+    // Check if review already has a grade
+    if (review.grade !== null && review.grade !== undefined) {
+      return failure("This review has already been graded");
+    }
+
+    // Check if user is trying to grade their own review (not allowed)
+    if (review.owner.equals(userId)) {
+      return failure("You cannot grade your own review");
+    }
+
+    // Fetch the return to check ownership
+    const associatedReturn = await Return.findById(review.return);
+
+    if (!associatedReturn) {
+      return failure(ErrorMessages.NOT_FOUND("Associated return"));
+    }
+
+    // Check if user is trying to grade a review on their own return (not allowed for neutral grading)
+    if (associatedReturn.owner.equals(userId)) {
+      return failure("You cannot grade reviews on your own projects");
+    }
+
+    // All checks passed, update the grade
+    await Review.updateOne({ _id: new ObjectId(reviewId) }, { grade });
+
+    const gradedDocument = (await Review.findById(
+      new ObjectId(reviewId)
+    )) as GradedReviewDocument;
+
+    if (!gradedDocument) {
+      return failure("Failed to submit grade");
+    }
+
+    return success(
+      safeSerialize(gradedDocument.toObject()),
+      "Grade submitted successfully"
+    );
   } catch (e) {
-    return {
-      success: false,
-      message: "Failed to submit grade",
-    };
+    return handleActionError("returnGrade", e, "Failed to submit grade");
   }
 }
 

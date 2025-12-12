@@ -2,35 +2,32 @@
 
 import { z } from "zod";
 import { ObjectId } from "mongodb";
-import type { FeedbackType } from "models/review";
+import type { ReviewType } from "models/review";
 import { auth } from "../../auth";
 import { Review, Vote } from "models/review";
 import { connectToDatabase } from "./mongoose-connector";
+import {
+  failure,
+  successNoData,
+  handleActionError,
+  ErrorMessages,
+  type ActionResult,
+} from "../utils/errors";
 
-type FeedbackDataType = {
+type ReviewDataType = {
   vote: Vote | undefined;
   comment: string | undefined;
   returnId: string | undefined;
   guideId: string | undefined;
 };
 
-type FeedbackFormState =
-  | {
-      errors?: {
-        returnId?: string[];
-        vote?: string[];
-        comment?: string[];
-        guideId?: string[];
-      };
-      message?: string;
-    }
-  | undefined;
+type ReviewFormState = ActionResult<void> | undefined;
 
-export async function returnFeedback(
-  state: FeedbackFormState,
-  data: FeedbackDataType
-) {
-  const validatedFields = FeedbackFormSchema.safeParse({
+export async function returnReview(
+  state: ReviewFormState,
+  data: ReviewDataType
+): Promise<ActionResult<void>> {
+  const validatedFields = ReviewFormSchema.safeParse({
     vote: data.vote,
     comment: data.comment,
     returnId: data.returnId,
@@ -38,24 +35,21 @@ export async function returnFeedback(
   });
 
   if (!validatedFields.success) {
-    return {
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+    return failure(
+      ErrorMessages.INVALID_INPUT,
+      validatedFields.error.flatten().fieldErrors
+    );
   }
 
   const { vote, comment, returnId, guideId } = validatedFields.data;
   const session = await auth();
 
   if (!session?.user) {
-    return {
-      success: false,
-      message: "You must be logged in to submit a return",
-    };
+    return failure("You must be logged in to submit a review");
   }
   const { user } = session;
 
-  const reviewData: Omit<FeedbackType, "createdAt"> = {
+  const reviewData: Omit<ReviewType, "createdAt"> = {
     vote,
     comment,
     owner: new ObjectId(user.id),
@@ -67,21 +61,13 @@ export async function returnFeedback(
     await connectToDatabase();
     await Review.create(reviewData);
 
-    return {
-      success: true,
-      message: "Return feedback submitted successfully",
-    };
+    return successNoData("Review submitted successfully");
   } catch (e) {
-    const error = e instanceof Error ? e : new Error(String(e));
-    console.error("[returnFeedback] Failed to submit feedback:", error.message);
-    return {
-      success: false,
-      message: "Failed to submit return feedback",
-    };
+    return handleActionError("returnReview", e, "Failed to submit review");
   }
 }
 
-const FeedbackFormSchema = z.object({
+const ReviewFormSchema = z.object({
   vote: z.nativeEnum(Vote).refine((val) => Object.values(Vote).includes(val), {
     message: "Vote type is invalid",
   }),
@@ -89,6 +75,9 @@ const FeedbackFormSchema = z.object({
   guideId: z.string().min(2, { message: "Please append a guideId" }).trim(),
   comment: z
     .string()
-    .min(2, { message: "Please provide valid feedback" })
+    .min(2, { message: "Please provide a valid review comment" })
     .trim(),
 });
+
+/** @deprecated Use returnReview instead */
+export const returnFeedback = returnReview;

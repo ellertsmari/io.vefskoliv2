@@ -4,18 +4,18 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { User, UserDocument, UserInfo } from "models/user";
 import { faker } from "@faker-js/faker";
 import {
-  FeedbackDocument,
-  FeedbackType,
+  ReviewDocument,
+  ReviewType,
   Review,
-  GradedFeedbackDocument,
-  GradedFeedbackType,
+  GradedReviewDocument,
+  GradedReviewType,
   Vote,
 } from "models/review";
 import { Return, ReturnDocument, ReturnType } from "models/return";
 import { Guide, GuideDocument, GuideType } from "models/guide";
 import {
   ExtendedGuideInfo,
-  FeedbackDocumentWithReturn,
+  ReviewDocumentWithReturn,
   GuideInfo,
   Module,
 } from "types/guideTypes";
@@ -124,12 +124,12 @@ export const createDummyReturn = async (
   return result;
 };
 
-export const createDummyFeedback = async (
+export const createDummyReview = async (
   owner?: UserDocument,
   guide?: GuideDocument,
   userReturn?: ReturnDocument,
   fail?: boolean
-): Promise<FeedbackDocument> => {
+): Promise<ReviewDocument> => {
   // Create a userReturn if not provided
   if (!userReturn) {
     userReturn = await createDummyReturn(undefined, guide);
@@ -139,7 +139,7 @@ export const createDummyFeedback = async (
   if (!userReturn) throw new Error("No userReturn provided");
 
   // Now we can safely create the dummy review
-  const dummyReview: Partial<FeedbackType> = {
+  const dummyReview: Partial<ReviewType> = {
     guide: guide?._id ?? new mongoose.Types.ObjectId(),
     return: userReturn._id, // userReturn is guaranteed to be defined here
     owner: owner?._id ?? new mongoose.Types.ObjectId(),
@@ -148,29 +148,35 @@ export const createDummyFeedback = async (
     createdAt: new Date(),
   };
 
-  const feedback = await Review.create(dummyReview);
+  const review = await Review.create(dummyReview);
 
-  return feedback; // Return the created feedback
+  return review; // Return the created review
 };
 
-export const createDummyFeedbackWithReturn = async (
+/** @deprecated Use createDummyReview instead */
+export const createDummyFeedback = createDummyReview;
+
+export const createDummyReviewWithReturn = async (
   owner?: UserDocument,
   guide?: GuideDocument,
   userReturn?: ReturnDocument,
   fail?: boolean
-): Promise<FeedbackDocumentWithReturn> => {
-  const feedback = await createDummyFeedback(owner, guide, userReturn, fail);
-  const feedbackWithReturn = feedback.toObject();
-  feedbackWithReturn.associatedReturn = userReturn?.toObject();
-  return feedbackWithReturn;
+): Promise<ReviewDocumentWithReturn> => {
+  const review = await createDummyReview(owner, guide, userReturn, fail);
+  const reviewWithReturn = review.toObject();
+  reviewWithReturn.associatedReturn = userReturn?.toObject();
+  return reviewWithReturn;
 };
+
+/** @deprecated Use createDummyReviewWithReturn instead */
+export const createDummyFeedbackWithReturn = createDummyReviewWithReturn;
 
 export const createDummyGrade = async (
   owner?: UserDocument,
   guide?: GuideDocument,
   userReturn?: ReturnDocument,
   grade?: number
-): Promise<GradedFeedbackDocument> => {
+): Promise<GradedReviewDocument> => {
   // Create a userReturn if not provided
   if (!userReturn) {
     userReturn = await createDummyReturn(undefined, guide);
@@ -180,7 +186,7 @@ export const createDummyGrade = async (
   if (!userReturn) throw new Error("No userReturn provided");
   const votes = [Vote.NO_PASS, Vote.PASS, Vote.RECOMMEND_TO_GALLERY];
 
-  const dummyReview: Partial<GradedFeedbackType> = {
+  const dummyReview: Partial<GradedReviewType> = {
     guide: guide?._id ?? new mongoose.Types.ObjectId(),
     return: userReturn?._id ?? new mongoose.Types.ObjectId(),
     grade: grade ?? faker.number.int(10),
@@ -191,10 +197,10 @@ export const createDummyGrade = async (
   };
 
   const result = await Review.create(dummyReview)
-    .then((feedback) => feedback.toObject())
-    .then((feedback) => {
-      feedback.associatedReturn = userReturn!.toObject();
-      return feedback;
+    .then((review) => review.toObject())
+    .then((review) => {
+      review.associatedReturn = userReturn!.toObject();
+      return review;
     });
 
   if (!result) throw new Error("Failed to create dummy grade");
@@ -218,21 +224,21 @@ export const createDummyFetchedGuides = async (
       module: guide.module,
       returnsSubmitted:
         Math.random() > 0.5 ? [await createDummyReturn(user, guide)] : [],
-      feedbackReceived:
+      reviewsReceived:
         Math.random() > 0.5
-          ? [await createDummyFeedback(undefined, guide)]
+          ? [await createDummyReview(undefined, guide)]
           : [],
-      availableForFeedback:
+      availableForReview:
         Math.random() > 0.5 ? [await createDummyReturn(undefined, guide)] : [],
-      feedbackGiven:
-        Math.random() > 0.5 ? [await createDummyFeedback(user, guide)] : [],
+      reviewsGiven:
+        Math.random() > 0.5 ? [await createDummyReview(user, guide)] : [],
       gradesReceived:
         Math.random() > 0.5 ? [await createDummyGrade(user, guide)] : [],
       gradesGiven:
         Math.random() > 0.5 ? [await createDummyGrade(undefined, guide)] : [],
       availableToGrade:
         Math.random() > 0.5
-          ? [await createDummyFeedback(undefined, guide)]
+          ? [await createDummyReview(undefined, guide)]
           : [],
     };
     guides.push(fetchedGuide);
@@ -252,9 +258,9 @@ export const createDummyFetchedGuidedWithNoReturn = async (
     order: 0,
     module: guide.module,
     returnsSubmitted: [],
-    feedbackReceived: [],
-    availableForFeedback: [],
-    feedbackGiven: [],
+    reviewsReceived: [],
+    availableForReview: [],
+    reviewsGiven: [],
     gradesReceived: [],
     gradesGiven: [],
     availableToGrade: [],
@@ -264,9 +270,9 @@ export const createDummyFetchedGuidedWithNoReturn = async (
 };
 
 type dummyGuideDetails = {
-  feedbackReceived?: number;
-  availableForFeedback?: number;
-  feedbackGiven?: number;
+  reviewsReceived?: number;
+  availableForReview?: number;
+  reviewsGiven?: number;
   gradesReceived?: number;
   gradesGiven?: number;
   availableToGrade?: number;
@@ -281,25 +287,25 @@ export const createDummyFetchedGuideWithControl = async (
   const userReturn = await createDummyReturn(user, guide);
 
   const {
-    feedbackReceived,
-    availableForFeedback,
-    feedbackGiven,
+    reviewsReceived,
+    availableForReview,
+    reviewsGiven,
     gradesReceived,
     gradesGiven,
     availableToGrade,
   } = dummyGuideDetails;
 
-  const feedbackReceivedPromises = Array.from({
-    length: feedbackReceived ?? 0,
-  }).map(() => createDummyFeedback(undefined, guide, userReturn));
+  const reviewsReceivedPromises = Array.from({
+    length: reviewsReceived ?? 0,
+  }).map(() => createDummyReview(undefined, guide, userReturn));
 
-  const availableForFeedbackPromises = Array.from({
-    length: availableForFeedback ?? 0,
+  const availableForReviewPromises = Array.from({
+    length: availableForReview ?? 0,
   }).map(() => createDummyReturn(undefined, guide));
 
-  const feedbackGivenPromises = Array.from({
-    length: feedbackGiven ?? 0,
-  }).map(() => createDummyFeedback(user, guide));
+  const reviewsGivenPromises = Array.from({
+    length: reviewsGiven ?? 0,
+  }).map(() => createDummyReview(user, guide));
 
   const gradesReceivedPromises = Array.from({
     length: gradesReceived ?? 0,
@@ -311,7 +317,7 @@ export const createDummyFetchedGuideWithControl = async (
 
   const availableToGradePromises = Array.from({
     length: availableToGrade ?? 0,
-  }).map(() => createDummyFeedback(undefined, guide));
+  }).map(() => createDummyReview(undefined, guide));
 
   const fetchedGuide: GuideInfo = {
     _id: guide._id,
@@ -321,9 +327,9 @@ export const createDummyFetchedGuideWithControl = async (
     order: 0,
     module: guide.module,
     returnsSubmitted: [userReturn],
-    feedbackReceived: await Promise.all(feedbackReceivedPromises),
-    availableForFeedback: await Promise.all(availableForFeedbackPromises),
-    feedbackGiven: await Promise.all(feedbackGivenPromises),
+    reviewsReceived: await Promise.all(reviewsReceivedPromises),
+    availableForReview: await Promise.all(availableForReviewPromises),
+    reviewsGiven: await Promise.all(reviewsGivenPromises),
     gradesReceived: await Promise.all(gradesReceivedPromises),
     gradesGiven: await Promise.all(gradesGivenPromises),
     availableToGrade: await Promise.all(availableToGradePromises),

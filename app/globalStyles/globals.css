@@ -13,7 +13,7 @@ input:-webkit-autofill {
 
 body {
   font-family: "Source Sans 3", sans-serif;
-
+  overflow-x: hidden;
 }
 
 div,

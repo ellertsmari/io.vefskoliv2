@@ -27,7 +27,7 @@ describe("signUp", () => {
     User.create = jest.fn();
     (getUser as jest.Mock).mockResolvedValueOnce({ email });
     (signIn as jest.Mock).mockResolvedValueOnce(true);
-    const result = await signUp({}, formData);
+    const result = await signUp(undefined, formData);
     expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
     expect(User.create).toHaveBeenCalledWith({
       name: firstName + " " + lastName,
@@ -41,6 +41,7 @@ describe("signUp", () => {
     });
     expect(result).toEqual({
       success: true,
+      data: undefined,
       message:
         "Successfully registered. Now logging you in. If it fails you will be redirected to the login page.",
     });
@@ -51,14 +52,16 @@ describe("signUp", () => {
     formData.append("lastName", "");
     formData.append("email", "");
     formData.append("password", "");
-    const result = await signUp({}, formData);
+    const result = await signUp(undefined, formData);
     expect(result.success).toBe(false);
-    expect(result.errors).toEqual({
-      firstName: ["First name must be at least 2 characters long."],
-      lastName: ["Last name must be at least 2 characters long."],
-      email: ["Please enter a valid email."],
-      password: ["Your password must be at least 8 characters long"],
-    });
+    if (!result.success) {
+      expect(result.errors).toEqual({
+        firstName: ["First name must be at least 2 characters long."],
+        lastName: ["Last name must be at least 2 characters long."],
+        email: ["Please enter a valid email."],
+        password: ["Your password must be at least 8 characters long"],
+      });
+    }
   });
   it("should not call signIn if user cannot be found in the DB", async () => {
     const formData = new FormData();
@@ -68,7 +71,7 @@ describe("signUp", () => {
     formData.append("password", password);
     bcrypt.hash = jest.fn().mockResolvedValue(hashedPassword);
     (getUser as jest.Mock).mockRejectedValueOnce(new Error("User not found"));
-    const result = await signUp({}, formData);
+    const result = await signUp(undefined, formData);
     expect(signIn).not.toHaveBeenCalled();
   });
   it("should return an error if user creation fails", async () => {
@@ -81,11 +84,13 @@ describe("signUp", () => {
     User.create = jest
       .fn()
       .mockRejectedValue(new Error("User creation failed"));
-    const result = await signUp({}, formData);
-    expect(result).toEqual({
-      success: false,
-      message: "Failed to create user. Please try again later.",
-    });
+    const result = await signUp(undefined, formData);
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: false,
+        message: "Failed to create user",
+      })
+    );
     expect(signIn).not.toHaveBeenCalled();
   });
 });

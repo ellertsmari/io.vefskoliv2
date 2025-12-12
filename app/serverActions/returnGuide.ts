@@ -4,39 +4,36 @@ import { auth } from "../../auth";
 import { Return } from "../models/return";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
+import {
+  failure,
+  successNoData,
+  handleActionError,
+  ErrorMessages,
+  type ActionResult,
+} from "../utils/errors";
 
 export type ReturnFormData = {
   projectUrl?: string;
   liveVersion?: string;
   projectName?: string;
   comment?: string;
-  imageOfProject?: string;
+  pictureUrl?: string;
   guideId?: string;
 } | null;
 
-type ReturnFormState =
-  | {
-      errors?: {
-        projectUrl?: string[];
-        liveVersion?: string[];
-        projectName?: string[];
-        comment?: string[];
-      };
-      message?: string;
-    }
-  | undefined;
+type ReturnFormState = ActionResult<void> | undefined;
 
 export async function returnGuide(
   state: ReturnFormState,
   data: ReturnFormData
-) {
+): Promise<ActionResult<void>> {
   const validatedFields = ReturnFormSchema.safeParse(data);
 
   if (!validatedFields.success) {
-    return {
-      success: false,
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+    return failure(
+      ErrorMessages.INVALID_INPUT,
+      validatedFields.error.flatten().fieldErrors
+    );
   }
 
   const {
@@ -45,37 +42,30 @@ export async function returnGuide(
     comment,
     liveVersion,
     guideId,
-    imageOfProject,
+    pictureUrl,
   } = validatedFields.data;
 
   const session = await auth();
 
   if (!session?.user) {
-    return {
-      success: false,
-      message: "You must be logged in to submit a return",
-    };
+    return failure("You must be logged in to submit a return");
   }
   const user = session?.user as AdapterUser;
+
   try {
-    const theReturn = await Return.create({
+    await Return.create({
       projectUrl,
       projectName,
       comment,
       liveVersion,
       owner: new ObjectId(user.id),
       guide: new ObjectId(guideId),
-      imageOfProject,
+      pictureUrl,
     });
-    return {
-      success: true,
-      message: "Return submitted successfully",
-    };
+
+    return successNoData("Return submitted successfully");
   } catch (e) {
-    return {
-      success: false,
-      message: "Failed to submit return",
-    };
+    return handleActionError("returnGuide", e, "Failed to submit return");
   }
 }
 
@@ -94,5 +84,5 @@ const ReturnFormSchema = z.object({
     .min(2, { message: "Please enter a valid description" })
     .trim(),
   guideId: z.string().trim(),
-  imageOfProject: z.string().trim().optional(),
+  pictureUrl: z.string().trim().optional(),
 });

@@ -17,7 +17,7 @@ import {
 } from "react";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "providers/GuideProvider";
-import { returnFeedback } from "serverActions/returnFeedback";
+import { returnReview } from "serverActions/returnFeedback";
 import { Vote } from "models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
@@ -53,7 +53,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const [vote, setVote] = useState<Vote | undefined>(undefined);
   const [showErrors, setShowErrors] = useState(false);
   const [state, formAction, isPending] = useActionState(
-    returnFeedback,
+    returnReview,
     undefined
   );
 
@@ -84,10 +84,10 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   );
 
   const { guide } = useGuide();
-  const { availableForFeedback } = guide;
+  const { availableForReview } = guide;
   // Take the first return - it's deterministically assigned to this user by the backend
   // (sorted by: fewest reviews → user-specific assignment → oldest first → consistent tiebreaker)
-  const theReturn = availableForFeedback[0];
+  const theReturn = availableForReview[0];
   const canSubmit = vote && comment && comment.length >= 2;
 
   // Error checking functions
@@ -137,22 +137,23 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
             $styletype="outlined"
             onClick={() => {
               const isCodeGuide = guide.category === 'code' || guide.category === 'speciality code';
-              const tips = isCodeGuide 
+              const tips = isCodeGuide
                 ? "Code Review Focus Areas:\n• Code readability and structure\n• Problem-solving approach\n• Best practices implementation\n• Edge case handling\n• Performance considerations"
                 : "Design Review Focus Areas:\n• Visual hierarchy and layout\n• Color and typography choices\n• User experience flow\n• Responsive design\n• Accessibility considerations";
               alert(tips);
             }}
+            disabled={isPending}
           >
             WHAT CAN I IMPROVE?
           </Button>
           <div>
             <Button
               type="button"
-              $styletype={canSubmit ? "default" : "outlined"}
+              $styletype={canSubmit && !isPending ? "default" : "outlined"}
               onClick={handleSubmit}
-              disabled={false}
+              disabled={isPending}
             >
-              SUBMIT REVIEW
+              {isPending ? "SUBMITTING..." : "SUBMIT REVIEW"}
             </Button>
           </div>
         </div>

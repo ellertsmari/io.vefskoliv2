@@ -15,7 +15,6 @@ const returnSchema = new Schema({
   comment: { type: Schema.Types.String, required: true },
   owner: { type: Schema.Types.ObjectId, required: true, ref: "User", index: true },
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
-  reviewedAt: { type: Schema.Types.Date, required: false },
   guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide", index: true },
 });
 

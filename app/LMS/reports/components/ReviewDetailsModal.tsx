@@ -171,8 +171,8 @@ interface ReviewDetailsModalProps {
 }
 
 export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalProps) => {
-  const reviewsReceived = guide.feedbackReceived || [];
-  const reviewsGiven = guide.feedbackGiven || [];
+  const reviewsReceived = guide.reviewsReceived || [];
+  const reviewsGiven = guide.reviewsGiven || [];
   const gradesGiven = guide.gradesGiven || [];
   const studentReturns = guide.returnsSubmitted || [];
 

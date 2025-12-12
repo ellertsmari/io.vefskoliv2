@@ -36,11 +36,11 @@ export const Grade = ({
   };
 
   useEffect(() => {
-    if (state?.success && state.data) {
+    if (state?.success) {
       setCanGrade(false);
       window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
     }
-  }, [state?.success, state?.data]);
+  }, [state?.success]);
 
   const handleSubmit = () => {
     startTransition(async () => {
@@ -65,7 +65,7 @@ export const Grade = ({
       <Slider
         options={Array.from({ length: 10 }, (_, i) => i + 1)}
         value={tempGrade}
-        selectable={canGrade}
+        selectable={canGrade && !isPending}
         helpLink={
           "https://docs.google.com/document/d/1MbGhamGJQmKHkVQHTCZP91Szmca0T7NQOG8ZNrTCp_U/edit?tab=t.0#heading=h.a3sfbxwldt9"
         }
@@ -80,7 +80,7 @@ export const Grade = ({
             onClick={handleSubmit}
             disabled={isPending}
           >
-            SUBMIT GRADE
+            {isPending ? "SUBMITTING..." : "SUBMIT GRADE"}
           </SubmitButton>
         </ButtonContainer>
       )}

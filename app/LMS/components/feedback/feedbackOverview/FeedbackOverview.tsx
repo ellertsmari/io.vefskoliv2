@@ -1,7 +1,7 @@
 import { SubHeading1 } from "globalStyles/text";
 import { useMemo, useState } from "react";
 import {
-  FeedbackDocumentWithReturn,
+  ReviewDocumentWithReturn,
   GradesGivenStatus,
   ReturnStatus,
 } from "types/guideTypes";
@@ -26,35 +26,35 @@ import { Vote } from "models/review";
 
 export const FeedbackOverview = () => {
   const { guide } = useGuide();
-  const isFeedbackGiven = useMemo(
-    () => guide?.feedbackGiven?.length > 0,
+  const isReviewGiven = useMemo(
+    () => guide?.reviewsGiven?.length > 0,
     [guide]
   );
-  const isFeedbackReceived = useMemo(
-    () => guide?.feedbackReceived?.length > 0,
+  const isReviewReceived = useMemo(
+    () => guide?.reviewsReceived?.length > 0,
     [guide]
   );
 
   const [showGivenOrReceived, setShowGivenOrReceived] = useState<
     "given" | "received" | null
-  >(isFeedbackReceived ? "received" : isFeedbackGiven ? "given" : null);
+  >(isReviewReceived ? "received" : isReviewGiven ? "given" : null);
 
   const [selectedGivenIndex, setSelectedGivenIndex] = useState<number>(0);
   const [selectedReceivedIndex, setSelectedReceivedIndex] = useState<number>(0);
-  const [showFeedbackForm, setShowFeedbackForm] = useState<boolean>(false);
+  const [showReviewForm, setShowReviewForm] = useState<boolean>(false);
 
   if (!guide) return null;
   const {
-    feedbackGiven,
-    feedbackReceived,
+    reviewsGiven,
+    reviewsReceived,
     returnsSubmitted,
     availableToGrade,
   } = guide;
 
-  const theFeedback =
+  const theReview =
     showGivenOrReceived === "given"
-      ? feedbackGiven[selectedGivenIndex]
-      : feedbackReceived[selectedReceivedIndex];
+      ? reviewsGiven[selectedGivenIndex]
+      : reviewsReceived[selectedReceivedIndex];
 
   if (!showGivenOrReceived) {
     const theReturn = returnsSubmitted[0];
@@ -62,14 +62,14 @@ export const FeedbackOverview = () => {
   }
 
   const gradeable =
-    showGivenOrReceived === "received" && theFeedback && !theFeedback.grade;
+    showGivenOrReceived === "received" && theReview && !theReview.grade;
 
   const toggleOptions = () => {
     let options: ToggleOption[] = [];
-    if (isFeedbackGiven) {
+    if (isReviewGiven) {
       options.push(["given", () => setShowGivenOrReceived("given")]);
     }
-    if (isFeedbackReceived) {
+    if (isReviewReceived) {
       options.push([
         "received",
         () => setShowGivenOrReceived("received"),
@@ -82,18 +82,18 @@ export const FeedbackOverview = () => {
 
   const NavigatorOptions = () => {
     if (showGivenOrReceived === "given") {
-      return feedbackGiven.map((feedback) =>
-        feedback.grade ? StyleColors.purple : StyleColors.lightGrey
+      return reviewsGiven.map((review) =>
+        review.grade ? StyleColors.purple : StyleColors.lightGrey
       );
     }
-    return feedbackReceived.map((feedback) => {
-      if (feedback.vote === Vote.PASS) return StyleColors.green;
-      if (feedback.vote === Vote.NO_PASS) return StyleColors.red;
+    return reviewsReceived.map((review) => {
+      if (review.vote === Vote.PASS) return StyleColors.green;
+      if (review.vote === Vote.NO_PASS) return StyleColors.red;
       return StyleColors.lightGrey;
     });
   };
 
-  if (showFeedbackForm) {
+  if (showReviewForm) {
     return <GiveFeedbackView guideTitle={guide.title} />;
   }
 
@@ -104,33 +104,34 @@ export const FeedbackOverview = () => {
           currentSelection={showGivenOrReceived}
           options={toggleOptions()}
         />
-        {guide.returnStatus !== ReturnStatus.NOT_RETURNED && guide.availableForFeedback.length > 0 && (
+        {guide.returnStatus !== ReturnStatus.NOT_RETURNED && guide.availableForReview.length > 0 && (
           <Button
             $styletype="outlined"
-            onClick={() => setShowFeedbackForm(true)}
+            onClick={() => setShowReviewForm(true)}
             style={{ marginLeft: 'auto' }}
           >
-            Give More Feedback
+            Give More Reviews
           </Button>
         )}
       </ToggleContainer>
       <FeedbackInfoContainer>
         <ReturnOverview
-          theFeedback={
+          theReview={
             showGivenOrReceived === "given"
-              ? feedbackGiven[selectedGivenIndex]
-              : feedbackReceived[selectedReceivedIndex]
+              ? reviewsGiven[selectedGivenIndex]
+              : reviewsReceived[selectedReceivedIndex]
           }
           gradeable={gradeable}
+          showGrade={showGivenOrReceived === "given"}
         />
         <ContentAndNavigatorContainer>
-          <FeedbackContent
-            currentFeedback={
+          <ReviewContent
+            currentReview={
               showGivenOrReceived === "given"
-                ? feedbackGiven[selectedGivenIndex]
-                : feedbackReceived[selectedReceivedIndex]
+                ? reviewsGiven[selectedGivenIndex]
+                : reviewsReceived[selectedReceivedIndex]
             }
-            subtitle={`FEEDBACK YOU ${
+            subtitle={`REVIEW YOU ${
               showGivenOrReceived === "given" ? "GAVE" : "RECEIVED"
             }`}
           />
@@ -157,12 +158,12 @@ export const FeedbackOverview = () => {
   );
 };
 
-const FeedbackContent = ({
-  currentFeedback,
+const ReviewContent = ({
+  currentReview,
   subtitle,
 }: {
   subtitle: string;
-  currentFeedback: FeedbackDocumentWithReturn | null;
+  currentReview: ReviewDocumentWithReturn | null;
 }) => {
   return (
     <FeedbackContentWrapper>
@@ -170,7 +171,7 @@ const FeedbackContent = ({
       <Border>
         <CommentWrapper>
           <MarkdownReader>
-            {currentFeedback?.comment ?? "No feedback yet"}
+            {currentReview?.comment ?? "No review yet"}
           </MarkdownReader>
         </CommentWrapper>
       </Border>

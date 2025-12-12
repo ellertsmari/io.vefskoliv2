@@ -67,6 +67,10 @@ Other root-level files and directories:
 - **`next.config.mjs`**: Configuration for Next.js application settings.
 - **`tsconfig.json`**: TypeScript configuration
 
+## Documentation
+
+- **[Peer Review Workflow](docs/PEER_REVIEW_WORKFLOW.md)** - Detailed documentation of the peer review system, business rules, and UI/UX requirements
+
 ## Notes
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).

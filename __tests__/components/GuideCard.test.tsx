@@ -16,7 +16,7 @@ import {
   createDummyFetchedGuidedWithNoReturn,
 } from "../__mocks__/mongoHandler";
 import {
-  FeedbackStatus,
+  ReviewStatus,
   GradesGivenStatus,
   ReturnStatus,
 } from "../../types/guideTypes";
@@ -24,7 +24,7 @@ import exp from "constants";
 
 const mockGuide = {
   returnStatus: ReturnStatus.NOT_RETURNED,
-  feedbackStatus: FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK,
+  reviewStatus: ReviewStatus.NEED_TO_REVIEW,
   gradesGivenStatus: GradesGivenStatus.NEED_TO_GRADE,
   grade: "A",
   link: "http://example.com",
@@ -88,10 +88,10 @@ describe("GuideCard", () => {
     expect(notificationIcon).toBeDefined();
   });
 
-  it("renders a notification icon if need to give feedback", async () => {
+  it("renders a notification icon if need to give review", async () => {
     const user = await createDummyUser();
     const guide = await createDummyFetchedGuideWithControl(user, {
-      availableForFeedback: 1,
+      availableForReview: 1,
     });
     const { getByLabelText } = render(<GuideCard guide={guide} order={1} />);
     const notificationIcon = getByLabelText("Notification icon");

@@ -1,24 +1,30 @@
 import { ReturnDocument } from "models/return";
-import { FeedbackDocument, GradedFeedbackDocument, Vote } from "models/review";
+import { ReviewDocument, GradedReviewDocument, Vote } from "models/review";
 import {
   ReturnStatus,
-  FeedbackStatus,
+  ReviewStatus,
   GradesReceivedStatus,
   GradesGivenStatus,
   ExtendedGuideInfo,
   GuideInfo,
   Module,
 } from "types/guideTypes";
+import {
+  REQUIRED_REVIEWS_COUNT,
+  REQUIRED_GRADES_COUNT,
+  FAIL_THRESHOLD,
+  GRADES_TO_AVERAGE,
+} from "constants/peerReview";
 
 export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
   return guides.map((guide) => {
     const returnStatus = calculateReturnStatus(
       guide.returnsSubmitted,
-      guide.feedbackReceived
+      guide.reviewsReceived
     );
-    const feedbackStatus = calculateFeedbackStatus(
-      guide.feedbackGiven,
-      guide.availableForFeedback
+    const reviewStatus = calculateReviewStatus(
+      guide.reviewsGiven,
+      guide.availableForReview
     );
     const gradesReceivedStatus = calculateGradesReceivedStatus(
       guide.gradesReceived
@@ -33,7 +39,7 @@ export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
       ...guide,
       link: `/guides/${guide._id}`,
       returnStatus,
-      feedbackStatus,
+      reviewStatus,
       gradesReceivedStatus,
       grade,
       gradesGivenStatus,
@@ -43,7 +49,7 @@ export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
 
 export const calculateReturnStatus = (
   returnsSubmitted: ReturnDocument[],
-  feedbackReceived: FeedbackDocument[]
+  reviewsReceived: ReviewDocument[]
 ): ReturnStatus => {
   if (returnsSubmitted.length === 0) {
     return ReturnStatus.NOT_RETURNED;
@@ -57,25 +63,24 @@ export const calculateReturnStatus = (
       return latestSubmission;
     }
   );
-  const feedbackOnLatestSubmission = feedbackReceived.filter((feedback) => {
+  const reviewsOnLatestSubmission = reviewsReceived.filter((review) => {
     // Convert both to strings for comparison to handle serialized ObjectIds
-    return feedback.return.toString() === latestSubmission._id.toString();
+    return review.return.toString() === latestSubmission._id.toString();
   });
 
   if (
-    feedbackOnLatestSubmission.filter(
-      (feedback) => feedback.vote === Vote.NO_PASS
-    ).length > 1
+    reviewsOnLatestSubmission.filter((review) => review.vote === Vote.NO_PASS)
+      .length >= FAIL_THRESHOLD
   ) {
     return ReturnStatus.FAILED;
   }
-  if (feedbackOnLatestSubmission.length < 2) {
-    return ReturnStatus.AWAITING_FEEDBACK;
+  if (reviewsOnLatestSubmission.length < REQUIRED_REVIEWS_COUNT) {
+    return ReturnStatus.AWAITING_REVIEWS;
   }
 
   if (
-    feedbackOnLatestSubmission.filter(
-      (feedback) => feedback.vote === Vote.RECOMMEND_TO_GALLERY
+    reviewsOnLatestSubmission.filter(
+      (review) => review.vote === Vote.RECOMMEND_TO_GALLERY
     ).length > 0
   ) {
     return ReturnStatus.HALL_OF_FAME;
@@ -84,64 +89,75 @@ export const calculateReturnStatus = (
   return ReturnStatus.PASSED;
 };
 
-export const calculateFeedbackStatus = (
-  feedbackGiven: FeedbackDocument[],
-  availableForFeedback: ReturnDocument[]
-): FeedbackStatus => {
-  if (feedbackGiven.length < 2 && availableForFeedback.length)
-    return FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK;
+export const calculateReviewStatus = (
+  reviewsGiven: ReviewDocument[],
+  availableForReview: ReturnDocument[]
+): ReviewStatus => {
+  if (reviewsGiven.length < REQUIRED_REVIEWS_COUNT && availableForReview.length)
+    return ReviewStatus.NEED_TO_REVIEW;
 
-  if (feedbackGiven.length < 2) return FeedbackStatus.AWAITING_PROJECTS;
+  if (reviewsGiven.length < REQUIRED_REVIEWS_COUNT)
+    return ReviewStatus.AWAITING_PROJECTS;
 
-  return FeedbackStatus.FEEDBACK_GIVEN;
+  return ReviewStatus.REVIEWS_GIVEN;
 };
 
 export const calculateGradesReceivedStatus = (
-  gradesReceived: GradedFeedbackDocument[]
+  gradesReceived: GradedReviewDocument[]
 ): GradesReceivedStatus => {
-  if (gradesReceived.length < 2) {
+  if (gradesReceived.length < REQUIRED_GRADES_COUNT) {
     return GradesReceivedStatus.AWAITING_GRADES;
   }
   return GradesReceivedStatus.GRADES_RECEIVED;
 };
 
 export const calculateGrade = (
-  gradesReceived: GradedFeedbackDocument[]
+  gradesReceived: GradedReviewDocument[]
 ): number | undefined => {
-  if (gradesReceived.length < 2) {
+  if (gradesReceived.length < GRADES_TO_AVERAGE) {
     return undefined;
   }
-  const highestTwoGrades = gradesReceived
+  const highestGrades = gradesReceived
     .sort((a, b) => b.grade - a.grade)
-    .slice(0, 2);
+    .slice(0, GRADES_TO_AVERAGE);
 
-  return (highestTwoGrades[0].grade + highestTwoGrades[1].grade) / 2;
+  const sum = highestGrades.reduce((acc, g) => acc + g.grade, 0);
+  return sum / GRADES_TO_AVERAGE;
 };
 
 export const calculateGradesGivenStatus = (
-  gradesGiven: GradedFeedbackDocument[],
-  availableToGrade: FeedbackDocument[]
+  gradesGiven: GradedReviewDocument[],
+  availableToGrade: ReviewDocument[]
 ): GradesGivenStatus => {
-  if (gradesGiven.length < 2 && availableToGrade.length)
+  if (gradesGiven.length < REQUIRED_GRADES_COUNT && availableToGrade.length)
     return GradesGivenStatus.NEED_TO_GRADE;
 
-  if (gradesGiven.length < 2) return GradesGivenStatus.AWAITING_FEEDBACK;
+  if (gradesGiven.length < REQUIRED_GRADES_COUNT)
+    return GradesGivenStatus.AWAITING_REVIEWS;
 
   return GradesGivenStatus.GRADES_GIVEN;
+};
+
+/** @deprecated Use calculateReviewStatus instead */
+export const calculateFeedbackStatus = calculateReviewStatus;
+
+/**
+ * Extracts the module number from a module title string.
+ * Expects format like "3 - The fundamentals" or "10 - Advanced topics"
+ */
+const extractModuleNumber = (title: string): number => {
+  const match = title.match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
 };
 
 export const fetchModules = (extendedGuides: ExtendedGuideInfo[]): Module[] => {
   return extendedGuides
     .reduce((acc: Module[], guideToCheck) => {
-      if (
-        !acc.some(
-          (existingGuide) =>
-            (+guideToCheck.module.title[0] as number) === existingGuide.number
-        )
-      ) {
+      const moduleNumber = extractModuleNumber(guideToCheck.module.title);
+      if (!acc.some((existingGuide) => moduleNumber === existingGuide.number)) {
         acc.push({
           title: guideToCheck.module.title,
-          number: +guideToCheck.module.title[0] as number,
+          number: moduleNumber,
         });
       }
       return acc;

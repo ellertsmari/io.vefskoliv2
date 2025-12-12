@@ -1,7 +1,7 @@
 import Modal from "UIcomponents/modal/modal";
 import {
   ExtendedGuideInfo,
-  FeedbackStatus,
+  ReviewStatus,
   GradesGivenStatus,
   ReturnStatus,
 } from "types/guideTypes";
@@ -25,7 +25,7 @@ const GuideCard = ({
   guide: ExtendedGuideInfo;
   order?: number;
 }) => {
-  const { returnStatus, feedbackStatus, gradesGivenStatus, grade } = guide;
+  const { returnStatus, reviewStatus, gradesGivenStatus, grade } = guide;
 
   const link =
     guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
@@ -35,7 +35,7 @@ const GuideCard = ({
         <InfoWrapper
           $borderStyle={calculateBorderStyle(
             returnStatus,
-            feedbackStatus,
+            reviewStatus,
             gradesGivenStatus
           )}
         >
@@ -46,13 +46,13 @@ const GuideCard = ({
               link={link}
               order={order}
               returnStatus={returnStatus}
-              feedbackStatus={feedbackStatus}
+              reviewStatus={reviewStatus}
               gradesGivenStatus={gradesGivenStatus}
               grade={grade}
             />
           ) : (
             <>
-              {(feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK ||
+              {(reviewStatus === ReviewStatus.NEED_TO_REVIEW ||
                 gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE) && (
                 <Notification />
               )}
@@ -63,7 +63,7 @@ const GuideCard = ({
                     guideTitle={guide.title}
                     order={order}
                     returnStatus={returnStatus}
-                    feedbackStatus={feedbackStatus}
+                    reviewStatus={reviewStatus}
                     gradesGivenStatus={gradesGivenStatus}
                     grade={grade}
                   />
@@ -92,7 +92,7 @@ const Notification = () => {
 
 const calculateBorderStyle = (
   returnStatus: ReturnStatus,
-  feedbackStatus: FeedbackStatus,
+  reviewStatus: ReviewStatus,
   gradesGivenStatus: GradesGivenStatus
 ) => {
   if (returnStatus === ReturnStatus.NOT_RETURNED) {
@@ -100,7 +100,7 @@ const calculateBorderStyle = (
   }
 
   if (
-    feedbackStatus === FeedbackStatus.NEED_TO_PROVIDE_FEEDBACK ||
+    reviewStatus === ReviewStatus.NEED_TO_REVIEW ||
     gradesGivenStatus === GradesGivenStatus.NEED_TO_GRADE
   ) {
     return "border-color: var(--error-warning-100);";

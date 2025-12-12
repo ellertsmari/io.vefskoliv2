@@ -3,7 +3,7 @@ import { render } from "@testing-library/react";
 import { GuideCardOverview } from "../../app/guides/components/guideCardOverview/GuideCardOverview";
 import {
   ReturnStatus,
-  FeedbackStatus,
+  ReviewStatus,
   GradesGivenStatus,
 } from "../../types/guideTypes";
 
@@ -16,8 +16,8 @@ describe("GuideCardOverview", () => {
         order={1}
         link="http://example.com"
         returnStatus={ReturnStatus.NOT_RETURNED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_FEEDBACK}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
+        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
@@ -33,8 +33,8 @@ describe("GuideCardOverview", () => {
         order={1}
         link={linkText}
         returnStatus={ReturnStatus.NOT_RETURNED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_FEEDBACK}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
+        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
@@ -49,8 +49,8 @@ describe("GuideCardOverview", () => {
         moduleTitle="Test Module"
         order={1}
         returnStatus={ReturnStatus.NOT_RETURNED}
-        feedbackStatus={FeedbackStatus.FEEDBACK_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_FEEDBACK}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
+        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 

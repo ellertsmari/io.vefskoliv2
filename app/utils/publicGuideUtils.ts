@@ -12,9 +12,9 @@ export const createPublicGuideInfo = (guide: GuideType): GuideInfo => {
     module: guide.module,
     // Add empty arrays for user-specific fields that the component expects
     returnsSubmitted: [],
-    feedbackReceived: [],
-    availableForFeedback: [],
-    feedbackGiven: [],
+    reviewsReceived: [],
+    availableForReview: [],
+    reviewsGiven: [],
     gradesReceived: [],
     availableToGrade: [],
     gradesGiven: [],

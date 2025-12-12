@@ -34,16 +34,16 @@ describe("updateUserInfo", () => {
       user: { id: mockUser._id.toString() },
     });
 
-    await updateUserInfo(updatedUserInfo);
+    const result = await updateUserInfo(updatedUserInfo);
+
+    expect(result.success).toBe(true);
 
     const expectedUser = {
       ...mockUser.toObject(), // Get plain object representation of mockUser
       ...updatedUserInfo, // Merge in the updated fields
     };
 
-    const actualUser = await User.findById(
-      mockUser._id
-    ).lean();
+    const actualUser = await User.findById(mockUser._id).lean();
 
     // Type assertion to inform TypeScript that these properties can be deleted
     delete (actualUser as any).updatedAt;
@@ -52,9 +52,7 @@ describe("updateUserInfo", () => {
     expect(actualUser).toEqual(expectedUser);
   });
 
-  it("should throw an error if user is not found", async () => {
-    const userId = "123";
-
+  it("should return error if user is not logged in", async () => {
     const updatedUserInfo = {
       background: "New background",
       careerGoals: "New career goals",
@@ -62,14 +60,24 @@ describe("updateUserInfo", () => {
       favoriteArtists: "New favorite artists",
     };
 
-    await expect(updateUserInfo(updatedUserInfo)).rejects.toThrow(
-      "User not found"
-    );
+    (auth as jest.Mock).mockResolvedValue(null);
+
+    const result = await updateUserInfo(updatedUserInfo);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.message).toBe(
+        "You must be logged in to perform this action"
+      );
+    }
   });
 
-  it("should throw an error if user cannot be updated", async () => {
+  it("should return error if user info is invalid", async () => {
     // Mock user document
     const mockUser = await createDummyUser();
+    (auth as jest.Mock).mockResolvedValue({
+      user: { id: mockUser._id.toString() },
+    });
 
     const updatedUserInfo = {
       background: "New background",
@@ -82,9 +90,11 @@ describe("updateUserInfo", () => {
     // Spy on console.warn to avoid printing the warning to the console
     jest.spyOn(console, "warn").mockImplementationOnce(() => {});
 
-    // Call the function and expect it to throw an error
-    await expect(updateUserInfo(updatedUserInfo)).rejects.toThrow(
-      "Invalid user info"
-    );
+    const result = await updateUserInfo(updatedUserInfo);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.message).toBe("Invalid input provided");
+    }
   });
 });
