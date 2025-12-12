@@ -100,7 +100,7 @@ const GradingReviewItem = ({
       </GradeInputContainer>
       {state && !state.success && (
         <p style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-          Error: {state.error}
+          Error: {state.message}
         </p>
       )}
     </ReviewItem>
