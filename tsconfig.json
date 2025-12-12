@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -10,7 +14,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -19,19 +23,45 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "components/*": ["app/LMS/components/*"],
-      "UIcomponents/*": ["./app/UIcomponents/*"],
-      "globalStyles/*": ["./app/globalStyles/*"],
-      "hooks/*": ["./app/hooks/*"],
-      "pages/*": ["./app/pages/*"],
-      "serverActions/*": ["./app/serverActions/*"],
-      "assets/*": ["./app/assets/*"],
-      "models/*": ["./app/models/*"],
-      "providers/*": ["./app/providers/*"],
-      "types/*": ["./types/*"],
-      "utils/*": ["./app/utils/*"],
-      "constants/*": ["./app/constants/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "components/*": [
+        "app/LMS/components/*"
+      ],
+      "UIcomponents/*": [
+        "./app/UIcomponents/*"
+      ],
+      "globalStyles/*": [
+        "./app/globalStyles/*"
+      ],
+      "hooks/*": [
+        "./app/hooks/*"
+      ],
+      "pages/*": [
+        "./app/pages/*"
+      ],
+      "serverActions/*": [
+        "./app/serverActions/*"
+      ],
+      "assets/*": [
+        "./app/assets/*"
+      ],
+      "models/*": [
+        "./app/models/*"
+      ],
+      "providers/*": [
+        "./app/providers/*"
+      ],
+      "types/*": [
+        "./types/*"
+      ],
+      "utils/*": [
+        "./app/utils/*"
+      ],
+      "constants/*": [
+        "./app/constants/*"
+      ]
     },
     "target": "ES2017"
   },
@@ -39,7 +69,10 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
