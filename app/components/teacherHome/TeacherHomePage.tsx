@@ -38,6 +38,17 @@ interface TeacherHomePageProps {
   modules: Module[];
 }
 
+// Calculate suggested grade based on review comment length
+const calculateSuggestedGrade = (comment: string): number => {
+  const length = comment.length;
+  if (length >= 800) return 10;
+  if (length >= 500) return 9;
+  if (length >= 300) return 8;
+  if (length >= 200) return 7;
+  if (length >= 100) return 6;
+  return 5;
+};
+
 const GradingReviewItem = ({
   review,
   onGraded
@@ -45,7 +56,7 @@ const GradingReviewItem = ({
   review: UngradedReviewWithDetails;
   onGraded: (reviewId: string) => void;
 }) => {
-  const [grade, setGrade] = useState(5);
+  const [grade, setGrade] = useState(() => calculateSuggestedGrade(review.comment));
   const [state, formAction, isPending] = useActionState(returnGrade, undefined);
 
   useEffect(() => {

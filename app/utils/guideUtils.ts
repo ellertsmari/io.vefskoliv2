@@ -115,15 +115,25 @@ export const calculateGrade = (
   gradesReceived: GradedReviewDocument[],
   returnStatus?: ReturnStatus
 ): number | undefined => {
-  if (gradesReceived.length < GRADES_TO_AVERAGE) {
-    return undefined;
-  }
-
   // If the guide has failed (no pass), no grade is given
   if (returnStatus === ReturnStatus.FAILED) {
     return undefined;
   }
 
+  // If the guide hasn't been returned yet, no grade
+  if (!returnStatus || returnStatus === ReturnStatus.NOT_RETURNED) {
+    return undefined;
+  }
+
+  // Base 5 points for returning a guide
+  const returnPoints = 5;
+
+  // If no graded reviews yet, just show the return points
+  if (gradesReceived.length < GRADES_TO_AVERAGE) {
+    return returnPoints;
+  }
+
+  // Calculate review points from the highest graded reviews
   const highestGrades = gradesReceived
     .sort((a, b) => b.grade - a.grade)
     .slice(0, GRADES_TO_AVERAGE);
@@ -131,9 +141,7 @@ export const calculateGrade = (
   const reviewGradeSum = highestGrades.reduce((acc, g) => acc + g.grade, 0);
   const reviewGradeAverage = reviewGradeSum / GRADES_TO_AVERAGE;
 
-  // New formula: 5 points for returning + up to 5 points from reviews
-  // reviewGradeAverage is on a scale of 1-10, so we scale it to 0-5
-  const returnPoints = 5;
+  // Review grade is on a scale of 1-10, scale it to 0-5
   const reviewPoints = (reviewGradeAverage / 10) * 5;
 
   return Math.round((returnPoints + reviewPoints) * 10) / 10;

@@ -184,18 +184,27 @@ describe("status calculations", () => {
   describe("calculateGrade", () => {
     afterEach(async () => await clearDatabase());
 
-    it("should return undefined if no reviews are received", () => {
-      const result = calculateGrade([]);
+    it("should return undefined if guide not returned", () => {
+      const result = calculateGrade([], ReturnStatus.NOT_RETURNED);
       expect(result).toBeUndefined();
     });
 
-    it("should return undefined if 1 review is received", async () => {
-      const review1 = await createDummyGrade();
-      const result = calculateGrade([review1]);
+    it("should return undefined if guide failed", () => {
+      const result = calculateGrade([], ReturnStatus.FAILED);
       expect(result).toBeUndefined();
     });
 
-    it("should return 5 points for return + scaled review grade", async () => {
+    it("should return 5 if guide returned but no graded reviews yet", () => {
+      const result = calculateGrade([], ReturnStatus.PASSED);
+      expect(result).toBe(5);
+    });
+
+    it("should return 5 if guide awaiting reviews", () => {
+      const result = calculateGrade([], ReturnStatus.AWAITING_REVIEWS);
+      expect(result).toBe(5);
+    });
+
+    it("should return 5 points for return + scaled review grade when enough reviews", async () => {
       const review1 = await createDummyGrade(
         undefined,
         undefined,
@@ -215,7 +224,7 @@ describe("status calculations", () => {
         6
       );
 
-      const result = calculateGrade([review1, review2, review3]);
+      const result = calculateGrade([review1, review2, review3], ReturnStatus.PASSED);
       // Two highest grades are 9 and 6, average is 7.5
       // New formula: 5 (return points) + (7.5 / 10 * 5) = 5 + 3.75 = 8.75
       const reviewAverage = (review2.grade + review3.grade) / 2;
