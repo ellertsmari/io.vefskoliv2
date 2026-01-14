@@ -34,16 +34,27 @@ export const GuideOverview = ({
     themeIdea,
     resources,
     classes: cMaterials,
+    module,
+    topicsList,
+    references,
   } = guide;
 
   // make rMaterials structure is the same as cMaterials
   const rMaterials = resources.map((material) => {
     return { title: material.description, link: material.link };
   });
-  const allMaterials = rMaterials.concat(cMaterials);
+
+  const refMaterials = references
+    ? references.map((ref) => {
+        return { title: ref.name, link: ref.link };
+      })
+    : [];
+
+  const allMaterials = rMaterials.concat(cMaterials).concat(refMaterials);
 
   return (
     <Container>
+      {module && <SubHeading1>{module.title}</SubHeading1>}
       <Heading1>{title}</Heading1>
       <Content>
         <Main>
@@ -51,6 +62,12 @@ export const GuideOverview = ({
             <SubHeading1>DESCRIPTION</SubHeading1>
             <MarkdownReader>{description}</MarkdownReader>
           </Wrapper>
+          {topicsList && (
+            <Wrapper>
+              <SubHeading1>TOPICS</SubHeading1>
+              <MarkdownReader>{topicsList}</MarkdownReader>
+            </Wrapper>
+          )}
           <Wrapper>
             {(knowledge.length > 0 || skills.length > 0) && (
               <>
@@ -87,7 +104,7 @@ export const GuideOverview = ({
             )}
           </Wrapper>
           <Wrapper>
-            <SubHeading1>REQUIREMENTS</SubHeading1>
+            <SubHeading1>{themeIdea.title || "REQUIREMENTS"}</SubHeading1>
             <MarkdownReader>{themeIdea.description}</MarkdownReader>
           </Wrapper>
         </Main>
