@@ -4,21 +4,61 @@ import { useState } from "react";
 import { GuideInfo } from "../../../types/guideTypes";
 import { GUIDE_CATEGORIES } from "../../constants/guideCategories";
 import { MODULE_TITLES } from "../../constants/moduleTitles";
-import { 
-  PageContainer, 
-  Header, 
-  Title, 
-  GuidesList, 
-  GuideCard, 
-  GuideTitle, 
-  GuideDescription, 
-  GuideActions, 
+import {
+  PageContainer,
+  Header,
+  Title,
+  GuidesList,
+  GuideCard,
+  GuideTitle,
+  GuideDescription,
+  GuideActions,
   ActionButton,
   SearchContainer,
   SearchInput,
   FilterContainer,
   FilterSelect
 } from "./styles.EditGuidesPage";
+
+// Strip markdown formatting for plain text preview
+const stripMarkdown = (text: string, maxLength: number = 200): string => {
+  if (!text) return '';
+
+  let stripped = text
+    // Remove headers
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove bold/italic
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    // Remove links but keep text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove images
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+    // Remove inline code
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove blockquotes
+    .replace(/^>\s+/gm, '')
+    // Remove list markers
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}$/gm, '')
+    // Collapse multiple newlines
+    .replace(/\n{2,}/g, ' ')
+    // Replace single newlines with space
+    .replace(/\n/g, ' ')
+    // Collapse multiple spaces
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  if (stripped.length > maxLength) {
+    stripped = stripped.substring(0, maxLength).trim() + '...';
+  }
+
+  return stripped;
+};
 
 interface EditGuidesPageProps {
   guides: GuideInfo[];
@@ -130,7 +170,7 @@ export const EditGuidesPage = ({ guides }: EditGuidesPageProps) => {
         {filteredGuides.map(guide => (
           <GuideCard key={guide._id.toString()}>
             <GuideTitle>{guide.title}</GuideTitle>
-            <GuideDescription>{guide.description}</GuideDescription>
+            <GuideDescription>{stripMarkdown(guide.description)}</GuideDescription>
             <div>
               <strong>Category:</strong> {guide.category}
             </div>
