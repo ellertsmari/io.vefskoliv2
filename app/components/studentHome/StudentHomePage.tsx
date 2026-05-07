@@ -239,51 +239,32 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
   );
 };
 
-// Helper function to calculate final grades with specialty guide replacement logic
+// Helper function to calculate final grades with specialty guide replacement logic.
+// Regular guides are required: unfinished ones count as 0 so the denominator is the
+// full set of required guides. Specialty guides are extra — they can only raise the
+// score by replacing the lowest current grade, never lower it, and are not counted
+// in the denominator themselves.
 function calculateFinalGrades(regularGuides: ExtendedGuideInfo[], specialtyGuides: ExtendedGuideInfo[]): number[] {
-  // Get grades from regular guides that have grades
-  const regularGuidesWithGrades = regularGuides
+  const finalGrades = regularGuides.map(guide => guide.grade ?? 0);
+
+  const specialtyGrades = specialtyGuides
     .filter(guide => guide.grade !== undefined)
-    .map(guide => ({ guide, grade: guide.grade! }));
-  
-  // Get grades from specialty guides that have grades
-  const specialtyGuidesWithGrades = specialtyGuides
-    .filter(guide => guide.grade !== undefined)
-    .map(guide => ({ guide, grade: guide.grade! }));
-  
-  // If no specialty guides, just return regular grades
-  if (specialtyGuidesWithGrades.length === 0) {
-    return regularGuidesWithGrades.map(item => item.grade);
-  }
-  
-  // Start with regular guides
-  let finalGrades = [...regularGuidesWithGrades];
-  
-  // For each specialty guide, apply replacement logic
-  for (const specialtyItem of specialtyGuidesWithGrades) {
-    // Check if there are unreturned regular guides (guides without grades)
-    const unreturnedRegularGuides = regularGuides.filter(guide => guide.grade === undefined);
-    
-    if (unreturnedRegularGuides.length > 0) {
-      // Replace an unreturned guide by just adding the specialty grade
-      finalGrades.push(specialtyItem);
-    } else {
-      // All regular guides are returned, replace the lowest grade if specialty grade is better
-      if (finalGrades.length > 0) {
-        const lowestGradeIndex = finalGrades.reduce((minIndex, current, index, array) => 
-          current.grade < array[minIndex].grade ? index : minIndex, 0);
-        
-        if (specialtyItem.grade > finalGrades[lowestGradeIndex].grade) {
-          finalGrades[lowestGradeIndex] = specialtyItem;
-        }
-      } else {
-        // No regular guides with grades, just add specialty grade
-        finalGrades.push(specialtyItem);
-      }
+    .map(guide => guide.grade!);
+
+  for (const specialtyGrade of specialtyGrades) {
+    if (finalGrades.length === 0) break;
+
+    const lowestIndex = finalGrades.reduce(
+      (minIndex, current, index, array) => current < array[minIndex] ? index : minIndex,
+      0
+    );
+
+    if (specialtyGrade > finalGrades[lowestIndex]) {
+      finalGrades[lowestIndex] = specialtyGrade;
     }
   }
-  
-  return finalGrades.map(item => item.grade);
+
+  return finalGrades;
 }
 
 // Helper function to get the most recently returned module
