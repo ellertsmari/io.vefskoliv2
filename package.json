@@ -11,15 +11,12 @@
     "test-watch": "jest --watch"
   },
   "dependencies": {
-    "@types/jsonwebtoken": "^9.0.10",
-    "@uiw/react-md-editor": "^4.0.4",
-    "bcrypt": "^5.1.1",
+    "@uiw/react-md-editor": "4.1.0",
+    "bcrypt": "6",
     "framer-motion": "^11.1.9",
-    "global": "^4.4.0",
     "jose": "^6.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.4",
-    "next": "^16.0.10",
+    "mongoose": "^8.22.1",
+    "next": "16.2.6",
     "next-auth": "5.0.0-beta.30",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -47,6 +44,10 @@
     "mongodb-memory-server": "^10.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "resolutions": {
+    "postcss": "^8.5.10",
+    "mdast-util-to-hast": "^13.2.1"
   },
   "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }
