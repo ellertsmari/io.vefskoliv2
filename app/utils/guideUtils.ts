@@ -15,12 +15,16 @@ import {
   FAIL_THRESHOLD,
   GRADES_TO_AVERAGE,
   REVIEW_GRACE_PERIOD_DAYS,
+  GRADING_MONTHS,
 } from "constants/peerReview";
 import { extractModuleNumber } from "utils/moduleUtils";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
+export const extendGuides = (
+  guides: GuideInfo[],
+  now: Date = new Date()
+): ExtendedGuideInfo[] => {
   return guides.map((guide) => {
     const returnStatus = calculateReturnStatus(
       guide.returnsSubmitted,
@@ -33,19 +37,20 @@ export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
     const gradesReceivedStatus = calculateGradesReceivedStatus(
       guide.gradesReceived
     );
-    // Once the review grace period has passed we grade the student on whatever
-    // reviews they managed to give (a "soft floor"), decoupled from whether more
-    // projects are currently available. This stops a late-arriving project from
-    // dragging an already-earned grade back down. Within the grace period they
-    // must still give the required reviews when projects are available, which is
-    // enforced separately via `reviewStatus`.
-    const gracePeriodElapsed = hasExceededReviewGracePeriod(
-      guide.returnsSubmitted
-    );
+    // A single graded review counts toward the grade when EITHER:
+    //  - it's a grading month (May/Aug/Dec), when the grace period is waived so
+    //    grades are accurate and final at grading time, OR
+    //  - the 14-day grace period has passed (the "soft floor"), so a late
+    //    project can't drag an already-earned grade back down.
+    // Within the grace period (outside grading months) students must still give
+    // the required reviews when projects are available, enforced via reviewStatus.
+    const gradePartialReviews =
+      isGradingMonth(now) ||
+      hasExceededReviewGracePeriod(guide.returnsSubmitted, now);
     const grade = calculateGrade(
       guide.gradesReceived,
       returnStatus,
-      gracePeriodElapsed
+      gradePartialReviews
     );
     const gradesGivenStatus = calculateGradesGivenStatus(
       guide.gradesGiven,
@@ -150,6 +155,16 @@ export const hasExceededReviewGracePeriod = (
 
   return daysSinceFirstReturn > REVIEW_GRACE_PERIOD_DAYS;
 };
+
+/**
+ * Is `now` in a grading month (May/August/December)?
+ *
+ * During these months final grades are issued, so the review grace period is
+ * waived entirely — a student's earned reviews count toward their grade right
+ * away (no 14-day wait), keeping grades accurate and final at grading time.
+ */
+export const isGradingMonth = (now: Date = new Date()): boolean =>
+  GRADING_MONTHS.includes(now.getMonth());
 
 export const calculateGradesReceivedStatus = (
   gradesReceived: GradedReviewDocument[]

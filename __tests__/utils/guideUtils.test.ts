@@ -12,6 +12,7 @@ import {
   calculateGradesReceivedStatus,
   calculateGrade,
   hasExceededReviewGracePeriod,
+  isGradingMonth,
   extendGuides,
 } from "utils/guideUtils";
 import { REVIEW_GRACE_PERIOD_DAYS } from "constants/peerReview";
@@ -291,16 +292,36 @@ describe("status calculations", () => {
     });
   });
 
+  describe("isGradingMonth", () => {
+    afterEach(async () => await clearDatabase());
+
+    it("is true in May, August, and December", () => {
+      expect(isGradingMonth(new Date("2026-05-15T12:00:00Z"))).toBe(true);
+      expect(isGradingMonth(new Date("2026-08-15T12:00:00Z"))).toBe(true);
+      expect(isGradingMonth(new Date("2026-12-15T12:00:00Z"))).toBe(true);
+    });
+
+    it("is false in non-grading months", () => {
+      expect(isGradingMonth(new Date("2026-01-15T12:00:00Z"))).toBe(false);
+      expect(isGradingMonth(new Date("2026-06-15T12:00:00Z"))).toBe(false);
+      expect(isGradingMonth(new Date("2026-11-15T12:00:00Z"))).toBe(false);
+    });
+  });
+
   // End-to-end behavior of the "soft floor": after the grace period the student
   // is graded on whatever reviews they gave, and a late-arriving project cannot
   // drop that earned grade — it's only surfaced as an optional nudge.
+  // A fixed non-grading-month `now` is passed so these tests are deterministic
+  // regardless of when they run (grading months are covered separately below).
   describe("extendGuides soft-floor grading", () => {
     afterEach(async () => await clearDatabase());
+
+    const NOW = new Date("2026-06-15T12:00:00Z"); // June — not a grading month
 
     const returnAgedDays = (days: number) =>
       ({
         _id: new Types.ObjectId(),
-        createdAt: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+        createdAt: new Date(NOW.getTime() - days * 24 * 60 * 60 * 1000),
       }) as ReturnDocument;
 
     const guideWith = (overrides: Partial<GuideInfo>): GuideInfo =>
@@ -329,7 +350,7 @@ describe("status calculations", () => {
         availableForReview: [returnAgedDays(1)], // a project is available
       });
 
-      const [extended] = extendGuides([guide]);
+      const [extended] = extendGuides([guide], NOW);
 
       // Inside the window: a single review doesn't count and the available
       // project must still be reviewed.
@@ -345,7 +366,7 @@ describe("status calculations", () => {
         availableForReview: [], // nothing available to review
       });
 
-      const [extended] = extendGuides([guide]);
+      const [extended] = extendGuides([guide], NOW);
 
       expect(extended.reviewStatus).toBe(ReviewStatus.AWAITING_PROJECTS);
       expect(extended.grade).toBe(9);
@@ -359,11 +380,61 @@ describe("status calculations", () => {
         availableForReview: [returnAgedDays(1)], // a late project showed up
       });
 
-      const [extended] = extendGuides([guide]);
+      const [extended] = extendGuides([guide], NOW);
 
       // Soft floor: the grade is NOT dragged back to 5. The late project is
       // still surfaced as an optional review (the nudge), but it can't lower
       // an already-earned grade.
+      expect(extended.reviewStatus).toBe(ReviewStatus.NEED_TO_REVIEW);
+      expect(extended.grade).toBe(9);
+    });
+  });
+
+  // During grading months (May/Aug/Dec) the grace period is waived: a single
+  // graded review counts immediately, even within the 14-day window and even if
+  // a project is still available to review.
+  describe("extendGuides grading-month waiver", () => {
+    afterEach(async () => await clearDatabase());
+
+    const GRADING_NOW = new Date("2026-05-15T12:00:00Z"); // May — a grading month
+
+    const returnAgedDays = (days: number) =>
+      ({
+        _id: new Types.ObjectId(),
+        createdAt: new Date(GRADING_NOW.getTime() - days * 24 * 60 * 60 * 1000),
+      }) as ReturnDocument;
+
+    const guideWith = (overrides: Partial<GuideInfo>): GuideInfo =>
+      ({
+        _id: new Types.ObjectId(),
+        title: "Test guide",
+        description: "",
+        category: "code",
+        order: 0,
+        module: { title: "3 - Test" },
+        returnsSubmitted: [],
+        reviewsReceived: [],
+        availableForReview: [],
+        reviewsGiven: [],
+        gradesReceived: [],
+        gradesGiven: [],
+        availableToGrade: [],
+        ...overrides,
+      }) as unknown as GuideInfo;
+
+    it("counts a single review immediately within the grace window (no waiting)", () => {
+      const guide = guideWith({
+        // Returned only 3 days ago — well within the 14-day grace — and a
+        // project is still available. Outside a grading month this would be 5.
+        returnsSubmitted: [returnAgedDays(REVIEW_GRACE_PERIOD_DAYS - 11)],
+        reviewsGiven: [{} as never],
+        gradesReceived: [{ grade: 8 } as never],
+        availableForReview: [returnAgedDays(1)],
+      });
+
+      const [extended] = extendGuides([guide], GRADING_NOW);
+
+      // Still nudged to review, but the grade already reflects the earned 8.
       expect(extended.reviewStatus).toBe(ReviewStatus.NEED_TO_REVIEW);
       expect(extended.grade).toBe(9);
     });

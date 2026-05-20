@@ -299,6 +299,30 @@ const slides: SlideDef[] = [
     ),
   },
   {
+    icon: "⏰",
+    // Mirrors GRADING_MONTHS in constants/peerReview.ts (May, Aug, Dec).
+    title: "Grading months: no waiting",
+    body: (
+      <SlideBody>
+        <p>
+          In <strong>May, August, and December</strong> we issue final grades.
+          During those months the {REVIEW_GRACE_PERIOD_DAYS}-day wait above is{" "}
+          <strong>switched off</strong> — your reviews count toward your grade{" "}
+          <strong>right away</strong>, with no grace period.
+        </p>
+        <p>
+          That keeps everyone&apos;s grades accurate and final when they&apos;re
+          handed out, so make sure your reviews (and projects) are{" "}
+          <strong>done in time</strong> — what&apos;s finished is what gets graded.
+        </p>
+        <Callout>
+          Don&apos;t leave reviews for the last days of a grading month — finish
+          early so your grade reflects all your work.
+        </Callout>
+      </SlideBody>
+    ),
+  },
+  {
     icon: "📈",
     title: "Your Home grade is a progress bar",
     body: (
@@ -357,15 +381,16 @@ export const GradingSlideshow = () => {
   const isLast = current === slides.length - 1;
   const isFirst = current === 0;
 
+  // Advance, or close the modal on the last slide. Closing is done here in the
+  // event handler — never inside a setState updater, which runs during render
+  // and would update ModalProvider mid-render.
   const goNext = useCallback(() => {
-    setCurrent((c) => {
-      if (c >= slides.length - 1) {
-        setIsModalOpen(false);
-        return c;
-      }
-      return c + 1;
-    });
-  }, [setIsModalOpen]);
+    if (isLast) {
+      setIsModalOpen(false);
+      return;
+    }
+    setCurrent((c) => Math.min(c + 1, slides.length - 1));
+  }, [isLast, setIsModalOpen]);
 
   const goPrev = useCallback(() => {
     setCurrent((c) => Math.max(0, c - 1));

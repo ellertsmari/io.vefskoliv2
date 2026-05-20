@@ -40,5 +40,15 @@ export const GRADES_TO_AVERAGE = 2;
  */
 export const REVIEW_GRACE_PERIOD_DAYS = 14;
 
+/**
+ * Months when final grades are issued, as JS `Date.getMonth()` values (0-indexed):
+ * May (4), August (7), December (11).
+ *
+ * During these months the review grace period is WAIVED: a student's earned
+ * reviews count toward their grade immediately, with no 14-day wait, so grades
+ * are accurate and final when teachers issue them. See `isGradingMonth`.
+ */
+export const GRADING_MONTHS = [4, 7, 11];
+
 /** @deprecated Use REQUIRED_REVIEWS_COUNT instead */
 export const REQUIRED_FEEDBACK_COUNT = REQUIRED_REVIEWS_COUNT;
