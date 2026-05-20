@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { getStudentGuides } from "serverActions/getStudentGuides";
+import { extractModuleNumber } from "utils/moduleUtils";
 import Modal from "UIcomponents/modal/modal";
 import { ReviewDetailsModal } from "./ReviewDetailsModal";
 import {
@@ -109,8 +110,8 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
       }
     });
 
-    return Array.from(guidesMap.values()).sort((a, b) => 
-      (+a.module.title[0]) - (+b.module.title[0])
+    return Array.from(guidesMap.values()).sort((a, b) =>
+      extractModuleNumber(a.module.title) - extractModuleNumber(b.module.title)
     );
   };
 
@@ -161,7 +162,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
                       key={guide._id.toString()}
                       modalTrigger={
                         <GuideCard>
-                          <ModuleBadge>Module {+guide.module.title[0]}</ModuleBadge>
+                          <ModuleBadge>Module {extractModuleNumber(guide.module.title)}</ModuleBadge>
                           <GuideTitle>{guide.title}</GuideTitle>
                           
                           {guide.hasReturned && (

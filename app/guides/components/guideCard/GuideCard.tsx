@@ -5,6 +5,7 @@ import {
   ReturnStatus,
 } from "types/guideTypes";
 import { GuideProvider } from "providers/GuideProvider";
+import { extractModuleNumber } from "utils/moduleUtils";
 import { GuideCardOverview } from "../guideCardOverview/GuideCardOverview";
 import { CardWrapper, InfoWrapper } from "./style";
 import { NotificationIconContainer } from "UIcomponents/toggle/style";
@@ -39,7 +40,7 @@ const GuideCard = ({
         >
           {link ? (
             <GuideCardOverview
-              moduleTitle={guide.module.title[0]}
+              moduleTitle={extractModuleNumber(guide.module.title).toString()}
               guideTitle={guide.title}
               link={link}
               order={order}
@@ -55,7 +56,7 @@ const GuideCard = ({
               <Modal
                 modalTrigger={
                   <GuideCardOverview
-                    moduleTitle={guide.module.title[0]}
+                    moduleTitle={extractModuleNumber(guide.module.title).toString()}
                     guideTitle={guide.title}
                     order={order}
                     returnStatus={returnStatus}

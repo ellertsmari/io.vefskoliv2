@@ -2,6 +2,7 @@ import React, { useState, useActionState, startTransition } from "react";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { FeedbackDocument, GradedFeedbackDocument } from "models/review";
 import { returnGrade } from "serverActions/returnGrade";
+import { extractModuleNumber } from "utils/moduleUtils";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import {
   ModalWrapper,
@@ -175,7 +176,7 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
   return (
     <ModalWrapper>
       <ModalHeader>
-        <ModuleBadge>Module {+guide.module.title[0]}</ModuleBadge>
+        <ModuleBadge>Module {extractModuleNumber(guide.module.title)}</ModuleBadge>
         <ModalTitle>{guide.title}</ModalTitle>
         <p style={{ margin: 0, color: '#6c757d' }}>
           Review details for {studentName}

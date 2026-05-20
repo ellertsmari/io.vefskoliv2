@@ -31,6 +31,7 @@ import {
   EmptyState
 } from "./style";
 import { useMemo } from "react";
+import { extractModuleNumber } from "utils/moduleUtils";
 
 interface StudentHomePageProps {
   extendedGuides: ExtendedGuideInfo[];
@@ -40,20 +41,33 @@ interface StudentHomePageProps {
 export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProps) => {
   // Organize guides by priority
   const organizedGuides = useMemo(() => {
+    // A guide counts as "returned" once the student has submitted it. We only
+    // surface review-related prompts for guides the student is actively in.
+    const isReturned = (guide: ExtendedGuideInfo) =>
+      guide.returnStatus === ReturnStatus.PASSED ||
+      guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
+      guide.returnStatus === ReturnStatus.FAILED ||
+      guide.returnStatus === ReturnStatus.AWAITING_REVIEWS;
+
     // 1. Guides that need review (only for guides you've already returned)
     const guidesNeedingReview = extendedGuides.filter(guide =>
-      guide.reviewStatus === ReviewStatus.NEED_TO_REVIEW &&
-      (guide.returnStatus === ReturnStatus.PASSED ||
-       guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-       guide.returnStatus === ReturnStatus.FAILED ||
-       guide.returnStatus === ReturnStatus.AWAITING_REVIEWS)
+      guide.reviewStatus === ReviewStatus.NEED_TO_REVIEW && isReturned(guide)
     );
 
-    // 2. Next guide in sequence that hasn't been returned
+    // 2. Returned guides where the student still owes reviews but no projects
+    //    are available to review yet. There's nothing for them to do here except
+    //    wait, so we show this separately from "Give Reviews" to make it clear
+    //    the ball isn't in their court.
+    const guidesAwaitingProjects = extendedGuides.filter(guide =>
+      guide.reviewStatus === ReviewStatus.AWAITING_PROJECTS && isReturned(guide)
+    );
+
+    // 3. Next guide in sequence that hasn't been returned
     const nextGuideToReturn = getNextGuideToReturn(extendedGuides);
 
     return {
       guidesNeedingReview,
+      guidesAwaitingProjects,
       nextGuideToReturn
     };
   }, [extendedGuides]);
@@ -68,7 +82,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       .filter(module => module.number !== 0 && module.number !== 2)
       .map(module => {
         const moduleGuides = extendedGuides.filter(guide =>
-          +guide.module.title[0] === module.number && !isSpecialtyGuide(guide)
+          extractModuleNumber(guide.module.title) === module.number && !isSpecialtyGuide(guide)
         );
         const completedGuides = moduleGuides.filter(guide =>
           guide.returnStatus === ReturnStatus.PASSED ||
@@ -88,9 +102,10 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
 
   // Calculate overall course progress (exclude modules 0, 2 and specialty guides)
   const overallProgress = useMemo(() => {
-    const relevantGuides = extendedGuides.filter(guide =>
-      +guide.module.title[0] !== 0 && +guide.module.title[0] !== 2 && !isSpecialtyGuide(guide)
-    );
+    const relevantGuides = extendedGuides.filter(guide => {
+      const moduleNumber = extractModuleNumber(guide.module.title);
+      return moduleNumber !== 0 && moduleNumber !== 2 && !isSpecialtyGuide(guide);
+    });
     const totalGuides = relevantGuides.length;
     const completedGuides = relevantGuides.filter(guide =>
       guide.returnStatus === ReturnStatus.PASSED ||
@@ -105,8 +120,8 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
     return modules
       .filter(module => module.number !== 0 && module.number !== 2) // Exclude modules 0 and 2
       .map(module => {
-        const moduleGuides = extendedGuides.filter(guide => 
-          +guide.module.title[0] === module.number
+        const moduleGuides = extendedGuides.filter(guide =>
+          extractModuleNumber(guide.module.title) === module.number
         );
         
         // Separate regular and specialty guides
@@ -166,8 +181,26 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
             </Section>
           )}
 
+          {/* Priority 3: Guides waiting for peers' projects to review */}
+          {organizedGuides.guidesAwaitingProjects.length > 0 && (
+            <Section>
+              <SectionTitle>Waiting for Projects to Review</SectionTitle>
+              <SectionSubtitle>
+                You still owe reviews on these guides, but no peer projects are
+                available yet. There&apos;s nothing to do right now &mdash; we&apos;ll
+                surface them under &ldquo;Give Reviews&rdquo; as soon as a project shows up.
+              </SectionSubtitle>
+              <GuidesList>
+                {organizedGuides.guidesAwaitingProjects.map((guide, index) => (
+                  <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
+                ))}
+              </GuidesList>
+            </Section>
+          )}
+
           {/* Empty State */}
           {organizedGuides.guidesNeedingReview.length === 0 &&
+           organizedGuides.guidesAwaitingProjects.length === 0 &&
            !organizedGuides.nextGuideToReturn && (
             <EmptyState>
               <SectionTitle>All caught up!</SectionTitle>

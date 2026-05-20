@@ -14,7 +14,11 @@ import {
   REQUIRED_GRADES_COUNT,
   FAIL_THRESHOLD,
   GRADES_TO_AVERAGE,
+  REVIEW_GRACE_PERIOD_DAYS,
 } from "constants/peerReview";
+import { extractModuleNumber } from "utils/moduleUtils";
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
   return guides.map((guide) => {
@@ -29,7 +33,20 @@ export const extendGuides = (guides: GuideInfo[]): ExtendedGuideInfo[] => {
     const gradesReceivedStatus = calculateGradesReceivedStatus(
       guide.gradesReceived
     );
-    const grade = calculateGrade(guide.gradesReceived, returnStatus);
+    // Once the review grace period has passed we grade the student on whatever
+    // reviews they managed to give (a "soft floor"), decoupled from whether more
+    // projects are currently available. This stops a late-arriving project from
+    // dragging an already-earned grade back down. Within the grace period they
+    // must still give the required reviews when projects are available, which is
+    // enforced separately via `reviewStatus`.
+    const gracePeriodElapsed = hasExceededReviewGracePeriod(
+      guide.returnsSubmitted
+    );
+    const grade = calculateGrade(
+      guide.gradesReceived,
+      returnStatus,
+      gracePeriodElapsed
+    );
     const gradesGivenStatus = calculateGradesGivenStatus(
       guide.gradesGiven,
       guide.availableToGrade
@@ -102,6 +119,38 @@ export const calculateReviewStatus = (
   return ReviewStatus.REVIEWS_GIVEN;
 };
 
+/**
+ * Has the review grace period passed for this guide?
+ *
+ * Returns true once more than REVIEW_GRACE_PERIOD_DAYS have passed since the
+ * student first submitted the guide. The clock starts at the student's *earliest*
+ * return so that a resubmission doesn't reset it.
+ *
+ * Note this is intentionally time-only — it does NOT depend on whether projects
+ * are currently available to review. That's what gives us the "soft floor": after
+ * the grace period `calculateGrade` counts whatever reviews the student managed
+ * to give, so a late-arriving project can't drop an already-earned grade. (The
+ * student is still nudged to give the extra review via `reviewStatus`; it just no
+ * longer changes their grade.)
+ */
+export const hasExceededReviewGracePeriod = (
+  returnsSubmitted: ReturnDocument[],
+  now: Date = new Date()
+): boolean => {
+  if (returnsSubmitted.length === 0) return false;
+
+  const firstSubmission = returnsSubmitted.reduce((earliest, submission) =>
+    new Date(submission.createdAt) < new Date(earliest.createdAt)
+      ? submission
+      : earliest
+  );
+
+  const daysSinceFirstReturn =
+    (now.getTime() - new Date(firstSubmission.createdAt).getTime()) / MS_PER_DAY;
+
+  return daysSinceFirstReturn > REVIEW_GRACE_PERIOD_DAYS;
+};
+
 export const calculateGradesReceivedStatus = (
   gradesReceived: GradedReviewDocument[]
 ): GradesReceivedStatus => {
@@ -113,7 +162,11 @@ export const calculateGradesReceivedStatus = (
 
 export const calculateGrade = (
   gradesReceived: GradedReviewDocument[],
-  returnStatus?: ReturnStatus
+  returnStatus?: ReturnStatus,
+  // When true, the student is graded on whatever reviews they managed to give,
+  // even if that's fewer than GRADES_TO_AVERAGE. Set by `extendGuides` once the
+  // review grace period has passed (see `hasExceededReviewGracePeriod`).
+  gradePartialReviews: boolean = false
 ): number | undefined => {
   // If the guide has failed (no pass), no grade is given
   if (returnStatus === ReturnStatus.FAILED) {
@@ -128,21 +181,31 @@ export const calculateGrade = (
   // Base 5 points for returning a guide
   const returnPoints = 5;
 
-  // If no graded reviews yet, just show the return points
-  if (gradesReceived.length < GRADES_TO_AVERAGE) {
+  // How many graded reviews must exist before review points count toward the
+  // grade. Normally we wait for the full GRADES_TO_AVERAGE so an early single
+  // grade doesn't lock in a final score. But a student stuck awaiting projects
+  // can't reach that count, so we count even a single graded review for them.
+  const minGradedReviewsToCount = gradePartialReviews ? 1 : GRADES_TO_AVERAGE;
+
+  // Not enough graded reviews yet — just show the return points.
+  if (gradesReceived.length < minGradedReviewsToCount) {
     return returnPoints;
   }
 
-  // Calculate review points from the highest graded reviews
+  // Average the student's highest grades (at most GRADES_TO_AVERAGE of them).
   const highestGrades = gradesReceived
     .sort((a, b) => b.grade - a.grade)
     .slice(0, GRADES_TO_AVERAGE);
 
   const reviewGradeSum = highestGrades.reduce((acc, g) => acc + g.grade, 0);
-  const reviewGradeAverage = reviewGradeSum / GRADES_TO_AVERAGE;
+  // Divide by how many grades we actually summed, not the target count, so a
+  // single graded review isn't diluted by a missing second grade.
+  const reviewGradeAverage = reviewGradeSum / highestGrades.length;
 
-  // Review grade is on a scale of 1-10, scale it to 0-5
-  const reviewPoints = (reviewGradeAverage / 10) * 5;
+  // The review grade is on a 0-10 scale and the review half of the grade is
+  // worth up to 5 points. Rescaling 0-10 down to 0-5 is just halving:
+  // (reviewGradeAverage / 10) * 5 === reviewGradeAverage / 2.
+  const reviewPoints = reviewGradeAverage / 2;
 
   return Math.round((returnPoints + reviewPoints) * 10) / 10;
 };
@@ -162,15 +225,6 @@ export const calculateGradesGivenStatus = (
 
 /** @deprecated Use calculateReviewStatus instead */
 export const calculateFeedbackStatus = calculateReviewStatus;
-
-/**
- * Extracts the module number from a module title string.
- * Expects format like "3 - The fundamentals" or "10 - Advanced topics"
- */
-const extractModuleNumber = (title: string): number => {
-  const match = title.match(/^(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
-};
 
 export const fetchModules = (extendedGuides: ExtendedGuideInfo[]): Module[] => {
   return extendedGuides

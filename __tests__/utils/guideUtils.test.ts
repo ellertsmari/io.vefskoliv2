@@ -11,7 +11,13 @@ import {
   calculateGradesGivenStatus,
   calculateGradesReceivedStatus,
   calculateGrade,
+  hasExceededReviewGracePeriod,
+  extendGuides,
 } from "utils/guideUtils";
+import { REVIEW_GRACE_PERIOD_DAYS } from "constants/peerReview";
+import { ReturnDocument } from "models/return";
+import { GuideInfo } from "types/guideTypes";
+import { Types } from "mongoose";
 import {
   clearDatabase,
   closeDatabase,
@@ -230,6 +236,136 @@ describe("status calculations", () => {
       const reviewAverage = (review2.grade + review3.grade) / 2;
       const expected = Math.round((5 + (reviewAverage / 10) * 5) * 10) / 10;
       expect(result).toBe(expected);
+    });
+
+    it("should ignore a single graded review by default (still waiting for the second)", async () => {
+      const review = await createDummyGrade(undefined, undefined, undefined, 8);
+      // gradePartialReviews defaults to false -> not enough graded reviews yet.
+      const result = calculateGrade([review], ReturnStatus.AWAITING_REVIEWS);
+      expect(result).toBe(5);
+    });
+
+    it("should count a single graded review once partial reviews are allowed", async () => {
+      const review = await createDummyGrade(undefined, undefined, undefined, 8);
+      // gradePartialReviews = true (student stuck past the grace period).
+      const result = calculateGrade(
+        [review],
+        ReturnStatus.AWAITING_REVIEWS,
+        true
+      );
+      // 5 (return) + (8 / 10 * 5) = 5 + 4 = 9 — the single grade is NOT halved.
+      expect(result).toBe(9);
+    });
+  });
+
+  describe("hasExceededReviewGracePeriod", () => {
+    afterEach(async () => await clearDatabase());
+
+    const daysAgo = (days: number): ReturnDocument =>
+      ({ createdAt: new Date(Date.now() - days * 24 * 60 * 60 * 1000) }) as ReturnDocument;
+
+    it("is false when the student has not returned the guide", () => {
+      expect(hasExceededReviewGracePeriod([])).toBe(false);
+    });
+
+    it("is false within the grace period", () => {
+      const result = hasExceededReviewGracePeriod([
+        daysAgo(REVIEW_GRACE_PERIOD_DAYS - 1),
+      ]);
+      expect(result).toBe(false);
+    });
+
+    it("is true once the grace period has passed", () => {
+      const result = hasExceededReviewGracePeriod([
+        daysAgo(REVIEW_GRACE_PERIOD_DAYS + 1),
+      ]);
+      expect(result).toBe(true);
+    });
+
+    it("uses the earliest return so a resubmission doesn't reset the clock", () => {
+      const result = hasExceededReviewGracePeriod([
+        daysAgo(1),
+        daysAgo(REVIEW_GRACE_PERIOD_DAYS + 5),
+      ]);
+      expect(result).toBe(true);
+    });
+  });
+
+  // End-to-end behavior of the "soft floor": after the grace period the student
+  // is graded on whatever reviews they gave, and a late-arriving project cannot
+  // drop that earned grade — it's only surfaced as an optional nudge.
+  describe("extendGuides soft-floor grading", () => {
+    afterEach(async () => await clearDatabase());
+
+    const returnAgedDays = (days: number) =>
+      ({
+        _id: new Types.ObjectId(),
+        createdAt: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+      }) as ReturnDocument;
+
+    const guideWith = (overrides: Partial<GuideInfo>): GuideInfo =>
+      ({
+        _id: new Types.ObjectId(),
+        title: "Test guide",
+        description: "",
+        category: "code",
+        order: 0,
+        module: { title: "3 - Test" },
+        returnsSubmitted: [],
+        reviewsReceived: [],
+        availableForReview: [],
+        reviewsGiven: [],
+        gradesReceived: [],
+        gradesGiven: [],
+        availableToGrade: [],
+        ...overrides,
+      }) as unknown as GuideInfo;
+
+    it("does NOT count a single review within the grace period (still must review)", () => {
+      const guide = guideWith({
+        returnsSubmitted: [returnAgedDays(REVIEW_GRACE_PERIOD_DAYS - 3)],
+        reviewsGiven: [{} as never],
+        gradesReceived: [{ grade: 8 } as never],
+        availableForReview: [returnAgedDays(1)], // a project is available
+      });
+
+      const [extended] = extendGuides([guide]);
+
+      // Inside the window: a single review doesn't count and the available
+      // project must still be reviewed.
+      expect(extended.reviewStatus).toBe(ReviewStatus.NEED_TO_REVIEW);
+      expect(extended.grade).toBe(5);
+    });
+
+    it("grades the one review (9) once past the grace period with nothing to review", () => {
+      const guide = guideWith({
+        returnsSubmitted: [returnAgedDays(REVIEW_GRACE_PERIOD_DAYS + 5)],
+        reviewsGiven: [{} as never],
+        gradesReceived: [{ grade: 8 } as never],
+        availableForReview: [], // nothing available to review
+      });
+
+      const [extended] = extendGuides([guide]);
+
+      expect(extended.reviewStatus).toBe(ReviewStatus.AWAITING_PROJECTS);
+      expect(extended.grade).toBe(9);
+    });
+
+    it("keeps the earned grade (9) when a late project appears past the grace period", () => {
+      const guide = guideWith({
+        returnsSubmitted: [returnAgedDays(REVIEW_GRACE_PERIOD_DAYS + 5)],
+        reviewsGiven: [{} as never],
+        gradesReceived: [{ grade: 8 } as never],
+        availableForReview: [returnAgedDays(1)], // a late project showed up
+      });
+
+      const [extended] = extendGuides([guide]);
+
+      // Soft floor: the grade is NOT dragged back to 5. The late project is
+      // still surfaced as an optional review (the nudge), but it can't lower
+      // an already-earned grade.
+      expect(extended.reviewStatus).toBe(ReviewStatus.NEED_TO_REVIEW);
+      expect(extended.grade).toBe(9);
     });
   });
 

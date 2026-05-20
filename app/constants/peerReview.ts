@@ -26,5 +26,19 @@ export const MAX_GRADE = 10;
 /** Number of top grades to average for final grade */
 export const GRADES_TO_AVERAGE = 2;
 
+/**
+ * Grace period (in days) the peer-review process is given to complete before a
+ * student is graded on partial reviews.
+ *
+ * Normally a student must give REQUIRED_REVIEWS_COUNT reviews to earn full review
+ * points. Within this window they must still give the required reviews whenever
+ * projects are available. But once this many days have passed since they first
+ * submitted the guide, we apply a "soft floor": we grade them on whatever reviews
+ * they did manage to give, regardless of whether more projects later appear. This
+ * means a late-arriving project can no longer drag an already-earned grade back
+ * down. See `hasExceededReviewGracePeriod`.
+ */
+export const REVIEW_GRACE_PERIOD_DAYS = 14;
+
 /** @deprecated Use REQUIRED_REVIEWS_COUNT instead */
 export const REQUIRED_FEEDBACK_COUNT = REQUIRED_REVIEWS_COUNT;

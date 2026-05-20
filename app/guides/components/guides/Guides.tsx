@@ -4,6 +4,7 @@ import { Container, GuideDropdownContainer } from "./style";
 import { ModuleOptions } from "UIcomponents/dropdown/Dropdown";
 import { ExtendedGuideInfo, Module } from "types/guideTypes";
 import { useLocalState } from "utils/hooks/useStorage";
+import { extractModuleNumber } from "utils/moduleUtils";
 import { GuidesClient } from "../guidesClient/GuidesClient";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
@@ -55,9 +56,9 @@ const filterGuides = (
   extendedGuides: ExtendedGuideInfo[]
 ) => {
   if (selectedModule === null) return extendedGuides;
-  return extendedGuides.filter((guide) => {
-    if (guide.module.title[0] === "" + selectedModule) return guide;
-  });
+  return extendedGuides.filter(
+    (guide) => extractModuleNumber(guide.module.title) === selectedModule
+  );
 };
 
 export const exportedForTesting = {

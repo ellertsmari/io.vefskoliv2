@@ -1,5 +1,6 @@
 import { GuideType } from "models/guide";
 import { Module, GuideInfo } from "types/guideTypes";
+import { extractModuleNumber } from "utils/moduleUtils";
 
 // Create a simplified guide info structure for public access
 export const createPublicGuideInfo = (guide: GuideType): GuideInfo => {
@@ -24,15 +25,11 @@ export const createPublicGuideInfo = (guide: GuideType): GuideInfo => {
 export const fetchPublicModules = async (guides: GuideType[]) => {
   return guides
     .reduce((acc: Module[], guideToCheck) => {
-      if (
-        !acc.some(
-          (existingGuide) =>
-            (+guideToCheck.module.title[0] as number) === existingGuide.number
-        )
-      ) {
+      const moduleNumber = extractModuleNumber(guideToCheck.module.title);
+      if (!acc.some((existingGuide) => moduleNumber === existingGuide.number)) {
         acc.push({
           title: guideToCheck.module.title,
-          number: +guideToCheck.module.title[0] as number,
+          number: moduleNumber,
         });
       }
       return acc;
