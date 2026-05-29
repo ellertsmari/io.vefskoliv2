@@ -1,5 +1,5 @@
 "use client";
-import { createContext } from "react";
+import { createContext, useMemo } from "react";
 import React from "react";
 import { ExtendedGuideInfo } from "../../types/guideTypes";
 
@@ -13,10 +13,12 @@ const GuideContext = createContext<{
 }>({ guide: {} as ExtendedGuideInfo });
 
 export const GuideProvider = ({ children, guide }: GuideContextProps) => {
+  const value = useMemo(() => ({ guide }), [guide]);
+
   if (!guide._id) return null;
 
   return (
-    <GuideContext.Provider value={{ guide }}>
+    <GuideContext.Provider value={value}>
       {children}
     </GuideContext.Provider>
   );

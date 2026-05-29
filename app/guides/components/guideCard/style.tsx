@@ -35,12 +35,6 @@ export const WriteFeedbackContainer = styled.form`
   width: 100%;
 `;
 
-export const Border = styled.div`
-  border: 1px solid var(--theme-module3-100);
-  padding: 16px;
-  border-radius: 8px;
-`;
-
 export const VotingContainer = styled.div`
   display: flex;
   justify-content: space-between;

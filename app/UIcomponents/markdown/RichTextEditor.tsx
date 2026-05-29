@@ -368,8 +368,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           >
             <strong>{isCodeGuide ? 'Code Review Tips:' : 'Design Review Tips:'}</strong>
             <ul>
-              {tooltipContent.map((tip, index) => (
-                <li key={index}>{tip}</li>
+              {tooltipContent.map((tip) => (
+                <li key={tip}>{tip}</li>
               ))}
             </ul>
           </Tooltip>

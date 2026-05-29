@@ -1,10 +1,14 @@
 "use server";
 
+import { auth } from "../../../auth";
 import { getZoomToken } from "./zoomToken";
 
 // Fetch recordings for the current school year with pagination support
 // Note: Zoom API limits date range to max 1 month, so we query month by month
 export async function getUserRecordings() {
+  const session = await auth();
+  if (!session?.user) return { total_records: 0, meetings: [] };
+
   let token = await getZoomToken();
 
   // Current school year: Aug 18, 2025 to Aug 31, 2026

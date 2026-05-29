@@ -98,7 +98,7 @@ export default function DeepLinkingPage() {
         height: '100vh',
         fontFamily: 'Arial, sans-serif'
       }}>
-        Loading guides...
+        Loading guides…
       </div>
     );
   }
@@ -160,6 +160,7 @@ export default function DeepLinkingPage() {
 
       <div style={{ textAlign: 'center' }}>
         <button
+          type="button"
           onClick={handleSubmit}
           disabled={submitting || selectedGuides.length === 0}
           style={{

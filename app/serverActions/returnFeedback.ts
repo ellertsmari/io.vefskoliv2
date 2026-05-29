@@ -78,6 +78,3 @@ const ReviewFormSchema = z.object({
     .min(2, { message: "Please provide a valid review comment" })
     .trim(),
 });
-
-/** @deprecated Use returnReview instead */
-export const returnFeedback = returnReview;

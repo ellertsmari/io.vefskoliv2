@@ -74,9 +74,3 @@ export enum GradesReceivedStatus {
   AWAITING_GRADES = "Awaiting grades",
   GRADES_RECEIVED = "Grades received",
 }
-
-// Legacy aliases for backwards compatibility
-/** @deprecated Use ReturnStatus.AWAITING_REVIEWS instead */
-export const AWAITING_FEEDBACK = ReturnStatus.AWAITING_REVIEWS;
-/** @deprecated Use ReviewStatus instead */
-export const FeedbackStatus = ReviewStatus;

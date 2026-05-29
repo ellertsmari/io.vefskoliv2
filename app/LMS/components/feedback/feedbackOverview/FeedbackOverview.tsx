@@ -74,7 +74,7 @@ export const FeedbackOverview = () => {
     return options;
   };
 
-  const NavigatorOptions = () => {
+  const navigatorOptions = () => {
     if (showGivenOrReceived === "given") {
       return reviewsGiven.map((review) =>
         review.grade ? StyleColors.purple : StyleColors.lightGrey
@@ -129,7 +129,7 @@ export const FeedbackOverview = () => {
             }`}
           />
           <OptionNavigator
-            optionsWithColor={NavigatorOptions()}
+            optionsWithColor={navigatorOptions()}
             selectedOption={
               showGivenOrReceived === "given"
                 ? selectedGivenIndex
