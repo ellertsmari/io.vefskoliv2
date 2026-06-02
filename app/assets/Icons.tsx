@@ -1,4 +1,15 @@
-const hourglassIconLabel = "Hourglass icon";
+import {
+  hourglassIconLabel,
+  hatIconLabel,
+  greenTickLabel,
+  notificationIconLabel,
+  purpleStarLabel,
+  redCrossLabel,
+  bellIconLabel,
+  exitIconLabel,
+  logOutIconLabel,
+} from "./iconLabels";
+
 export const Hourglass = () => (
   <svg
     width="100%"
@@ -14,7 +25,6 @@ export const Hourglass = () => (
   </svg>
 );
 
-const hatIconLabel = "Hat icon";
 export const HatIcon = ({ color }: { color?: string }) => (
   <svg
     width="100%"
@@ -29,8 +39,6 @@ export const HatIcon = ({ color }: { color?: string }) => (
   fill="var(--error-success-100)"/>
   </svg>
 );
-
-const greenTickLabel = "Green tick icon";
 
 export const GreenTick = () => (
   <svg
@@ -47,7 +55,6 @@ export const GreenTick = () => (
   </svg>
 );
 
-const notificationIconLabel = "Notification icon";
 export const NotificationIcon = ({ color }: { color?: string }) => (
   <svg
     width="100%"
@@ -65,7 +72,6 @@ export const NotificationIcon = ({ color }: { color?: string }) => (
   </svg>
 );
 
-const purpleStarLabel = "Purple star icon";
 export const PurpleStar = () => (
   <svg
     width="100%"
@@ -79,7 +85,6 @@ export const PurpleStar = () => (
   </svg>
 );
 
-const redCrossLabel = "Red cross icon";
 export const RedCross = () => (
   <svg
     width="100%"
@@ -95,7 +100,6 @@ export const RedCross = () => (
   </svg>
 );
 
-const bellIconLabel = "Bell icon";
 export const Bell = ({ color }: { color?: string }) => (
   <svg
     width="100%"
@@ -111,7 +115,6 @@ export const Bell = ({ color }: { color?: string }) => (
 
 );
 
-const exitIconLabel = "Exit icon";
 export const ExitIcon = ({ color }: { color?: string }) => (
   <svg
     width="48"
@@ -128,7 +131,6 @@ export const ExitIcon = ({ color }: { color?: string }) => (
   </svg>
 );
 
-const logOutIconLabel = "Log out icon";
 export const LogoutIcon = () => (
   <svg
     width="17"
@@ -184,17 +186,3 @@ export const Arrow = ({
   );
 };
 
-const defaultUserIconLabel = "Default user icon";
-
-export const exportedForTesting = {
-  hourglassIconLabel,
-  hatIconLabel,
-  greenTickLabel,
-  notificationIconLabel,
-  purpleStarLabel,
-  redCrossLabel,
-  bellIconLabel,
-  exitIconLabel,
-  logOutIconLabel,
-  defaultUserIconLabel,
-};
