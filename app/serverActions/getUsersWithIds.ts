@@ -1,4 +1,5 @@
 "use server";
+import { auth } from "../../auth";
 import { User, UserWithIdType } from "models/user";
 import { FilterQuery } from "mongoose";
 import { connectToDatabase } from "./mongoose-connector";
@@ -13,6 +14,9 @@ type UserForReports = {
 export const getUsersWithIds = async (
   filter: FilterQuery<any> = {}
 ): Promise<UserForReports[]> => {
+  const session = await auth();
+  if (!session?.user) return [];
+
   await connectToDatabase();
   const usersJSON = await User.find(filter);
   const users = JSON.parse(JSON.stringify(usersJSON)) as UserWithIdType[];

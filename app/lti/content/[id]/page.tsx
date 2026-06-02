@@ -53,7 +53,7 @@ export default function LTIContentPage() {
         height: '100vh',
         fontFamily: 'Arial, sans-serif'
       }}>
-        Loading guide...
+        Loading guide…
       </div>
     );
   }
@@ -70,7 +70,8 @@ export default function LTIContentPage() {
       }}>
         <h2>Error</h2>
         <p>{error || 'Guide not found'}</p>
-        <button 
+        <button
+          type="button"
           onClick={() => window.history.back()}
           style={{
             padding: '10px 20px',

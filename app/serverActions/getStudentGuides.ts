@@ -1,11 +1,15 @@
 "use server";
 
+import { auth } from "../../auth";
 import { getGuides } from "./getGuides";
 import { extendGuides } from "utils/guideUtils";
 import { safeSerialize } from "utils/serialization";
 import { ExtendedGuideInfo } from "types/guideTypes";
 
 export const getStudentGuides = async (userId: string): Promise<ExtendedGuideInfo[]> => {
+  const session = await auth();
+  if (!session?.user) return [];
+
   try {
     const fetchedGuides = await getGuides(userId);
     

@@ -17,42 +17,47 @@ import { useSessionState } from "utils/hooks/useStorage";
 export const ReturnForm = ({ guideId }: { guideId: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const FormContent = () => {
-    const [formData, setFormData, loading] = useSessionState<ReturnFormData>(
-      `returnForm-${guideId}`
-    );
-    // const [formData, setFormData] = useState<ReturnFormData | null>(null);
-    const [state, formAction, isPending] = useActionState(
-      returnGuide,
-      undefined
-    );
+  return (
+    <Modal
+      modalTrigger={<Button style="default">RETURN</Button>}
+      modalContent={<FormContent guideId={guideId} />}
+      state={[isModalOpen, setIsModalOpen]}
+    />
+  );
+};
 
-    useEffect(() => {
-      if (state?.success) {
-        setFormData(null);
-        // lazy way to force state update as we have no DB listeners setup yet
-        window.location.replace("/guides");
-      }
-    }, [state?.success, setFormData]);
+const FormContent = ({ guideId }: { guideId: string }) => {
+  const [formData, setFormData, loading] = useSessionState<ReturnFormData>(
+    `returnForm-${guideId}`
+  );
+  const [state, formAction, isPending] = useActionState(returnGuide, undefined);
 
-    if (!guideId || loading) return null;
+  useEffect(() => {
+    if (state?.success) {
+      setFormData(null);
+      // lazy way to force state update as we have no DB listeners setup yet
+      window.location.replace("/guides");
+    }
+  }, [state?.success, setFormData]);
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      startTransition(() => {
-        formAction({ ...formData, guideId });
-      });
-    };
+  if (!guideId || loading) return null;
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    startTransition(() => {
+      formAction({ ...formData, guideId });
+    });
+  };
 
-    // Extract errors from state (only present when success is false)
-    const errors = state && !state.success ? state.errors : undefined;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-    return (
-      <Form onSubmit={handleSubmit}>
+  // Extract errors from state (only present when success is false)
+  const errors = state && !state.success ? state.errors : undefined;
+
+  return (
+    <Form onSubmit={handleSubmit}>
         <Input
           id={"projectUrl"}
           type={"text"}
@@ -121,18 +126,9 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
             errors?.comment && !isPending ? errors.comment[0] : undefined
           }
         />
-        <Button style="default" type="submit">
-          SUBMIT
-        </Button>
-      </Form>
-    );
-  };
-
-  return (
-    <Modal
-      modalTrigger={<Button style="default">RETURN</Button>}
-      modalContent={FormContent()}
-      state={[isModalOpen, setIsModalOpen]}
-    />
+      <Button style="default" type="submit">
+        SUBMIT
+      </Button>
+    </Form>
   );
 };

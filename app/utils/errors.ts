@@ -39,7 +39,7 @@ export function failure(
 /**
  * Normalizes unknown errors to Error objects
  */
-export function normalizeError(error: unknown): Error {
+function normalizeError(error: unknown): Error {
   if (error instanceof Error) {
     return error;
   }

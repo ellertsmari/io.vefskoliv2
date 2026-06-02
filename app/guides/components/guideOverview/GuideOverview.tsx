@@ -77,9 +77,9 @@ export const GuideOverview = ({
                     {knowledge.length > 0 && (
                       <Wrapper>
                         <SubHeading1Bold>KNOWLEDGE</SubHeading1Bold>
-                        {knowledge.map((knowledge, index) => {
+                        {knowledge.map((knowledge) => {
                           return (
-                            <MarkdownReader key={index}>
+                            <MarkdownReader key={String(knowledge.knowledge)}>
                               {String(knowledge.knowledge)}
                             </MarkdownReader>
                           );
@@ -89,9 +89,9 @@ export const GuideOverview = ({
                     {skills.length > 0 && (
                       <Wrapper>
                         <SubHeading1Bold>SKILLS</SubHeading1Bold>
-                        {skills.map((skills, index) => {
+                        {skills.map((skills) => {
                           return (
-                            <MarkdownReader key={index}>
+                            <MarkdownReader key={String(skills.skill)}>
                               {String(skills.skill)}
                             </MarkdownReader>
                           );
@@ -114,11 +114,11 @@ export const GuideOverview = ({
               <SubHeading1>MATERIALS</SubHeading1>
               <Border>
                 <MaterialsWrapper>
-                  {allMaterials.map((material, index) =>
+                  {allMaterials.map((material) =>
                     /* Checking if the link has title if not it won't be displayed ---- FIX IT THE DATA BASE*/
                     material.title ? (
                       <a
-                        key={index}
+                        key={material.link}
                         style={{ textDecoration: "none" }}
                         href={material.link}
                         target="_blank"

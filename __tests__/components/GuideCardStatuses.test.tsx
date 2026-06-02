@@ -5,7 +5,12 @@ import {
   ReturnStatus,
 } from "../../types/guideTypes";
 import { GuideCardStatuses } from "../../app/guides/components/guideCardStatuses/GuideCardStatuses";
-import { exportedForTesting } from "../../app/assets/Icons";
+import {
+  greenTickLabel,
+  purpleStarLabel,
+  redCrossLabel,
+  bellIconLabel,
+} from "../../app/assets/iconLabels";
 
 describe("Statuses", () => {
   it("renders the correct icon and text for return status PASSED", () => {
@@ -19,7 +24,7 @@ describe("Statuses", () => {
 
     expect(getByText(ReturnStatus.PASSED)).toBeInTheDocument();
     expect(
-      getByLabelText(exportedForTesting.greenTickLabel)
+      getByLabelText(greenTickLabel)
     ).toBeInTheDocument();
   });
 
@@ -34,7 +39,7 @@ describe("Statuses", () => {
 
     expect(getByText(ReturnStatus.HALL_OF_FAME)).toBeInTheDocument();
     expect(
-      getByLabelText(exportedForTesting.purpleStarLabel)
+      getByLabelText(purpleStarLabel)
     ).toBeInTheDocument();
   });
 
@@ -49,7 +54,7 @@ describe("Statuses", () => {
 
     expect(getByText(ReturnStatus.FAILED)).toBeInTheDocument();
     expect(
-      getByLabelText(exportedForTesting.redCrossLabel)
+      getByLabelText(redCrossLabel)
     ).toBeInTheDocument();
   });
 
@@ -78,7 +83,7 @@ describe("Statuses", () => {
       getByText(ReviewStatus.NEED_TO_REVIEW)
     ).toBeInTheDocument();
     expect(
-      getByLabelText(exportedForTesting.bellIconLabel)
+      getByLabelText(bellIconLabel)
     ).toBeInTheDocument();
   });
 
@@ -93,7 +98,7 @@ describe("Statuses", () => {
 
     expect(getByText(GradesGivenStatus.NEED_TO_GRADE)).toBeInTheDocument();
     expect(
-      getByLabelText(exportedForTesting.bellIconLabel)
+      getByLabelText(bellIconLabel)
     ).toBeInTheDocument();
   });
 

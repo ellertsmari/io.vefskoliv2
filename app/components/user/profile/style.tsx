@@ -67,11 +67,6 @@ export const LogoutButton = styled.div`
   align-items: center;
 `;
 
-export const LogoutIcon = styled(Image)`
-  width: 17px;
-  height: 18px;
-`;
-
 export const ProfileDetails = styled.div`
   display: flex;
   flex-direction: column;

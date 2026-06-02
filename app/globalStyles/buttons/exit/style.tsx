@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Image from "next/image";
 
 export const Button = styled.button`
   background-color: var(--primary-black-60);
@@ -18,9 +17,4 @@ export const Button = styled.button`
   &:hover {
     background-color: var(--error-failure-100);
   }
-`;
-
-export const ExitIcon = styled(Image)`
-  width: 8px;
-  height: 8px;
 `;

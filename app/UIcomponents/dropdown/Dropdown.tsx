@@ -15,11 +15,11 @@ interface OptionProps {
 
 export const ModuleOptions = ({ options, style, currentOption }: OptionProps) => {
   const Options = useMemo(() => {
-    return options.map((option, index) => {
+    return options.map((option) => {
       const { optionName, onClick } = option;
-      
+
       return (
-        <div key={index} onClick={() => {optionName; onClick();}}>
+        <div key={optionName} onClick={() => {optionName; onClick();}}>
           <CapsuleButton $active={optionName === currentOption?.optionName}>{optionName}</CapsuleButton>
         </div>
       );

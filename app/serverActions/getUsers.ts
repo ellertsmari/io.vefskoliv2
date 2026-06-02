@@ -1,4 +1,5 @@
 "use server";
+import { auth } from "../../auth";
 import { OptionalUserInfoKeys, User, UserWithIdType } from "models/user";
 import { FilterQuery } from "mongoose";
 import { connectToDatabase } from "./mongoose-connector";
@@ -7,6 +8,9 @@ import { ShareableUserInfo } from "types/types";
 export const getUsers = async (
   filter: FilterQuery<any> = {}
 ): Promise<ShareableUserInfo[]> => {
+  const session = await auth();
+  if (!session?.user) return [];
+
   await connectToDatabase();
   const usersJSON = await User.find(filter);
   const users = JSON.parse(JSON.stringify(usersJSON)) as UserWithIdType[];

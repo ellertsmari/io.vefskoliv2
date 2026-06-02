@@ -1,4 +1,15 @@
-const hourglassIconLabel = "Hourglass icon";
+import {
+  hourglassIconLabel,
+  hatIconLabel,
+  greenTickLabel,
+  notificationIconLabel,
+  purpleStarLabel,
+  redCrossLabel,
+  bellIconLabel,
+  exitIconLabel,
+  logOutIconLabel,
+} from "./iconLabels";
+
 export const Hourglass = () => (
   <svg
     width="100%"
@@ -14,7 +25,6 @@ export const Hourglass = () => (
   </svg>
 );
 
-const hatIconLabel = "Hat icon";
 export const HatIcon = ({ color }: { color?: string }) => (
   <svg
     width="100%"
@@ -29,8 +39,6 @@ export const HatIcon = ({ color }: { color?: string }) => (
   fill="var(--error-success-100)"/>
   </svg>
 );
-
-const greenTickLabel = "Green tick icon";
 
 export const GreenTick = () => (
   <svg
@@ -47,7 +55,6 @@ export const GreenTick = () => (
   </svg>
 );
 
-const notificationIconLabel = "Notification icon";
 export const NotificationIcon = ({ color }: { color?: string }) => (
   <svg
     width="100%"
@@ -65,7 +72,6 @@ export const NotificationIcon = ({ color }: { color?: string }) => (
   </svg>
 );
 
-const purpleStarLabel = "Purple star icon";
 export const PurpleStar = () => (
   <svg
     width="100%"
@@ -79,7 +85,6 @@ export const PurpleStar = () => (
   </svg>
 );
 
-const redCrossLabel = "Red cross icon";
 export const RedCross = () => (
   <svg
     width="100%"
@@ -95,7 +100,6 @@ export const RedCross = () => (
   </svg>
 );
 
-const bellIconLabel = "Bell icon";
 export const Bell = ({ color }: { color?: string }) => (
   <svg
     width="100%"
@@ -111,7 +115,6 @@ export const Bell = ({ color }: { color?: string }) => (
 
 );
 
-const exitIconLabel = "Exit icon";
 export const ExitIcon = ({ color }: { color?: string }) => (
   <svg
     width="48"
@@ -128,7 +131,6 @@ export const ExitIcon = ({ color }: { color?: string }) => (
   </svg>
 );
 
-const logOutIconLabel = "Log out icon";
 export const LogoutIcon = () => (
   <svg
     width="17"
@@ -184,38 +186,3 @@ export const Arrow = ({
   );
 };
 
-const defaultUserIconLabel = "Default user icon";
-export const DefaultUserIcon = ({
-  height = 100,
-  width = 100,
-}: {
-  height?: number | "auto";
-  width?: number | "auto";
-}) => (
-  <svg
-    width={"" + width}
-    height={"" + height}
-    viewBox="0 0 143 143"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-label={defaultUserIconLabel}
-  >
-    <path
-      d="M71.1685 0.453613C80.5836 0.453613 89.6132 4.19378 96.2707 10.8513C102.928 17.5089 106.668 26.5384 106.668 35.9536C106.668 45.3688 102.928 54.3984 96.2707 61.0559C89.6132 67.7134 80.5836 71.4536 71.1685 71.4536C61.7533 71.4536 52.7237 67.7134 46.0662 61.0559C39.4086 54.3984 35.6685 45.3688 35.6685 35.9536C35.6685 26.5384 39.4086 17.5089 46.0662 10.8513C52.7237 4.19378 61.7533 0.453613 71.1685 0.453613ZM71.1685 142.454C71.1685 142.454 142.168 142.454 142.168 124.704C142.168 103.404 107.556 80.3286 71.1685 80.3286C34.781 80.3286 0.168457 103.404 0.168457 124.704C0.168457 142.454 71.1685 142.454 71.1685 142.454Z"
-      fill="black"
-    />
-  </svg>
-);
-
-export const exportedForTesting = {
-  hourglassIconLabel,
-  hatIconLabel,
-  greenTickLabel,
-  notificationIconLabel,
-  purpleStarLabel,
-  redCrossLabel,
-  bellIconLabel,
-  exitIconLabel,
-  logOutIconLabel,
-  defaultUserIconLabel,
-};

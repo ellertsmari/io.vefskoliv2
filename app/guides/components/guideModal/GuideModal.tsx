@@ -20,13 +20,6 @@ export const GuideModal = () => {
 
   const { link, returnStatus, title, reviewStatus } = guide;
 
-  const RenderedContent = () => {
-    if (reviewStatus === ReviewStatus.NEED_TO_REVIEW) {
-      return <GiveFeedbackView guideTitle={title} />;
-    }
-    return <FeedbackOverview />;
-  };
-
   return (
     <GuideModalWrapper>
       <Header>
@@ -45,7 +38,11 @@ export const GuideModal = () => {
           </div>
         </TitleContainer>
       </Header>
-      <RenderedContent />
+      {reviewStatus === ReviewStatus.NEED_TO_REVIEW ? (
+        <GiveFeedbackView guideTitle={title} />
+      ) : (
+        <FeedbackOverview />
+      )}
     </GuideModalWrapper>
   );
 };

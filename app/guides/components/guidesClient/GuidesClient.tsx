@@ -14,7 +14,7 @@ export const GuidesClient = ({ guides, useGuideOrder }: GuidesClientProps) => {
         return (
           <GuideCard
             guide={guide}
-            key={index}
+            key={String(guide._id)}
             order={useGuideOrder ? index + 1 : undefined}
           />
         );

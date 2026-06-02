@@ -22,7 +22,7 @@ export const Toggle = ({
     <ToggleContainer>
       {options.map(([name, onClick, notification], index) => (
         <Option
-          key={index}
+          key={name}
           onClick={onClick}
           selected={index === currentSelectionIndex}
           role="button"
