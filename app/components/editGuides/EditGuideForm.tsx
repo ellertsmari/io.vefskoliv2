@@ -6,6 +6,11 @@ import { GuideType } from "../../models/guide";
 import { GUIDE_CATEGORIES } from "../../constants/guideCategories";
 import { MODULE_TITLES } from "../../constants/moduleTitles";
 import {
+  ExerciseEditor,
+  emptyTask,
+  type ExerciseForm,
+} from "./ExerciseEditor";
+import {
   FormContainer,
   BackLink,
   FormHeader,
@@ -43,6 +48,29 @@ interface EditGuideFormProps {
 }
 
 export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
+  const [gradingMode, setGradingMode] = useState<"peerReview" | "auto">(
+    (guide.gradingMode as "peerReview" | "auto") || "peerReview"
+  );
+
+  // Authoring copy of the exercise (includes the answer key — teacher-only view).
+  const [exercise, setExercise] = useState<ExerciseForm>(() => {
+    const ex = guide.exercise;
+    if (ex && Array.isArray(ex.tasks) && ex.tasks.length > 0) {
+      return {
+        passThreshold: ex.passThreshold ?? 0.7,
+        tasks: ex.tasks.map((t: any) => ({
+          prompt: t.prompt || "",
+          options: Array.isArray(t.options) ? t.options : ["", ""],
+          correctAnswers: Array.isArray(t.correctAnswers) ? t.correctAnswers : [],
+          allowMultiple: !!t.allowMultiple,
+          points: t.points ?? 1,
+          explanation: t.explanation || "",
+        })),
+      };
+    }
+    return { passThreshold: 0.7, tasks: [emptyTask()] };
+  });
+
   const [formData, setFormData] = useState({
     title: guide.title || '',
     description: guide.description || '',
@@ -109,10 +137,60 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
     }));
   };
 
+  // Validate the authored exercise before saving an auto-graded guide.
+  // Returns an error string, or null when the exercise is valid.
+  const validateExercise = (): string | null => {
+    if (exercise.tasks.length === 0) {
+      return "Add at least one question to the exercise.";
+    }
+    for (let i = 0; i < exercise.tasks.length; i++) {
+      const task = exercise.tasks[i];
+      const n = i + 1;
+      if (!task.prompt.trim()) return `Question ${n}: add a prompt.`;
+      const filledOptions = task.options.filter((o) => o.trim());
+      if (filledOptions.length < 2)
+        return `Question ${n}: add at least two options.`;
+      if (task.correctAnswers.length === 0)
+        return `Question ${n}: mark at least one correct answer.`;
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Build the grading-specific part of the payload.
+    let gradingPayload: Record<string, unknown>;
+    if (gradingMode === "auto") {
+      const exerciseError = validateExercise();
+      if (exerciseError) {
+        alert(exerciseError);
+        return;
+      }
+      gradingPayload = {
+        gradingMode: "auto",
+        exercise: {
+          passThreshold: exercise.passThreshold,
+          tasks: exercise.tasks.map((t) => ({
+            type: "quiz",
+            prompt: t.prompt.trim(),
+            options: t.options.map((o) => o.trim()),
+            allowMultiple: t.allowMultiple,
+            points: t.points,
+            correctAnswers: t.correctAnswers,
+            ...(t.explanation.trim()
+              ? { explanation: t.explanation.trim() }
+              : {}),
+          })),
+        },
+      };
+    } else {
+      // Peer-reviewed guide: clear any previously authored exercise.
+      gradingPayload = { gradingMode: "peerReview", exercise: null };
+    }
+
     setSaving(true);
-    
+
     try {
       const response = await fetch(`/api/guides/${guide._id}`, {
         method: 'PUT',
@@ -121,6 +199,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
         },
         body: JSON.stringify({
           ...formData,
+          ...gradingPayload,
           knowledge: formData.knowledge.map(k => ({ knowledge: k })),
           skills: formData.skills.map(s => ({ skill: s })),
           updatedAt: new Date().toISOString()
@@ -214,6 +293,31 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
             />
           </InputGroup>
         </Section>
+
+        <Section>
+          <SectionTitle>Grading</SectionTitle>
+          <InputGroup>
+            <Label htmlFor="gradingMode">How is this guide completed?</Label>
+            <Select
+              id="gradingMode"
+              value={gradingMode}
+              onChange={(e) =>
+                setGradingMode(e.target.value as "peerReview" | "auto")
+              }
+            >
+              <option value="peerReview">
+                Peer review (submit a project, get reviewed)
+              </option>
+              <option value="auto">
+                Auto-graded exercise (graded instantly, no peer review)
+              </option>
+            </Select>
+          </InputGroup>
+        </Section>
+
+        {gradingMode === "auto" && (
+          <ExerciseEditor value={exercise} onChange={setExercise} />
+        )}
 
         <Section>
           <SectionTitle>Theme Idea</SectionTitle>

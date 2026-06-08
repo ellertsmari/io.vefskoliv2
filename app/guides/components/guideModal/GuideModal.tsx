@@ -1,6 +1,6 @@
 import { Paragraph, Heading1 } from "globalStyles/text";
 import { useGuide } from "providers/GuideProvider";
-import { ReviewStatus } from "types/guideTypes";
+import { ReviewStatus, GradingMode } from "types/guideTypes";
 import { calculateReturnStyle } from "./calculateReturnStyle";
 import { Button } from "globalStyles/buttons/default/style";
 import { FeedbackOverview } from "../../../LMS/components/feedback/feedbackOverview/FeedbackOverview";
@@ -18,7 +18,7 @@ export const GuideModal = () => {
   const { guide } = useGuide();
   if (!guide) return null;
 
-  const { link, returnStatus, title, reviewStatus } = guide;
+  const { link, returnStatus, title, reviewStatus, grade } = guide;
 
   return (
     <GuideModalWrapper>
@@ -38,7 +38,15 @@ export const GuideModal = () => {
           </div>
         </TitleContainer>
       </Header>
-      {reviewStatus === ReviewStatus.NEED_TO_REVIEW ? (
+      {guide.gradingMode === GradingMode.AUTO ? (
+        // Auto-graded guides have no peer feedback; point the student back to
+        // the exercise to review their result or try again.
+        <Paragraph>
+          This is an auto-graded exercise
+          {grade !== undefined ? ` (score ${grade}/10)` : ""}. Open the guide to
+          review your answers or try again.
+        </Paragraph>
+      ) : reviewStatus === ReviewStatus.NEED_TO_REVIEW ? (
         <GiveFeedbackView guideTitle={title} />
       ) : (
         <FeedbackOverview />

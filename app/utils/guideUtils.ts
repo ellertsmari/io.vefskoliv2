@@ -8,6 +8,8 @@ import {
   ExtendedGuideInfo,
   GuideInfo,
   Module,
+  GradingMode,
+  ExerciseAttemptInfo,
 } from "types/guideTypes";
 import {
   REQUIRED_REVIEWS_COUNT,
@@ -26,6 +28,12 @@ export const extendGuides = (
   now: Date = new Date()
 ): ExtendedGuideInfo[] => {
   return guides.map((guide) => {
+    // Auto-graded guides skip peer review entirely: status and grade come from
+    // the student's best exercise attempt, and the review/grade steps are N/A.
+    if (guide.gradingMode === GradingMode.AUTO) {
+      return extendAutoGuide(guide);
+    }
+
     const returnStatus = calculateReturnStatus(
       guide.returnsSubmitted,
       guide.reviewsReceived
@@ -67,6 +75,47 @@ export const extendGuides = (
       gradesGivenStatus,
     };
   });
+};
+
+/**
+ * The student's best attempt on an auto-graded guide, or undefined if none.
+ * "Best" = highest score (ties broken arbitrarily, which is fine).
+ */
+export const bestAttempt = (
+  attempts: ExerciseAttemptInfo[] = []
+): ExerciseAttemptInfo | undefined => {
+  if (attempts.length === 0) return undefined;
+  return attempts.reduce((best, a) => (a.score > best.score ? a : best));
+};
+
+/**
+ * Build the extended info for an auto-graded guide. The peer-review pipeline does
+ * not apply, so reviews/grades are marked NOT_APPLICABLE and the grade is taken
+ * directly from the best exercise attempt.
+ */
+const extendAutoGuide = (guide: GuideInfo): ExtendedGuideInfo => {
+  const best = bestAttempt(guide.exerciseAttempts);
+
+  let returnStatus: ReturnStatus;
+  if (!best) {
+    returnStatus = ReturnStatus.NOT_RETURNED;
+  } else if (best.passed) {
+    returnStatus = ReturnStatus.PASSED;
+  } else {
+    returnStatus = ReturnStatus.FAILED;
+  }
+
+  return {
+    ...guide,
+    link: `/guides/${guide._id}`,
+    returnStatus,
+    // No peer-review steps for auto-graded guides.
+    reviewStatus: ReviewStatus.NOT_APPLICABLE,
+    gradesReceivedStatus: GradesReceivedStatus.NOT_APPLICABLE,
+    gradesGivenStatus: GradesGivenStatus.NOT_APPLICABLE,
+    // Grade is the best attempt's score; undefined until the student attempts it.
+    grade: best ? best.score : undefined,
+  };
 };
 
 export const calculateReturnStatus = (

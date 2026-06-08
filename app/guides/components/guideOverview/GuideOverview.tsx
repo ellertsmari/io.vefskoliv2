@@ -2,9 +2,10 @@
 
 import MarkdownReader from "UIcomponents/markdown/reader";
 import { ReturnForm } from "../../../LMS/components/feedback/returnForm/ReturnForm";
+import { ExerciseView } from "../exercise/ExerciseView";
 import { Border, Wrapper, MaterialButton } from "globalStyles/globalStyles";
 import { Heading1, SubHeading1, SubHeading1Bold } from "globalStyles/text";
-import { GuideType } from "models/guide";
+import { ClientGuide, GradingMode } from "types/guideTypes";
 import {
   Main,
   Side,
@@ -15,11 +16,11 @@ import {
   Container,
 } from "./style";
 
-export const GuideOverview = ({ 
-  guide, 
+export const GuideOverview = ({
+  guide,
   isAuthenticated = true // Default to true to maintain backwards compatibility
-}: { 
-  guide: GuideType; 
+}: {
+  guide: ClientGuide;
   isAuthenticated?: boolean;
 }) => {
   if (!guide) {
@@ -51,6 +52,9 @@ export const GuideOverview = ({
     : [];
 
   const allMaterials = rMaterials.concat(cMaterials).concat(refMaterials);
+
+  const isAutoGraded =
+    guide.gradingMode === GradingMode.AUTO && !!guide.exercise;
 
   return (
     <Container>
@@ -138,7 +142,14 @@ export const GuideOverview = ({
 
       {isAuthenticated && (
         <ReturnWrapper>
-          <ReturnForm guideId={guide._id.toString()} />
+          {isAutoGraded ? (
+            <ExerciseView
+              guideId={guide._id.toString()}
+              exercise={guide.exercise!}
+            />
+          ) : (
+            <ReturnForm guideId={guide._id.toString()} />
+          )}
         </ReturnWrapper>
       )}
     </Container>

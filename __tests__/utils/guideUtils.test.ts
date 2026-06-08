@@ -4,6 +4,7 @@ import {
   ReturnStatus,
   GradesGivenStatus,
   GradesReceivedStatus,
+  GradingMode,
 } from "types/guideTypes";
 import {
   calculateReviewStatus,
@@ -436,6 +437,77 @@ describe("status calculations", () => {
 
       // Still nudged to review, but the grade already reflects the earned 8.
       expect(extended.reviewStatus).toBe(ReviewStatus.NEED_TO_REVIEW);
+      expect(extended.grade).toBe(9);
+    });
+  });
+
+  describe("extendGuides auto-graded guides", () => {
+    afterEach(async () => await clearDatabase());
+
+    const autoGuideWith = (
+      overrides: Partial<GuideInfo>
+    ): GuideInfo =>
+      ({
+        _id: new Types.ObjectId(),
+        title: "Auto guide",
+        description: "",
+        category: "code",
+        order: 0,
+        module: { title: "3 - Test" },
+        gradingMode: GradingMode.AUTO,
+        returnsSubmitted: [],
+        reviewsReceived: [],
+        availableForReview: [],
+        reviewsGiven: [],
+        gradesReceived: [],
+        gradesGiven: [],
+        availableToGrade: [],
+        exerciseAttempts: [],
+        ...overrides,
+      }) as unknown as GuideInfo;
+
+    const attempt = (score: number, passed: boolean) =>
+      ({
+        _id: new Types.ObjectId(),
+        score,
+        passed,
+        createdAt: new Date(),
+      }) as never;
+
+    it("is NOT_RETURNED with no grade and N/A peer statuses before any attempt", () => {
+      const [extended] = extendGuides([autoGuideWith({})]);
+      expect(extended.returnStatus).toBe(ReturnStatus.NOT_RETURNED);
+      expect(extended.grade).toBeUndefined();
+      expect(extended.reviewStatus).toBe(ReviewStatus.NOT_APPLICABLE);
+      expect(extended.gradesReceivedStatus).toBe(
+        GradesReceivedStatus.NOT_APPLICABLE
+      );
+      expect(extended.gradesGivenStatus).toBe(GradesGivenStatus.NOT_APPLICABLE);
+    });
+
+    it("PASSES and takes the grade from a passing attempt", () => {
+      const [extended] = extendGuides([
+        autoGuideWith({ exerciseAttempts: [attempt(8.5, true)] }),
+      ]);
+      expect(extended.returnStatus).toBe(ReturnStatus.PASSED);
+      expect(extended.grade).toBe(8.5);
+    });
+
+    it("FAILS when attempted but no attempt passed", () => {
+      const [extended] = extendGuides([
+        autoGuideWith({ exerciseAttempts: [attempt(3, false)] }),
+      ]);
+      expect(extended.returnStatus).toBe(ReturnStatus.FAILED);
+      expect(extended.grade).toBe(3);
+    });
+
+    it("uses the best (highest-scoring) attempt across retries", () => {
+      const [extended] = extendGuides([
+        autoGuideWith({
+          exerciseAttempts: [attempt(3, false), attempt(9, true), attempt(6, false)],
+        }),
+      ]);
+      expect(extended.returnStatus).toBe(ReturnStatus.PASSED);
       expect(extended.grade).toBe(9);
     });
   });
