@@ -72,7 +72,11 @@ export type GuideInfo = {
   _id: Types.ObjectId;
   title: string;
   description: string;
+  /** Derived mirror of (discipline, isSpecialty); read via utils/guideTaxonomy. */
   category: string;
+  /** Canonical taxonomy axes (may be absent on un-migrated guides). */
+  discipline?: "code" | "design";
+  isSpecialty?: boolean;
   order: number;
   module: ModuleType;
 

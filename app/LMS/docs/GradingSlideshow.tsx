@@ -352,6 +352,29 @@ const slides: SlideDef[] = [
     ),
   },
   {
+    icon: "⚡",
+    title: "Some guides grade themselves",
+    body: (
+      <SlideBody>
+        <p>
+          A few guides aren&apos;t peer-reviewed projects at all — they&apos;re{" "}
+          <strong>interactive exercises</strong> (like quizzes) that are{" "}
+          <strong>graded instantly</strong>.
+        </p>
+        <p>
+          There&apos;s no return and no reviews: you answer the exercise, it&apos;s
+          checked automatically, and your score (out of 10) becomes your grade for
+          that guide. You can <strong>try again</strong> to improve it — your best
+          attempt counts.
+        </p>
+        <Callout>
+          These count toward your progress just like any other guide — they&apos;re
+          just faster, with instant feedback.
+        </Callout>
+      </SlideBody>
+    ),
+  },
+  {
     icon: "🚀",
     title: "Specialty guides & quick tips",
     body: (

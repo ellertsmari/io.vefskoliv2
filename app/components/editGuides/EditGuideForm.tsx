@@ -3,8 +3,13 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { GuideType } from "../../models/guide";
-import { GUIDE_CATEGORIES } from "../../constants/guideCategories";
 import { MODULE_TITLES } from "../../constants/moduleTitles";
+import {
+  getDiscipline,
+  getIsSpecialty,
+  axesToCategory,
+  type Discipline,
+} from "../../utils/guideTaxonomy";
 import {
   ExerciseEditor,
   emptyTask,
@@ -71,10 +76,13 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
     return { passThreshold: 0.7, tasks: [emptyTask()] };
   });
 
+  // Canonical taxonomy axes (category is derived from these on save).
+  const [discipline, setDiscipline] = useState<Discipline>(getDiscipline(guide));
+  const [isSpecialty, setIsSpecialty] = useState<boolean>(getIsSpecialty(guide));
+
   const [formData, setFormData] = useState({
     title: guide.title || '',
     description: guide.description || '',
-    category: guide.category || '',
     topicsList: guide.topicsList || '',
     order: guide.order || 0,
     themeIdea: {
@@ -200,6 +208,10 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
         body: JSON.stringify({
           ...formData,
           ...gradingPayload,
+          // Canonical taxonomy axes + derived legacy `category` mirror.
+          discipline,
+          isSpecialty,
+          category: axesToCategory(discipline, isSpecialty),
           knowledge: formData.knowledge.map(k => ({ knowledge: k })),
           skills: formData.skills.map(s => ({ skill: s })),
           updatedAt: new Date().toISOString()
@@ -255,20 +267,30 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
           </InputGroup>
 
           <InputGroup>
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="discipline">Discipline</Label>
             <Select
-              id="category"
-              value={formData.category}
-              onChange={(e) => handleInputChange('category', e.target.value)}
+              id="discipline"
+              value={discipline}
+              onChange={(e) => setDiscipline(e.target.value as Discipline)}
               required
             >
-              <option value="">Select a category</option>
-              {GUIDE_CATEGORIES.map(category => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+              <option value="code">Code</option>
+              <option value="design">Design</option>
             </Select>
+          </InputGroup>
+
+          <InputGroup>
+            <Label htmlFor="isSpecialty">
+              <input
+                id="isSpecialty"
+                type="checkbox"
+                checked={isSpecialty}
+                onChange={(e) => setIsSpecialty(e.target.checked)}
+                style={{ marginRight: "0.5rem" }}
+              />
+              Specialty guide (optional — can replace a lower grade in the same
+              discipline, and does not count toward progress)
+            </Label>
           </InputGroup>
 
           <InputGroup>

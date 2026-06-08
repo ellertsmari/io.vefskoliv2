@@ -7,6 +7,7 @@ import {
   WriteFeedbackContainer,
 } from "../../../../guides/components/guideCard/style";
 import { SubHeading1 } from "globalStyles/text";
+import { isCodeCategory } from "utils/guideTaxonomy";
 import RichTextEditor from "UIcomponents/markdown/RichTextEditor";
 import {
   useActionState,
@@ -136,7 +137,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
             type="button"
             $styletype="outlined"
             onClick={() => {
-              const isCodeGuide = guide.category === 'code' || guide.category === 'speciality code';
+              const isCodeGuide = isCodeCategory(guide.category);
               const tips = isCodeGuide
                 ? "Code Review Focus Areas:\n• Code readability and structure\n• Problem-solving approach\n• Best practices implementation\n• Edge case handling\n• Performance considerations"
                 : "Design Review Focus Areas:\n• Visual hierarchy and layout\n• Color and typography choices\n• User experience flow\n• Responsive design\n• Accessibility considerations";
