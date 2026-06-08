@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import styled from "styled-components";
+import { isCodeCategory } from "utils/guideTaxonomy";
 
 const EditorContainer = styled.div`
   border: 1px solid #ccc;
@@ -298,7 +299,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     executeCommand('insertOrderedList');
   }, [executeCommand]);
 
-  const isCodeGuide = guideCategory === 'code' || guideCategory === 'speciality code';
+  // Route through the taxonomy helper so specialty-code guides (codeSpeciality)
+  // are correctly treated as code — the old `=== 'speciality code'` check never
+  // matched and silently showed design tips on specialty-code guides.
+  const isCodeGuide = isCodeCategory(guideCategory);
 
   const codeReviewTips = [
     "Check if the code is clean and readable",

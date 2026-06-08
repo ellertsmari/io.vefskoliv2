@@ -33,7 +33,9 @@ export async function POST() {
     const draft = await Guide.create({
       title: "Untitled guide",
       description: "TODO: add a description",
-      category: "code",
+      discipline: "code",
+      isSpecialty: false,
+      category: "code", // derived mirror of (discipline, isSpecialty)
       topicsList: "TODO",
       order: nextOrder,
       themeIdea: { title: "Project", description: "TODO: add the task" },

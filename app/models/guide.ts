@@ -74,6 +74,18 @@ const exerciseSchema = new Schema({
 });
 
 const guideSchema = new Schema({
+  // Canonical taxonomy axes (see app/utils/guideTaxonomy.ts). Not strictly
+  // required so existing/un-migrated docs still read fine — the taxonomy helpers
+  // fall back to deriving these from `category`.
+  discipline: {
+    type: Schema.Types.String,
+    enum: ["code", "design"],
+    required: false,
+  },
+  isSpecialty: { type: Schema.Types.Boolean, required: false, default: false },
+  // DERIVED mirror of (discipline, isSpecialty), kept for legacy/display/LTI
+  // consumers. Written on every save via axesToCategory; never string-matched
+  // directly in logic.
   category: { type: Schema.Types.String, required: true },
   references: { type: [guideReferenceSchema], required: true },
   title: { type: Schema.Types.String, required: true },

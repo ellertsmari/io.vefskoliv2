@@ -1,6 +1,7 @@
 "use client";
 
 import { ExtendedGuideInfo, Module, ReviewStatus, ReturnStatus } from "types/guideTypes";
+import { getDiscipline, getIsSpecialty } from "utils/guideTaxonomy";
 import GuideCard from "../../guides/components/guideCard/GuideCard";
 import {
   HomeContainer,
@@ -72,9 +73,9 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
     };
   }, [extendedGuides]);
 
-  // Helper to check if a guide is a specialty guide
-  const isSpecialtyGuide = (guide: ExtendedGuideInfo) =>
-    guide.category === 'codeSpeciality' || guide.category === 'designSpeciality';
+  // Helper to check if a guide is a specialty guide (reads the canonical axis,
+  // falling back to deriving from the legacy category — see utils/guideTaxonomy).
+  const isSpecialtyGuide = (guide: ExtendedGuideInfo) => getIsSpecialty(guide);
 
   // Calculate progress for each module (exclude modules 0, 2 and specialty guides)
   const moduleProgress = useMemo(() => {
@@ -124,11 +125,13 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
           extractModuleNumber(guide.module.title) === module.number
         );
         
-        // Separate regular and specialty guides
-        const regularCodingGuides = moduleGuides.filter(guide => guide.category === 'code');
-        const specialtyCodingGuides = moduleGuides.filter(guide => guide.category === 'codeSpeciality');
-        const regularDesignGuides = moduleGuides.filter(guide => guide.category === 'design');
-        const specialtyDesignGuides = moduleGuides.filter(guide => guide.category === 'designSpeciality');
+        // Separate regular and specialty guides by discipline.
+        const isCoding = (g: ExtendedGuideInfo) => getDiscipline(g) === 'code';
+        const isDesign = (g: ExtendedGuideInfo) => getDiscipline(g) === 'design';
+        const regularCodingGuides = moduleGuides.filter(g => isCoding(g) && !getIsSpecialty(g));
+        const specialtyCodingGuides = moduleGuides.filter(g => isCoding(g) && getIsSpecialty(g));
+        const regularDesignGuides = moduleGuides.filter(g => isDesign(g) && !getIsSpecialty(g));
+        const specialtyDesignGuides = moduleGuides.filter(g => isDesign(g) && getIsSpecialty(g));
         
         // Calculate final coding grades with specialty logic
         const finalCodingGrades = calculateFinalGrades(regularCodingGuides, specialtyCodingGuides);

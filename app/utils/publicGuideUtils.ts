@@ -9,6 +9,8 @@ export const createPublicGuideInfo = (guide: GuideType): GuideInfo => {
     title: guide.title,
     description: guide.description,
     category: guide.category,
+    discipline: (guide.discipline as "code" | "design") || undefined,
+    isSpecialty: guide.isSpecialty ?? undefined,
     order: guide.order,
     module: guide.module,
     // Add empty arrays for user-specific fields that the component expects

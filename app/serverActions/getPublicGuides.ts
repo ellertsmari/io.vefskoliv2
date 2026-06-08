@@ -16,6 +16,8 @@ export async function getPublicGuides(): Promise<GuideType[] | null> {
         title: 1,
         description: 1,
         category: 1,
+        discipline: 1,
+        isSpecialty: 1,
         order: 1,
         module: 1,
         references: 1,
