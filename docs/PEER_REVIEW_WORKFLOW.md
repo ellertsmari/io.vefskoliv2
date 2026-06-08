@@ -4,7 +4,7 @@ This document describes the peer review system and the requirements for students
 
 ## Overview
 
-The peer review system is designed to ensure students learn from each other through structured feedback. Each guide follows a cycle of: **Submit** -> **Review Others** -> **Receive Feedback** -> **Grade Reviews**.
+The peer review system is designed to ensure students learn from each other through structured feedback. Each guide follows a cycle of: **Submit** -> **Review Others** -> **Receive Feedback**. Teachers then grade the reviews students gave.
 
 ## Requirements for Completing a Guide
 
@@ -15,7 +15,31 @@ For a student to pass a guide, they must complete ALL of the following:
 | 1. Submit Return | Submit their project work | Implemented |
 | 2. Give Feedback | Review **2 other students'** projects | Implemented |
 | 3. Receive Feedback | Wait for **2 reviews** from peers | Implemented |
-| 4. Grade Reviews | Grade **2 reviews** given to other students | Implemented |
+
+The reviews a student gives are then graded **by teachers** (see below). Students do not grade reviews.
+
+## Auto-graded guides (exception to the above)
+
+Most guides use the peer-review flow described here. A guide may instead be marked
+as an **auto-graded interactive exercise**, in which case the peer-review cycle is
+**skipped entirely**:
+
+- The guide has `gradingMode: "auto"` and an `exercise` (a list of tasks; phase 1
+  supports multiple-choice **quiz** tasks).
+- The student answers the exercise on the guide page; it is **graded server-side**
+  (`submitExercise` action) against an answer key that is never sent to the client.
+- The grade is the best attempt's score (0–10) and flows through the normal grade /
+  progress UI. There are **no reviews and no review-grading** for these guides, so
+  the review/grade statuses are `NOT_APPLICABLE`.
+- Students may retry; each submission is stored as an `ExerciseAttempt` and the
+  highest-scoring attempt wins.
+
+Related code: `app/models/guide.ts` (`gradingMode`, `exercise`),
+`app/models/exerciseAttempt.ts`, `app/utils/exerciseUtils.ts` (grading +
+answer-key stripping), `app/serverActions/submitExercise.ts`, and the auto branch
+in `extendGuides` (`app/utils/guideUtils.ts`).
+
+Everything below applies to **peer-reviewed** guides only.
 
 ## Business Rules
 
@@ -26,9 +50,9 @@ For a student to pass a guide, they must complete ALL of the following:
 - Feedback includes a vote (PASS / NO PASS / RECOMMEND) and a comment
 
 ### Grading (Review of Reviews)
-- Each student must grade **2 reviews** per guide
-- Students **cannot grade their own reviews** (the ones they wrote)
-- Students **cannot grade reviews on their own projects** (ensures neutral grading)
+- Grading is **teacher-only**. Students give reviews but never grade them.
+- Teachers grade the reviews students gave; the grade contributes to that reviewer's score for the guide
+- Teachers can grade and re-grade any review (e.g. via the reports page)
 - Grades are on a scale of 0-10
 
 ### Pass/Fail Criteria
@@ -85,7 +109,7 @@ Student A submits return
 Student B & C review Student A's return (feedbackReceived for A)
     |
     v
-Student D & E grade the reviews by B & C (neutral grading)
+A teacher grades the reviews written by B & C
     |
     v
 Student A can see feedback but NOT the grades those reviewers received
@@ -118,8 +142,7 @@ export const GUIDE_RULES = {
 
 The `returnGrade` server action enforces:
 1. User must be logged in
-2. Review must exist and not already be graded
-3. User cannot grade their own review
-4. User cannot grade reviews on their own projects
+2. User must have the **teacher** role (`session.user.role === "teacher"`) — this is the single source of grading authorization; there is no student grading path anywhere in the app
+3. Review must exist
 
-This ensures neutral, unbiased grading of peer feedback.
+Teachers can grade and re-grade any review.

@@ -190,7 +190,10 @@ const lookupReviewsReceived = (userId: ObjectId): PipelineStage => {
   };
 };
 
-// grab reviews available for grading by user (reviews on OTHER users' returns, for neutral grading)
+// LEGACY: from when students graded each other's reviews. Grading is now
+// teacher-only (see returnGrade.ts), so this per-user "available to grade" pool
+// is no longer used to drive student grading. Kept for shape compatibility.
+// grab reviews available for grading by user (reviews on OTHER users' returns)
 const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
@@ -220,7 +223,7 @@ const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
         },
         { $unwind: "$associatedReturn" },
         // Only include reviews on OTHER users' projects (not reviews on the user's own returns)
-        // This ensures neutral grading - users grade reviews given to others, not to themselves
+        // (Legacy neutrality rule from student-grading; grading is now teacher-only.)
         {
           $match: {
             $expr: {
@@ -262,6 +265,31 @@ const lookupGradesGiven = (userId: ObjectId): PipelineStage => {
   };
 };
 
+// grab this user's attempts at an auto-graded guide's exercise. Only the fields
+// needed for status/grade calc are projected (never the answer key).
+const lookupExerciseAttempts = (userId: ObjectId): PipelineStage => {
+  return {
+    $lookup: {
+      from: "exerciseattempts",
+      let: { guideId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$guide", "$$guideId"] },
+                { $eq: ["$owner", userId] },
+              ],
+            },
+          },
+        },
+        { $project: { _id: 1, score: 1, passed: 1, createdAt: 1 } },
+      ],
+      as: "exerciseAttempts",
+    },
+  };
+};
+
 const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
   // define the final document structure
   const defineProject: PipelineStage = {
@@ -272,6 +300,7 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
       category: 1,
       order: 1,
       module: 1,
+      gradingMode: 1,
 
       // this user's project returns
       returnsSubmitted: 1,
@@ -287,6 +316,9 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
       // grading others' reviews
       gradesGiven: 1,
       availableToGrade: 1,
+
+      // auto-graded guides only
+      exerciseAttempts: 1,
     },
   };
   return [
@@ -297,6 +329,7 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
     lookupGradesGiven(userId),
     addAvailableToGrade(userId),
     lookupAvailableForReview(userId),
+    lookupExerciseAttempts(userId),
     defineProject,
     {
       $sort: {
