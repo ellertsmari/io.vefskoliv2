@@ -20,23 +20,6 @@ export const GuideModal = () => {
 
   const { link, returnStatus, title, reviewStatus, grade } = guide;
 
-  const RenderedContent = () => {
-    // Auto-graded guides have no peer feedback; point the student back to the
-    // exercise to review their result or try again.
-    if (guide.gradingMode === GradingMode.AUTO) {
-      return (
-        <Paragraph>
-          This is an auto-graded exercise{grade !== undefined ? ` (score ${grade}/10)` : ""}.{" "}
-          Open the guide to review your answers or try again.
-        </Paragraph>
-      );
-    }
-    if (reviewStatus === ReviewStatus.NEED_TO_REVIEW) {
-      return <GiveFeedbackView guideTitle={title} />;
-    }
-    return <FeedbackOverview />;
-  };
-
   return (
     <GuideModalWrapper>
       <Header>
@@ -55,7 +38,19 @@ export const GuideModal = () => {
           </div>
         </TitleContainer>
       </Header>
-      <RenderedContent />
+      {guide.gradingMode === GradingMode.AUTO ? (
+        // Auto-graded guides have no peer feedback; point the student back to
+        // the exercise to review their result or try again.
+        <Paragraph>
+          This is an auto-graded exercise
+          {grade !== undefined ? ` (score ${grade}/10)` : ""}. Open the guide to
+          review your answers or try again.
+        </Paragraph>
+      ) : reviewStatus === ReviewStatus.NEED_TO_REVIEW ? (
+        <GiveFeedbackView guideTitle={title} />
+      ) : (
+        <FeedbackOverview />
+      )}
     </GuideModalWrapper>
   );
 };

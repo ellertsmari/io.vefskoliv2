@@ -29,31 +29,29 @@ export const GuideCardOverview = ({
   reviewStatus: ReviewStatus;
   grade?: number;
 }) => {
-  const Content = () => {
-    return (
-      <Info>
-        <GuideDescription>
-          <GuideNr>
-            {order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}
-          </GuideNr>
-          <Name>{guideTitle}</Name>
-        </GuideDescription>
-        <GuideCardStatuses
-          returnStatus={returnStatus}
-          reviewStatus={reviewStatus}
-          grade={grade}
-        />
-      </Info>
-    );
-  };
+  const content = (
+    <Info>
+      <GuideDescription>
+        <GuideNr>
+          {order ? `GUIDE ${order}` : `MODULE ${moduleTitle}`}
+        </GuideNr>
+        <Name>{guideTitle}</Name>
+      </GuideDescription>
+      <GuideCardStatuses
+        returnStatus={returnStatus}
+        reviewStatus={reviewStatus}
+        grade={grade}
+      />
+    </Info>
+  );
 
   return link ? (
     <StyledLink href={link} passHref style={{ textDecoration: "none" }}>
-      <Content />
+      {content}
     </StyledLink>
   ) : (
     <GuideCardContainer>
-      <Content />
+      {content}
     </GuideCardContainer>
   );
 };

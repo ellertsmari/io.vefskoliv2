@@ -49,6 +49,3 @@ export const REVIEW_GRACE_PERIOD_DAYS = 14;
  * are accurate and final when teachers issue them. See `isGradingMonth`.
  */
 export const GRADING_MONTHS = [4, 7, 11];
-
-/** @deprecated Use REQUIRED_REVIEWS_COUNT instead */
-export const REQUIRED_FEEDBACK_COUNT = REQUIRED_REVIEWS_COUNT;

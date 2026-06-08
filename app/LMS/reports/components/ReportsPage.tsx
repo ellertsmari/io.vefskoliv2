@@ -149,7 +149,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
               <p>Select a student from the list to view their report</p>
             </EmptyState>
           ) : loadingStudent ? (
-            <LoadingState>Loading {selectedStudent.name}&apos;s data...</LoadingState>
+            <LoadingState>Loading {selectedStudent.name}&apos;s data…</LoadingState>
           ) : (
             <>
               <ReportTitle>{selectedStudent.name} - Progress Report</ReportTitle>

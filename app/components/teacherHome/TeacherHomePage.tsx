@@ -141,7 +141,7 @@ const GradingModal = () => {
         <GradingModalHeader>
           <GradingModalTitle>Grade Reviews</GradingModalTitle>
         </GradingModalHeader>
-        <EmptyGradingState>Loading reviews...</EmptyGradingState>
+        <EmptyGradingState>Loading reviews…</EmptyGradingState>
       </GradingModalWrapper>
     );
   }

@@ -122,8 +122,3 @@ export const SliderHelpLink = styled(Link)`
 export const SliderHelpLinkText = styled(Paragraph)`
   color: var(--theme-module3-100);
 `;
-
-export const GradeSlider = styled.input`
-  color: blue;
-  width: 100%;
-`;

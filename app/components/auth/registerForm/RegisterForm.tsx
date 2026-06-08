@@ -38,9 +38,10 @@ export function RegisterForm({
 
   useEffect(() => {
     if (state?.success) {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         setSelectedForm("login");
       }, 3000);
+      return () => clearTimeout(timeoutId);
     }
   }, [state?.success, setSelectedForm]);
 

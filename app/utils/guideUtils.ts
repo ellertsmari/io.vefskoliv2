@@ -287,9 +287,6 @@ export const calculateGradesGivenStatus = (
   return GradesGivenStatus.GRADES_GIVEN;
 };
 
-/** @deprecated Use calculateReviewStatus instead */
-export const calculateFeedbackStatus = calculateReviewStatus;
-
 export const fetchModules = (extendedGuides: ExtendedGuideInfo[]): Module[] => {
   return extendedGuides
     .reduce((acc: Module[], guideToCheck) => {

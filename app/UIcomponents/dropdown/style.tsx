@@ -1,11 +1,9 @@
 "use client";
 import styled, { keyframes } from "styled-components";
 
-const radius = "8px";
 const minHeightSmall = "42px";
 const minHeightLarge = "54px";
 const maxHeight = "500px";
-export const animationDuration = 0.2;
 const breakPoint = "768px";
 
 const fadeInSmall = keyframes`
@@ -77,35 +75,3 @@ export const CapsuleButton = styled.button<{$active: boolean}>`
   }
 `
 
-export const DropDownContainer = styled.div<{
-}>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: absolute;
-  top: 0;
-  border-radius: ${radius};
-  border: 1px solid var(--theme-module3-100);
-  width: 100%;
-  overflow: hidden;
-`;
-
-export const Accordian = styled.div<{ $title?: boolean }>`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 5px 1rem;
-  gap: 1rem;
-  height: fit-content;
-  color: ${(props) => (props.$title ? "white" : "black")};
-  background-color: ${(props) =>
-    props.$title ? "var(--theme-module3-100)" : "white"};
-  width: 100%;
-`;
-
-export const AccordianOptionContainer = styled(Accordian)`
-  &:hover {
-    background-color: var(--theme-module3-100);
-    color: white;
-  }
-`;

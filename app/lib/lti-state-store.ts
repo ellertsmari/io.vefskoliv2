@@ -42,7 +42,7 @@ const ltiStateSchema = new Schema<ILTIState>({
 });
 
 // Create model
-export const LTIState: Model<ILTIState> = mongoose.models.LTIState || 
+const LTIState: Model<ILTIState> = mongoose.models.LTIState ||
   mongoose.model<ILTIState>('LTIState', ltiStateSchema);
 
 /**
@@ -75,7 +75,7 @@ export async function storeLTIState(
  * Retrieve and validate LTI state
  * Returns null if state doesn't exist or has expired
  */
-export async function retrieveLTIState(
+async function retrieveLTIState(
   state: string
 ): Promise<ILTIState | null> {
   try {
@@ -153,20 +153,5 @@ export async function validateLTIState(
       valid: false,
       error: 'State validation failed',
     };
-  }
-}
-
-/**
- * Clean up expired states (called periodically)
- * MongoDB TTL index should handle this automatically, but this is a backup
- */
-export async function cleanupExpiredStates(): Promise<void> {
-  try {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    await LTIState.deleteMany({
-      timestamp: { $lt: fiveMinutesAgo },
-    });
-  } catch (error) {
-    console.error('Failed to cleanup expired states:', error);
   }
 }

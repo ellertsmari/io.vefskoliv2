@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 const breakpoint = "840px";
 
-export const NavbarButton = styled(Link)<{$active: boolean}>`
+const NavbarButton = styled(Link)<{$active: boolean}>`
   width: 100%;
   text-align: center;
   text-decoration: none;
@@ -14,7 +14,7 @@ export const NavbarButton = styled(Link)<{$active: boolean}>`
   transition: 0.3s ease-in-out;
 `;
 
-export const Nav = styled.nav`
+const Nav = styled.nav`
   display: flex;
   flex-direction: column;
   align-items: center;

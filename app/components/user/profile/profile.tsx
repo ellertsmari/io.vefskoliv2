@@ -25,24 +25,18 @@ import { UserAliasDropdown } from "../userAliasDropdown/UserAliasDropdown";
 export const Profile = ({ session }: { session: Session | null }) => {
   const user = session?.user as AdapterUser;
 
-  const ProfilePictureContainer = () => {
-    return (
-        <ProfilePicture name={user.name} url={user.avatarUrl} />
-    );
-  };
-
   return (
     <Wrapper>
       {user ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <UserAliasDropdown session={session} />
           <Modal
-            modalTrigger={<ProfilePictureContainer />}
+            modalTrigger={<ProfilePicture name={user.name} url={user.avatarUrl} />}
             modalContent={<EditProfileScreen user={user} />}
           />
         </div>
       ) : (
-        <div>loading...</div>
+        <div>loading…</div>
       )}
     </Wrapper>
   );

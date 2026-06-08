@@ -3,6 +3,7 @@ import React, {
   createContext,
   useState,
   useContext,
+  useMemo,
   SetStateAction,
   Dispatch,
 } from "react";
@@ -23,8 +24,13 @@ export const ModalProvider = ({ children, state }: ModalContextProps) => {
   const isModalOpen = state ? state[0] : isModalOpenLocal;
   const setIsModalOpen = state ? state[1] : setIsModalOpenLocal;
 
+  const value = useMemo(
+    () => ({ isModalOpen, setIsModalOpen }),
+    [isModalOpen, setIsModalOpen]
+  );
+
   return (
-    <ModalContext.Provider value={{ isModalOpen, setIsModalOpen }}>
+    <ModalContext.Provider value={value}>
       {children}
     </ModalContext.Provider>
   );

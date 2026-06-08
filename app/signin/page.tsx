@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { LoginOrRegister } from "app/components/auth/loginOrRegister/LoginOrRegister";
 import { auth } from "auth";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Sign In | Vefskólinn LMS",
+};
 
 const SignIn = async () => {
     const session = await auth();

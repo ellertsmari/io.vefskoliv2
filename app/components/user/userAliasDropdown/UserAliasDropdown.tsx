@@ -127,7 +127,7 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
           )}
           
           {loading ? (
-            <DropdownItem>Loading users...</DropdownItem>
+            <DropdownItem>Loading users…</DropdownItem>
           ) : (
             users.map((user) => (
               <DropdownItem

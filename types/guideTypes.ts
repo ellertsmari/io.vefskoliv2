@@ -147,9 +147,3 @@ export enum GradesReceivedStatus {
   /** Auto-graded guides are scored on submission, not via peer grades. */
   NOT_APPLICABLE = "Not applicable",
 }
-
-// Legacy aliases for backwards compatibility
-/** @deprecated Use ReturnStatus.AWAITING_REVIEWS instead */
-export const AWAITING_FEEDBACK = ReturnStatus.AWAITING_REVIEWS;
-/** @deprecated Use ReviewStatus instead */
-export const FeedbackStatus = ReviewStatus;

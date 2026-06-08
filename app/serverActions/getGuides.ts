@@ -1,5 +1,6 @@
 "use server";
 import { ObjectId } from "mongodb";
+import { auth } from "../../auth";
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { PipelineStage } from "mongoose";
@@ -342,6 +343,9 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
 export async function getGuides(
   userIdString: string
 ): Promise<GuideInfo[] | null> {
+  const session = await auth();
+  if (!session?.user) return null;
+
   if (!userIdString) return null;
 
   try {

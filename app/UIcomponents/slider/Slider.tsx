@@ -48,7 +48,7 @@ export const Slider = <T extends string | number>({
         return (
           <OptionValue
             $selected={option === tempValue}
-            key={index}
+            key={option}
             // htmlFor={`${id}-option-${option}`}
             onClick={() => handleSliderChange(option)}
             title={titles && titles[index]}
