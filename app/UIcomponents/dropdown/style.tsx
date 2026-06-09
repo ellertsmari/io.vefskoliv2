@@ -48,22 +48,23 @@ export const Container = styled.div`
   height: auto;
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  /* Capsules size to their labels now, so let the row wrap instead of
+     squeezing fixed-width pills with space-between. */
+  flex-wrap: wrap;
+  justify-content: flex-start;
   align-items: center;
-  overflow-y: scroll;
-  @media (min-width: ${breakPoint}) {
-    display: flex;
-    gap: 24px;
-  }
-    @media (max-width: ${breakPoint}) {
-    display: flex;
-    gap: 24px;
-  }
+  gap: 12px 16px;
 `;
 
 export const CapsuleButton = styled.button<{$active: boolean}>`
-  width: 120px;
-  height: 28px;
+  /* Sized by content: module titles ("2 - Community & Networking") are much
+     longer than the old "Module 3" labels and overflowed the fixed 120x28 pill. */
+  width: auto;
+  min-height: 28px;
+  padding: 4px 18px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  font-size: 0.85rem;
   border-radius: 999px;
   border: 1px solid var(--primary-black-100);
   background-color: ${({$active}) => ($active ? "black" : "white")};
