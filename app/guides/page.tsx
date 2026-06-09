@@ -8,6 +8,7 @@ import { getPublicGuides } from "serverActions/getPublicGuides";
 import { extendGuides, fetchModules } from "utils/guideUtils";
 import { createPublicGuideInfo, fetchPublicModules } from "utils/publicGuideUtils";
 import { safeSerialize } from "utils/serialization";
+import { EmptyState, ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
 
 const GuidesPage = async () => {
@@ -17,11 +18,17 @@ const GuidesPage = async () => {
     // Authenticated user - show personalized guides with status
     try {
       const fetchedGuides = (await getGuides(session.user.id)) || [];
-      if (fetchedGuides.length < 1) throw new Error("No guides found");
-
       const extendedGuides = await extendGuides(fetchedGuides);
 
-      if (extendedGuides.length < 1) throw new Error("No extended guides found");
+      // An empty collection is a state, not an error.
+      if (extendedGuides.length < 1) {
+        return (
+          <EmptyState
+            title="No guides yet"
+            message="Guides will show up here once your teachers publish them — check back soon."
+          />
+        );
+      }
 
       const modules: Module[] = await fetchModules(extendedGuides);
 
@@ -33,17 +40,21 @@ const GuidesPage = async () => {
     } catch (error) {
       console.error("Error in authenticated guides view:", error);
       return (
-        <div>
-          <h1>Error</h1>
-          <p>Something went wrong: {error instanceof Error ? error.message : 'Unknown error'}</p>
-        </div>
+        <ErrorState message="We couldn't load your guides. Please refresh the page — and if it keeps happening, let a teacher know." />
       );
     }
   } else {
     // Public access - fetch guides without user-specific data
     try {
       const publicGuides = await getPublicGuides();
-      if (!publicGuides || publicGuides.length < 1) throw new Error("No guides found");
+      if (!publicGuides || publicGuides.length < 1) {
+        return (
+          <EmptyState
+            title="No guides yet"
+            message="Guides will show up here once they're published — check back soon."
+          />
+        );
+      }
 
       // Convert to the format expected by the Guides component
       const publicGuideInfos = publicGuides.map(createPublicGuideInfo);
@@ -70,10 +81,7 @@ const GuidesPage = async () => {
     } catch (error) {
       console.error("Error in public guides view:", error);
       return (
-        <div>
-          <h1>Error</h1>
-          <p>Something went wrong: {error instanceof Error ? error.message : 'Unknown error'}</p>
-        </div>
+        <ErrorState message="We couldn't load the guides. Please refresh the page and try again." />
       );
     }
   }

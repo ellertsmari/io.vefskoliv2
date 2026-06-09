@@ -7,6 +7,7 @@ import { useLocalState } from "utils/hooks/useStorage";
 import { extractModuleNumber } from "utils/moduleUtils";
 import { GuidesClient } from "../guidesClient/GuidesClient";
 import { StatusLegend } from "./StatusLegend";
+import { LoadingSpinner } from "UIcomponents/states/States";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
 
@@ -20,7 +21,8 @@ export const Guides = ({
   const [selectedModule, setSelectedModule, loading] =
     useLocalState<number>(LOCAL_STORAGE_KEY, 0, v => v.toString());
 
-  if (!extendedGuides || !modules || loading) return null;
+  if (!extendedGuides || !modules) return null;
+  if (loading) return <LoadingSpinner label="Loading guides…" />;
 
   const filteredGuides = filterGuides(selectedModule, extendedGuides);
 

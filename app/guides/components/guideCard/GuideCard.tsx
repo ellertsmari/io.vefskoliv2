@@ -11,6 +11,7 @@ import { CardWrapper, InfoWrapper } from "./style";
 import { NotificationIconContainer } from "UIcomponents/toggle/style";
 import { NotificationIcon } from "assets/Icons";
 import { Suspense, lazy } from "react";
+import { LoadingSpinner } from "UIcomponents/states/States";
 
 const GuideModal = lazy(() =>
   import("../guideModal/GuideModal").then((mod) => ({
@@ -65,7 +66,7 @@ const GuideCard = ({
                   />
                 }
                 modalContent={
-                  <Suspense fallback={<div>loading</div>}>
+                  <Suspense fallback={<LoadingSpinner label="Opening guide…" />}>
                     <GuideModal />
                   </Suspense>
                 }

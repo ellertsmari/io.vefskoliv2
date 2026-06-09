@@ -3,6 +3,7 @@ import { auth } from "../../../auth";
 import { getGuide } from "serverActions/getGuide";
 import { GuideOverview } from "../components/guideOverview/GuideOverview";
 import { ClientGuide } from "types/guideTypes";
+import { ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
 
 type ParamsType = Promise<{ id: string }>;
@@ -16,10 +17,11 @@ const GuidePage = async ({ params }: { params: ParamsType }) => {
 
   if (!guide) {
     return (
-      <>
-        <h1>Guide not found</h1>
-        <h2>{id}</h2>
-      </>
+      <ErrorState
+        title="Guide not found"
+        message="This guide may have been moved or removed."
+        backLink="/guides"
+      />
     );
   }
 
