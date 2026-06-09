@@ -2,6 +2,7 @@ import { ReturnOverview } from "../returnOverview/ReturnOverview";
 
 import {
   VoteContainer,
+  VoteDescription,
   VoteIcon,
   VotingContainer,
   WriteFeedbackContainer,
@@ -10,12 +11,13 @@ import { SubHeading1 } from "globalStyles/text";
 import { isCodeCategory } from "utils/guideTaxonomy";
 import RichTextEditor from "UIcomponents/markdown/RichTextEditor";
 import {
+  startTransition,
   useActionState,
   useCallback,
   useEffect,
-  useMemo,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "providers/GuideProvider";
 import { returnReview } from "serverActions/returnFeedback";
@@ -24,7 +26,7 @@ import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
 import { FeedbackInfoContainer } from "./style";
 import { useLocalState } from "utils/hooks/useStorage";
-import { set } from "mongoose";
+import { LoadingSpinner } from "UIcomponents/states/States";
 import styled from "styled-components";
 
 const ErrorMessage = styled.div`
@@ -34,50 +36,105 @@ const ErrorMessage = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  
+
   &::before {
     content: "⚠️";
   }
 `;
 
-const ErrorContainer = styled.div`
-  margin: 8px 0;
+const TipsPanel = styled.div`
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: #fafafa;
+  font-size: 0.9rem;
+
+  ul {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.2rem;
+  }
+
+  li {
+    margin-bottom: 0.25rem;
+  }
 `;
+
+const SuccessPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 0;
+`;
+
+/** One-line student-facing criteria for each vote, shown under the icon. */
+const VOTE_DESCRIPTIONS: Record<Vote, string> = {
+  [Vote.NO_PASS]: "Doesn't meet the guide's requirements yet",
+  [Vote.PASS]: "Meets the guide's requirements",
+  [Vote.RECOMMEND_TO_GALLERY]: "Outstanding — deserves to be showcased",
+};
+
+const CODE_TIPS = [
+  "Code readability and structure",
+  "Problem-solving approach",
+  "Best practices implementation",
+  "Edge case handling",
+  "Performance considerations",
+];
+
+const DESIGN_TIPS = [
+  "Visual hierarchy and layout",
+  "Color and typography choices",
+  "User experience flow",
+  "Responsive design",
+  "Accessibility considerations",
+];
 
 export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   const LOCAL_STORAGE_KEY = `feedback for ${guideTitle}`;
 
-  const [comment, setComment, loading] = useLocalState<string>(
+  // Both the comment AND the vote survive a refresh — losing one but not the
+  // other felt arbitrary to students.
+  const [comment, setComment, loadingComment] = useLocalState<string>(
     LOCAL_STORAGE_KEY,
     ""
   );
-  const [vote, setVote] = useState<Vote | undefined>(undefined);
+  const [vote, setVoteStored, loadingVote] = useLocalState<Vote | null>(
+    `${LOCAL_STORAGE_KEY} (vote)`,
+    null
+  );
   const [showErrors, setShowErrors] = useState(false);
+  const [showTips, setShowTips] = useState(false);
   const [state, formAction, isPending] = useActionState(
     returnReview,
     undefined
   );
+  const router = useRouter();
 
+  // On success, clear the draft. We deliberately do NOT auto-refresh here:
+  // the student first sees a confirmation; "CONTINUE" triggers the refresh
+  // (which re-renders the modal with their updated review status).
   useEffect(() => {
     if (state?.success) {
       setComment("");
-      window.location.reload(); // lazy way to force state update as we have no DB listeners setup yet
+      setVoteStored(null);
     }
-  }, [state?.success, setComment]);
+  }, [state?.success, setComment, setVoteStored]);
 
-  const handleSetVote = useCallback((vote: Vote) => {
-    setVote(vote);
-    // Hide errors when user selects a vote
-    if (showErrors && vote) {
-      setShowErrors(false);
-    }
-  }, [showErrors]);
-  
+  const handleSetVote = useCallback(
+    (newVote: Vote) => {
+      setVoteStored(newVote);
+      if (showErrors && newVote) {
+        setShowErrors(false);
+      }
+    },
+    [showErrors, setVoteStored]
+  );
+
   const handleSetComment = useCallback(
-    (comment: string) => {
-      setComment(comment);
-      // Hide errors when user types enough text
-      if (showErrors && comment && comment.length >= 2) {
+    (newComment: string) => {
+      setComment(newComment);
+      if (showErrors && newComment && newComment.length >= 2) {
         setShowErrors(false);
       }
     },
@@ -85,11 +142,10 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
   );
 
   const { guide } = useGuide();
-  const { availableForReview } = guide;
+  const availableForReview = guide?.availableForReview ?? [];
   // Take the first return - it's deterministically assigned to this user by the backend
   // (sorted by: fewest reviews → user-specific assignment → oldest first → consistent tiebreaker)
   const theReturn = availableForReview[0];
-  const canSubmit = vote && comment && comment.length >= 2;
 
   // Error checking functions
   const hasVoteError = showErrors && !vote;
@@ -97,60 +153,113 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
 
   const handleSubmit = (event: React.FormEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    
+
     if (vote && comment && comment.length >= 2 && theReturn) {
       setShowErrors(false);
-      formAction({
-        vote,
-        comment,
-        returnId: theReturn._id.toString(),
-        guideId: theReturn.guide.toString(),
+      // useActionState's dispatch must run inside a transition, otherwise
+      // React warns and isPending never flips (no SUBMITTING… state).
+      startTransition(() => {
+        formAction({
+          vote,
+          comment,
+          returnId: theReturn._id.toString(),
+          guideId: theReturn.guide.toString(),
+        });
       });
     } else {
       setShowErrors(true);
     }
   };
 
-  if (!guide || loading) return null;
+  if (!guide || loadingComment || loadingVote) {
+    return <LoadingSpinner label="Loading review…" />;
+  }
+
+  if (state?.success) {
+    const moreAvailable = availableForReview.length > 1;
+    return (
+      <SuccessPanel>
+        <SubHeading1>REVIEW SUBMITTED ✓</SubHeading1>
+        <p style={{ margin: 0, lineHeight: 1.5 }}>
+          Thanks for helping a classmate — your review brings them one step
+          closer to completing this guide.
+          {moreAvailable &&
+            " Another project is waiting for your review on this guide."}
+        </p>
+        <Button
+          type="button"
+          $styletype="default"
+          onClick={() => router.refresh()}
+        >
+          {moreAvailable ? "CONTINUE" : "DONE"}
+        </Button>
+      </SuccessPanel>
+    );
+  }
+
+  const isCodeGuide = isCodeCategory(guide.category);
+  const tips = isCodeGuide ? CODE_TIPS : DESIGN_TIPS;
 
   return (
     <FeedbackInfoContainer>
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <VoteSelector selectedVote={vote} setVote={handleSetVote} />
+        <VoteSelector selectedVote={vote ?? undefined} setVote={handleSetVote} />
         {hasVoteError && (
-          <ErrorMessage>Please select a vote (PASS, NO PASS, or GALLERY)</ErrorMessage>
+          <ErrorMessage>
+            Please select a vote (PASS, NO PASS, or GALLERY)
+          </ErrorMessage>
         )}
         <ReturnOverview theReturn={theReturn} />
       </div>
       <WriteFeedbackContainer>
         <SubHeading1>WRITE A REVIEW</SubHeading1>
-        <RichTextEditor 
-          value={comment || ""} 
-          setValue={handleSetComment} 
+        <RichTextEditor
+          value={comment || ""}
+          setValue={handleSetComment}
           guideCategory={guide.category}
         />
         {hasCommentError && (
-          <ErrorMessage>Please write at least 2 characters in your review</ErrorMessage>
+          <ErrorMessage>
+            Please write at least 2 characters in your review
+          </ErrorMessage>
         )}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {showTips && (
+          <TipsPanel id="review-tips">
+            <strong>
+              {isCodeGuide ? "Code review focus areas" : "Design review focus areas"}
+            </strong>
+            <ul>
+              {tips.map((tip) => (
+                <li key={tip}>{tip}</li>
+              ))}
+            </ul>
+          </TipsPanel>
+        )}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Button
             type="button"
             $styletype="outlined"
-            onClick={() => {
-              const isCodeGuide = isCodeCategory(guide.category);
-              const tips = isCodeGuide
-                ? "Code Review Focus Areas:\n• Code readability and structure\n• Problem-solving approach\n• Best practices implementation\n• Edge case handling\n• Performance considerations"
-                : "Design Review Focus Areas:\n• Visual hierarchy and layout\n• Color and typography choices\n• User experience flow\n• Responsive design\n• Accessibility considerations";
-              alert(tips);
-            }}
+            onClick={() => setShowTips((prev) => !prev)}
+            aria-expanded={showTips}
+            aria-controls="review-tips"
             disabled={isPending}
           >
-            WHAT CAN I IMPROVE?
+            {showTips ? "HIDE TIPS" : "WHAT SHOULD I LOOK FOR?"}
           </Button>
           <div>
             <Button
               type="button"
-              $styletype={canSubmit && !isPending ? "default" : "outlined"}
+              $styletype={
+                vote && comment && comment.length >= 2 && !isPending
+                  ? "default"
+                  : "outlined"
+              }
               onClick={handleSubmit}
               disabled={isPending}
             >
@@ -173,7 +282,7 @@ const VoteSelector = ({
   return (
     <>
       <SubHeading1>VOTE</SubHeading1>
-      <VotingContainer>
+      <VotingContainer role="radiogroup" aria-label="Your vote on this project">
         {Object.values(Vote)
           .map((vote) => (
             <VoteButton
@@ -218,7 +327,12 @@ const VoteButton = ({
   }
 
   return (
-    <VoteContainer onClick={() => setVote(vote)}>
+    <VoteContainer
+      type="button"
+      onClick={() => setVote(vote)}
+      role="radio"
+      aria-checked={selected}
+    >
       <div>
         <VoteIcon
           style={{
@@ -230,6 +344,7 @@ const VoteButton = ({
         </VoteIcon>
       </div>
       <div style={{ color: color }}>{title}</div>
+      <VoteDescription>{VOTE_DESCRIPTIONS[vote]}</VoteDescription>
     </VoteContainer>
   );
 };

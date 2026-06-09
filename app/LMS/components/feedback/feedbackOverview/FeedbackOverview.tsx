@@ -43,10 +43,13 @@ export const FeedbackOverview = () => {
   const [showReviewForm, setShowReviewForm] = useState<boolean>(false);
 
   if (!guide) return null;
+  // Defensive defaults: a guide fresh from serialization (or an unexpected
+  // shape) may be missing these arrays entirely. Without the fallbacks the
+  // whole guide modal crashes when a student opens their feedback.
   const {
-    reviewsGiven,
-    reviewsReceived,
-    returnsSubmitted,
+    reviewsGiven = [],
+    reviewsReceived = [],
+    returnsSubmitted = [],
   } = guide;
 
   const theReview =
@@ -98,7 +101,7 @@ export const FeedbackOverview = () => {
           currentSelection={showGivenOrReceived}
           options={toggleOptions()}
         />
-        {guide.returnStatus !== ReturnStatus.NOT_RETURNED && guide.availableForReview.length > 0 && (
+        {guide.returnStatus !== ReturnStatus.NOT_RETURNED && (guide.availableForReview?.length ?? 0) > 0 && (
           <Button
             $styletype="outlined"
             onClick={() => setShowReviewForm(true)}

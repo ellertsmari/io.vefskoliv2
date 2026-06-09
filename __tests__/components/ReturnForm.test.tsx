@@ -25,6 +25,11 @@ jest.mock("serverActions/returnGuide", () => ({
   returnGuide: jest.fn(),
 }));
 
+const mockRefresh = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: mockRefresh }),
+}));
+
 describe("ReturnForm", () => {
   beforeAll(async () => await connect());
 
@@ -60,7 +65,7 @@ describe("ReturnForm", () => {
 
     const projectUrl =
       "https://www.figma.com/board/zzY1HfwDdoUVAXJrJTwtYW/Untitled?node-id=24-1599&t=obAcOpdLEllhnacc-1";
-    const liveVersion = "liveVersion";
+    const liveVersion = "my-site.netlify.app";
     const comment = "comment";
     const projectName = "projectName";
 
@@ -96,7 +101,8 @@ describe("ReturnForm", () => {
     await waitFor(() =>
       expect(returnGuide).toHaveBeenCalledWith(undefined, {
         projectUrl,
-        liveVersion,
+        // bare URLs are normalized with https:// before submission
+        liveVersion: "https://my-site.netlify.app",
         projectName,
         comment,
         guideId,

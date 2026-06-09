@@ -21,7 +21,7 @@ jest.mock("../../app/guides/components/guidesClient/GuidesClient", () => ({
     guides.map((guide) => <div key={guide.link}>{guide.module.title}</div>),
 }));
 
-const { filterGuides, createOptions } = exportedForTesting;
+const { filterGuides, createOptions, currentOptionName } = exportedForTesting;
 
 describe("Guides", () => {
   beforeAll(async () => await connect());
@@ -53,10 +53,10 @@ describe("Guides", () => {
       expect(queryByText(extendedGuides[2].module.title)).toBeDefined();
     });
 
-    // The component uses ModuleOptions dropdown with Module X buttons
-    // Click on a different module to filter guides
+    // Capsules render the modules' real titles, with an "All modules" option first
+    expect(getByText("All modules")).toBeDefined();
     const moduleNumber = parseInt(extendedGuides[1].module.title[0]);
-    fireEvent.click(getByText("Module " + moduleNumber));
+    fireEvent.click(getByText(modules[moduleNumber].title));
 
     // Check that the filtered guide is shown
     await waitFor(() => {
@@ -71,10 +71,10 @@ describe("Guides", () => {
       <Guides extendedGuides={guides} modules={[]} />
     );
 
-    // When no guides/modules are provided, no module buttons should be rendered
+    // When no modules are provided, only the "All modules" capsule renders
     await waitFor(() => {
-      // Check that no module option buttons are rendered
       expect(queryByText(/Module \d/)).toBeNull();
+      expect(queryByText("All modules")).toBeDefined();
     });
   });
 });
@@ -195,28 +195,56 @@ describe("filterGuides", () => {
 });
 
 describe("createOptions", () => {
-  it("creates options from modules", () => {
+  it("creates an All option followed by one option per module, labeled by title", () => {
     const setSelectedModule = jest.fn();
     const modules = [
-      { title: "1", number: 1 },
-      { title: "2", number: 2 },
-      { title: "2", number: 3 },
+      { title: "1 - Fundamentals", number: 1 },
+      { title: "2 - Connecting", number: 2 },
     ];
 
     const options = createOptions(modules, setSelectedModule);
 
+    expect(options[0].optionName).toEqual("All modules");
+    options[0].onClick();
+    expect(setSelectedModule).toHaveBeenCalledWith(null);
+
     for (let i = 0; i < modules.length; i++) {
-      expect(options[i].optionName).toEqual("Module " + modules[i].number);
-      options[i].onClick();
+      expect(options[i + 1].optionName).toEqual(modules[i].title);
+      options[i + 1].onClick();
       expect(setSelectedModule).toHaveBeenCalledWith(modules[i].number);
     }
   });
-  it("creates empty array when modules array is empty", () => {
+
+  it("falls back to 'Module N' when a module title is missing", () => {
     const setSelectedModule = jest.fn();
-    const modules = [] as { title: string; number: number }[];
+    const options = createOptions(
+      [{ title: "", number: 4 }],
+      setSelectedModule
+    );
+    expect(options[1].optionName).toEqual("Module 4");
+  });
 
-    const options = createOptions(modules, setSelectedModule);
+  it("creates only the All option when modules array is empty", () => {
+    const setSelectedModule = jest.fn();
+    const options = createOptions([], setSelectedModule);
 
-    expect(options.length).toEqual(0);
+    expect(options.length).toEqual(1);
+    expect(options[0].optionName).toEqual("All modules");
+  });
+});
+
+describe("currentOptionName", () => {
+  const modules = [{ title: "3 - The fundamentals", number: 3 }];
+
+  it("returns the module title for a selected module", () => {
+    expect(currentOptionName(3, modules)).toEqual("3 - The fundamentals");
+  });
+
+  it("returns All modules when nothing is selected", () => {
+    expect(currentOptionName(null, modules)).toEqual("All modules");
+  });
+
+  it("returns All modules when the selection no longer exists", () => {
+    expect(currentOptionName(7, modules)).toEqual("All modules");
   });
 });

@@ -69,12 +69,18 @@ export async function returnGuide(
   }
 }
 
+// A typo'd URL doesn't just hurt the submitter: a classmate gets assigned to
+// review the return and hits a dead link. So URLs are actually validated as
+// URLs (the client normalizes bare domains to https:// before submitting).
+const urlField = (message: string) => z.string().trim().url({ message });
+
 const ReturnFormSchema = z.object({
-  projectUrl: z.string().min(2, { message: "Please enter a valid URL" }).trim(),
-  liveVersion: z
-    .string()
-    .min(2, { message: "Please enter a valid URL" })
-    .trim(),
+  projectUrl: urlField(
+    "Please enter a valid URL, including https:// (e.g. https://github.com/you/project)"
+  ),
+  liveVersion: urlField(
+    "Please enter a valid URL, including https:// (e.g. https://you.github.io/project)"
+  ),
   projectName: z
     .string()
     .min(2, { message: "Please enter a valid project name" })
@@ -84,5 +90,9 @@ const ReturnFormSchema = z.object({
     .min(2, { message: "Please enter a valid description" })
     .trim(),
   guideId: z.string().trim(),
-  pictureUrl: z.string().trim().optional(),
+  // optional, but if present it must be a real URL; empty string means absent
+  pictureUrl: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    urlField("Please enter a valid image URL or leave the field empty").optional()
+  ),
 });

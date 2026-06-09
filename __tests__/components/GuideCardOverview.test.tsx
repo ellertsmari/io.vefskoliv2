@@ -4,7 +4,6 @@ import { GuideCardOverview } from "../../app/guides/components/guideCardOverview
 import {
   ReturnStatus,
   ReviewStatus,
-  GradesGivenStatus,
 } from "../../types/guideTypes";
 
 describe("GuideCardOverview", () => {
@@ -17,7 +16,6 @@ describe("GuideCardOverview", () => {
         link="http://example.com"
         returnStatus={ReturnStatus.NOT_RETURNED}
         reviewStatus={ReviewStatus.REVIEWS_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
@@ -34,7 +32,6 @@ describe("GuideCardOverview", () => {
         link={linkText}
         returnStatus={ReturnStatus.NOT_RETURNED}
         reviewStatus={ReviewStatus.REVIEWS_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 
@@ -50,7 +47,6 @@ describe("GuideCardOverview", () => {
         order={1}
         returnStatus={ReturnStatus.NOT_RETURNED}
         reviewStatus={ReviewStatus.REVIEWS_GIVEN}
-        gradesGivenStatus={GradesGivenStatus.AWAITING_REVIEWS}
       />
     );
 

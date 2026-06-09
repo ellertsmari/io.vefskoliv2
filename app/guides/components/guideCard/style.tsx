@@ -42,11 +42,30 @@ export const VotingContainer = styled.div`
   width: 100%;
   max-width: 400px;
 `;
-export const VoteContainer = styled.div`
+export const VoteContainer = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-black-100);
+    outline-offset: 4px;
+    border-radius: 8px;
+  }
+`;
+
+export const VoteDescription = styled.span`
+  font-size: 0.75rem;
+  color: #555;
+  text-align: center;
+  line-height: 1.3;
+  margin-top: 0.25rem;
 `;
 
 export const VoteIcon = styled.div`

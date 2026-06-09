@@ -7,6 +7,7 @@ import { Module } from "../../../types/guideTypes";
 import { getGuides } from "../../serverActions/getGuides";
 import { extendGuides, fetchModules } from "../../utils/guideUtils";
 import { safeSerialize } from "../../utils/serialization";
+import { EmptyState, ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
 import { redirect } from 'next/navigation';
 
@@ -27,11 +28,16 @@ const Dashboard = async () => {
   // Authenticated user - show personalized home page based on role
   try {
     const fetchedGuides = (await getGuides(session.user.id)) || [];
-    if (fetchedGuides.length < 1) throw new Error("No guides found");
-
     const extendedGuides = await extendGuides(fetchedGuides);
 
-    if (extendedGuides.length < 1) throw new Error("No extended guides found");
+    if (extendedGuides.length < 1) {
+      return (
+        <EmptyState
+          title="Welcome!"
+          message="Your dashboard will fill up once guides are published — check back soon."
+        />
+      );
+    }
 
     const modules: Module[] = await fetchModules(extendedGuides);
 
@@ -48,10 +54,7 @@ const Dashboard = async () => {
   } catch (error) {
     console.error("Error in home page:", error);
     return (
-      <div>
-        <h1>Error</h1>
-        <p>Something went wrong: {error instanceof Error ? error.message : 'Unknown error'}</p>
-      </div>
+      <ErrorState message="We couldn't load your dashboard. Please refresh the page — and if it keeps happening, let a teacher know." />
     );
   }
 };
