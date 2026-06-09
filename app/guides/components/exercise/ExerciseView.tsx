@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { submitExercise } from "serverActions/submitExercise";
+import type { BestAttemptInfo } from "serverActions/getExerciseAttempts";
 import type { TaskResult } from "utils/exerciseUtils";
 import { ExercisePublic } from "types/guideTypes";
 import { Button } from "globalStyles/buttons/default/style";
@@ -25,6 +26,8 @@ import {
   TaskResultNote,
   SubmitRow,
   AnsweredCount,
+  GoalBreakdownList,
+  GoalItem,
 } from "./style";
 
 type Answers = Record<string, number[]>;
@@ -42,9 +45,12 @@ const shuffledIndices = (n: number): number[] => {
 export const ExerciseView = ({
   guideId,
   exercise,
+  bestAttempt,
 }: {
   guideId: string;
   exercise: ExercisePublic;
+  /** the student's best previous attempt, for "your best so far" context */
+  bestAttempt?: BestAttemptInfo;
 }) => {
   const [answers, setAnswers] = useState<Answers>({});
   const [state, formAction, isPending] = useActionState(
@@ -143,9 +149,21 @@ export const ExerciseView = ({
     <Wrapper>
       <Heading1>Exercise</Heading1>
       <ExerciseMeta>
-        {taskCount} question{taskCount === 1 ? "" : "s"} · {passPercent}% to
-        pass · unlimited attempts — your best score counts
+        {taskCount} question{taskCount === 1 ? "" : "s"}
+        {exercise.poolTotal
+          ? ` (drawn from a pool of ${exercise.poolTotal})`
+          : ""}{" "}
+        · {passPercent}% to pass · unlimited attempts — your best score counts
       </ExerciseMeta>
+      {bestAttempt && !result && (
+        <ExerciseMeta>
+          Your best so far: <strong>{bestAttempt.score}/10</strong>{" "}
+          {bestAttempt.passed ? "(passed)" : "(not passed yet)"} ·{" "}
+          {bestAttempt.attemptCount} attempt
+          {bestAttempt.attemptCount === 1 ? "" : "s"}
+          {bestAttempt.passed && " — retake to improve your score"}
+        </ExerciseMeta>
+      )}
 
       <div ref={bannerRef} aria-live="polite">
         {result && (
@@ -158,6 +176,19 @@ export const ExerciseView = ({
         )}
         {errorMessage && (
           <ResultBanner $passed={false}>{errorMessage}</ResultBanner>
+        )}
+        {result?.goalBreakdown && result.goalBreakdown.length > 0 && (
+          <GoalBreakdownList aria-label="Score by learning goal">
+            {result.goalBreakdown.map(({ goal, earnedPoints, totalPoints }) => {
+              const mastered = earnedPoints === totalPoints;
+              return (
+                <GoalItem key={goal} $mastered={mastered}>
+                  {mastered ? "✓" : "↻"} {goal} — {earnedPoints}/{totalPoints}{" "}
+                  points{mastered ? "" : " · worth revisiting in the materials"}
+                </GoalItem>
+              );
+            })}
+          </GoalBreakdownList>
         )}
       </div>
 
@@ -177,7 +208,9 @@ export const ExerciseView = ({
                 </SubHeading1>
               </TaskPrompt>
               <TaskMeta>
-                {task.allowMultiple ? "Select all that apply" : "Choose one"}
+                {task.allowMultiple
+                  ? "Select all that apply · partial credit"
+                  : "Choose one"}
               </TaskMeta>
               <Border>
                 {displayOrder.map((originalIndex) => (
@@ -196,12 +229,22 @@ export const ExerciseView = ({
                 ))}
               </Border>
               {taskResult && (
-                <TaskResultNote $correct={taskResult.correct}>
+                <TaskResultNote
+                  $correct={taskResult.correct}
+                  $partial={!taskResult.correct && taskResult.pointsEarned > 0}
+                >
                   {taskResult.correct
                     ? `Correct${
                         taskResult.explanation
                           ? ` — ${taskResult.explanation}`
                           : ""
+                      }`
+                    : taskResult.pointsEarned > 0
+                    ? `Partially correct (${taskResult.pointsEarned}/${
+                        taskResult.pointsPossible
+                      } points) — ${
+                        taskResult.hint ??
+                        "review the materials above and try again."
                       }`
                     : `Not quite — ${
                         taskResult.hint ??

@@ -6,6 +6,7 @@ import { ExerciseView } from "../exercise/ExerciseView";
 import { Border, Wrapper, MaterialButton } from "globalStyles/globalStyles";
 import { Heading1, SubHeading1, SubHeading1Bold } from "globalStyles/text";
 import { ClientGuide, GradingMode } from "types/guideTypes";
+import type { BestAttemptInfo } from "serverActions/getExerciseAttempts";
 import {
   Main,
   Side,
@@ -18,10 +19,12 @@ import {
 
 export const GuideOverview = ({
   guide,
-  isAuthenticated = true // Default to true to maintain backwards compatibility
+  isAuthenticated = true, // Default to true to maintain backwards compatibility
+  bestAttempt,
 }: {
   guide: ClientGuide;
   isAuthenticated?: boolean;
+  bestAttempt?: BestAttemptInfo;
 }) => {
   if (!guide) {
     return <h1>Guide not found</h1>;
@@ -146,6 +149,7 @@ export const GuideOverview = ({
             <ExerciseView
               guideId={guide._id.toString()}
               exercise={guide.exercise!}
+              bestAttempt={bestAttempt}
             />
           ) : (
             <ReturnForm guideId={guide._id.toString()} />

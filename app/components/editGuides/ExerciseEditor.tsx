@@ -30,10 +30,14 @@ export type QuizTaskForm = {
   points: number;
   explanation: string;
   hint: string;
+  /** knowledge goal this question assesses; "" = untagged */
+  goal: string;
 };
 
 export type ExerciseForm = {
   passThreshold: number; // 0..1
+  /** 0 = serve every question; N = serve N random questions per visit */
+  poolSize: number;
   tasks: QuizTaskForm[];
 };
 
@@ -45,14 +49,18 @@ export const emptyTask = (): QuizTaskForm => ({
   points: 1,
   explanation: "",
   hint: "",
+  goal: "",
 });
 
 export const ExerciseEditor = ({
   value,
   onChange,
+  knowledgeGoals = [],
 }: {
   value: ExerciseForm;
   onChange: (next: ExerciseForm) => void;
+  /** the guide's knowledge items, offered as goal tags for each question */
+  knowledgeGoals?: string[];
 }) => {
   const updateTask = (index: number, patch: Partial<QuizTaskForm>) => {
     onChange({
@@ -139,6 +147,30 @@ export const ExerciseEditor = ({
         />
         <SmallLabel>
           Percentage of points a student needs to pass the exercise.
+        </SmallLabel>
+      </InputGroup>
+
+      <InputGroup>
+        <Label htmlFor="poolSize">Question pool (optional)</Label>
+        <Input
+          id="poolSize"
+          type="number"
+          min={0}
+          max={Math.max(0, value.tasks.length - 1)}
+          value={value.poolSize || ""}
+          placeholder="Serve all questions"
+          onChange={(e) =>
+            onChange({
+              ...value,
+              poolSize: Math.max(0, parseInt(e.target.value) || 0),
+            })
+          }
+        />
+        <SmallLabel>
+          Serve this many randomly chosen questions per visit instead of all{" "}
+          {value.tasks.length}. Leave empty to serve every question. Larger
+          pools make retries more meaningful — students can&apos;t memorize a
+          fixed set.
         </SmallLabel>
       </InputGroup>
 
@@ -244,6 +276,34 @@ export const ExerciseEditor = ({
                 />
               </MultiFieldGroup>
             </MultiFieldRow>
+
+            {knowledgeGoals.length > 0 && (
+              <MultiFieldRow>
+                <MultiFieldGroup>
+                  <SmallLabel>
+                    Knowledge goal this question assesses (optional)
+                  </SmallLabel>
+                  <select
+                    value={task.goal}
+                    onChange={(e) =>
+                      updateTask(taskIndex, { goal: e.target.value })
+                    }
+                    style={{ padding: "0.4rem", maxWidth: "100%" }}
+                  >
+                    <option value="">— not tagged —</option>
+                    {knowledgeGoals.map((goal) => (
+                      <option key={goal} value={goal}>
+                        {goal}
+                      </option>
+                    ))}
+                  </select>
+                  <SmallLabel>
+                    Tagged questions give students per-goal feedback
+                    (&quot;you&apos;ve got X down, review Y&quot;).
+                  </SmallLabel>
+                </MultiFieldGroup>
+              </MultiFieldRow>
+            )}
 
             <MultiFieldRow>
               <MultiFieldGroup>

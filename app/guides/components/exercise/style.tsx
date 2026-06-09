@@ -62,8 +62,28 @@ export const ResultBanner = styled.div<{ $passed: boolean }>`
   background-color: ${({ $passed }) => ($passed ? "#d1e7dd" : "#f8d7da")};
 `;
 
-export const TaskResultNote = styled.p<{ $correct: boolean }>`
+export const TaskResultNote = styled.p<{
+  $correct: boolean;
+  $partial?: boolean;
+}>`
   margin: 0;
   font-size: 0.9rem;
-  color: ${({ $correct }) => ($correct ? "#0f5132" : "#842029")};
+  color: ${({ $correct, $partial }) =>
+    $correct ? "#0f5132" : $partial ? "#664d03" : "#842029"};
+`;
+
+export const GoalBreakdownList = styled.ul`
+  list-style: none;
+  margin: 0 0 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+`;
+
+export const GoalItem = styled.li<{ $mastered: boolean }>`
+  font-size: 0.9rem;
+  color: ${({ $mastered }) => ($mastered ? "#0f5132" : "#664d03")};
 `;

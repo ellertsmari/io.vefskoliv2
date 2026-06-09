@@ -68,6 +68,10 @@ const exerciseTaskSchema = new Schema(
     // rather than copy-the-feedback). Should point back at the material, not
     // give the answer away.
     hint: { type: Schema.Types.String, required: false },
+    // Optional knowledge goal this task assesses (one of the guide's
+    // knowledge items, stored as its text). Powers per-goal feedback for
+    // students and per-goal stats for teachers.
+    goal: { type: Schema.Types.String, required: false },
   },
   { _id: true }
 );
@@ -76,6 +80,9 @@ const exerciseSchema = new Schema({
   tasks: { type: [exerciseTaskSchema], required: true },
   // fraction of total points required to pass (0..1)
   passThreshold: { type: Schema.Types.Number, required: true, default: 0.7 },
+  // When set (1 <= poolSize < tasks.length), each visit serves a random
+  // subset of this many questions; absent = serve all questions.
+  poolSize: { type: Schema.Types.Number, required: false, min: 1 },
 });
 
 const guideSchema = new Schema({

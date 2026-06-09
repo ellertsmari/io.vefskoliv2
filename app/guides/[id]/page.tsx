@@ -2,7 +2,8 @@
 import { auth } from "../../../auth";
 import { getGuide } from "serverActions/getGuide";
 import { GuideOverview } from "../components/guideOverview/GuideOverview";
-import { ClientGuide } from "types/guideTypes";
+import { ClientGuide, GradingMode } from "types/guideTypes";
+import { getBestExerciseAttempt } from "serverActions/getExerciseAttempts";
 import { ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
 
@@ -28,7 +29,19 @@ const GuidePage = async ({ params }: { params: ParamsType }) => {
   // Pass authentication status to determine if return form should be shown
   const isAuthenticated = !!session?.user?.id;
 
-  return <GuideOverview guide={guide} isAuthenticated={isAuthenticated} />;
+  // "Your best so far" context for students revisiting an auto-graded exercise.
+  const bestAttempt =
+    isAuthenticated && guide.gradingMode === GradingMode.AUTO
+      ? (await getBestExerciseAttempt(id)) ?? undefined
+      : undefined;
+
+  return (
+    <GuideOverview
+      guide={guide}
+      isAuthenticated={isAuthenticated}
+      bestAttempt={bestAttempt}
+    />
+  );
 };
 
 export default GuidePage;

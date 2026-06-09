@@ -47,6 +47,8 @@ export type ExercisePublic = {
   tasks: ExerciseTaskPublic[];
   /** fraction of total points required to pass, 0..1 */
   passThreshold: number;
+  /** total pool size when questions are drawn from a pool (tasks.length < poolTotal) */
+  poolTotal?: number;
 };
 
 /**
