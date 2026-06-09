@@ -10,6 +10,7 @@ import {
   Name,
   GuideCardContainer,
   StyledLink,
+  ActionHint,
 } from "./style";
 
 export const GuideCardOverview = ({
@@ -42,6 +43,11 @@ export const GuideCardOverview = ({
         reviewStatus={reviewStatus}
         grade={grade}
       />
+      {/* same-looking cards behave differently (open guide vs. status modal);
+          a small hint removes the guesswork */}
+      <ActionHint aria-hidden="true">
+        {link ? "Open guide ›" : "View status ›"}
+      </ActionHint>
     </Info>
   );
 

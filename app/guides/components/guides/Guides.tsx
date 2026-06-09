@@ -2,10 +2,11 @@
 
 import { Container, GuideDropdownContainer } from "./style";
 import { ModuleOptions } from "UIcomponents/dropdown/Dropdown";
-import { ExtendedGuideInfo, Module } from "types/guideTypes";
+import { ExtendedGuideInfo, Module, ReturnStatus } from "types/guideTypes";
 import { useLocalState } from "utils/hooks/useStorage";
 import { extractModuleNumber } from "utils/moduleUtils";
 import { GuidesClient } from "../guidesClient/GuidesClient";
+import { StatusLegend } from "./StatusLegend";
 
 const LOCAL_STORAGE_KEY = "selectedModule";
 
@@ -25,6 +26,12 @@ export const Guides = ({
 
   const options = createOptions(modules, setSelectedModule);
 
+  // Only meaningful for logged-in students with progress; visitors see
+  // every card as NOT_RETURNED and don't need a legend.
+  const showLegend = extendedGuides.some(
+    (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED
+  );
+
   return (
     <Container>
       <GuideDropdownContainer>
@@ -36,6 +43,7 @@ export const Guides = ({
           )}
         />
       </GuideDropdownContainer>
+      {showLegend && <StatusLegend />}
       <GuidesClient guides={filteredGuides} useGuideOrder={!!selectedModule} />
     </Container>
   );

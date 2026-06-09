@@ -59,3 +59,10 @@ export const GuideDescription = styled(Wrapper)`
   align-items: flex-start;
   text-align: center;
 `;
+
+export const ActionHint = styled.span`
+  font-size: 0.7rem;
+  color: #777;
+  align-self: center;
+  white-space: nowrap;
+`;
