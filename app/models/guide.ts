@@ -63,6 +63,11 @@ const exerciseTaskSchema = new Schema(
     // server-only answer key:
     correctAnswers: { type: [Schema.Types.Number], required: true },
     explanation: { type: Schema.Types.String, required: false },
+    // Shown to the student when they answer INCORRECTLY (the explanation is
+    // only revealed on a correct answer, so retries stay a learning exercise
+    // rather than copy-the-feedback). Should point back at the material, not
+    // give the answer away.
+    hint: { type: Schema.Types.String, required: false },
   },
   { _id: true }
 );

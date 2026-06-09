@@ -4,8 +4,7 @@ import { auth } from "../../../../auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { EditGuideForm } from "../../../components/editGuides/EditGuideForm";
-import { getGuide } from "../../../serverActions/getGuide";
-import { safeSerialize } from "../../../utils/serialization";
+import { getGuideForTeacher } from "../../../serverActions/getGuide";
 import { Session } from "next-auth";
 
 interface EditGuidePageProps {
@@ -26,7 +25,7 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
   const { id } = await params;
 
   try {
-    const guide = await getGuide(id);
+    const guide = await getGuideForTeacher(id);
     
     if (!guide) {
       return (
@@ -38,9 +37,7 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
       );
     }
 
-    const serializedGuide = safeSerialize(guide);
-
-    return <EditGuideForm guide={serializedGuide} />;
+    return <EditGuideForm guide={guide} />;
   } catch (error) {
     console.error("Error in edit guide page:", error);
     return (

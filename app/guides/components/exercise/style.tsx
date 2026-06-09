@@ -1,10 +1,42 @@
 import styled from "styled-components";
 
-export const TaskCard = styled.div`
+export const TaskCard = styled.fieldset`
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
+  border: none;
+  padding: 0;
+  margin-left: 0;
+  margin-right: 0;
+`;
+
+export const TaskPrompt = styled.legend`
+  padding: 0;
+`;
+
+export const TaskMeta = styled.span`
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #666;
+`;
+
+export const ExerciseMeta = styled.p`
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: #555;
+`;
+
+export const SubmitRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+export const AnsweredCount = styled.span`
+  font-size: 0.9rem;
+  color: #555;
 `;
 
 export const Option = styled.label`

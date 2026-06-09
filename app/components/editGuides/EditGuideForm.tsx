@@ -70,6 +70,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
           allowMultiple: !!t.allowMultiple,
           points: t.points ?? 1,
           explanation: t.explanation || "",
+          hint: t.hint || "",
         })),
       };
     }
@@ -189,6 +190,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
             ...(t.explanation.trim()
               ? { explanation: t.explanation.trim() }
               : {}),
+            ...(t.hint.trim() ? { hint: t.hint.trim() } : {}),
           })),
         },
       };
