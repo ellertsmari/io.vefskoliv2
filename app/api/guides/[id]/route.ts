@@ -48,6 +48,7 @@ const GuideUpdateSchema = z.object({
           allowMultiple: z.boolean().optional().default(false),
           points: z.number().int().min(1).optional().default(1),
           explanation: z.string().optional(),
+          hint: z.string().optional(),
         })
       ),
     })

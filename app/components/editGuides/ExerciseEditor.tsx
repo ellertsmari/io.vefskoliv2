@@ -29,6 +29,7 @@ export type QuizTaskForm = {
   allowMultiple: boolean;
   points: number;
   explanation: string;
+  hint: string;
 };
 
 export type ExerciseForm = {
@@ -43,6 +44,7 @@ export const emptyTask = (): QuizTaskForm => ({
   allowMultiple: false,
   points: 1,
   explanation: "",
+  hint: "",
 });
 
 export const ExerciseEditor = ({
@@ -229,13 +231,31 @@ export const ExerciseEditor = ({
 
             <MultiFieldRow>
               <MultiFieldGroup>
-                <SmallLabel>Explanation (shown after submitting, optional)</SmallLabel>
+                <SmallLabel>
+                  Explanation (shown when answered correctly, optional)
+                </SmallLabel>
                 <TextArea
                   value={task.explanation}
                   onChange={(e) =>
                     updateTask(taskIndex, { explanation: e.target.value })
                   }
                   placeholder="Why this answer is correct"
+                  rows={2}
+                />
+              </MultiFieldGroup>
+            </MultiFieldRow>
+
+            <MultiFieldRow>
+              <MultiFieldGroup>
+                <SmallLabel>
+                  Hint (shown when answered incorrectly, optional)
+                </SmallLabel>
+                <TextArea
+                  value={task.hint}
+                  onChange={(e) =>
+                    updateTask(taskIndex, { hint: e.target.value })
+                  }
+                  placeholder='Point back at the material without revealing the answer, e.g. "Revisit the section on selectors"'
                   rows={2}
                 />
               </MultiFieldGroup>

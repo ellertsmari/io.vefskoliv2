@@ -17,6 +17,7 @@ const makeExercise = (overrides?: Partial<ServerExercise>): ServerExercise => ({
       points: 1,
       correctAnswers: [0],
       explanation: "A is correct",
+      hint: "Re-read the section on letters",
     },
     {
       id: "t2",
@@ -68,6 +69,21 @@ describe("gradeExercise", () => {
     expect(lenient.passed).toBe(true);
   });
 
+  it("reveals the explanation only when the answer is correct", () => {
+    const graded = gradeExercise(makeExercise(), { t1: [0], t2: [0, 2] });
+    const t1 = graded.results.find((r) => r.taskId === "t1");
+    expect(t1?.explanation).toBe("A is correct");
+    expect(t1?.hint).toBeUndefined();
+  });
+
+  it("reveals the hint (not the explanation) when the answer is wrong", () => {
+    const graded = gradeExercise(makeExercise(), { t1: [1], t2: [0, 2] });
+    const t1 = graded.results.find((r) => r.taskId === "t1");
+    expect(t1?.correct).toBe(false);
+    expect(t1?.explanation).toBeUndefined();
+    expect(t1?.hint).toBe("Re-read the section on letters");
+  });
+
   it("weights tasks by their points", () => {
     const exercise = makeExercise();
     exercise.tasks[0].points = 3; // t1 worth 3, t2 worth 1 => total 4
@@ -85,6 +101,7 @@ describe("sanitizeExerciseForClient", () => {
     const serialized = JSON.stringify(sanitized);
     expect(serialized).not.toContain("correctAnswers");
     expect(serialized).not.toContain("A is correct");
+    expect(serialized).not.toContain("Re-read the section on letters");
     expect(sanitized!.tasks[0]).not.toHaveProperty("correctAnswers");
     expect(sanitized!.tasks[0].id).toBe("t1");
     expect(sanitized!.tasks[0].options).toEqual(["A", "B", "C"]);

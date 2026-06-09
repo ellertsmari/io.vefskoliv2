@@ -19,6 +19,7 @@ export type ServerQuizTask = {
   points?: number;
   correctAnswers: number[];
   explanation?: string;
+  hint?: string;
 };
 
 export type ServerExercise = {
@@ -34,8 +35,10 @@ export type TaskResult = {
   correct: boolean;
   pointsEarned: number;
   pointsPossible: number;
-  /** revealed only after grading */
+  /** revealed only when the task was answered CORRECTLY */
   explanation?: string;
+  /** revealed only when the task was answered INCORRECTLY */
+  hint?: string;
 };
 
 export type GradeResult = {
@@ -92,7 +95,11 @@ export const gradeExercise = (
       correct,
       pointsEarned,
       pointsPossible: points,
-      explanation: task.explanation,
+      // The explanation typically restates the answer, so it's only revealed
+      // once the student has it right; on a wrong answer they get the hint,
+      // which points back at the material without giving the answer away.
+      explanation: correct ? task.explanation : undefined,
+      hint: correct ? undefined : task.hint,
     };
   });
 
@@ -105,6 +112,8 @@ export const gradeExercise = (
 
 /**
  * Strip the answer key from an exercise so it can be safely sent to a student.
+ * `correctAnswers`, `explanation` and `hint` all stay server-side; the latter
+ * two are revealed selectively through grading results.
  * Returns undefined when there is no exercise.
  */
 export const sanitizeExerciseForClient = (
