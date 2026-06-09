@@ -10,7 +10,13 @@ import {
 import { SubHeading1 } from "globalStyles/text";
 import { isCodeCategory } from "utils/guideTaxonomy";
 import RichTextEditor from "UIcomponents/markdown/RichTextEditor";
-import { useActionState, useCallback, useEffect, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "providers/GuideProvider";
@@ -150,11 +156,15 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
 
     if (vote && comment && comment.length >= 2 && theReturn) {
       setShowErrors(false);
-      formAction({
-        vote,
-        comment,
-        returnId: theReturn._id.toString(),
-        guideId: theReturn.guide.toString(),
+      // useActionState's dispatch must run inside a transition, otherwise
+      // React warns and isPending never flips (no SUBMITTING… state).
+      startTransition(() => {
+        formAction({
+          vote,
+          comment,
+          returnId: theReturn._id.toString(),
+          guideId: theReturn.guide.toString(),
+        });
       });
     } else {
       setShowErrors(true);
