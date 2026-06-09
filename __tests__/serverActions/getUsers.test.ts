@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { mock } from "node:test";
 import {
   closeDatabase,
@@ -75,5 +78,30 @@ describe("getUsers", () => {
   it("should return an empty array when no users are found", async () => {
     const result = await getUsers({});
     expect(result).toEqual([]);
+  });
+
+  it("never returns sensitive fields (password, email, role, _id)", async () => {
+    await createDummyUser();
+    await createDummyUser("teacher");
+
+    const result = await getUsers();
+    expect(result.length).toBe(2);
+    for (const user of result) {
+      expect(user).not.toHaveProperty("password");
+      expect(user).not.toHaveProperty("email");
+      expect(user).not.toHaveProperty("role");
+      expect(user).not.toHaveProperty("_id");
+    }
+  });
+
+  it("filters by role when a known role is given", async () => {
+    await createDummyUser("user");
+    await createDummyUser("teacher");
+
+    const teachers = await getUsers({ role: "teacher" });
+    expect(teachers.length).toBe(1);
+
+    const students = await getUsers({ role: "user" });
+    expect(students.length).toBe(1);
   });
 });

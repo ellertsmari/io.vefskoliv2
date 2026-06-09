@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { Types } from "mongoose";
 import { auth } from "../../auth";
 import {

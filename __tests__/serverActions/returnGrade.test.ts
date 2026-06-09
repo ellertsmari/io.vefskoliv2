@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { Types } from "mongoose";
 import { GradeDataType, returnGrade } from "serverActions/returnGrade";
 import { auth } from "../../auth";

@@ -32,9 +32,20 @@ const config: Config = {
   },
   testPathIgnorePatterns: ["<rootDir>/__tests__/__mocks__/"],
   transformIgnorePatterns: [
-    "/node_modules/(?!(react-session-hooks|jose)/)"
+    "/node_modules/(?!(react-session-hooks|jose|next-auth|@auth)/)"
   ],
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default createJestConfig(config);
+// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async.
+// next/jest overrides transformIgnorePatterns, so we patch the generated config to keep our
+// ESM allowlist (next-auth v5 and friends ship untranspiled ESM that jest must transform).
+export default async () => {
+  const generated = await createJestConfig(config)();
+  return {
+    ...generated,
+    transformIgnorePatterns: [
+      "/node_modules/(?!(react-session-hooks|jose|next-auth|@auth|@panva|preact|preact-render-to-string|oauth4webapi)/)",
+      "^.+\\.module\\.(css|sass|scss)$",
+    ],
+  };
+};

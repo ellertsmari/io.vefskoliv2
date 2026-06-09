@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { connect, clearDatabase, closeDatabase, createDummyUser, createDummyGuide } from "../__mocks__/mongoHandler";
 import { getGalleryItems } from "serverActions/getGallery";
 import { Return } from "models/return";
