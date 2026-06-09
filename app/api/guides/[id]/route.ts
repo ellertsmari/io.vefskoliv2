@@ -39,6 +39,7 @@ const GuideUpdateSchema = z.object({
   exercise: z
     .object({
       passThreshold: z.number().min(0).max(1),
+      poolSize: z.number().int().min(1).optional(),
       tasks: z.array(
         z.object({
           type: z.literal("quiz").optional().default("quiz"),
@@ -49,9 +50,14 @@ const GuideUpdateSchema = z.object({
           points: z.number().int().min(1).optional().default(1),
           explanation: z.string().optional(),
           hint: z.string().optional(),
+          goal: z.string().optional(),
         })
       ),
     })
+    .refine(
+      (ex) => ex.poolSize === undefined || ex.poolSize < ex.tasks.length,
+      { message: "poolSize must be smaller than the number of questions" }
+    )
     .nullable()
     .optional(),
 });

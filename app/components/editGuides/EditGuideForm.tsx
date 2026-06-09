@@ -71,10 +71,12 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
           points: t.points ?? 1,
           explanation: t.explanation || "",
           hint: t.hint || "",
+          goal: t.goal || "",
         })),
+        poolSize: ex.poolSize ?? 0,
       };
     }
-    return { passThreshold: 0.7, tasks: [emptyTask()] };
+    return { passThreshold: 0.7, poolSize: 0, tasks: [emptyTask()] };
   });
 
   // Canonical taxonomy axes (category is derived from these on save).
@@ -162,6 +164,8 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
       if (task.correctAnswers.length === 0)
         return `Question ${n}: mark at least one correct answer.`;
     }
+    if (exercise.poolSize >= exercise.tasks.length && exercise.poolSize > 0)
+      return "The question pool must be smaller than the total number of questions (leave it empty to serve all).";
     return null;
   };
 
@@ -191,7 +195,9 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
               ? { explanation: t.explanation.trim() }
               : {}),
             ...(t.hint.trim() ? { hint: t.hint.trim() } : {}),
+            ...(t.goal.trim() ? { goal: t.goal.trim() } : {}),
           })),
+          ...(exercise.poolSize > 0 ? { poolSize: exercise.poolSize } : {}),
         },
       };
     } else {
@@ -340,7 +346,11 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
         </Section>
 
         {gradingMode === "auto" && (
-          <ExerciseEditor value={exercise} onChange={setExercise} />
+          <ExerciseEditor
+            value={exercise}
+            onChange={setExercise}
+            knowledgeGoals={formData.knowledge.filter((k) => k.trim())}
+          />
         )}
 
         <Section>
