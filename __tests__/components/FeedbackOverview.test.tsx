@@ -73,12 +73,12 @@ const returnsSubmitted = [
 
 // Base mock guide data with all required fields
 const createMockGuide = (overrides = {}) => ({
-  feedbackGiven: [],
-  feedbackReceived: [],
+  reviewsGiven: [],
+  reviewsReceived: [],
   returnsSubmitted,
   link: "someLink",
   returnStatus: "awaiting feedback",
-  availableForFeedback: [],
+  availableForReview: [],
   ...overrides,
 });
 
@@ -100,8 +100,8 @@ describe("Feedback", () => {
 
     (useGuide as jest.Mock).mockReturnValue({
       guide: createMockGuide({
-        feedbackGiven: mockFeedbackGiven,
-        feedbackReceived: mockFeedbackReceived,
+        reviewsGiven: mockFeedbackGiven,
+        reviewsReceived: mockFeedbackReceived,
       }),
     });
 
@@ -138,8 +138,8 @@ describe("Feedback", () => {
 
     (useGuide as jest.Mock).mockReturnValue({
       guide: createMockGuide({
-        feedbackGiven: mockFeedbackGiven,
-        feedbackReceived: mockFeedbackReceived,
+        reviewsGiven: mockFeedbackGiven,
+        reviewsReceived: mockFeedbackReceived,
       }),
     });
 
@@ -169,8 +169,8 @@ describe("Feedback", () => {
 
     (useGuide as jest.Mock).mockReturnValue({
       guide: createMockGuide({
-        feedbackGiven: mockFeedbackGiven,
-        feedbackReceived: mockFeedbackReceived,
+        reviewsGiven: mockFeedbackGiven,
+        reviewsReceived: mockFeedbackReceived,
       }),
     });
 
@@ -209,8 +209,8 @@ describe("Feedback", () => {
 
     (useGuide as jest.Mock).mockReturnValue({
       guide: createMockGuide({
-        feedbackGiven: mockFeedbackGiven,
-        feedbackReceived: mockFeedbackReceived,
+        reviewsGiven: mockFeedbackGiven,
+        reviewsReceived: mockFeedbackReceived,
       }),
     });
 
@@ -228,8 +228,8 @@ describe("Feedback", () => {
 
     (useGuide as jest.Mock).mockReturnValue({
       guide: createMockGuide({
-        feedbackGiven: mockFeedbackGiven,
-        feedbackReceived: mockFeedbackReceived,
+        reviewsGiven: mockFeedbackGiven,
+        reviewsReceived: mockFeedbackReceived,
       }),
     });
 
