@@ -8,10 +8,17 @@ import bcrypt from "bcrypt";
 import { connectToDatabase } from "serverActions/mongoose-connector";
 import { cookies } from "next/headers";
 
-export async function getUser(email: string): Promise<UserDocument | null> {
+export async function getUser(
+  email: string,
+  options: { withPassword?: boolean } = {}
+): Promise<UserDocument | null> {
   try {
     await connectToDatabase();
-    const user: UserDocument | null = await User.findOne({ email });
+    // The password hash is `select: false` on the schema; only the credentials
+    // `authorize` flow opts in to it for bcrypt comparison.
+    const query = User.findOne({ email });
+    if (options.withPassword) query.select("+password");
+    const user: UserDocument | null = await query;
     return user;
   } catch (error) {
     throw new Error("Failed to fetch user.");
@@ -29,7 +36,7 @@ const nextAuth = NextAuth({
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
-          const user = await getUser(email);
+          const user = await getUser(email, { withPassword: true });
           if (!user) return null;
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) return user;
