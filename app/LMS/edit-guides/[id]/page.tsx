@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { EditGuideForm } from "../../../components/editGuides/EditGuideForm";
 import { getGuideForTeacher } from "../../../serverActions/getGuide";
+import { getExerciseAnalytics } from "../../../serverActions/getExerciseAnalytics";
+import { ExerciseAnalyticsView } from "../../../components/editGuides/ExerciseAnalyticsView";
+import { safeSerialize } from "../../../utils/serialization";
 import { Session } from "next-auth";
 
 interface EditGuidePageProps {
@@ -37,7 +40,19 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
       );
     }
 
-    return <EditGuideForm guide={guide} />;
+    const analytics =
+      guide.gradingMode === "auto" && guide.exercise
+        ? await getExerciseAnalytics(id)
+        : null;
+
+    return (
+      <>
+        <EditGuideForm guide={guide} />
+        {analytics && (
+          <ExerciseAnalyticsView analytics={safeSerialize(analytics)} />
+        )}
+      </>
+    );
   } catch (error) {
     console.error("Error in edit guide page:", error);
     return (
