@@ -8,6 +8,7 @@ import { Guide } from "../models/guide";
 import { ExerciseAttempt } from "../models/exerciseAttempt";
 import {
   gradeExercise,
+  ExerciseGradingError,
   type GradeResult,
   type ServerExercise,
   type ExerciseAnswers,
@@ -77,7 +78,17 @@ export async function submitExercise(
       return failure("This guide is not an auto-graded exercise");
     }
 
-    const result = gradeExercise(guide.exercise as ServerExercise, answers);
+    let result: GradeResult;
+    try {
+      result = gradeExercise(guide.exercise as ServerExercise, answers);
+    } catch (e) {
+      // A pooled submission that doesn't match the served questions is a bad
+      // request, not a server error — tell the student what to do.
+      if (e instanceof ExerciseGradingError) {
+        return failure(e.message);
+      }
+      throw e;
+    }
 
     await ExerciseAttempt.create({
       guide: new ObjectId(guideId),
