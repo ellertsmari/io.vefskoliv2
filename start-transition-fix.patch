@@ -1,0 +1,61 @@
+From 15b0cd979f63d4bef1a202cf94fc511fd57f0f6f Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 9 Jun 2026 22:21:37 +0000
+Subject: [PATCH] fix(reviews): dispatch review submission inside
+ startTransition
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+useActionState's dispatch must be called within a transition; outside
+one React 19 warns in the console and isPending never updates, so the
+SUBMITTING… state and the disabled buttons didn't engage while the
+review was in flight. Every other call site already wrapped it — this
+was the one stray.
+---
+ .../giveFeedbackView/GiveFeedbackView.tsx     | 22 ++++++++++++++-----
+ 1 file changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/app/LMS/components/feedback/giveFeedbackView/GiveFeedbackView.tsx b/app/LMS/components/feedback/giveFeedbackView/GiveFeedbackView.tsx
+index fc2e26b..e2495f5 100644
+--- a/app/LMS/components/feedback/giveFeedbackView/GiveFeedbackView.tsx
++++ b/app/LMS/components/feedback/giveFeedbackView/GiveFeedbackView.tsx
+@@ -10,7 +10,13 @@ import {
+ import { SubHeading1 } from "globalStyles/text";
+ import { isCodeCategory } from "utils/guideTaxonomy";
+ import RichTextEditor from "UIcomponents/markdown/RichTextEditor";
+-import { useActionState, useCallback, useEffect, useState } from "react";
++import {
++  startTransition,
++  useActionState,
++  useCallback,
++  useEffect,
++  useState,
++} from "react";
+ import { useRouter } from "next/navigation";
+ import { Button } from "globalStyles/buttons/default/style";
+ import { useGuide } from "providers/GuideProvider";
+@@ -150,11 +156,15 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
+ 
+     if (vote && comment && comment.length >= 2 && theReturn) {
+       setShowErrors(false);
+-      formAction({
+-        vote,
+-        comment,
+-        returnId: theReturn._id.toString(),
+-        guideId: theReturn.guide.toString(),
++      // useActionState's dispatch must run inside a transition, otherwise
++      // React warns and isPending never flips (no SUBMITTING… state).
++      startTransition(() => {
++        formAction({
++          vote,
++          comment,
++          returnId: theReturn._id.toString(),
++          guideId: theReturn.guide.toString(),
++        });
+       });
+     } else {
+       setShowErrors(true);
+-- 
+2.43.0
+

@@ -1,0 +1,800 @@
+From 045e9b03999804b17a39968ef3b53b3e898d669d Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 9 Jun 2026 21:17:52 +0000
+Subject: [PATCH 1/3] refactor: getGuide sanitizes by default;
+ getGuideForTeacher for the editor
+
+The student/public guide fetch now strips the exercise answer key inside
+the data-access layer itself, so no caller can accidentally serialize it
+to the browser. The guide editor uses the new teacher-gated
+getGuideForTeacher, which returns the raw guide (answer key included).
+Both return client-serializable plain objects, removing the manual
+JSON.parse(JSON.stringify()) + sanitize dance from the pages.
+---
+ app/LMS/edit-guides/[id]/page.tsx |  9 ++----
+ app/guides/[id]/page.tsx          | 12 ++------
+ app/serverActions/getGuide.ts     | 49 +++++++++++++++++++++++++------
+ 3 files changed, 46 insertions(+), 24 deletions(-)
+
+diff --git a/app/LMS/edit-guides/[id]/page.tsx b/app/LMS/edit-guides/[id]/page.tsx
+index a3fead7..dbe727e 100644
+--- a/app/LMS/edit-guides/[id]/page.tsx
++++ b/app/LMS/edit-guides/[id]/page.tsx
+@@ -4,8 +4,7 @@ import { auth } from "../../../../auth";
+ import { redirect } from "next/navigation";
+ import Link from "next/link";
+ import { EditGuideForm } from "../../../components/editGuides/EditGuideForm";
+-import { getGuide } from "../../../serverActions/getGuide";
+-import { safeSerialize } from "../../../utils/serialization";
++import { getGuideForTeacher } from "../../../serverActions/getGuide";
+ import { Session } from "next-auth";
+ 
+ interface EditGuidePageProps {
+@@ -26,7 +25,7 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
+   const { id } = await params;
+ 
+   try {
+-    const guide = await getGuide(id);
++    const guide = await getGuideForTeacher(id);
+     
+     if (!guide) {
+       return (
+@@ -38,9 +37,7 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
+       );
+     }
+ 
+-    const serializedGuide = safeSerialize(guide);
+-
+-    return <EditGuideForm guide={serializedGuide} />;
++    return <EditGuideForm guide={guide} />;
+   } catch (error) {
+     console.error("Error in edit guide page:", error);
+     return (
+diff --git a/app/guides/[id]/page.tsx b/app/guides/[id]/page.tsx
+index b8d04b4..1b4feb0 100644
+--- a/app/guides/[id]/page.tsx
++++ b/app/guides/[id]/page.tsx
+@@ -2,7 +2,6 @@
+ import { auth } from "../../../auth";
+ import { getGuide } from "serverActions/getGuide";
+ import { GuideOverview } from "../components/guideOverview/GuideOverview";
+-import { sanitizeGuideForClient } from "utils/exerciseUtils";
+ import { ClientGuide } from "types/guideTypes";
+ import { Session } from "next-auth";
+ 
+@@ -11,14 +10,9 @@ type ParamsType = Promise<{ id: string }>;
+ const GuidePage = async ({ params }: { params: ParamsType }) => {
+   const { id } = await params;
+   const session: Session | null = await auth();
+-  const guideJSON = await getGuide(id);
+-  // Strip the exercise answer key before this reaches the client. This page is
+-  // the student/public view, so the raw `exercise` must never be serialized here.
+-  const guide: ClientGuide | null = guideJSON
+-    ? (sanitizeGuideForClient(
+-        JSON.parse(JSON.stringify(guideJSON))
+-      ) as unknown as ClientGuide)
+-    : null;
++  // getGuide is sanitized by default: the exercise answer key is stripped
++  // server-side and the result is already client-serializable.
++  const guide: ClientGuide | null = await getGuide(id);
+ 
+   if (!guide) {
+     return (
+diff --git a/app/serverActions/getGuide.ts b/app/serverActions/getGuide.ts
+index c61677d..6d3b60c 100644
+--- a/app/serverActions/getGuide.ts
++++ b/app/serverActions/getGuide.ts
+@@ -1,18 +1,49 @@
+ "use server";
+ import { Types } from "mongoose";
+-import { GuideDocument } from "models/guide";
++import { auth } from "../../auth";
++import { Guide, GuideType } from "models/guide";
+ import { connectToDatabase } from "./mongoose-connector";
+-import { Guide } from "models/guide";
++import { sanitizeGuideForClient } from "utils/exerciseUtils";
++import { safeSerialize } from "utils/serialization";
++import { hasTeacherPermissions } from "utils/userUtils";
++import type { ClientGuide } from "types/guideTypes";
+ 
+-export const getGuide = async (id: string) => {
++const findGuide = async (id: string): Promise<GuideType | null> => {
+   if (!Types.ObjectId.isValid(id)) {
+     return null;
+   }
+-  const objectId = new Types.ObjectId(id);
+   await connectToDatabase();
+-  const guide: GuideDocument | null =
+-    (await Guide.findOne({
+-      _id: objectId,
+-    })) || null;
+-  return guide;
++  const guide = await Guide.findById(new Types.ObjectId(id)).lean<GuideType>();
++  return guide ?? null;
++};
++
++/**
++ * Fetch a guide for student/public views.
++ *
++ * Sanitized BY DEFAULT: the raw `exercise` (which contains the quiz answer key)
++ * is replaced with a client-safe version before this function returns, so no
++ * caller can accidentally serialize the answer key to the browser. Teacher
++ * tooling that needs the answer key must use `getGuideForTeacher` instead.
++ */
++export const getGuide = async (id: string): Promise<ClientGuide | null> => {
++  const guide = await findGuide(id);
++  if (!guide) return null;
++  return sanitizeGuideForClient(
++    safeSerialize(guide) as Record<string, unknown>
++  ) as unknown as ClientGuide;
++};
++
++/**
++ * Fetch a guide INCLUDING the exercise answer key, for the guide editor.
++ * Teacher-only; returns null for anyone else.
++ */
++export const getGuideForTeacher = async (
++  id: string
++): Promise<GuideType | null> => {
++  const session = await auth();
++  if (!hasTeacherPermissions(session)) {
++    return null;
++  }
++  const guide = await findGuide(id);
++  return guide ? safeSerialize(guide) : null;
+ };
+-- 
+2.43.0
+
+
+From 87f57705e91e4ad1fa44ce97d5bd8e4119c5d7ef Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 9 Jun 2026 21:17:52 +0000
+Subject: [PATCH 2/3] feat(quiz): hint-on-incorrect, explanation-on-correct
+
+- exercise tasks get an optional teacher-authored hint that points back
+  at the material without revealing the answer
+- grading now reveals the explanation only on a CORRECT answer; a wrong
+  answer gets the hint instead, so retries stay a learning exercise
+  rather than copy-the-feedback
+- editor: hint field per question; clarified explanation label
+- PUT whitelist allows the new field; sanitization keeps it server-side
+---
+ __tests__/utils/exerciseUtils.test.ts        | 17 +++++++++++++++
+ app/api/guides/[id]/route.ts                 |  1 +
+ app/components/editGuides/EditGuideForm.tsx  |  2 ++
+ app/components/editGuides/ExerciseEditor.tsx | 22 +++++++++++++++++++-
+ app/models/guide.ts                          |  5 +++++
+ app/utils/exerciseUtils.ts                   | 13 ++++++++++--
+ 6 files changed, 57 insertions(+), 3 deletions(-)
+
+diff --git a/__tests__/utils/exerciseUtils.test.ts b/__tests__/utils/exerciseUtils.test.ts
+index 5a0b28b..639ff4d 100644
+--- a/__tests__/utils/exerciseUtils.test.ts
++++ b/__tests__/utils/exerciseUtils.test.ts
+@@ -17,6 +17,7 @@ const makeExercise = (overrides?: Partial<ServerExercise>): ServerExercise => ({
+       points: 1,
+       correctAnswers: [0],
+       explanation: "A is correct",
++      hint: "Re-read the section on letters",
+     },
+     {
+       id: "t2",
+@@ -68,6 +69,21 @@ describe("gradeExercise", () => {
+     expect(lenient.passed).toBe(true);
+   });
+ 
++  it("reveals the explanation only when the answer is correct", () => {
++    const graded = gradeExercise(makeExercise(), { t1: [0], t2: [0, 2] });
++    const t1 = graded.results.find((r) => r.taskId === "t1");
++    expect(t1?.explanation).toBe("A is correct");
++    expect(t1?.hint).toBeUndefined();
++  });
++
++  it("reveals the hint (not the explanation) when the answer is wrong", () => {
++    const graded = gradeExercise(makeExercise(), { t1: [1], t2: [0, 2] });
++    const t1 = graded.results.find((r) => r.taskId === "t1");
++    expect(t1?.correct).toBe(false);
++    expect(t1?.explanation).toBeUndefined();
++    expect(t1?.hint).toBe("Re-read the section on letters");
++  });
++
+   it("weights tasks by their points", () => {
+     const exercise = makeExercise();
+     exercise.tasks[0].points = 3; // t1 worth 3, t2 worth 1 => total 4
+@@ -85,6 +101,7 @@ describe("sanitizeExerciseForClient", () => {
+     const serialized = JSON.stringify(sanitized);
+     expect(serialized).not.toContain("correctAnswers");
+     expect(serialized).not.toContain("A is correct");
++    expect(serialized).not.toContain("Re-read the section on letters");
+     expect(sanitized!.tasks[0]).not.toHaveProperty("correctAnswers");
+     expect(sanitized!.tasks[0].id).toBe("t1");
+     expect(sanitized!.tasks[0].options).toEqual(["A", "B", "C"]);
+diff --git a/app/api/guides/[id]/route.ts b/app/api/guides/[id]/route.ts
+index f472aa6..fc946ec 100644
+--- a/app/api/guides/[id]/route.ts
++++ b/app/api/guides/[id]/route.ts
+@@ -48,6 +48,7 @@ const GuideUpdateSchema = z.object({
+           allowMultiple: z.boolean().optional().default(false),
+           points: z.number().int().min(1).optional().default(1),
+           explanation: z.string().optional(),
++          hint: z.string().optional(),
+         })
+       ),
+     })
+diff --git a/app/components/editGuides/EditGuideForm.tsx b/app/components/editGuides/EditGuideForm.tsx
+index 76be603..41c8f1b 100644
+--- a/app/components/editGuides/EditGuideForm.tsx
++++ b/app/components/editGuides/EditGuideForm.tsx
+@@ -70,6 +70,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
+           allowMultiple: !!t.allowMultiple,
+           points: t.points ?? 1,
+           explanation: t.explanation || "",
++          hint: t.hint || "",
+         })),
+       };
+     }
+@@ -189,6 +190,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
+             ...(t.explanation.trim()
+               ? { explanation: t.explanation.trim() }
+               : {}),
++            ...(t.hint.trim() ? { hint: t.hint.trim() } : {}),
+           })),
+         },
+       };
+diff --git a/app/components/editGuides/ExerciseEditor.tsx b/app/components/editGuides/ExerciseEditor.tsx
+index d12f2cc..f3e346d 100644
+--- a/app/components/editGuides/ExerciseEditor.tsx
++++ b/app/components/editGuides/ExerciseEditor.tsx
+@@ -29,6 +29,7 @@ export type QuizTaskForm = {
+   allowMultiple: boolean;
+   points: number;
+   explanation: string;
++  hint: string;
+ };
+ 
+ export type ExerciseForm = {
+@@ -43,6 +44,7 @@ export const emptyTask = (): QuizTaskForm => ({
+   allowMultiple: false,
+   points: 1,
+   explanation: "",
++  hint: "",
+ });
+ 
+ export const ExerciseEditor = ({
+@@ -229,7 +231,9 @@ export const ExerciseEditor = ({
+ 
+             <MultiFieldRow>
+               <MultiFieldGroup>
+-                <SmallLabel>Explanation (shown after submitting, optional)</SmallLabel>
++                <SmallLabel>
++                  Explanation (shown when answered correctly, optional)
++                </SmallLabel>
+                 <TextArea
+                   value={task.explanation}
+                   onChange={(e) =>
+@@ -240,6 +244,22 @@ export const ExerciseEditor = ({
+                 />
+               </MultiFieldGroup>
+             </MultiFieldRow>
++
++            <MultiFieldRow>
++              <MultiFieldGroup>
++                <SmallLabel>
++                  Hint (shown when answered incorrectly, optional)
++                </SmallLabel>
++                <TextArea
++                  value={task.hint}
++                  onChange={(e) =>
++                    updateTask(taskIndex, { hint: e.target.value })
++                  }
++                  placeholder='Point back at the material without revealing the answer, e.g. "Revisit the section on selectors"'
++                  rows={2}
++                />
++              </MultiFieldGroup>
++            </MultiFieldRow>
+           </MultiFieldItem>
+         ))}
+         <AddButton type="button" onClick={addTask}>
+diff --git a/app/models/guide.ts b/app/models/guide.ts
+index 4efdbe8..9d0cace 100644
+--- a/app/models/guide.ts
++++ b/app/models/guide.ts
+@@ -63,6 +63,11 @@ const exerciseTaskSchema = new Schema(
+     // server-only answer key:
+     correctAnswers: { type: [Schema.Types.Number], required: true },
+     explanation: { type: Schema.Types.String, required: false },
++    // Shown to the student when they answer INCORRECTLY (the explanation is
++    // only revealed on a correct answer, so retries stay a learning exercise
++    // rather than copy-the-feedback). Should point back at the material, not
++    // give the answer away.
++    hint: { type: Schema.Types.String, required: false },
+   },
+   { _id: true }
+ );
+diff --git a/app/utils/exerciseUtils.ts b/app/utils/exerciseUtils.ts
+index 4b6ac93..0478870 100644
+--- a/app/utils/exerciseUtils.ts
++++ b/app/utils/exerciseUtils.ts
+@@ -19,6 +19,7 @@ export type ServerQuizTask = {
+   points?: number;
+   correctAnswers: number[];
+   explanation?: string;
++  hint?: string;
+ };
+ 
+ export type ServerExercise = {
+@@ -34,8 +35,10 @@ export type TaskResult = {
+   correct: boolean;
+   pointsEarned: number;
+   pointsPossible: number;
+-  /** revealed only after grading */
++  /** revealed only when the task was answered CORRECTLY */
+   explanation?: string;
++  /** revealed only when the task was answered INCORRECTLY */
++  hint?: string;
+ };
+ 
+ export type GradeResult = {
+@@ -92,7 +95,11 @@ export const gradeExercise = (
+       correct,
+       pointsEarned,
+       pointsPossible: points,
+-      explanation: task.explanation,
++      // The explanation typically restates the answer, so it's only revealed
++      // once the student has it right; on a wrong answer they get the hint,
++      // which points back at the material without giving the answer away.
++      explanation: correct ? task.explanation : undefined,
++      hint: correct ? undefined : task.hint,
+     };
+   });
+ 
+@@ -105,6 +112,8 @@ export const gradeExercise = (
+ 
+ /**
+  * Strip the answer key from an exercise so it can be safely sent to a student.
++ * `correctAnswers`, `explanation` and `hint` all stay server-side; the latter
++ * two are revealed selectively through grading results.
+  * Returns undefined when there is no exercise.
+  */
+ export const sanitizeExerciseForClient = (
+-- 
+2.43.0
+
+
+From b8908da71d7ecfa5d267d1b94ea2fc07b5decf50 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 9 Jun 2026 21:17:52 +0000
+Subject: [PATCH 3/3] =?UTF-8?q?feat(quiz):=20exercise=20UX=20=E2=80=94=20e?=
+ =?UTF-8?q?xpectations,=20shuffle,=20stale-feedback=20clearing?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- header states the rules up front: question count, pass %, unlimited
+  attempts / best score counts
+- per-question 'Choose one' / 'Select all that apply' labels
+- option display order shuffles per mount (selections keep original
+  indices, grading untouched); defeats position-memorization on retries
+- changing an answer after grading clears THAT task's stale
+  Correct/Incorrect note instead of mislabeling the new answer
+- 'N of M answered' next to the disabled submit button explains why it
+  is disabled; result banner is aria-live and scrolled into view
+- questions are fieldset/legend for screen readers
+- component tests cover the meta header, answered count, hint vs
+  explanation rendering, and stale-feedback clearing
+---
+ __tests__/components/ExerciseView.test.tsx    | 101 +++++++++++
+ .../components/exercise/ExerciseView.tsx      | 171 ++++++++++++++----
+ app/guides/components/exercise/style.tsx      |  34 +++-
+ 3 files changed, 267 insertions(+), 39 deletions(-)
+ create mode 100644 __tests__/components/ExerciseView.test.tsx
+
+diff --git a/__tests__/components/ExerciseView.test.tsx b/__tests__/components/ExerciseView.test.tsx
+new file mode 100644
+index 0000000..2286d91
+--- /dev/null
++++ b/__tests__/components/ExerciseView.test.tsx
+@@ -0,0 +1,101 @@
++import { fireEvent, render, screen, waitFor } from "@testing-library/react";
++import { ExerciseView } from "../../app/guides/components/exercise/ExerciseView";
++import { ExerciseTaskType, type ExercisePublic } from "types/guideTypes";
++
++// Mock the server action: first submission grades t1 wrong / t2 right.
++jest.mock("serverActions/submitExercise", () => ({
++  submitExercise: jest.fn().mockResolvedValue({
++    success: true,
++    message: "Exercise submitted",
++    data: {
++      score: 5,
++      passed: false,
++      earnedPoints: 1,
++      totalPoints: 2,
++      results: [
++        {
++          taskId: "t1",
++          correct: false,
++          pointsEarned: 0,
++          pointsPossible: 1,
++          hint: "Re-read the section on letters",
++        },
++        {
++          taskId: "t2",
++          correct: true,
++          pointsEarned: 1,
++          pointsPossible: 1,
++          explanation: "B is correct",
++        },
++      ],
++    },
++  }),
++}));
++
++const exercise: ExercisePublic = {
++  passThreshold: 0.7,
++  tasks: [
++    {
++      type: ExerciseTaskType.QUIZ,
++      id: "t1",
++      prompt: "Pick A",
++      options: ["A", "B"],
++      allowMultiple: false,
++      points: 1,
++    },
++    {
++      type: ExerciseTaskType.QUIZ,
++      id: "t2",
++      prompt: "Pick B and C",
++      options: ["A", "B", "C"],
++      allowMultiple: true,
++      points: 1,
++    },
++  ],
++};
++
++describe("ExerciseView", () => {
++  it("shows expectations up front and the answered count", async () => {
++    render(<ExerciseView guideId="g1" exercise={exercise} />);
++
++    expect(
++      screen.getByText(/2 questions · 70% to pass · unlimited attempts/i)
++    ).toBeInTheDocument();
++    expect(screen.getByText("Choose one")).toBeInTheDocument();
++    expect(screen.getByText("Select all that apply")).toBeInTheDocument();
++    expect(screen.getByText("0 of 2 answered")).toBeInTheDocument();
++    expect(screen.getByRole("button", { name: /submit/i })).toBeDisabled();
++
++    fireEvent.click(screen.getByRole("radio", { name: /^A$/ }));
++    expect(screen.getByText("1 of 2 answered")).toBeInTheDocument();
++
++    fireEvent.click(screen.getByRole("checkbox", { name: /^B$/ }));
++    // all answered: count disappears, submit enables
++    expect(screen.queryByText(/of 2 answered/)).not.toBeInTheDocument();
++    expect(screen.getByRole("button", { name: /submit/i })).toBeEnabled();
++  });
++
++  it("shows hint on wrong answers, explanation on correct ones, and clears stale feedback when an answer changes", async () => {
++    render(<ExerciseView guideId="g1" exercise={exercise} />);
++
++    fireEvent.click(screen.getByRole("radio", { name: /^A$/ }));
++    fireEvent.click(screen.getByRole("checkbox", { name: /^B$/ }));
++    fireEvent.click(screen.getByRole("button", { name: /submit/i }));
++
++    // graded: banner + per-task feedback (hint for wrong, explanation for right)
++    await waitFor(() =>
++      expect(screen.getByText(/Not passed yet/)).toBeInTheDocument()
++    );
++    expect(
++      screen.getByText(/Not quite — Re-read the section on letters/)
++    ).toBeInTheDocument();
++    expect(screen.getByText(/Correct — B is correct/)).toBeInTheDocument();
++
++    // changing t1's answer must clear ITS stale note, but keep t2's
++    fireEvent.click(screen.getByRole("radio", { name: /^B$/ }));
++    expect(
++      screen.queryByText(/Not quite — Re-read the section on letters/)
++    ).not.toBeInTheDocument();
++    expect(screen.getByText(/Correct — B is correct/)).toBeInTheDocument();
++  });
++});
+diff --git a/app/guides/components/exercise/ExerciseView.tsx b/app/guides/components/exercise/ExerciseView.tsx
+index 524ab13..b9feba0 100644
+--- a/app/guides/components/exercise/ExerciseView.tsx
++++ b/app/guides/components/exercise/ExerciseView.tsx
+@@ -1,22 +1,44 @@
+ "use client";
+ 
+-import { startTransition, useActionState, useMemo, useState } from "react";
++import {
++  startTransition,
++  useActionState,
++  useEffect,
++  useMemo,
++  useRef,
++  useState,
++} from "react";
+ import { submitExercise } from "serverActions/submitExercise";
+ import type { TaskResult } from "utils/exerciseUtils";
+ import { ExercisePublic } from "types/guideTypes";
+ import { Button } from "globalStyles/buttons/default/style";
+-import { Heading1, Paragraph, SubHeading1 } from "globalStyles/text";
++import { Heading1, SubHeading1 } from "globalStyles/text";
+ import { Border, Wrapper } from "globalStyles/globalStyles";
+ import {
+   TaskCard,
++  TaskPrompt,
++  TaskMeta,
++  ExerciseMeta,
+   Option,
+   OptionInput,
+   ResultBanner,
+   TaskResultNote,
++  SubmitRow,
++  AnsweredCount,
+ } from "./style";
+ 
+ type Answers = Record<string, number[]>;
+ 
++/** Fisher–Yates shuffle of [0..n), used for per-mount option display order. */
++const shuffledIndices = (n: number): number[] => {
++  const order = Array.from({ length: n }, (_, i) => i);
++  for (let i = order.length - 1; i > 0; i--) {
++    const j = Math.floor(Math.random() * (i + 1));
++    [order[i], order[j]] = [order[j], order[i]];
++  }
++  return order;
++};
++
+ export const ExerciseView = ({
+   guideId,
+   exercise,
+@@ -30,9 +52,44 @@ export const ExerciseView = ({
+     undefined
+   );
+ 
++  // Tasks whose answer changed AFTER the last grading — their old
++  // Correct/Incorrect note is stale and must not be shown.
++  const [changedSinceResult, setChangedSinceResult] = useState<Set<string>>(
++    new Set()
++  );
++
++  // Per-task display order of options. Shuffled once per mount, AFTER
++  // hydration (shuffling during render would mismatch the server-rendered
++  // HTML). Selections always store the ORIGINAL option indices, so grading
++  // is unaffected. Until the effect runs, options render in natural order.
++  const [optionOrder, setOptionOrder] = useState<Record<string, number[]>>({});
++  useEffect(() => {
++    const order: Record<string, number[]> = {};
++    for (const task of exercise.tasks) {
++      order[task.id] = shuffledIndices(task.options.length);
++    }
++    setOptionOrder(order);
++  }, [exercise.tasks]);
++
+   const result = state?.success ? state.data : undefined;
+   const errorMessage = state && !state.success ? state.message : undefined;
+ 
++  // A fresh grading result supersedes any "changed since result" tracking.
++  useEffect(() => {
++    if (state) setChangedSinceResult(new Set());
++  }, [state]);
++
++  // Bring the result banner into view and let screen readers announce it.
++  const bannerRef = useRef<HTMLDivElement>(null);
++  useEffect(() => {
++    if (result || errorMessage) {
++      bannerRef.current?.scrollIntoView?.({
++        behavior: "smooth",
++        block: "nearest",
++      });
++    }
++  }, [result, errorMessage]);
++
+   // Map taskId -> result for quick lookup when rendering per-task feedback.
+   const resultByTask = useMemo(() => {
+     const map: Record<string, TaskResult> = {};
+@@ -47,6 +104,14 @@ export const ExerciseView = ({
+     optionIndex: number,
+     allowMultiple: boolean
+   ) => {
++    // Once graded, changing an answer invalidates that task's feedback note.
++    if (result) {
++      setChangedSinceResult((prev) => {
++        const next = new Set(prev);
++        next.add(taskId);
++        return next;
++      });
++    }
+     setAnswers((prev) => {
+       const current = prev[taskId] ?? [];
+       if (!allowMultiple) {
+@@ -66,72 +131,102 @@ export const ExerciseView = ({
+     });
+   };
+ 
+-  const allAnswered = exercise.tasks.every(
++  const answeredCount = exercise.tasks.filter(
+     (task) => (answers[task.id] ?? []).length > 0
+-  );
++  ).length;
++  const allAnswered = answeredCount === exercise.tasks.length;
++
++  const taskCount = exercise.tasks.length;
++  const passPercent = Math.round(exercise.passThreshold * 100);
+ 
+   return (
+     <Wrapper>
+       <Heading1>Exercise</Heading1>
+-      <Paragraph>
+-        Answer the questions below. Your submission is graded automatically.
+-      </Paragraph>
+-
+-      {result && (
+-        <ResultBanner $passed={result.passed}>
+-          {result.passed ? "Passed" : "Not passed yet"} — score {result.score}/10
+-          {" "}({result.earnedPoints}/{result.totalPoints} points)
+-          {!result.passed && " — feel free to try again."}
+-        </ResultBanner>
+-      )}
+-      {errorMessage && <ResultBanner $passed={false}>{errorMessage}</ResultBanner>}
++      <ExerciseMeta>
++        {taskCount} question{taskCount === 1 ? "" : "s"} · {passPercent}% to
++        pass · unlimited attempts — your best score counts
++      </ExerciseMeta>
++
++      <div ref={bannerRef} aria-live="polite">
++        {result && (
++          <ResultBanner $passed={result.passed}>
++            {result.passed ? "Passed" : "Not passed yet"} — score{" "}
++            {result.score}/10 ({result.earnedPoints}/{result.totalPoints}{" "}
++            points)
++            {!result.passed && " — adjust your answers and try again."}
++          </ResultBanner>
++        )}
++        {errorMessage && (
++          <ResultBanner $passed={false}>{errorMessage}</ResultBanner>
++        )}
++      </div>
+ 
+       <form onSubmit={handleSubmit}>
+         {exercise.tasks.map((task, taskIndex) => {
+-          const taskResult = resultByTask[task.id];
++          const isStale = changedSinceResult.has(task.id);
++          const taskResult = isStale ? undefined : resultByTask[task.id];
+           const selected = answers[task.id] ?? [];
++          const displayOrder =
++            optionOrder[task.id] ??
++            task.options.map((_, originalIndex) => originalIndex);
+           return (
+             <TaskCard key={task.id}>
+-              <SubHeading1>
+-                {taskIndex + 1}. {task.prompt}
+-              </SubHeading1>
++              <TaskPrompt>
++                <SubHeading1>
++                  {taskIndex + 1}. {task.prompt}
++                </SubHeading1>
++              </TaskPrompt>
++              <TaskMeta>
++                {task.allowMultiple ? "Select all that apply" : "Choose one"}
++              </TaskMeta>
+               <Border>
+-                {task.options.map((optionText, optionIndex) => (
+-                  <Option key={optionIndex}>
++                {displayOrder.map((originalIndex) => (
++                  <Option key={originalIndex}>
+                     <OptionInput
+                       type={task.allowMultiple ? "checkbox" : "radio"}
+                       name={task.id}
+-                      checked={selected.includes(optionIndex)}
++                      checked={selected.includes(originalIndex)}
+                       disabled={isPending}
+                       onChange={() =>
+-                        toggleOption(
+-                          task.id,
+-                          optionIndex,
+-                          task.allowMultiple
+-                        )
++                        toggleOption(task.id, originalIndex, task.allowMultiple)
+                       }
+                     />
+-                    <span>{optionText}</span>
++                    <span>{task.options[originalIndex]}</span>
+                   </Option>
+                 ))}
+               </Border>
+               {taskResult && (
+                 <TaskResultNote $correct={taskResult.correct}>
+-                  {taskResult.correct ? "Correct" : "Incorrect"}
+-                  {taskResult.explanation ? ` — ${taskResult.explanation}` : ""}
++                  {taskResult.correct
++                    ? `Correct${
++                        taskResult.explanation
++                          ? ` — ${taskResult.explanation}`
++                          : ""
++                      }`
++                    : `Not quite — ${
++                        taskResult.hint ??
++                        "review the materials above and try again."
++                      }`}
+                 </TaskResultNote>
+               )}
+             </TaskCard>
+           );
+         })}
+ 
+-        <Button
+-          type="submit"
+-          $styletype="default"
+-          disabled={isPending || !allAnswered}
+-        >
+-          {isPending ? "Submitting…" : result ? "Submit again" : "Submit"}
+-        </Button>
++        <SubmitRow>
++          <Button
++            type="submit"
++            $styletype="default"
++            disabled={isPending || !allAnswered}
++          >
++            {isPending ? "Submitting…" : result ? "Submit again" : "Submit"}
++          </Button>
++          {!allAnswered && (
++            <AnsweredCount>
++              {answeredCount} of {taskCount} answered
++            </AnsweredCount>
++          )}
++        </SubmitRow>
+       </form>
+     </Wrapper>
+   );
+diff --git a/app/guides/components/exercise/style.tsx b/app/guides/components/exercise/style.tsx
+index e3ba36e..cfa0a5b 100644
+--- a/app/guides/components/exercise/style.tsx
++++ b/app/guides/components/exercise/style.tsx
+@@ -1,10 +1,42 @@
+ import styled from "styled-components";
+ 
+-export const TaskCard = styled.div`
++export const TaskCard = styled.fieldset`
+   display: flex;
+   flex-direction: column;
+   gap: 0.75rem;
+   margin-bottom: 1.5rem;
++  border: none;
++  padding: 0;
++  margin-left: 0;
++  margin-right: 0;
++`;
++
++export const TaskPrompt = styled.legend`
++  padding: 0;
++`;
++
++export const TaskMeta = styled.span`
++  font-size: 0.8rem;
++  text-transform: uppercase;
++  letter-spacing: 0.04em;
++  color: #666;
++`;
++
++export const ExerciseMeta = styled.p`
++  margin: 0 0 1rem 0;
++  font-size: 0.9rem;
++  color: #555;
++`;
++
++export const SubmitRow = styled.div`
++  display: flex;
++  align-items: center;
++  gap: 1rem;
++`;
++
++export const AnsweredCount = styled.span`
++  font-size: 0.9rem;
++  color: #555;
+ `;
+ 
+ export const Option = styled.label`
+-- 
+2.43.0
+
