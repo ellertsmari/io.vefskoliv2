@@ -3,6 +3,7 @@
 import bcrypt from "bcrypt";
 import { signIn, getUser } from "../../auth";
 import { User } from "../models/user";
+import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
 import {
   failure,
@@ -43,6 +44,10 @@ export async function signUp(
   const password = await bcrypt.hash(rawPassword, 10);
 
   try {
+    // bufferCommands is disabled on the connection, so User.create fails on a
+    // cold start unless we connect explicitly (previously this relied on some
+    // earlier request having already opened the connection).
+    await connectToDatabase();
     await User.create({
       name: firstName + " " + lastName,
       email,

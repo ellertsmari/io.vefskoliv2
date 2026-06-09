@@ -13,13 +13,9 @@ import { redirect } from 'next/navigation';
 const Dashboard = async () => {
   const session: Session | null = await auth();
   
-  console.log('Dashboard session:', session);
-  console.log('User ID:', session?.user?.id);
-  console.log('User role:', session?.user?.role);
   
   // Let middleware handle authentication, but still check for safety
   if (!session?.user?.id) {
-    console.log('No session or user ID found');
     return (
       <div>
         <h1>Authentication Required</h1>

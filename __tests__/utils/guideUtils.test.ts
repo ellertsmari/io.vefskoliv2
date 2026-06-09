@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 // utils.test.ts
 import {
   ReviewStatus,

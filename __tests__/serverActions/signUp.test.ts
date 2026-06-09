@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { signUp } from "serverActions/signUp";
 import { getUser, signIn } from "../../auth";
 import bcrypt from "bcrypt";

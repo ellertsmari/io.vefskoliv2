@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { Types } from "mongoose";
 import { User, UserDocument } from "models/user";
 import {

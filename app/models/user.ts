@@ -43,7 +43,11 @@ const userSchema = new Schema(
   {
     name: { type: Schema.Types.String, required: true },
     email: { type: Schema.Types.String, required: true, unique: true },
-    password: { type: Schema.Types.String, required: true },
+    // `select: false`: the hash is never included in query results unless a
+    // caller explicitly opts in with `.select("+password")` (only the
+    // credentials `authorize` path does). Defense in depth so no list/lookup
+    // query can accidentally serialize password hashes.
+    password: { type: Schema.Types.String, required: true, select: false },
     background: { type: Schema.Types.String, required: false },
     careerGoals: { type: Schema.Types.String, required: false },
     interests: { type: Schema.Types.String, required: false },

@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { auth } from "auth";
 import { Return } from "models/return";
 import {
