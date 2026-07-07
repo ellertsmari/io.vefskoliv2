@@ -4,7 +4,7 @@ import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { Team } from "models/team";
-import { MAX_TEAM_IMAGES } from "constants/groupWork";
+import { optionalStoredImageSchema } from "utils/imageUpload";
 import {
   ActionResult,
   ErrorMessages,
@@ -12,7 +12,7 @@ import {
   handleActionError,
   successNoData,
 } from "utils/errors";
-import { isTeacher, requireSession } from "./helpers";
+import { objectIdSchema, isTeacher, requireSession } from "./helpers";
 
 const optionalUrl = z
   .string()
@@ -22,12 +22,12 @@ const optionalUrl = z
     message: "Must be a link starting with http(s)://",
   });
 
+
 const UpdateTeamHubSchema = z.object({
-  teamId: z
-    .string()
-    .refine((value) => ObjectId.isValid(value), { message: "Invalid id" }),
+  teamId: objectIdSchema,
   name: z.string().trim().min(1, { message: "Team name is required" }).max(100),
   projectName: z.string().trim().max(200),
+  tagline: z.string().trim().max(140),
   projectDescription: z.string().max(20000),
   links: z.object({
     github: optionalUrl,
@@ -36,7 +36,9 @@ const UpdateTeamHubSchema = z.object({
     website: optionalUrl,
     backend: optionalUrl,
   }),
-  images: z.array(optionalUrl).max(MAX_TEAM_IMAGES),
+  coverImage: optionalStoredImageSchema,
+  teamPhoto: optionalStoredImageSchema,
+  logo: optionalStoredImageSchema,
 });
 
 export type UpdateTeamHubData = z.input<typeof UpdateTeamHubSchema>;
@@ -73,10 +75,7 @@ export async function updateTeamHub(
       }
     }
 
-    team.set({
-      ...updates,
-      images: updates.images.filter(Boolean),
-    });
+    team.set(updates);
     await team.save();
     return successNoData("Team hub saved");
   } catch (error) {

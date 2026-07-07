@@ -1,11 +1,12 @@
 "use server";
 import { connectToDatabase } from "../mongoose-connector";
-import { GroupProject } from "models/groupProject";
+import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { GroupPreference } from "models/groupPreference";
 import { logError } from "utils/errors";
 import { GroupProjectListItem } from "types/groupTypes";
-import { requireSession, serializeProject } from "./helpers";
+import { applyLifecycle } from "./lifecycle";
+import { isTeacher, requireSession, serializeProject } from "./helpers";
 
 export async function getGroupProjects(): Promise<GroupProjectListItem[]> {
   const session = await requireSession();
@@ -13,9 +14,25 @@ export async function getGroupProjects(): Promise<GroupProjectListItem[]> {
 
   try {
     await connectToDatabase();
-    const projects = await GroupProject.find({})
+    let projects = await GroupProject.find({})
       .sort({ startDate: -1 })
-      .lean();
+      .lean<GroupProjectLean[]>();
+    await Promise.all(projects.map((project) => applyLifecycle(project)));
+
+    // Students see running and past projects, but of the upcoming (forming)
+    // ones only the next — no wall of future projects.
+    if (!isTeacher(session)) {
+      const nextFormation = projects
+        .filter((project) => project.status === "formation")
+        .sort(
+          (a, b) =>
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        )[0];
+      projects = projects.filter(
+        (project) =>
+          project.status !== "formation" || project === nextFormation
+      );
+    }
 
     const userId = session.user.id;
 

@@ -2,14 +2,8 @@
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
-import { GroupProject } from "models/groupProject";
+import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
-import { TeamEvaluation } from "models/teamEvaluation";
-import {
-  EVALUATION_CATEGORIES,
-  EVALUATION_MAX_SCORE,
-  EVALUATION_MIN_SCORE,
-} from "constants/groupWork";
 import {
   ActionResult,
   ErrorMessages,
@@ -17,29 +11,20 @@ import {
   handleActionError,
   successNoData,
 } from "utils/errors";
-import { isTeacher, requireSession } from "./helpers";
-
-const objectIdSchema = z
-  .string()
-  .refine((value) => ObjectId.isValid(value), { message: "Invalid id" });
+import { applyLifecycle } from "./lifecycle";
+import { objectIdSchema, isTeacher, requireSession } from "./helpers";
+import {
+  overallCommentSchema,
+  teamEvalEntriesSchema,
+  upsertTeamEvaluation,
+  validateTeamEvalSubmission,
+} from "./teamEvalShared";
 
 const SubmitTeamEvaluationSchema = z.object({
   projectId: objectIdSchema,
   teamId: objectIdSchema,
-  entries: z
-    .array(
-      z.object({
-        category: z.enum(EVALUATION_CATEGORIES),
-        score: z
-          .number()
-          .int()
-          .min(EVALUATION_MIN_SCORE)
-          .max(EVALUATION_MAX_SCORE),
-        comment: z.string().trim().max(5000).default(""),
-      })
-    )
-    .min(1)
-    .max(EVALUATION_CATEGORIES.length),
+  entries: teamEvalEntriesSchema,
+  overallComment: overallCommentSchema,
 });
 
 export type SubmitTeamEvaluationData = z.input<
@@ -59,18 +44,26 @@ export async function submitTeamEvaluation(
       validated.error.flatten().fieldErrors
     );
   }
-  const { projectId, teamId, entries } = validated.data;
+  const { projectId, teamId, entries, overallComment } = validated.data;
 
   try {
     await connectToDatabase();
     const [project, team] = await Promise.all([
-      GroupProject.findById(projectId),
+      GroupProject.findById(projectId).lean<GroupProjectLean | null>(),
       Team.findById(teamId),
     ]);
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
     if (!team || team.project.toString() !== projectId) {
       return failure(ErrorMessages.NOT_FOUND("Team"));
     }
+    await applyLifecycle(project);
+
+    const validationError = validateTeamEvalSubmission({
+      rubric: project.rubric,
+      entries,
+      overallComment,
+    });
+    if (validationError) return failure(validationError);
 
     if (!isTeacher(session)) {
       if (!project.teamEvalOpen) {
@@ -84,20 +77,13 @@ export async function submitTeamEvaluation(
       }
     }
 
-    await Promise.all(
-      entries.map((entry) =>
-        TeamEvaluation.findOneAndUpdate(
-          {
-            project: projectId,
-            team: teamId,
-            evaluator: session.user.id,
-            category: entry.category,
-          },
-          { $set: { score: entry.score, comment: entry.comment } },
-          { upsert: true }
-        )
-      )
-    );
+    await upsertTeamEvaluation({
+      projectId,
+      teamId,
+      owner: { evaluator: session.user.id },
+      entries,
+      overallComment,
+    });
     return successNoData("Evaluation submitted");
   } catch (error) {
     return handleActionError(

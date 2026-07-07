@@ -352,3 +352,12 @@ export const EditButton = styled.button`
     color: white;
   }
 `;
+// Uploaded return pictures are inline data URLs — shown as a thumbnail
+// instead of a (non-navigable) link.
+export const ReturnPicture = styled.img`
+  max-width: 160px;
+  max-height: 100px;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  object-fit: cover;
+`;

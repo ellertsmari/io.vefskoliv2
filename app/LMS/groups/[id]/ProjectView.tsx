@@ -2,7 +2,11 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import MarkdownReader from "UIcomponents/markdown/reader";
-import { EvaluationReports, GroupProjectDetails } from "types/groupTypes";
+import {
+  EvaluationReports,
+  GroupProjectDetails,
+  SerializedJudgeInvitation,
+} from "types/groupTypes";
 import { PROJECT_STATUS_LABELS } from "constants/groupWork";
 import {
   PageContainer,
@@ -45,6 +49,7 @@ const Description = styled.div`
 type Props = {
   details: GroupProjectDetails;
   reports: EvaluationReports | null;
+  judges: SerializedJudgeInvitation[];
   isTeacher: boolean;
   userId: string;
 };
@@ -56,7 +61,13 @@ const formatDate = (iso: string) =>
     year: "numeric",
   });
 
-export const ProjectView = ({ details, reports, isTeacher, userId }: Props) => {
+export const ProjectView = ({
+  details,
+  reports,
+  judges,
+  isTeacher,
+  userId,
+}: Props) => {
   const { project, myTeamId } = details;
 
   const tabs = useMemo(() => {
@@ -88,6 +99,8 @@ export const ProjectView = ({ details, reports, isTeacher, userId }: Props) => {
           </TitleRow>
           <MutedText>
             {formatDate(project.startDate)} – {formatDate(project.endDate)}
+            {project.presentationDate &&
+              ` · Presentations ${formatDate(project.presentationDate)}`}
           </MutedText>
         </HeaderInfo>
       </PageHeader>
@@ -126,7 +139,7 @@ export const ProjectView = ({ details, reports, isTeacher, userId }: Props) => {
       {currentTab === "Overview" && <TeacherOverview details={details} />}
       {currentTab === "Assignment" && <AssignmentBoard details={details} />}
       {currentTab === "Evaluations" && (
-        <TeacherEvaluations details={details} reports={reports} />
+        <TeacherEvaluations details={details} reports={reports} judges={judges} />
       )}
       {currentTab === "Settings" && <ProjectSettings details={details} />}
     </PageContainer>

@@ -228,6 +228,36 @@ export const MorePill = styled.span`
   padding: 0 0.35rem;
 `;
 
+/**
+ * One day-segment of a multi-day event. Bleeds over the cell padding (and the
+ * 1px cell border) so consecutive days join into one continuous line, like in
+ * Google Calendar; only the first and last day are rounded.
+ */
+export const SpanBar = styled.span<{
+  $color: string;
+  $start: boolean;
+  $end: boolean;
+}>`
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 1.15rem;
+  line-height: 1.15rem;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--primary-white, #fff);
+  background: ${(props) => props.$color};
+  padding: 0 ${(props) => (props.$start ? "0.35rem" : "0")};
+  margin-left: ${(props) => (props.$start ? "0" : "calc(-0.4rem - 1px)")};
+  margin-right: ${(props) => (props.$end ? "0" : "-0.4rem")};
+  border-radius: ${(props) =>
+    `${props.$start ? "4px" : "0"} ${props.$end ? "4px" : "0"} ${
+      props.$end ? "4px" : "0"
+    } ${props.$start ? "4px" : "0"}`};
+`;
+
 // ── Detail panel ──────────────────────────────────────────────────────────
 
 export const Panel = styled.aside`

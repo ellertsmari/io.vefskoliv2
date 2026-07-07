@@ -1,9 +1,12 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { BoardStudent, GroupProjectDetails } from "types/groupTypes";
-import { FOCUS_OPTIONS, TECH_STACK_OPTIONS } from "constants/groupWork";
+import {
+  FOCUS_OPTIONS,
+  techStackOptionsForModule,
+} from "constants/groupWork";
 import {
   createTeam,
   deleteTeam,
@@ -13,7 +16,6 @@ import {
   Card,
   SectionTitle,
   MutedText,
-  PrimaryButton,
   SecondaryButton,
   DangerButton,
   SelectableChip,
@@ -116,9 +118,11 @@ export const AssignmentBoard = ({
   const students = useMemo(() => details.students || [], [details.students]);
   const teams = details.teams;
 
-  const [pendingChanges, setPendingChanges] = useState<
-    Map<string, string | null>
-  >(new Map());
+  // Optimistic team-per-student overrides while the save round-trips.
+  const [overrides, setOverrides] = useState<Map<string, string | null>>(
+    new Map()
+  );
+  const [savingCount, setSavingCount] = useState(0);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverZone, setDragOverZone] = useState<string | null>(null);
   const [focusFilter, setFocusFilter] = useState<string | null>(null);
@@ -129,9 +133,26 @@ export const AssignmentBoard = ({
     error: boolean;
   } | null>(null);
 
+  // Drop overrides once the refreshed server state confirms them (or their
+  // target team disappeared) so the board never masks fresher data.
+  useEffect(() => {
+    setOverrides((prev) => {
+      if (prev.size === 0) return prev;
+      const teamIds = new Set(teams.map((team) => team._id));
+      const next = new Map(prev);
+      for (const [studentId, teamId] of prev) {
+        const serverTeamId =
+          students.find((s) => s._id === studentId)?.teamId ?? null;
+        const targetGone = teamId !== null && !teamIds.has(teamId);
+        if (serverTeamId === teamId || targetGone) next.delete(studentId);
+      }
+      return next.size === prev.size ? prev : next;
+    });
+  }, [students, teams]);
+
   const effectiveTeamId = (student: BoardStudent) =>
-    pendingChanges.has(student._id)
-      ? pendingChanges.get(student._id)!
+    overrides.has(student._id)
+      ? overrides.get(student._id)!
       : student.teamId;
 
   const matchesFilters = (student: BoardStudent) => {
@@ -143,18 +164,37 @@ export const AssignmentBoard = ({
     return true;
   };
 
-  const moveStudent = (studentId: string, teamId: string | null) => {
-    setPendingChanges((prev) => {
-      const next = new Map(prev);
-      const original = students.find((s) => s._id === studentId)?.teamId ?? null;
-      if (original === teamId) {
-        next.delete(studentId);
-      } else {
-        next.set(studentId, teamId);
-      }
-      return next;
-    });
+  // Every move is saved straight away — the override keeps the card in place
+  // until the refreshed server state takes over.
+  const moveStudent = async (studentId: string, teamId: string | null) => {
+    const current =
+      students.find((s) => s._id === studentId)?.teamId ?? null;
+    const effective = overrides.has(studentId)
+      ? overrides.get(studentId)!
+      : current;
+    if (effective === teamId) return;
+
+    setOverrides((prev) => new Map(prev).set(studentId, teamId));
     setMessage(null);
+    setSavingCount((count) => count + 1);
+
+    const result = await saveAssignments({
+      projectId: details.project._id,
+      changes: [{ userId: studentId, teamId }],
+    });
+
+    setSavingCount((count) => count - 1);
+    if (result.success) {
+      router.refresh();
+    } else {
+      // Roll the card back and surface the error.
+      setOverrides((prev) => {
+        const next = new Map(prev);
+        next.delete(studentId);
+        return next;
+      });
+      setMessage({ text: result.message, error: true });
+    }
   };
 
   const handleDrop = (zone: string) => (event: React.DragEvent) => {
@@ -163,26 +203,6 @@ export const AssignmentBoard = ({
     if (!draggingId) return;
     moveStudent(draggingId, zone === UNASSIGNED ? null : zone);
     setDraggingId(null);
-  };
-
-  const handleSave = async () => {
-    setBusy(true);
-    setMessage(null);
-    const result = await saveAssignments({
-      projectId: details.project._id,
-      changes: Array.from(pendingChanges.entries()).map(([userId, teamId]) => ({
-        userId,
-        teamId,
-      })),
-    });
-    setBusy(false);
-    if (result.success) {
-      setPendingChanges(new Map());
-      setMessage({ text: "Assignments saved!", error: false });
-      router.refresh();
-    } else {
-      setMessage({ text: result.message, error: true });
-    }
   };
 
   const handleCreateTeam = async () => {
@@ -266,14 +286,11 @@ export const AssignmentBoard = ({
         <SecondaryButton onClick={handleCreateTeam} disabled={busy}>
           + Create team
         </SecondaryButton>
-        <PrimaryButton
-          onClick={handleSave}
-          disabled={busy || pendingChanges.size === 0}
-        >
-          {busy
+        <MutedText aria-live="polite">
+          {savingCount > 0
             ? "Saving…"
-            : `Save changes${pendingChanges.size > 0 ? ` (${pendingChanges.size})` : ""}`}
-        </PrimaryButton>
+            : "Changes are saved automatically when you move a student."}
+        </MutedText>
         {message && <Message $error={message.error}>{message.text}</Message>}
       </ActionBar>
 
@@ -290,7 +307,7 @@ export const AssignmentBoard = ({
             {option}
           </SelectableChip>
         ))}
-        {TECH_STACK_OPTIONS.map((option) => (
+        {techStackOptionsForModule(details.project.module).map((option) => (
           <SelectableChip
             key={option}
             type="button"

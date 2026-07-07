@@ -11,8 +11,7 @@ import {
   TeamEvalReport,
 } from "types/groupTypes";
 import { isTeacher, requireSession, serializeTeam } from "./helpers";
-
-const round1 = (value: number) => Math.round(value * 10) / 10;
+import { round1, summarizeTeamEvaluations } from "./teamEvalShared";
 
 export async function getEvaluationReports(
   projectId: string
@@ -34,6 +33,7 @@ export async function getEvaluationReports(
         .lean(),
       TeamEvaluation.find({ project: projectId })
         .populate("evaluator", "name role")
+        .populate("judge", "name")
         .lean(),
     ]);
 
@@ -90,37 +90,41 @@ export async function getEvaluationReports(
       }
     }
 
-    // Team evaluation report: per team, per category averages + all entries.
+    // Team evaluation report: per team, weighted category averages (panel =
+    // teachers + judges) plus every individual entry.
     const teamReports = new Map<string, TeamEvalReport>(
       serializedTeams.map((team) => [
         team._id,
         { teamId: team._id, teamName: team.name, categories: {}, entries: [] },
       ])
     );
+    const summaries = summarizeTeamEvaluations(
+      (teamEvals as any[]).map((evaluation) => ({
+        team: evaluation.team,
+        category: evaluation.category,
+        score: evaluation.score,
+        isPanel:
+          !!evaluation.judge || evaluation.evaluator?.role === "teacher",
+      }))
+    );
+    for (const [teamId, categories] of Object.entries(summaries)) {
+      const report = teamReports.get(teamId);
+      if (report) report.categories = categories;
+    }
     for (const evaluation of teamEvals as any[]) {
       const report = teamReports.get(evaluation.team.toString());
       if (!report) continue;
-      const bucket = report.categories[evaluation.category] || {
-        avg: 0,
-        count: 0,
-      };
-      bucket.avg += evaluation.score;
-      bucket.count += 1;
-      report.categories[evaluation.category] = bucket;
       report.entries.push({
         category: evaluation.category,
-        score: evaluation.score,
+        score: evaluation.score ?? null,
         comment: evaluation.comment || "",
-        evaluatorName: evaluation.evaluator?.name || "Unknown",
+        evaluatorName:
+          evaluation.evaluator?.name || evaluation.judge?.name || "Unknown",
         evaluatorIsTeacher: evaluation.evaluator?.role === "teacher",
+        evaluatorIsJudge: !!evaluation.judge,
       });
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
-    for (const report of teamReports.values()) {
-      for (const bucket of Object.values(report.categories)) {
-        bucket.avg = round1(bucket.avg / bucket.count);
-      }
-    }
 
     return {
       peerEvals: Array.from(peerReports.values()).sort((a, b) =>

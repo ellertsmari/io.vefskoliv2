@@ -17,6 +17,8 @@ const teamSchema = new Schema({
   name: { type: Schema.Types.String, required: true, default: "New Team" },
   members: [{ type: Schema.Types.ObjectId, ref: "User" }],
   projectName: { type: Schema.Types.String, required: false, default: "" },
+  // One-line pitch shown under the project name on the public showcase.
+  tagline: { type: Schema.Types.String, required: false, default: "" },
   projectDescription: {
     type: Schema.Types.String,
     required: false,
@@ -29,8 +31,12 @@ const teamSchema = new Schema({
     website: { type: Schema.Types.String, required: false, default: "" },
     backend: { type: Schema.Types.String, required: false, default: "" },
   },
-  // Image URLs (max 3), same URL-paste approach as Return.pictureUrl
-  images: [{ type: Schema.Types.String }],
+  // Stored images (uploaded data URLs via utils/imageUpload, or legacy
+  // pasted http(s) URLs), each with a role on the public showcase page:
+  // cover screenshot (the hero), team photo, and a small square logo.
+  coverImage: { type: Schema.Types.String, required: false, default: "" },
+  teamPhoto: { type: Schema.Types.String, required: false, default: "" },
+  logo: { type: Schema.Types.String, required: false, default: "" },
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
 });
 

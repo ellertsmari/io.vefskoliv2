@@ -12,6 +12,7 @@
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
+    "@iconify/react": "^6.0.2",
     "@uiw/react-md-editor": "4.1.0",
     "bcrypt": "6",
     "framer-motion": "^11.1.9",

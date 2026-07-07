@@ -5,22 +5,26 @@ import {
   EvaluationReports,
   GroupProjectDetails,
   PeerEvalStudentReport,
+  SerializedJudgeInvitation,
 } from "types/groupTypes";
 import {
   CONTRIBUTION_SCORES,
   TEAMBUILDING_SCORES,
-  EVALUATION_CATEGORY_LABELS,
-  EvaluationCategory,
+  categoryLabel,
+  disciplineMetaForCategory,
+  rubricForProject,
 } from "constants/groupWork";
+import { submitTeamEvaluation } from "serverActions/groups/submitTeamEvaluation";
 import {
   Card,
   SectionTitle,
   MutedText,
   ChipRow,
   SelectableChip,
-  Pill,
+  ScorePill,
 } from "../../styles";
 import { TeamEvalForm } from "./TeamEvalForm";
+import { JudgesPanel } from "./JudgesPanel";
 
 const Layout = styled.div`
   display: flex;
@@ -243,9 +247,11 @@ const PeerEvalReport = ({
 export const TeacherEvaluations = ({
   details,
   reports,
+  judges,
 }: {
   details: GroupProjectDetails;
   reports: EvaluationReports | null;
+  judges: SerializedJudgeInvitation[];
 }) => {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(
     details.teams[0]?._id ?? null
@@ -282,13 +288,23 @@ export const TeacherEvaluations = ({
           </ChipRow>
           {selectedTeam && (
             <TeamEvalForm
-              projectId={details.project._id}
-              team={selectedTeam}
+              key={selectedTeam._id}
+              heading={`Evaluate ${selectedTeam.name}`}
+              rubric={rubricForProject(details.project.rubric)}
               existing={details.myTeamEvaluations[selectedTeam._id] || []}
+              onSubmit={(data) =>
+                submitTeamEvaluation({
+                  projectId: details.project._id,
+                  teamId: selectedTeam._id,
+                  ...data,
+                })
+              }
             />
           )}
         </>
       )}
+
+      <JudgesPanel projectId={details.project._id} judges={judges} />
 
       {reports && <PeerEvalReport reports={reports.peerEvals} />}
 
@@ -303,30 +319,56 @@ export const TeacherEvaluations = ({
                   {team.teamName}
                 </SectionTitle>
                 <ChipRow style={{ margin: "0.5rem 0" }}>
-                  {Object.entries(team.categories).map(([category, bucket]) => (
-                    <Pill key={category}>
-                      {EVALUATION_CATEGORY_LABELS[
-                        category as EvaluationCategory
-                      ] || category}
-                      : {bucket.avg} avg ({bucket.count})
-                    </Pill>
-                  ))}
+                  {Object.entries(team.categories).map(([category, bucket]) => {
+                    const meta = disciplineMetaForCategory(
+                      details.project.rubric,
+                      category
+                    );
+                    return (
+                      <ScorePill
+                        key={category}
+                        $color={meta.color}
+                        $background={meta.background}
+                      >
+                        {categoryLabel(details.project.rubric, category)}:{" "}
+                        {bucket.avg} avg ({bucket.count})
+                      </ScorePill>
+                    );
+                  })}
                 </ChipRow>
                 {team.entries
                   .filter((entry) => entry.comment)
-                  .map((entry, index) => (
-                    <ReceivedEval key={index}>
-                      <span>
-                        <strong>{entry.evaluatorName}</strong>
-                        {entry.evaluatorIsTeacher && " (teacher)"} —{" "}
-                        {EVALUATION_CATEGORY_LABELS[
-                          entry.category as EvaluationCategory
-                        ] || entry.category}
-                        : {entry.score}/10
-                      </span>
-                      <span>{entry.comment}</span>
-                    </ReceivedEval>
-                  ))}
+                  .map((entry, index) => {
+                    const meta = disciplineMetaForCategory(
+                      details.project.rubric,
+                      entry.category
+                    );
+                    return (
+                      <ReceivedEval key={index}>
+                        <span>
+                          <strong>{entry.evaluatorName}</strong>
+                          {entry.evaluatorIsTeacher && " (teacher)"}
+                          {entry.evaluatorIsJudge && " (judge)"} —{" "}
+                          {categoryLabel(
+                            details.project.rubric,
+                            entry.category
+                          )}
+                          {entry.score !== null && (
+                            <>
+                              :{" "}
+                              <ScorePill
+                                $color={meta.color}
+                                $background={meta.background}
+                              >
+                                {entry.score}/10
+                              </ScorePill>
+                            </>
+                          )}
+                        </span>
+                        <span>{entry.comment}</span>
+                      </ReceivedEval>
+                    );
+                  })}
               </div>
             ))}
         </Card>

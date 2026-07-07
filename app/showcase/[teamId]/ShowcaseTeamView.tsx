@@ -1,0 +1,114 @@
+"use client";
+import { ShowcaseTeamDetail } from "types/groupTypes";
+import { TEAM_LINK_LABELS } from "constants/groupWork";
+import {
+  Page,
+  DetailTopBar,
+  BackLink,
+  Wordmark,
+  DetailMain,
+  DetailHeader,
+  DetailLogo,
+  DetailTitle,
+  DetailTagline,
+  LinkButtons,
+  PrimaryLink,
+  SecondaryLink,
+  HeroImage,
+  DetailSection,
+  SectionHeading,
+  Description,
+  TeamPhotoImage,
+  MemberChips,
+  MemberChip,
+  ContextNote,
+  Footer,
+} from "../styles";
+
+const formatMonthYear = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  });
+
+// The live site is the star; the other links are supporting material.
+const SECONDARY_LINK_KEYS = ["github", "figma"] as const;
+
+export const ShowcaseTeamView = ({
+  detail,
+}: {
+  detail: ShowcaseTeamDetail;
+}) => {
+  const { team, project } = detail;
+
+  return (
+    <Page>
+      <DetailTopBar>
+        <BackLink href="/showcase">← All projects</BackLink>
+        <Wordmark>Vefskólinn Showcase</Wordmark>
+      </DetailTopBar>
+
+      <DetailMain>
+        <DetailHeader>
+          {team.logo && <DetailLogo src={team.logo} alt="" />}
+          <DetailTitle>{team.projectName}</DetailTitle>
+          {team.tagline && <DetailTagline>{team.tagline}</DetailTagline>}
+          <LinkButtons>
+            {team.links.website && (
+              <PrimaryLink
+                href={team.links.website}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Visit the live site ↗
+              </PrimaryLink>
+            )}
+            {SECONDARY_LINK_KEYS.filter((key) => team.links[key]).map((key) => (
+              <SecondaryLink
+                key={key}
+                href={team.links[key]}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {TEAM_LINK_LABELS[key]} ↗
+              </SecondaryLink>
+            ))}
+          </LinkButtons>
+        </DetailHeader>
+
+        {team.coverImage && (
+          <HeroImage src={team.coverImage} alt={`${team.projectName} screenshot`} />
+        )}
+
+        {team.projectDescription && (
+          <DetailSection>
+            <SectionHeading>About the project</SectionHeading>
+            <Description>{team.projectDescription}</Description>
+          </DetailSection>
+        )}
+
+        <DetailSection>
+          <SectionHeading>The team — {team.name}</SectionHeading>
+          {team.teamPhoto && (
+            <TeamPhotoImage src={team.teamPhoto} alt={`${team.name} team photo`} />
+          )}
+          <MemberChips>
+            {team.memberNames.map((name) => (
+              <MemberChip key={name}>{name}</MemberChip>
+            ))}
+          </MemberChips>
+        </DetailSection>
+
+        <ContextNote>
+          Built at Vefskólinn · {project.title} ·{" "}
+          {formatMonthYear(project.endDate)}
+        </ContextNote>
+      </DetailMain>
+
+      <Footer>
+        More projects on the{" "}
+        <BackLink href="/showcase">Vefskólinn student showcase</BackLink>
+      </Footer>
+    </Page>
+  );
+};

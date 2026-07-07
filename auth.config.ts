@@ -1,5 +1,15 @@
 import type { NextAuthConfig } from "next-auth";
 
+// Routes that don't require authentication:
+// - /judge/<token> is for external judges — the token is the credential
+// - /showcase is the public project showcase students link from CVs
+// '/' must match exactly — with startsWith it would make every route public.
+const PUBLIC_ROUTES = ["/guides", "/signin", "/judge", "/showcase"];
+
+export const isPublicPathname = (pathname: string): boolean =>
+  pathname === "/" ||
+  PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+
 export const authConfig = {
   pages: {
     signIn: "/signin",
@@ -17,9 +27,7 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const { pathname } = nextUrl;
 
-      // Public routes that don't require authentication
-      const publicRoutes = ['/guides', '/signin', '/'];
-      const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+      const isPublicRoute = isPublicPathname(pathname);
 
       if (isPublicRoute) {
         return true;

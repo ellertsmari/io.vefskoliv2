@@ -24,6 +24,12 @@ export interface CalendarEvent {
   id: string;
   /** ISO date, "YYYY-MM-DD", local (no timezone offset). */
   date: string;
+  /**
+   * Optional inclusive last day ("YYYY-MM-DD") for events spanning several
+   * days (e.g. group projects, holidays) — rendered as a continuous bar
+   * across the covered days.
+   */
+  endDate?: string;
   title: string;
   category: EventCategory;
   /** Optional start time, e.g. "10:00". */
@@ -94,21 +100,8 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
     category: "groupwork",
   },
 
-  // ── Week 35 · Module 1 group project ────────────────────────────────────
-  {
-    id: "w35-groupproject",
-    date: "2026-08-24",
-    title: "M1 group project — kickoff",
-    category: "groupwork",
-    time: "10:00",
-    description: "Introduction to the Module 1 group project.",
-  },
-  {
-    id: "w35-presentation",
-    date: "2026-08-28",
-    title: "M1 group project presentation",
-    category: "groupwork",
-  },
+  // Week 35 · Module 1 group project — kickoff & presentation now come from
+  // the group project itself (see serverActions/groups/getGroupCalendarEvents).
 
   // ── Week 36 · Module 3 — Design thinking ────────────────────────────────
   {
@@ -263,13 +256,7 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
     title: "Teacher presentation",
     category: "lecture",
   },
-  {
-    id: "w42-finalpres",
-    date: "2026-10-16",
-    title: "M3 — Final presentations",
-    category: "groupwork",
-    time: "10:00",
-  },
+  // M3 final presentations come from the group project itself.
   {
     id: "last-day-s1",
     date: "2026-10-16",
@@ -375,10 +362,11 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
     category: "lecture",
     time: "10:00",
   },
+  // The M4 group project kickoff on Nov 6 comes from the group project itself.
   {
-    id: "w45-groupintro",
+    id: "w45-checkin",
     date: "2026-11-06",
-    title: "Group work intro + Friday check-in",
+    title: "Friday check-in",
     category: "groupwork",
     time: "11:00",
   },
@@ -439,12 +427,7 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
     title: "Finalize per teacher feedback",
     category: "groupwork",
   },
-  {
-    id: "w49-finalpres",
-    date: "2026-12-04",
-    title: "M4 — Final presentation",
-    category: "groupwork",
-  },
+  // The M4 final presentation on Dec 4 comes from the group project itself.
   {
     id: "w49-designfinal",
     date: "2026-12-06",
@@ -470,6 +453,7 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
   {
     id: "w51-holiday",
     date: "2026-12-14",
+    endDate: "2026-12-20",
     title: "Holiday — independent work",
     category: "holiday",
   },
@@ -482,7 +466,8 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
   {
     id: "christmas-break",
     date: "2026-12-22",
-    title: "Christmas break begins (Jólafrí)",
+    endDate: "2026-12-31",
+    title: "Christmas break (Jólafrí)",
     category: "holiday",
   },
 ];

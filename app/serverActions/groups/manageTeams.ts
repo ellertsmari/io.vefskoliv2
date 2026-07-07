@@ -1,5 +1,4 @@
 "use server";
-import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
@@ -12,11 +11,7 @@ import {
   success,
   successNoData,
 } from "utils/errors";
-import { isTeacher, requireSession } from "./helpers";
-
-const objectIdSchema = z
-  .string()
-  .refine((value) => ObjectId.isValid(value), { message: "Invalid id" });
+import { objectIdSchema, isTeacher, requireSession } from "./helpers";
 
 export async function createTeam(data: {
   projectId: string;

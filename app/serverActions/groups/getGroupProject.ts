@@ -1,7 +1,7 @@
 "use server";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../mongoose-connector";
-import { GroupProject } from "models/groupProject";
+import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { GroupPreference } from "models/groupPreference";
 import { PeerEvaluation } from "models/peerEvaluation";
@@ -12,12 +12,17 @@ import {
   BoardStudent,
   GroupProjectDetails,
   PeerEvaluationEntry,
-  TeamEvalSummary,
-  TeamEvaluationEntry,
   TeamFeedbackEntry,
 } from "types/groupTypes";
+import { applyLifecycle } from "./lifecycle";
+import {
+  groupEvaluationEntriesByTeam,
+  LeanEvaluationRow,
+  summarizeTeamEvaluations,
+} from "./teamEvalShared";
 import {
   isTeacher,
+  nextFormationProjectId,
   requireSession,
   serializePreference,
   serializeProject,
@@ -32,8 +37,20 @@ export async function getGroupProject(
 
   try {
     await connectToDatabase();
-    const project = await GroupProject.findById(projectId).lean();
+    const project = await GroupProject.findById(projectId).lean<GroupProjectLean | null>();
     if (!project) return null;
+    await applyLifecycle(project);
+
+    const teacher = isTeacher(session);
+
+    // Later formation projects are hidden from students until it's their turn.
+    if (
+      !teacher &&
+      project.status === "formation" &&
+      projectId !== (await nextFormationProjectId())
+    ) {
+      return null;
+    }
 
     const teams = await Team.find({ project: projectId })
       .populate("members", "name avatarUrl")
@@ -41,7 +58,6 @@ export async function getGroupProject(
 
     const serializedTeams = teams.map(serializeTeam);
     const userId = session.user.id;
-    const teacher = isTeacher(session);
 
     const myTeam = serializedTeams.find((team) =>
       team.members.some((member) => member._id === userId)
@@ -63,7 +79,10 @@ export async function getGroupProject(
     const [myPreference, myPeerEvals, myTeamEvals] = await Promise.all([
       GroupPreference.findOne({ project: projectId, user: userId }).lean(),
       PeerEvaluation.find({ project: projectId, evaluator: userId }).lean(),
-      TeamEvaluation.find({ project: projectId, evaluator: userId }).lean(),
+      TeamEvaluation.find({
+        project: projectId,
+        evaluator: userId,
+      }).lean<LeanEvaluationRow[]>(),
     ]);
 
     if (myPreference) details.myPreferences = serializePreference(myPreference);
@@ -78,16 +97,7 @@ export async function getGroupProject(
       })
     );
 
-    for (const entry of myTeamEvals) {
-      const teamId = entry.team.toString();
-      const list: TeamEvaluationEntry[] = details.myTeamEvaluations[teamId] || [];
-      list.push({
-        category: entry.category,
-        score: entry.score,
-        comment: entry.comment || "",
-      });
-      details.myTeamEvaluations[teamId] = list;
-    }
+    details.myTeamEvaluations = groupEvaluationEntriesByTeam(myTeamEvals);
 
     // Feedback received by my team becomes visible once the project is archived.
     if (myTeam && details.project.status === "archived") {
@@ -96,14 +106,16 @@ export async function getGroupProject(
         team: myTeam._id,
       })
         .populate("evaluator", "name")
+        .populate("judge", "name")
         .lean();
       details.myTeamFeedback = feedback.map(
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         (entry: any): TeamFeedbackEntry => ({
           category: entry.category,
-          score: entry.score,
+          score: entry.score ?? null,
           comment: entry.comment || "",
-          evaluatorName: entry.evaluator?.name || "Unknown",
+          evaluatorName:
+            entry.evaluator?.name || entry.judge?.name || "Unknown",
         })
       );
     }
@@ -112,7 +124,9 @@ export async function getGroupProject(
       const [students, preferences, teamEvals] = await Promise.all([
         User.find({ role: "user" }, { name: 1, avatarUrl: 1 }).lean(),
         GroupPreference.find({ project: projectId }).lean(),
-        TeamEvaluation.find({ project: projectId }).lean(),
+        TeamEvaluation.find({ project: projectId })
+          .populate("evaluator", "role")
+          .lean(),
       ]);
 
       const prefByUser = new Map(
@@ -137,23 +151,16 @@ export async function getGroupProject(
         };
       });
 
-      const summaries: Record<string, TeamEvalSummary> = {};
-      for (const entry of teamEvals) {
-        const teamId = entry.team.toString();
-        const summary = summaries[teamId] || {};
-        const bucket = summary[entry.category] || { avg: 0, count: 0 };
-        // store running sum in avg, finalize below
-        bucket.avg += entry.score;
-        bucket.count += 1;
-        summary[entry.category] = bucket;
-        summaries[teamId] = summary;
-      }
-      for (const summary of Object.values(summaries)) {
-        for (const bucket of Object.values(summary)) {
-          bucket.avg = Math.round((bucket.avg / bucket.count) * 10) / 10;
-        }
-      }
-      details.teamEvalSummaries = summaries;
+      // Panel = teachers + external judges; their scores outweigh students'.
+      details.teamEvalSummaries = summarizeTeamEvaluations(
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        (teamEvals as any[]).map((entry) => ({
+          team: entry.team,
+          category: entry.category,
+          score: entry.score,
+          isPanel: !!entry.judge || entry.evaluator?.role === "teacher",
+        }))
+      );
     }
 
     return details;

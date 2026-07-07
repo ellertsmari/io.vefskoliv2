@@ -1,13 +1,13 @@
 "use server";
-import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
-import { GroupProject } from "models/groupProject";
+import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { GroupPreference } from "models/groupPreference";
 import {
   AMBITION_OPTIONS,
   FOCUS_OPTIONS,
   TECH_STACK_OPTIONS,
+  techStackOptionsForModule,
 } from "constants/groupWork";
 import {
   ActionResult,
@@ -16,12 +16,15 @@ import {
   handleActionError,
   successNoData,
 } from "utils/errors";
-import { requireSession } from "./helpers";
+import { applyLifecycle } from "./lifecycle";
+import {
+  nextFormationProjectId,
+  objectIdSchema,
+  requireSession,
+} from "./helpers";
 
 const SavePreferencesSchema = z.object({
-  projectId: z
-    .string()
-    .refine((value) => ObjectId.isValid(value), { message: "Invalid id" }),
+  projectId: objectIdSchema,
   ambition: z.enum(AMBITION_OPTIONS).or(z.literal("")),
   focus: z.array(z.enum(FOCUS_OPTIONS)).max(FOCUS_OPTIONS.length),
   techStack: z.array(z.enum(TECH_STACK_OPTIONS)).max(TECH_STACK_OPTIONS.length),
@@ -47,10 +50,26 @@ export async function savePreferences(
 
   try {
     await connectToDatabase();
-    const project = await GroupProject.findById(projectId);
+    const project = await GroupProject.findById(projectId).lean<GroupProjectLean | null>();
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
+    await applyLifecycle(project);
     if (project.status !== "formation") {
       return failure("Preferences can only be changed while teams are forming");
+    }
+    // Students answer formation questions one project at a time — only the
+    // next upcoming project accepts preferences.
+    if (projectId !== (await nextFormationProjectId())) {
+      return failure(
+        "Preferences open for the next group project only — this one comes later"
+      );
+    }
+
+    // Only stack choices that make sense for this project's module.
+    const allowedTech = new Set(techStackOptionsForModule(project.module));
+    for (const tech of preferences.techStack) {
+      if (!allowedTech.has(tech)) {
+        return failure(`${tech} is not an option for this project`);
+      }
     }
 
     await GroupPreference.findOneAndUpdate(

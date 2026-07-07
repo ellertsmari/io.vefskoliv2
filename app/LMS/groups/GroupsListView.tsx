@@ -3,7 +3,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "UIcomponents/modal/modal";
 import { GroupProjectListItem } from "types/groupTypes";
-import { PROJECT_STATUS_LABELS } from "constants/groupWork";
+import {
+  GROUP_PROJECT_MODULES,
+  PROJECT_STATUS_LABELS,
+} from "constants/groupWork";
 import { createGroupProject } from "serverActions/groups/manageGroupProject";
 import {
   PageContainer,
@@ -20,6 +23,8 @@ import {
   Input,
   TextArea,
   Message,
+  ChipRow,
+  SelectableChip,
 } from "./styles";
 import styled from "styled-components";
 
@@ -102,6 +107,7 @@ const ProjectCard = ({
         {formatDate(project.startDate)} – {formatDate(project.endDate)}
       </MutedText>
       <PillRow>
+        {project.module != null && <Pill>Module {project.module}</Pill>}
         <Pill>
           {project.teamCount} team{project.teamCount === 1 ? "" : "s"}
         </Pill>
@@ -117,6 +123,7 @@ const CreateProjectForm = ({ onClose }: { onClose: () => void }) => {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [module, setModule] = useState<number | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +136,7 @@ const CreateProjectForm = ({ onClose }: { onClose: () => void }) => {
     const result = await createGroupProject({
       title,
       description,
+      module,
       startDate,
       endDate,
     });
@@ -160,6 +168,21 @@ const CreateProjectForm = ({ onClose }: { onClose: () => void }) => {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What is this project about? Goals, deliverables, schedule…"
         />
+      </Label>
+      <Label as="div">
+        Module
+        <ChipRow>
+          {GROUP_PROJECT_MODULES.map((option) => (
+            <SelectableChip
+              key={option}
+              type="button"
+              $selected={module === option}
+              onClick={() => setModule(module === option ? null : option)}
+            >
+              Module {option}
+            </SelectableChip>
+          ))}
+        </ChipRow>
       </Label>
       <DateRow>
         <Label>

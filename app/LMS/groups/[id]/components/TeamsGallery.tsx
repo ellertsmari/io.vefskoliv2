@@ -10,7 +10,6 @@ import {
   MemberRow,
   LinksRow,
   ExternalLink,
-  ImagesRow,
   TeamImage,
   Pill,
 } from "../../styles";
@@ -23,6 +22,19 @@ const TeamHeader = styled.div`
   gap: 0.5rem;
 `;
 
+const ProjectNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const TeamLogo = styled.img`
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+`;
+
 const ProjectName = styled.p`
   font-size: 0.9rem;
   font-weight: 600;
@@ -30,11 +42,24 @@ const ProjectName = styled.p`
   color: var(--theme-module3-100);
 `;
 
+const Tagline = styled.p`
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: 0;
+  color: #6c757d;
+`;
+
 const DescriptionText = styled.p`
   font-size: 0.9rem;
   margin: 0;
   color: #495057;
   white-space: pre-wrap;
+`;
+
+const CoverImage = styled(TeamImage)`
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
 `;
 
 export const TeamsGallery = ({
@@ -56,11 +81,20 @@ export const TeamsGallery = ({
         const isMine = team.members.some((member) => member._id === userId);
         return (
           <Card key={team._id}>
+            {team.coverImage && (
+              <CoverImage src={team.coverImage} alt={`${team.name} project`} />
+            )}
             <TeamHeader>
               <SectionTitle>{team.name}</SectionTitle>
               {isMine && <Pill>Your team</Pill>}
             </TeamHeader>
-            {team.projectName && <ProjectName>{team.projectName}</ProjectName>}
+            {team.projectName && (
+              <ProjectNameRow>
+                {team.logo && <TeamLogo src={team.logo} alt="" />}
+                <ProjectName>{team.projectName}</ProjectName>
+              </ProjectNameRow>
+            )}
+            {team.tagline && <Tagline>{team.tagline}</Tagline>}
             {team.projectDescription && (
               <DescriptionText>{team.projectDescription}</DescriptionText>
             )}
@@ -87,17 +121,6 @@ export const TeamsGallery = ({
                 </ExternalLink>
               ))}
             </LinksRow>
-            {team.images.length > 0 && (
-              <ImagesRow>
-                {team.images.map((url, index) => (
-                  <TeamImage
-                    key={index}
-                    src={url}
-                    alt={`${team.name} project image ${index + 1}`}
-                  />
-                ))}
-              </ImagesRow>
-            )}
           </Card>
         );
       })}

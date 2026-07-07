@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ReturnFormData, returnGuide } from "serverActions/returnGuide";
 import { Form } from "globalStyles/globalStyles";
 import { Input } from "UIcomponents/input/Input";
+import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import { useSessionState } from "utils/hooks/useStorage";
 import { LoadingSpinner } from "UIcomponents/states/States";
 import {
@@ -99,7 +100,8 @@ const FormContent = ({
       ...formData,
       projectUrl: normalizeUrl(formData?.projectUrl),
       liveVersion: normalizeUrl(formData?.liveVersion),
-      pictureUrl: normalizeUrl(formData?.pictureUrl),
+      // uploaded as a data URL by ImageUploadField — no normalization
+      pictureUrl: formData?.pictureUrl,
     };
     setFormData(normalized);
     startTransition(() => {
@@ -146,20 +148,14 @@ const FormContent = ({
               : undefined
           }
         />
-        <Input
+        <ImageUploadField
           id={"pictureUrl"}
-          type={"text"}
-          name={"pictureUrl"}
-          value={formData?.pictureUrl || ""}
-          onChange={handleInputChange}
           label={"Image that suits your project (optional)"}
-          required={false}
-          disabled={isPending}
-          error={
-            errors?.pictureUrl && !isPending
-              ? errors.pictureUrl[0]
-              : undefined
+          value={formData?.pictureUrl || ""}
+          onChange={(value) =>
+            setFormData({ ...formData, pictureUrl: value })
           }
+          disabled={isPending}
         />
         <Input
           id={"projectName"}

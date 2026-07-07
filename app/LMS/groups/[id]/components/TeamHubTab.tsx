@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { GroupProjectDetails, SerializedTeam } from "types/groupTypes";
 import {
-  MAX_TEAM_IMAGES,
   TEAM_LINK_KEYS,
   TEAM_LINK_LABELS,
   TeamLinkKey,
-  EVALUATION_CATEGORY_LABELS,
-  EvaluationCategory,
+  categoryLabel,
+  disciplineMetaForCategory,
 } from "constants/groupWork";
+import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import {
   Card,
@@ -24,9 +24,7 @@ import {
   MemberRow,
   Avatar,
   AvatarFallback,
-  ImagesRow,
-  TeamImage,
-  Pill,
+  ScorePill,
 } from "../../styles";
 
 const Layout = styled.div`
@@ -64,6 +62,72 @@ const FeedbackEntry = styled.div`
   font-size: 0.9rem;
 `;
 
+const ShowcaseLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--theme-module3-100);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const ShowcaseBanner = styled.div`
+  background: linear-gradient(135deg, #6563eb 0%, #2c2b76 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  box-shadow: 0 8px 20px rgba(101, 99, 235, 0.25);
+`;
+
+const BannerText = styled.span`
+  font-weight: 600;
+  font-size: 0.95rem;
+`;
+
+const BannerActions = styled.span`
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+`;
+
+const BannerButton = styled.button`
+  background: white;
+  color: var(--theme-module3-hover, #2c2b76);
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--theme-module3-10, #f0f0fd);
+  }
+`;
+
+const BannerLink = styled.a`
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    border-color: white;
+  }
+`;
+
 const initials = (name: string) =>
   name
     .split(" ")
@@ -98,10 +162,12 @@ export const TeamHubTab = ({
   const team =
     teamOverride ?? details.teams.find((t) => t._id === details.myTeamId);
   const archived = details.project.status === "archived";
+  const rubric = details.project.rubric;
   const readOnly = archived && !isTeacher;
 
   const [name, setName] = useState(team?.name || "");
   const [projectName, setProjectName] = useState(team?.projectName || "");
+  const [tagline, setTagline] = useState(team?.tagline || "");
   const [projectDescription, setProjectDescription] = useState(
     team?.projectDescription || ""
   );
@@ -111,16 +177,28 @@ export const TeamHubTab = ({
         TEAM_LINK_KEYS.map((key) => [key, team?.links[key] || ""])
       ) as Record<TeamLinkKey, string>
   );
-  const [images, setImages] = useState<string[]>(() => {
-    const list = [...(team?.images || [])];
-    while (list.length < MAX_TEAM_IMAGES) list.push("");
-    return list;
-  });
+  const [coverImage, setCoverImage] = useState(team?.coverImage || "");
+  const [teamPhoto, setTeamPhoto] = useState(team?.teamPhoto || "");
+  const [logo, setLogo] = useState(team?.logo || "");
   const [feedback, setFeedback] = useState<{
     text: string;
     error: boolean;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // The public page exists once the team has a project name and the project
+  // has left formation (getShowcaseTeam enforces the same).
+  const showcaseIsLive =
+    Boolean(projectName.trim()) && details.project.status !== "formation";
+  const showcaseUrl = () =>
+    `${window.location.origin}/showcase/${team?._id}`;
+
+  const handleCopyShowcase = async () => {
+    await navigator.clipboard.writeText(showcaseUrl());
+    setCopied(true);
+  };
 
   if (!team) {
     return (
@@ -139,16 +217,23 @@ export const TeamHubTab = ({
       teamId: team._id,
       name,
       projectName,
+      tagline,
       projectDescription,
       links,
-      images,
+      coverImage,
+      teamPhoto,
+      logo,
     });
     setSaving(false);
     setFeedback({
       text: result.success ? "Team hub saved!" : result.message,
       error: !result.success,
     });
-    if (result.success) router.refresh();
+    if (result.success) {
+      setJustSaved(true);
+      setCopied(false);
+      router.refresh();
+    }
   };
 
   return (
@@ -189,6 +274,16 @@ export const TeamHubTab = ({
                 />
               </Label>
               <Label>
+                Tagline — one-line pitch for the showcase
+                <Input
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
+                  placeholder="e.g. Plan your whole week in five minutes"
+                  maxLength={140}
+                  disabled={readOnly}
+                />
+              </Label>
+              <Label>
                 Project description
                 <TextArea
                   value={projectDescription}
@@ -219,34 +314,41 @@ export const TeamHubTab = ({
           </TwoColumns>
 
           <Card>
-            <SectionTitle>Project images</SectionTitle>
+            <SectionTitle>Showcase images</SectionTitle>
             <MutedText>
-              Paste up to {MAX_TEAM_IMAGES} image URLs (group photo,
-              screenshots…). They show up in the Teams gallery.
+              These make your project shine on the{" "}
+              <ShowcaseLink
+                href={`/showcase/${team._id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                public showcase page ↗
+              </ShowcaseLink>{" "}
+              — a link you can put in your portfolio or CV.
             </MutedText>
-            {images.map((url, index) => (
-              <Label key={index}>
-                Image {index + 1}
-                <Input
-                  type="url"
-                  value={url}
-                  onChange={(e) =>
-                    setImages((prev) =>
-                      prev.map((item, i) => (i === index ? e.target.value : item))
-                    )
-                  }
-                  placeholder="https://…"
-                  disabled={readOnly}
-                />
-              </Label>
-            ))}
-            <ImagesRow>
-              {images
-                .filter(Boolean)
-                .map((url, index) => (
-                  <TeamImage key={index} src={url} alt={`Project image ${index + 1}`} />
-                ))}
-            </ImagesRow>
+            <TwoColumns>
+              <ImageUploadField
+                id="cover-image"
+                label="Cover screenshot — a crisp shot of your product (the hero image)"
+                value={coverImage}
+                onChange={setCoverImage}
+                disabled={readOnly}
+              />
+              <ImageUploadField
+                id="team-photo"
+                label="Team photo — the humans behind the project"
+                value={teamPhoto}
+                onChange={setTeamPhoto}
+                disabled={readOnly}
+              />
+              <ImageUploadField
+                id="team-logo"
+                label="Logo — square works best (optional)"
+                value={logo}
+                onChange={setLogo}
+                disabled={readOnly}
+              />
+            </TwoColumns>
           </Card>
 
           {!readOnly && (
@@ -259,27 +361,48 @@ export const TeamHubTab = ({
               )}
             </Footer>
           )}
+
+          {justSaved && showcaseIsLive && (
+            <ShowcaseBanner role="status">
+              <BannerText>
+                🎉 Your showcase page is live — share it in your portfolio or
+                CV!
+              </BannerText>
+              <BannerActions>
+                <BannerButton type="button" onClick={handleCopyShowcase}>
+                  {copied ? "Copied!" : "Copy link"}
+                </BannerButton>
+                <BannerLink
+                  href={`/showcase/${team._id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View page ↗
+                </BannerLink>
+              </BannerActions>
+            </ShowcaseBanner>
+          )}
         </Layout>
       </form>
 
       {details.myTeamFeedback.length > 0 && (
         <Card>
           <SectionTitle>Feedback your team received</SectionTitle>
-          {details.myTeamFeedback.map((entry, index) => (
-            <FeedbackEntry key={index}>
-              <div>
-                <Pill>
-                  {EVALUATION_CATEGORY_LABELS[
-                    entry.category as EvaluationCategory
-                  ] || entry.category}
-                  {" — "}
-                  {entry.score}/10
-                </Pill>
-              </div>
-              {entry.comment && <span>{entry.comment}</span>}
-              <MutedText>by {entry.evaluatorName}</MutedText>
-            </FeedbackEntry>
-          ))}
+          {details.myTeamFeedback.map((entry, index) => {
+            const meta = disciplineMetaForCategory(rubric, entry.category);
+            return (
+              <FeedbackEntry key={index}>
+                <div>
+                  <ScorePill $color={meta.color} $background={meta.background}>
+                    {categoryLabel(rubric, entry.category)}
+                    {entry.score !== null && ` — ${entry.score}/10`}
+                  </ScorePill>
+                </div>
+                {entry.comment && <span>{entry.comment}</span>}
+                <MutedText>by {entry.evaluatorName}</MutedText>
+              </FeedbackEntry>
+            );
+          })}
         </Card>
       )}
     </Layout>

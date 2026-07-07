@@ -27,6 +27,7 @@ import {
   DayNumber,
   EventPill,
   MorePill,
+  SpanBar,
   Panel,
   PanelDate,
   PanelHint,
@@ -100,7 +101,12 @@ const formatLongDate = (key: string) => {
   return `${WEEKDAYS[mondayIndex(new Date(y, m - 1, d))]} ${d} ${MONTH_NAMES[m - 1]}`;
 };
 
-export default function CalendarView() {
+export default function CalendarView({
+  extraEvents = [],
+}: {
+  /** Dynamic events (e.g. group projects) merged into the static schedule. */
+  extraEvents?: CalendarEvent[];
+}) {
   const { year, months } = SEMESTER;
   const [monthCursor, setMonthCursor] = useState(0); // index into SEMESTER.months
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -108,29 +114,74 @@ export default function CalendarView() {
   const month = months[monthCursor];
   const todayKey = toKey(new Date());
 
-  // Group events by date once.
+  const allEvents = useMemo(
+    () => [...CALENDAR_EVENTS, ...extraEvents],
+    [extraEvents],
+  );
+
+  // Multi-day events render as continuous bars; the rest as day pills.
+  const multiDayEvents = useMemo(
+    () =>
+      allEvents
+        .filter((e) => e.endDate && e.endDate > e.date)
+        .sort(
+          (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id),
+        ),
+    [allEvents],
+  );
+  const singleDayEvents = useMemo(
+    () => allEvents.filter((e) => !(e.endDate && e.endDate > e.date)),
+    [allEvents],
+  );
+
+  // Every day each multi-day event covers, precomputed once (mirrors
+  // eventsByDate below instead of filtering per day cell per render).
+  const spansByDate = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>();
+    for (const event of multiDayEvents) {
+      const [y, m, d] = event.date.split("-").map(Number);
+      const cursor = new Date(y, m - 1, d);
+      // hard cap guards against a malformed endDate looping forever
+      for (let i = 0; i < 370 && toKey(cursor) <= event.endDate!; i++) {
+        const key = toKey(cursor);
+        const list = map.get(key);
+        if (list) list.push(event);
+        else map.set(key, [event]);
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+    return map;
+  }, [multiDayEvents]);
+
+  const spansOnDay = (key: string) => spansByDate.get(key) ?? [];
+
+  // Group single-day events by date once.
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
-    for (const event of CALENDAR_EVENTS) {
+    for (const event of singleDayEvents) {
       const list = map.get(event.date);
       if (list) list.push(event);
       else map.set(event.date, [event]);
     }
     return map;
-  }, []);
+  }, [singleDayEvents]);
 
   const weeks = useMemo(() => buildWeeks(year, month), [year, month]);
 
   const selectedEvents = selectedKey
-    ? (eventsByDate.get(selectedKey) ?? [])
+    ? [...spansOnDay(selectedKey), ...(eventsByDate.get(selectedKey) ?? [])]
     : [];
-  const monthEventCount = useMemo(
-    () =>
-      CALENDAR_EVENTS.filter(
-        (e) => Number(e.date.split("-")[1]) - 1 === month,
-      ).length,
-    [month],
-  );
+  const monthEventCount = useMemo(() => {
+    const monthStart = `${year}-${pad(month + 1)}-01`;
+    const monthEnd = toKey(new Date(year, month + 1, 0));
+    const singles = singleDayEvents.filter(
+      (e) => Number(e.date.split("-")[1]) - 1 === month,
+    ).length;
+    const spans = multiDayEvents.filter(
+      (e) => e.date <= monthEnd && e.endDate! >= monthStart,
+    ).length;
+    return singles + spans;
+  }, [singleDayEvents, multiDayEvents, month, year]);
 
   const goToMonth = (next: number) => {
     setMonthCursor(next);
@@ -189,8 +240,9 @@ export default function CalendarView() {
                 const key = toKey(day);
                 const inMonth = day.getMonth() === month;
                 const weekendDay = mondayIndex(day) >= 5;
+                const daySpans = inMonth ? spansOnDay(key) : [];
                 const dayEvents = inMonth ? (eventsByDate.get(key) ?? []) : [];
-                const visible = dayEvents.slice(0, 3);
+                const visible = dayEvents.slice(0, daySpans.length > 0 ? 2 : 3);
                 const hidden = dayEvents.length - visible.length;
 
                 return (
@@ -207,6 +259,23 @@ export default function CalendarView() {
                     <DayNumber $muted={!inMonth} $today={key === todayKey}>
                       {day.getDate()}
                     </DayNumber>
+                    {daySpans.map((event) => {
+                      const isStart = event.date === key;
+                      const isEnd = event.endDate === key;
+                      // Repeat the label at the start of every week row.
+                      const showLabel = isStart || mondayIndex(day) === 0;
+                      return (
+                        <SpanBar
+                          key={event.id}
+                          $color={CATEGORY_META[event.category].color}
+                          $start={isStart}
+                          $end={isEnd}
+                          title={event.title}
+                        >
+                          {showLabel ? event.title : " "}
+                        </SpanBar>
+                      );
+                    })}
                     {visible.map((event) => (
                       <EventPill
                         key={event.id}
@@ -242,6 +311,12 @@ export default function CalendarView() {
                             {meta.label}
                           </CategoryBadge>
                           {event.time && <EventTime>{event.time}</EventTime>}
+                          {event.endDate && (
+                            <EventTime>
+                              {formatLongDate(event.date)} –{" "}
+                              {formatLongDate(event.endDate)}
+                            </EventTime>
+                          )}
                         </EventMeta>
                         {event.description && (
                           <EventDescription>

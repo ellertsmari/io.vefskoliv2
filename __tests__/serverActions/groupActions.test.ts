@@ -15,9 +15,18 @@ import { PeerEvaluation } from "models/peerEvaluation";
 import { createGroupProject } from "serverActions/groups/manageGroupProject";
 import { saveAssignments, createTeam, deleteTeam } from "serverActions/groups/manageTeams";
 import { savePreferences } from "serverActions/groups/savePreferences";
+import { getGroupProjects } from "serverActions/groups/getGroupProjects";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import { submitPeerEvaluations } from "serverActions/groups/submitPeerEvaluations";
 import { submitTeamEvaluation } from "serverActions/groups/submitTeamEvaluation";
+import { dueLifecycleUpdates } from "serverActions/groups/lifecycle";
+import {
+  createJudgeInvitation,
+  deleteJudgeInvitation,
+} from "serverActions/groups/manageJudges";
+import { submitJudgeEvaluation } from "serverActions/groups/judgeActions";
+import { JudgeInvitation } from "models/judgeInvitation";
+import { TeamEvaluation } from "models/teamEvaluation";
 import { UserDocument } from "models/user";
 
 jest.mock("../../auth", () => ({
@@ -41,13 +50,21 @@ const createProject = async (
   const teacher = creator ?? (await createDummyUser("teacher"));
   return GroupProject.create({
     title: "Test Project",
-    startDate: new Date("2026-01-01"),
-    endDate: new Date("2026-02-01"),
+    // far future so formation projects are not auto-activated by the lifecycle
+    startDate: new Date("2099-01-01"),
+    endDate: new Date("2099-02-01"),
     status: "formation",
     createdBy: teacher._id,
     ...overrides,
   });
 };
+
+// A complete submission against the default rubric (product/presentation/qa).
+const defaultRubricEntries = (comment = "Solid work") => [
+  { category: "product", score: 8, comment },
+  { category: "presentation", score: 7, comment: "" },
+  { category: "qa", score: 6, comment: "" },
+];
 
 describe("group work server actions", () => {
   beforeAll(async () => await connect());
@@ -226,6 +243,65 @@ describe("group work server actions", () => {
       expect(prefs[0].ambition).toBe("Basics");
     });
 
+    it("only accepts preferences for the next upcoming project", async () => {
+      const teacher = await createDummyUser("teacher");
+      const student = await createDummyUser("user");
+      const next = await createProject({ title: "Next" }, teacher);
+      const later = await createProject(
+        {
+          title: "Later",
+          startDate: new Date("2099-06-01"),
+          endDate: new Date("2099-07-01"),
+        },
+        teacher
+      );
+      loginAs(student);
+
+      const rejected = await savePreferences({
+        projectId: later._id.toString(),
+        ambition: "Basics",
+        focus: [],
+        techStack: [],
+        about: "",
+      });
+      expect(rejected.success).toBe(false);
+
+      const accepted = await savePreferences({
+        projectId: next._id.toString(),
+        ambition: "Basics",
+        focus: [],
+        techStack: [],
+        about: "",
+      });
+      expect(accepted.success).toBe(true);
+    });
+
+    it("students see only the next forming project in the list, teachers see all", async () => {
+      const teacher = await createDummyUser("teacher");
+      const student = await createDummyUser("user");
+      await createProject({ title: "Next" }, teacher);
+      await createProject(
+        {
+          title: "Later",
+          startDate: new Date("2099-06-01"),
+          endDate: new Date("2099-07-01"),
+        },
+        teacher
+      );
+      await createProject({ title: "Running", status: "active" }, teacher);
+
+      loginAs(student);
+      const studentList = await getGroupProjects();
+      expect(studentList.map((p) => p.title).sort()).toEqual([
+        "Next",
+        "Running",
+      ]);
+
+      loginAs(teacher);
+      const teacherList = await getGroupProjects();
+      expect(teacherList).toHaveLength(3);
+    });
+
     it("rejects changes once the project is active", async () => {
       const student = await createDummyUser("user");
       const project = await createProject({ status: "active" });
@@ -247,6 +323,7 @@ describe("group work server actions", () => {
       teamId,
       name: "Renamed Team",
       projectName: "Cool App",
+      tagline: "The coolest of apps",
       projectDescription: "An app",
       links: {
         github: "https://github.com/team",
@@ -255,7 +332,9 @@ describe("group work server actions", () => {
         website: "",
         backend: "",
       },
-      images: ["https://example.com/a.png", "", ""],
+      coverImage: "data:image/jpeg;base64,AAAA",
+      teamPhoto: "https://example.com/a.png",
+      logo: "",
     });
 
     it("lets a member edit their team hub", async () => {
@@ -273,8 +352,38 @@ describe("group work server actions", () => {
 
       const updated = await Team.findById(team._id);
       expect(updated.name).toBe("Renamed Team");
-      // blank image slots are dropped
-      expect(updated.images).toHaveLength(1);
+      expect(updated.tagline).toBe("The coolest of apps");
+      expect(updated.coverImage).toBe("data:image/jpeg;base64,AAAA");
+      // legacy pasted URLs are still accepted
+      expect(updated.teamPhoto).toBe("https://example.com/a.png");
+    });
+
+    it("rejects images that could break out of a CSS url() or href", async () => {
+      const student = await createDummyUser("user");
+      const project = await createProject({ status: "active" });
+      const team = await Team.create({
+        project: project._id,
+        name: "Team",
+        members: [student._id],
+      });
+      loginAs(student);
+
+      // CSS-injection payload that passes a start-anchored-only check
+      const payloads = [
+        'https://a.png"); } body { background: url("//evil.example/x',
+        "data:image/jpeg;base64,AAA</style><script>alert(1)</script>",
+        "https://a.png') url(javascript:alert(1))",
+      ];
+      for (const coverImage of payloads) {
+        const result = await updateTeamHub({
+          ...hubData(team._id.toString()),
+          coverImage,
+        });
+        expect(result.success).toBe(false);
+      }
+
+      const untouched = await Team.findById(team._id);
+      expect(untouched.coverImage).toBeFalsy();
     });
 
     it("rejects non-members and archived projects", async () => {
@@ -375,6 +484,329 @@ describe("group work server actions", () => {
     });
   });
 
+  describe("lifecycle", () => {
+    const baseProject = {
+      status: "formation" as const,
+      startDate: new Date("2026-09-01"),
+      peerEvalOpen: false,
+      teamEvalOpen: false,
+    };
+
+    it("activates a formation project once the start date arrives", () => {
+      expect(
+        dueLifecycleUpdates(baseProject, new Date("2026-08-31T23:00:00Z"))
+      ).toEqual({});
+      expect(
+        dueLifecycleUpdates(baseProject, new Date("2026-09-01T00:00:00Z"))
+      ).toEqual({ status: "active" });
+    });
+
+    it("opens team eval on the presentation day and peer eval after the last slot", () => {
+      const project = {
+        ...baseProject,
+        status: "active" as const,
+        presentationDate: new Date("2026-10-16"),
+        presentationSlots: [
+          { startTime: "10:00", endTime: "10:30" },
+          { startTime: "11:00", endTime: "11:30" },
+        ],
+      };
+
+      expect(
+        dueLifecycleUpdates(project, new Date("2026-10-15T12:00:00Z"))
+      ).toEqual({});
+      expect(
+        dueLifecycleUpdates(project, new Date("2026-10-16T09:00:00Z"))
+      ).toEqual({ teamEvalOpen: true });
+      expect(
+        dueLifecycleUpdates(project, new Date("2026-10-16T11:30:00Z"))
+      ).toEqual({ teamEvalOpen: true, peerEvalOpen: true });
+    });
+
+    it("fires each transition only once, so teacher overrides stick", () => {
+      const project = {
+        ...baseProject,
+        status: "active" as const,
+        presentationDate: new Date("2026-10-16"),
+        presentationSlots: [],
+      };
+      const afterPresentations = new Date("2026-10-20T12:00:00Z");
+
+      // Gates were auto-opened, then manually closed by a teacher: they stay closed.
+      expect(
+        dueLifecycleUpdates(
+          {
+            ...project,
+            autoApplied: { teamEvalOpened: true, peerEvalOpened: true },
+          },
+          afterPresentations
+        )
+      ).toEqual({});
+
+      // Status was auto-activated, then reverted to formation: it stays reverted.
+      expect(
+        dueLifecycleUpdates(
+          { ...baseProject, autoApplied: { activated: true } },
+          afterPresentations
+        )
+      ).toEqual({});
+    });
+
+    it("falls back to end of day for peer eval when no slots exist, and leaves archived projects alone", () => {
+      const project = {
+        ...baseProject,
+        status: "active" as const,
+        presentationDate: new Date("2026-10-16"),
+        presentationSlots: [],
+      };
+      expect(
+        dueLifecycleUpdates(project, new Date("2026-10-16T12:00:00Z"))
+      ).toEqual({ teamEvalOpen: true });
+      expect(
+        dueLifecycleUpdates(project, new Date("2026-10-17T00:00:00Z"))
+      ).toEqual({ teamEvalOpen: true, peerEvalOpen: true });
+
+      expect(
+        dueLifecycleUpdates(
+          { ...project, status: "archived" },
+          new Date("2026-10-17T00:00:00Z")
+        )
+      ).toEqual({});
+    });
+
+    it("lets students submit team evaluations once the presentation day arrives, without a prior read", async () => {
+      const student = await createDummyUser("user");
+      const project = await createProject({
+        status: "active",
+        teamEvalOpen: false,
+        presentationDate: new Date("2020-01-01"), // long past
+      });
+      const otherTeam = await Team.create({ project: project._id, name: "Other" });
+      loginAs(student);
+
+      const result = await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: otherTeam._id.toString(),
+        entries: defaultRubricEntries(),
+        overallComment: "",
+      });
+      expect(result.success).toBe(true);
+
+      const stored = await GroupProject.findById(project._id);
+      expect(stored.teamEvalOpen).toBe(true);
+      expect(stored.peerEvalOpen).toBe(true);
+      // the transitions are marked as fired so a manual close sticks
+      expect(stored.autoApplied.teamEvalOpened).toBe(true);
+      expect(stored.autoApplied.peerEvalOpened).toBe(true);
+    });
+  });
+
+  describe("module tech stack and rubric", () => {
+    it("rejects tech picks outside the project's module", async () => {
+      const student = await createDummyUser("user");
+      const project = await createProject({ module: 1 });
+      loginAs(student);
+
+      const invalid = await savePreferences({
+        projectId: project._id.toString(),
+        ambition: "Basics",
+        focus: [],
+        techStack: ["NextJS"],
+        about: "",
+      });
+      expect(invalid.success).toBe(false);
+
+      const valid = await savePreferences({
+        projectId: project._id.toString(),
+        ambition: "Basics",
+        focus: [],
+        techStack: ["HTML", "Figma"],
+        about: "",
+      });
+      expect(valid.success).toBe(true);
+    });
+
+    it("validates team evaluation categories against the project rubric and requires every score", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({
+        rubric: [
+          { key: "product-demo", title: "Product Demo", description: "" },
+          { key: "work-organization", title: "Work Organization", description: "" },
+        ],
+      });
+      const team = await Team.create({ project: project._id, name: "A" });
+      loginAs(teacher);
+
+      const unknown = await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: team._id.toString(),
+        entries: [{ category: "product", score: 5, comment: "Fine" }],
+        overallComment: "",
+      });
+      expect(unknown.success).toBe(false);
+
+      const incomplete = await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: team._id.toString(),
+        entries: [{ category: "product-demo", score: 5, comment: "Fine" }],
+        overallComment: "",
+      });
+      expect(incomplete.success).toBe(false);
+
+      const complete = await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: team._id.toString(),
+        entries: [
+          { category: "product-demo", score: 5, comment: "Fine" },
+          { category: "work-organization", score: 7, comment: "" },
+        ],
+        overallComment: "",
+      });
+      expect(complete.success).toBe(true);
+    });
+
+    it("requires at least one comment somewhere, and stores the overall comment", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject();
+      const team = await Team.create({ project: project._id, name: "A" });
+      loginAs(teacher);
+
+      const noComments = await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: team._id.toString(),
+        entries: defaultRubricEntries(""),
+        overallComment: "",
+      });
+      expect(noComments.success).toBe(false);
+
+      const withOverall = await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: team._id.toString(),
+        entries: defaultRubricEntries(""),
+        overallComment: "Great energy on stage",
+      });
+      expect(withOverall.success).toBe(true);
+
+      const overall = await TeamEvaluation.findOne({
+        project: project._id,
+        category: "overall",
+      });
+      expect(overall.comment).toBe("Great energy on stage");
+      expect(overall.score).toBeUndefined();
+    });
+  });
+
+  describe("external judges", () => {
+    // Rubric with one row per discipline, so focus rules are easy to assert.
+    const disciplinedRubric = [
+      { key: "ui", title: "UI", description: "", discipline: "design" },
+      { key: "code-quality", title: "Code", description: "", discipline: "code" },
+      { key: "qa", title: "Q&A", description: "", discipline: "general" },
+    ];
+
+    const invite = async (focus: "all" | "design" | "code") => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject(
+        { status: "active", rubric: disciplinedRubric },
+        teacher
+      );
+      const team = await Team.create({ project: project._id, name: "A" });
+      loginAs(teacher);
+      const created = await createJudgeInvitation({
+        projectId: project._id.toString(),
+        name: "Jane Judge",
+        focus,
+      });
+      if (!created.success) throw new Error(created.message);
+      return { project, team, ...created.data };
+    };
+
+    it("only teachers can invite judges", async () => {
+      const student = await createDummyUser("user");
+      const project = await createProject();
+      loginAs(student);
+      const denied = await createJudgeInvitation({
+        projectId: project._id.toString(),
+        name: "X",
+        focus: "all",
+      });
+      expect(denied.success).toBe(false);
+    });
+
+    it("a design judge may skip coding rows but must score design and general rows", async () => {
+      const { team, token } = await invite("design");
+
+      const missingGeneral = await submitJudgeEvaluation({
+        token,
+        teamId: team._id.toString(),
+        entries: [{ category: "ui", score: 9, comment: "Lovely" }],
+        overallComment: "",
+      });
+      expect(missingGeneral.success).toBe(false);
+
+      const withoutCode = await submitJudgeEvaluation({
+        token,
+        teamId: team._id.toString(),
+        entries: [
+          { category: "ui", score: 9, comment: "Lovely" },
+          { category: "qa", score: 7, comment: "" },
+        ],
+        overallComment: "",
+      });
+      expect(withoutCode.success).toBe(true);
+
+      const stored = await TeamEvaluation.find({ team: team._id });
+      expect(stored).toHaveLength(2);
+      expect(stored.every((entry) => entry.judge)).toBe(true);
+    });
+
+    it("an 'all' judge must score everything, and a bad token is rejected", async () => {
+      const { team, token } = await invite("all");
+
+      const partial = await submitJudgeEvaluation({
+        token,
+        teamId: team._id.toString(),
+        entries: [
+          { category: "ui", score: 9, comment: "Nice" },
+          { category: "qa", score: 7, comment: "" },
+        ],
+        overallComment: "",
+      });
+      expect(partial.success).toBe(false);
+
+      const badToken = await submitJudgeEvaluation({
+        token: "not-a-real-token",
+        teamId: team._id.toString(),
+        entries: [
+          { category: "ui", score: 9, comment: "Nice" },
+          { category: "code-quality", score: 8, comment: "" },
+          { category: "qa", score: 7, comment: "" },
+        ],
+        overallComment: "",
+      });
+      expect(badToken.success).toBe(false);
+    });
+
+    it("refuses to delete an invitation once the judge has graded", async () => {
+      const { team, token, id } = await invite("all");
+
+      await submitJudgeEvaluation({
+        token,
+        teamId: team._id.toString(),
+        entries: [
+          { category: "ui", score: 9, comment: "Nice" },
+          { category: "code-quality", score: 8, comment: "" },
+          { category: "qa", score: 7, comment: "" },
+        ],
+        overallComment: "",
+      });
+
+      const denied = await deleteJudgeInvitation({ invitationId: id });
+      expect(denied.success).toBe(false);
+      expect(await JudgeInvitation.findById(id)).not.toBeNull();
+    });
+  });
+
   describe("submitTeamEvaluation", () => {
     it("blocks students from their own team and when the gate is closed, allows teachers anytime", async () => {
       const student = await createDummyUser("user");
@@ -390,7 +822,7 @@ describe("group work server actions", () => {
       });
       const otherTeam = await Team.create({ project: project._id, name: "Other" });
 
-      const entries = [{ category: "product" as const, score: 8, comment: "Nice" }];
+      const entries = defaultRubricEntries();
 
       loginAs(student);
       const gateClosed = await submitTeamEvaluation({

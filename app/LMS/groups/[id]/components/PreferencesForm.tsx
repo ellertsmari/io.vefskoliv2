@@ -2,11 +2,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
+import { Icon } from "@iconify/react";
 import { GroupProjectDetails } from "types/groupTypes";
 import {
+  AMBITION_ICONS,
   AMBITION_OPTIONS,
+  FOCUS_ICONS,
   FOCUS_OPTIONS,
+  TECH_STACK_ICONS,
   TECH_STACK_OPTIONS,
+  techStackOptionsForModule,
 } from "constants/groupWork";
 import { savePreferences } from "serverActions/groups/savePreferences";
 import {
@@ -33,6 +38,29 @@ const Footer = styled.div`
   gap: 1rem;
 `;
 
+const ChipContent = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  svg {
+    font-size: 1.1em;
+  }
+`;
+
+const IconChipLabel = ({
+  icon,
+  children,
+}: {
+  icon?: string;
+  children: React.ReactNode;
+}) => (
+  <ChipContent>
+    {icon && <Icon icon={icon} aria-hidden />}
+    {children}
+  </ChipContent>
+);
+
 export const PreferencesForm = ({
   details,
 }: {
@@ -40,10 +68,14 @@ export const PreferencesForm = ({
 }) => {
   const router = useRouter();
   const existing = details.myPreferences;
+  const techOptions = techStackOptionsForModule(details.project.module);
   const [ambition, setAmbition] = useState(existing?.ambition || "");
   const [focus, setFocus] = useState<string[]>(existing?.focus || []);
   const [techStack, setTechStack] = useState<string[]>(
-    existing?.techStack || []
+    // drop stale picks that are no longer offered for this module
+    (existing?.techStack || []).filter((tech) =>
+      (techOptions as readonly string[]).includes(tech)
+    )
   );
   const [about, setAbout] = useState(existing?.about || "");
   const [feedback, setFeedback] = useState<{
@@ -101,7 +133,9 @@ export const PreferencesForm = ({
               $selected={ambition === option}
               onClick={() => setAmbition(ambition === option ? "" : option)}
             >
-              {option}
+              <IconChipLabel icon={AMBITION_ICONS[option]}>
+                {option}
+              </IconChipLabel>
             </SelectableChip>
           ))}
         </ChipRow>
@@ -117,7 +151,7 @@ export const PreferencesForm = ({
               $selected={focus.includes(option)}
               onClick={() => toggle(option, focus, setFocus)}
             >
-              {option}
+              <IconChipLabel icon={FOCUS_ICONS[option]}>{option}</IconChipLabel>
             </SelectableChip>
           ))}
         </ChipRow>
@@ -126,14 +160,16 @@ export const PreferencesForm = ({
       <Card>
         <SectionTitle>Which tech do you want to work with?</SectionTitle>
         <ChipRow>
-          {TECH_STACK_OPTIONS.map((option) => (
+          {techOptions.map((option) => (
             <SelectableChip
               key={option}
               type="button"
               $selected={techStack.includes(option)}
               onClick={() => toggle(option, techStack, setTechStack)}
             >
-              {option}
+              <IconChipLabel icon={TECH_STACK_ICONS[option]}>
+                {option}
+              </IconChipLabel>
             </SelectableChip>
           ))}
         </ChipRow>

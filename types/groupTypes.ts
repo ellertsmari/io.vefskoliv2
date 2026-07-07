@@ -1,5 +1,7 @@
 import {
   GroupProjectStatus,
+  JudgeFocus,
+  RubricItem,
   TeamLinkKey,
 } from "../app/constants/groupWork";
 
@@ -19,9 +21,40 @@ export type SerializedTeam = {
   name: string;
   members: GroupMemberInfo[];
   projectName: string;
+  tagline: string;
   projectDescription: string;
   links: TeamLinks;
-  images: string[];
+  coverImage: string;
+  teamPhoto: string;
+  logo: string;
+};
+
+// Public showcase (no auth — students link these pages from portfolios/CVs)
+export type ShowcaseTeam = {
+  _id: string;
+  name: string;
+  projectName: string;
+  tagline: string;
+  projectDescription: string;
+  links: TeamLinks;
+  coverImage: string;
+  teamPhoto: string;
+  logo: string;
+  memberNames: string[];
+};
+
+export type ShowcaseProject = {
+  _id: string;
+  title: string;
+  module: number | null;
+  startDate: string;
+  endDate: string;
+  teams: ShowcaseTeam[];
+};
+
+export type ShowcaseTeamDetail = {
+  team: ShowcaseTeam;
+  project: { title: string; module: number | null; endDate: string };
 };
 
 export type SerializedPreference = {
@@ -32,13 +65,24 @@ export type SerializedPreference = {
   about: string;
 };
 
+export type SerializedPresentationSlot = {
+  team: string;
+  startTime: string;
+  endTime: string;
+};
+
 export type SerializedGroupProject = {
   _id: string;
   title: string;
   description: string;
+  module: number | null;
   startDate: string;
   endDate: string;
   status: GroupProjectStatus;
+  presentationDate: string | null;
+  presentationLength: number | null;
+  presentationSlots: SerializedPresentationSlot[];
+  rubric: RubricItem[];
   peerEvalOpen: boolean;
   teamEvalOpen: boolean;
 };
@@ -62,7 +106,8 @@ export type BoardStudent = {
 
 export type TeamFeedbackEntry = {
   category: string;
-  score: number;
+  /** null for the score-less "overall" comment entry */
+  score: number | null;
   comment: string;
   evaluatorName: string;
 };
@@ -91,7 +136,8 @@ export type PeerEvaluationEntry = {
 
 export type TeamEvaluationEntry = {
   category: string;
-  score: number;
+  /** null for the score-less "overall" comment entry */
+  score: number | null;
   comment: string;
 };
 
@@ -122,10 +168,30 @@ export type TeamEvalReport = {
   teamId: string;
   teamName: string;
   categories: TeamEvalSummary;
-  entries: (TeamFeedbackEntry & { evaluatorIsTeacher: boolean })[];
+  entries: (TeamFeedbackEntry & {
+    evaluatorIsTeacher: boolean;
+    evaluatorIsJudge: boolean;
+  })[];
 };
 
 export type EvaluationReports = {
   peerEvals: PeerEvalStudentReport[];
   teamEvals: TeamEvalReport[];
+};
+
+// External judges
+export type SerializedJudgeInvitation = {
+  _id: string;
+  name: string;
+  focus: JudgeFocus;
+  token: string;
+  hasSubmitted: boolean;
+};
+
+export type JudgeView = {
+  project: SerializedGroupProject;
+  teams: SerializedTeam[];
+  judge: { name: string; focus: JudgeFocus };
+  // own submissions keyed by teamId
+  myEvaluations: Record<string, TeamEvaluationEntry[]>;
 };

@@ -8,8 +8,10 @@ import {
   PEER_SCORE_VALUES,
   TEAMBUILDING_SCORES,
   PeerScoreInfo,
+  rubricForProject,
 } from "constants/groupWork";
 import { submitPeerEvaluations } from "serverActions/groups/submitPeerEvaluations";
+import { submitTeamEvaluation } from "serverActions/groups/submitTeamEvaluation";
 import {
   Card,
   SectionTitle,
@@ -323,9 +325,17 @@ const TeamEvaluationSection = ({
       </ChipRow>
       {selectedTeam && (
         <TeamEvalForm
-          projectId={details.project._id}
-          team={selectedTeam}
+          key={selectedTeam._id}
+          heading={`Evaluate ${selectedTeam.name}`}
+          rubric={rubricForProject(details.project.rubric)}
           existing={details.myTeamEvaluations[selectedTeam._id] || []}
+          onSubmit={(data) =>
+            submitTeamEvaluation({
+              projectId: details.project._id,
+              teamId: selectedTeam._id,
+              ...data,
+            })
+          }
         />
       )}
     </Layout>

@@ -4,8 +4,8 @@ import { GroupProjectDetails, SerializedTeam } from "types/groupTypes";
 import {
   TEAM_LINK_KEYS,
   TEAM_LINK_LABELS,
-  EVALUATION_CATEGORY_LABELS,
-  EvaluationCategory,
+  categoryLabel,
+  disciplineMetaForCategory,
 } from "constants/groupWork";
 import {
   Card,
@@ -20,6 +20,7 @@ import {
   LinksRow,
   ExternalLink,
   Pill,
+  ScorePill,
 } from "../../styles";
 import { MemberAvatar } from "./TeamHubTab";
 
@@ -57,7 +58,7 @@ const PrefBadges = styled.div`
   margin-left: auto;
 `;
 
-// Mirrors SustainableIsland's project status: links + description + images out of 7.
+// Hub completeness: links + description + cover screenshot out of 7.
 const completeness = (team: SerializedTeam) => {
   let filled = 0;
   const total = TEAM_LINK_KEYS.length + 2;
@@ -65,7 +66,7 @@ const completeness = (team: SerializedTeam) => {
     if (team.links[key]) filled++;
   }
   if (team.projectDescription) filled++;
-  if (team.images.length > 0) filled++;
+  if (team.coverImage) filled++;
   return { filled, total, ratio: filled / total };
 };
 
@@ -168,14 +169,22 @@ export const TeacherOverview = ({
                 </LinksRow>
                 {summary && Object.keys(summary).length > 0 && (
                   <LinksRow>
-                    {Object.entries(summary).map(([category, bucket]) => (
-                      <Pill key={category}>
-                        {EVALUATION_CATEGORY_LABELS[
-                          category as EvaluationCategory
-                        ] || category}
-                        : {bucket.avg} ({bucket.count})
-                      </Pill>
-                    ))}
+                    {Object.entries(summary).map(([category, bucket]) => {
+                      const meta = disciplineMetaForCategory(
+                        details.project.rubric,
+                        category
+                      );
+                      return (
+                        <ScorePill
+                          key={category}
+                          $color={meta.color}
+                          $background={meta.background}
+                        >
+                          {categoryLabel(details.project.rubric, category)}:{" "}
+                          {bucket.avg} ({bucket.count})
+                        </ScorePill>
+                      );
+                    })}
                   </LinksRow>
                 )}
               </Card>

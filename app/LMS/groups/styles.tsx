@@ -109,6 +109,14 @@ export const Pill = styled.span`
   color: #495057;
 `;
 
+// A Pill tinted by the discipline of the rubric category it shows
+// (coding / design / general — the docs' rubric color coding).
+export const ScorePill = styled(Pill)<{ $color: string; $background: string }>`
+  color: ${({ $color }) => $color};
+  background: ${({ $background }) => $background};
+  border-color: ${({ $color }) => $color}33;
+`;
+
 export const buttonBase = css`
   border-radius: 8px;
   padding: 0.6rem 1.25rem;

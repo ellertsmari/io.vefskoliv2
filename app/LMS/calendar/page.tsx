@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getGroupCalendarEvents } from "serverActions/groups/getGroupCalendarEvents";
 import CalendarView from "./CalendarView";
 
 export const metadata: Metadata = {
@@ -6,6 +7,10 @@ export const metadata: Metadata = {
   description: "Course schedule and key dates for the active semester.",
 };
 
-export default function CalendarPage() {
-  return <CalendarView />;
+// Group project events come from the database — render per request.
+export const dynamic = "force-dynamic";
+
+export default async function CalendarPage() {
+  const groupProjectEvents = await getGroupCalendarEvents();
+  return <CalendarView extraEvents={groupProjectEvents} />;
 }

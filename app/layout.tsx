@@ -35,18 +35,20 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
 
-  // Define public routes that use the LMS layout (guides, signin)
-  const isPublicRoute = pathname.startsWith('/guides') || pathname === "/signin";
-
-  // Landing page (/) when not logged in should render without the LMS layout
-  const isLandingPage = pathname === "/" && !isLoggedIn;
+  // Landing page (/) when not logged in should render without the LMS layout,
+  // as do the external judge pages (/judge/<token> — judges have no account)
+  // and the public project showcase.
+  const isStandalonePage =
+    (pathname === "/" && !isLoggedIn) ||
+    pathname.startsWith("/judge") ||
+    pathname.startsWith("/showcase");
 
   return (
     <html lang="en">
       <body className={SourceSans3.className}>
         <StyledComponentsRegistry>
-          {isLandingPage ? (
-            // Landing page renders without the LMS layout wrapper
+          {isStandalonePage ? (
+            // Standalone pages render without the LMS layout wrapper
             <>{children}</>
           ) : (
             // All other pages use the LMS layout

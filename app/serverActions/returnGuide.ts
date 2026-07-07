@@ -11,6 +11,7 @@ import {
   ErrorMessages,
   type ActionResult,
 } from "../utils/errors";
+import { optionalStoredImageSchema } from "../utils/imageUpload";
 
 export type ReturnFormData = {
   projectUrl?: string;
@@ -90,9 +91,10 @@ const ReturnFormSchema = z.object({
     .min(2, { message: "Please enter a valid description" })
     .trim(),
   guideId: z.string().trim(),
-  // optional, but if present it must be a real URL; empty string means absent
+  // optional: an uploaded image (data URL) or a legacy pasted URL; empty
+  // string means absent
   pictureUrl: z.preprocess(
     (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
-    urlField("Please enter a valid image URL or leave the field empty").optional()
+    optionalStoredImageSchema.optional()
   ),
 });

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "../../../../auth";
 import { getGroupProject } from "serverActions/groups/getGroupProject";
 import { getEvaluationReports } from "serverActions/groups/getEvaluationReports";
+import { listJudgeInvitations } from "serverActions/groups/manageJudges";
 import { ProjectView } from "./ProjectView";
 
 export const metadata: Metadata = {
@@ -22,12 +23,15 @@ const GroupProjectPage = async ({
   if (!details) notFound();
 
   const isTeacher = session.user.role === "teacher";
-  const reports = isTeacher ? await getEvaluationReports(id) : null;
+  const [reports, judges] = isTeacher
+    ? await Promise.all([getEvaluationReports(id), listJudgeInvitations(id)])
+    : [null, []];
 
   return (
     <ProjectView
       details={details}
       reports={reports}
+      judges={judges}
       isTeacher={isTeacher}
       userId={session.user.id}
     />

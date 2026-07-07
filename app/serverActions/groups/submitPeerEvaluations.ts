@@ -2,7 +2,7 @@
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
-import { GroupProject } from "models/groupProject";
+import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { PeerEvaluation } from "models/peerEvaluation";
 import {
@@ -12,11 +12,8 @@ import {
   handleActionError,
   successNoData,
 } from "utils/errors";
-import { requireSession } from "./helpers";
-
-const objectIdSchema = z
-  .string()
-  .refine((value) => ObjectId.isValid(value), { message: "Invalid id" });
+import { applyLifecycle } from "./lifecycle";
+import { objectIdSchema, requireSession } from "./helpers";
 
 const peerScore = z.number().int().min(-2).max(2);
 
@@ -65,8 +62,9 @@ export async function submitPeerEvaluations(
 
   try {
     await connectToDatabase();
-    const project = await GroupProject.findById(projectId);
+    const project = await GroupProject.findById(projectId).lean<GroupProjectLean | null>();
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
+    await applyLifecycle(project);
     if (!project.peerEvalOpen) {
       return failure("Peer evaluation is not open for this project");
     }

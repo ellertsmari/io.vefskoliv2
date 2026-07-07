@@ -25,6 +25,7 @@ import {
   ProjectName,
   LinkRow,
   ProjectLink,
+  ReturnPicture,
   DateInfo,
   ReturnComment,
   GradeAdjustmentContainer,
@@ -265,11 +266,17 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
                       <ProjectLink href={returnDoc.liveVersion} target="_blank" rel="noopener noreferrer">
                         Live Version
                       </ProjectLink>
-                      {returnDoc.pictureUrl && (
-                        <ProjectLink href={returnDoc.pictureUrl} target="_blank" rel="noopener noreferrer">
-                          Picture
-                        </ProjectLink>
-                      )}
+                      {returnDoc.pictureUrl &&
+                        (returnDoc.pictureUrl.startsWith("data:") ? (
+                          <ReturnPicture
+                            src={returnDoc.pictureUrl}
+                            alt="Project picture"
+                          />
+                        ) : (
+                          <ProjectLink href={returnDoc.pictureUrl} target="_blank" rel="noopener noreferrer">
+                            Picture
+                          </ProjectLink>
+                        ))}
                     </LinkRow>
                     <DateInfo>
                       Submitted: {new Date(returnDoc.createdAt).toLocaleDateString()}
