@@ -175,7 +175,9 @@ export const createDummyGrade = async (
   owner?: UserDocument,
   guide?: GuideDocument,
   userReturn?: ReturnDocument,
-  grade?: number
+  grade?: number,
+  /** Who applied the grade — a teacher. `gradesGiven` is keyed on this. */
+  gradedBy?: UserDocument
 ): Promise<GradedReviewDocument> => {
   // Create a userReturn if not provided
   if (!userReturn) {
@@ -194,6 +196,7 @@ export const createDummyGrade = async (
     comment: faker.lorem.sentence(),
     vote: votes[Math.floor(Math.random() * votes.length)],
     createdAt: new Date(),
+    ...(gradedBy ? { gradedBy: gradedBy._id } : {}),
   };
 
   const result = await Review.create(dummyReview)

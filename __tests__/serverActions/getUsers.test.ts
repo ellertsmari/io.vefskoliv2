@@ -9,8 +9,16 @@ import {
   createDummyUser,
 } from "../__mocks__/mongoHandler";
 import { getUsers } from "serverActions/getUsers";
+import { auth } from "../../auth";
 import { ShareableUserInfo } from "types/types";
 import { OptionalUserInfoKeys, User, UserWithIdType } from "models/user";
+
+// `getUsers` is a server action guarded by a session. The real `auth()` reads
+// cookies, which throws outside a request scope, so every test signs in a
+// caller — see the last test for the logged-out case.
+jest.mock("../../auth", () => ({
+  auth: jest.fn(),
+}));
 
 describe("getUsers", () => {
   beforeAll(async () => await connect());
@@ -18,6 +26,7 @@ describe("getUsers", () => {
   beforeEach(async () => {
     await clearDatabase();
     jest.clearAllMocks();
+    (auth as jest.Mock).mockResolvedValue({ user: { id: "caller" } });
   });
 
   const shareableKeys = Object.keys(OptionalUserInfoKeys).concat(
@@ -103,5 +112,12 @@ describe("getUsers", () => {
 
     const students = await getUsers({ role: "user" });
     expect(students.length).toBe(1);
+  });
+
+  it("returns nothing to a caller who is not logged in", async () => {
+    await createDummyUser();
+    (auth as jest.Mock).mockResolvedValue(null);
+
+    expect(await getUsers()).toEqual([]);
   });
 });

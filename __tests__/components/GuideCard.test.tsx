@@ -78,15 +78,9 @@ describe("GuideCard", () => {
     expect(notificationIcon).toBeNull();
   });
 
-  it("renders a notification icon if need to grade", async () => {
-    const user = await createDummyUser();
-    const guide = await createDummyFetchedGuideWithControl(user, {
-      availableToGrade: 1,
-    });
-    const { getByLabelText } = render(<GuideCard guide={guide} order={1} />);
-    const notificationIcon = getByLabelText("Notification icon");
-    expect(notificationIcon).toBeDefined();
-  });
+  // There is no "need to grade" notification any more: students stopped
+  // grading each other's reviews in 7d0d21e, so the card only notifies about
+  // reviews the student still owes.
 
   it("renders a notification icon if need to give review", async () => {
     const user = await createDummyUser();

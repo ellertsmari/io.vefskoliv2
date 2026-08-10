@@ -16,14 +16,23 @@ import { Types } from "mongoose";
 import { GuideInfo } from "types/guideTypes";
 import { ReturnDocument } from "models/return";
 import { getGuides } from "serverActions/getGuides";
+import { auth } from "../../auth";
+
+// `getGuides` is a server action guarded by a session. The real `auth()` reads
+// cookies, which throws outside a request scope, so every test signs in a
+// caller. Which user's guides come back is still decided by the argument, not
+// by the session — see the last test for the logged-out case.
+jest.mock("../../auth", () => ({
+  auth: jest.fn(),
+}));
 
 // for type checking (note: _id is serialized to string by getGuides)
 function isGuideInfo(obj: any): obj is GuideInfo {
   return (
     Array.isArray(obj.returnsSubmitted) &&
-    Array.isArray(obj.feedbackReceived) &&
-    Array.isArray(obj.availableForFeedback) &&
-    Array.isArray(obj.feedbackGiven) &&
+    Array.isArray(obj.reviewsReceived) &&
+    Array.isArray(obj.availableForReview) &&
+    Array.isArray(obj.reviewsGiven) &&
     Array.isArray(obj.gradesReceived) &&
     Array.isArray(obj.gradesGiven) &&
     Array.isArray(obj.availableToGrade) &&
@@ -44,11 +53,15 @@ function serialize<T>(doc: T): T {
 describe("getGuides", () => {
   beforeAll(async () => await connect());
 
+  beforeEach(() => {
+    (auth as jest.Mock).mockResolvedValue({ user: { id: "caller" } });
+  });
+
   afterEach(async () => await clearDatabase());
 
   afterAll(async () => await closeDatabase());
 
-  describe("availableForFeedback", () => {
+  describe("availableForReview", () => {
     afterEach(async () => await clearDatabase());
 
     it("only returns latest return from each user", async () => {
@@ -72,7 +85,7 @@ describe("getGuides", () => {
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      const actual = gottenGuide.availableForFeedback;
+      const actual = gottenGuide.availableForReview;
       const expected = expect.arrayContaining([
         {
           ...serialize(otherUserReturn.toObject()),
@@ -118,7 +131,7 @@ describe("getGuides", () => {
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      const actual = gottenGuide.availableForFeedback;
+      const actual = gottenGuide.availableForReview;
       const expected = [
         { ...serialize(aReturn.toObject()), associatedReviewCount: 1 },
         { ...serialize(anotherReturn.toObject()), associatedReviewCount: 2 },
@@ -147,7 +160,7 @@ describe("getGuides", () => {
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      const actual = gottenGuide.availableForFeedback;
+      const actual = gottenGuide.availableForReview;
       const expected = expect.arrayContaining([
         {
           ...serialize(otherUserReturn2.toObject()),
@@ -177,14 +190,14 @@ describe("getGuides", () => {
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      const actual = gottenGuide.availableForFeedback;
+      const actual = gottenGuide.availableForReview;
       const expected = [] as ReturnDocument[];
 
       expect(actual).toEqual(expected);
     });
   });
 
-  describe("feedbackGiven", () => {
+  describe("reviewsGiven", () => {
     afterEach(async () => await clearDatabase());
 
     it("returns feedback given by the user", async () => {
@@ -221,7 +234,7 @@ describe("getGuides", () => {
       const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
-      const actual = gottenGuide.feedbackGiven;
+      const actual = gottenGuide.reviewsGiven;
       const expected = [serialize(feedbackGiven), serialize(feedbackGiven2)];
 
       expect(actual).toEqual(expected);
@@ -231,33 +244,49 @@ describe("getGuides", () => {
   describe("gradesGiven", () => {
     afterEach(async () => await clearDatabase());
 
-    it("returns feedback where the user has given a grade", async () => {
-      const userF = await createDummyUser();
+    // Grading is teacher-only, and a grade records its grader in `gradedBy` —
+    // that field, not the review's owner, is what puts a review in this list.
+    it("returns the reviews this user graded", async () => {
+      const teacher = await createDummyUser("teacher");
 
       const guide = await createDummyGuide();
 
-      const userReturn = await createDummyReturn(userF, guide);
-      const otherUsersReturn = await createDummyReturn(undefined, guide);
+      const aReturn = await createDummyReturn(undefined, guide);
 
-      const gradeGiven = await createDummyGrade(undefined, guide, userReturn);
-      const gradeGiven2 = await createDummyGrade(undefined, guide, userReturn);
-      const gradesReceived = await createDummyGrade(userF, guide, undefined);
-      const otherUsersGradeReceived = await createDummyGrade(
+      const graded = await createDummyGrade(
         undefined,
         guide,
-        otherUsersReturn
+        aReturn,
+        undefined,
+        teacher
       );
+      const graded2 = await createDummyGrade(
+        undefined,
+        guide,
+        aReturn,
+        undefined,
+        teacher
+      );
+      // Graded by somebody else, and an ungraded review: neither counts.
+      await createDummyGrade(undefined, guide, aReturn);
+      await createDummyFeedback(undefined, guide, aReturn);
 
-      const guides = await getGuides(userF._id.toString());
+      const guides = await getGuides(teacher._id.toString());
 
       const gottenGuide = findGuideById(guides, guide._id);
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      const actual = gottenGuide.gradesGiven;
-      const expected = expect.arrayContaining([serialize(gradeGiven), serialize(gradeGiven2)]);
+      // Compared by id: `gradesGiven` doesn't join the return back in, so the
+      // documents don't carry the `associatedReturn` the helper attaches.
+      const actual = gottenGuide.gradesGiven.map((review: any) =>
+        String(review._id)
+      );
 
-      expect(actual).toEqual(expected);
+      expect(actual).toEqual(
+        expect.arrayContaining([String(graded._id), String(graded2._id)])
+      );
+      expect(actual).toHaveLength(2);
     });
   });
 
@@ -295,7 +324,7 @@ describe("getGuides", () => {
     });
   });
 
-  describe("feedbackReceived", () => {
+  describe("reviewsReceived", () => {
     afterEach(async () => await clearDatabase());
 
     it("returns feedback that the user has received in order, starting with most recent", async () => {
@@ -326,7 +355,7 @@ describe("getGuides", () => {
 
       if (!gottenGuide) throw new Error("gottenGuide is null");
 
-      expect(gottenGuide.feedbackReceived).toEqual([serialize(feedback2), serialize(feedback)]);
+      expect(gottenGuide.reviewsReceived).toEqual([serialize(feedback2), serialize(feedback)]);
     });
   });
 
@@ -450,5 +479,14 @@ describe("getGuides", () => {
 
     expect(guides).not.toBeNull();
     expect(guides).toEqual([]);
+  });
+
+  it("returns nothing to a caller who is not logged in", async () => {
+    const userJ = await createDummyUser();
+    const guide = await createDummyGuide();
+    await createDummyReturn(userJ, guide);
+    (auth as jest.Mock).mockResolvedValue(null);
+
+    expect(await getGuides(userJ._id.toString())).toBeNull();
   });
 });

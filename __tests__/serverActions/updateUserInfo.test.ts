@@ -51,6 +51,9 @@ describe("updateUserInfo", () => {
     // Type assertion to inform TypeScript that these properties can be deleted
     delete (actualUser as any).updatedAt;
     delete (expectedUser as any).updatedAt;
+    // The password hash is `select: false`, so a re-fetched user never carries
+    // one — only the document we created by hand does.
+    delete (expectedUser as any).password;
 
     expect(actualUser).toEqual(expectedUser);
   });
