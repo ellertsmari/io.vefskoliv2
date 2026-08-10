@@ -19,7 +19,20 @@ See the complete list with copy instructions in: **`VERCEL_ENVIRONMENT_VARIABLES
 2. Click **"Import .env File"**
 3. Upload your `.env.local` file
 4. Select **Production** environment
-5. Done! ✅
+5. **Fix `NEXTAUTH_URL` afterwards** → `https://io.vefskoli.is` (see below)
+
+### ⚠️ `NEXTAUTH_URL` must NOT be imported as-is
+`.env.local` sets `NEXTAUTH_URL=http://localhost:3000` for local dev. Uploading it
+to Production points every NextAuth redirect at localhost — logging out sends the
+user to `http://localhost:3000/`, and the base URL being `http://` also disables
+the `__Secure-` session cookie prefix. Set it per environment:
+
+| Environment | Value |
+|---|---|
+| Production | `https://io.vefskoli.is` |
+| Local | `http://localhost:3000` |
+
+Don't set `AUTH_URL` at all — NextAuth v5 prefers it over `NEXTAUTH_URL`.
 
 ---
 

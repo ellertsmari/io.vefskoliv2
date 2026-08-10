@@ -14,14 +14,15 @@ export const ModalContent = ({
   const { isModalOpen, setIsModalOpen } = useModal();
 
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      const body = document.querySelector("body");
-      if (isModalOpen) {
-        body!.style.overflow = "hidden";
-      } else {
-        body!.style.overflow = "auto";
-      }
-    }
+    if (!isModalOpen) return;
+
+    document.body.style.overflow = "hidden";
+    // Unlock on unmount as well as on close: the logout button lives inside the
+    // profile modal, so navigating away leaves the modal mounted-then-removed
+    // with `isModalOpen` still true — the next page was stuck unscrollable.
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isModalOpen]);
 
   return (

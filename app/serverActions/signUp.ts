@@ -77,9 +77,13 @@ export async function signUp(
       );
     }
 
+    // `redirect: false` — the form navigates itself. Letting NextAuth redirect
+    // here would both throw NEXT_REDIRECT into the catch below (reported to the
+    // user as a failed auto-login) and send them to NEXTAUTH_URL's host.
     await signIn("credentials", {
       email,
       password: rawPassword,
+      redirect: false,
     });
   } catch (error) {
     logError("signUp:autoLogin", error, { email });

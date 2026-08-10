@@ -41,6 +41,7 @@ describe("signUp", () => {
     expect(signIn).toHaveBeenCalledWith("credentials", {
       email: "john.doe@example.com",
       password: "password123",
+      redirect: false,
     });
     expect(result).toEqual({
       success: true,
