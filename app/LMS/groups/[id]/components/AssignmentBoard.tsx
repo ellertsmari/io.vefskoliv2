@@ -254,6 +254,12 @@ export const AssignmentBoard = ({
           {student.preferences.focus.map((item) => (
             <Pill key={item}>{item}</Pill>
           ))}
+          {student.preferences.schedule && (
+            <Pill>{student.preferences.schedule}</Pill>
+          )}
+          {student.preferences.location && (
+            <Pill>{student.preferences.location}</Pill>
+          )}
         </BadgeRow>
       )}
       <MoveSelect

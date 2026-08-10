@@ -62,6 +62,8 @@ export type SerializedPreference = {
   ambition: string;
   focus: string[];
   techStack: string[];
+  schedule: string;
+  location: string;
   about: string;
 };
 
@@ -85,6 +87,13 @@ export type SerializedGroupProject = {
   rubric: RubricItem[];
   peerEvalOpen: boolean;
   teamEvalOpen: boolean;
+  /**
+   * True when `description` was withheld server-side because the viewer is a
+   * student who hasn't completed their formation preferences yet. The brief is
+   * the reward for filling in the form, so it never reaches the client until
+   * then — hiding it in the UI alone would still ship it in the payload.
+   */
+  descriptionLocked: boolean;
 };
 
 export type GroupProjectListItem = SerializedGroupProject & {

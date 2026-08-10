@@ -21,6 +21,7 @@ import {
   summarizeTeamEvaluations,
 } from "./teamEvalShared";
 import {
+  canReadDescription,
   isTeacher,
   nextFormationProjectId,
   requireSession,
@@ -63,18 +64,6 @@ export async function getGroupProject(
       team.members.some((member) => member._id === userId)
     );
 
-    const details: GroupProjectDetails = {
-      project: serializeProject(project),
-      teams: serializedTeams,
-      myTeamId: myTeam?._id ?? null,
-      myPreferences: null,
-      myPeerEvaluations: [],
-      myTeamEvaluations: {},
-      myTeamFeedback: [],
-      students: null,
-      teamEvalSummaries: null,
-    };
-
     // Own preferences + own submitted evaluations (any role, but relevant to students)
     const [myPreference, myPeerEvals, myTeamEvals] = await Promise.all([
       GroupPreference.findOne({ project: projectId, user: userId }).lean(),
@@ -84,6 +73,25 @@ export async function getGroupProject(
         evaluator: userId,
       }).lean<LeanEvaluationRow[]>(),
     ]);
+
+    const details: GroupProjectDetails = {
+      project: serializeProject(project, {
+        // The brief is withheld until the student has filled in the form.
+        hideDescription: !canReadDescription(
+          project.status,
+          teacher,
+          myPreference
+        ),
+      }),
+      teams: serializedTeams,
+      myTeamId: myTeam?._id ?? null,
+      myPreferences: null,
+      myPeerEvaluations: [],
+      myTeamEvaluations: {},
+      myTeamFeedback: [],
+      students: null,
+      teamEvalSummaries: null,
+    };
 
     if (myPreference) details.myPreferences = serializePreference(myPreference);
 

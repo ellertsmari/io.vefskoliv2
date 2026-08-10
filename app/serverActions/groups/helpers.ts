@@ -39,12 +39,50 @@ export async function nextFormationProjectId(): Promise<string | null> {
   return next ? String(next._id) : null;
 }
 
+/**
+ * Has the student actually answered the formation questions? Every field is
+ * optional in the schema (so a half-filled form can still be saved as a draft
+ * by a teacher fixing things up), but the description gate and the team
+ * composition both need real answers — `about` stays optional, it's free text.
+ */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+export function isPreferenceComplete(pref: any): boolean {
+  if (!pref) return false;
+  return (
+    !!pref.ambition &&
+    (pref.focus?.length ?? 0) > 0 &&
+    (pref.techStack?.length ?? 0) > 0 &&
+    !!pref.schedule &&
+    !!pref.location
+  );
+}
+
+/**
+ * Students only get the project brief once they've filled in the formation
+ * form. The gate applies while teams are forming — after that everyone needs
+ * the description to do the work, so it opens for the whole class.
+ */
+export function canReadDescription(
+  status: string,
+  teacher: boolean,
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+  myPreference: any
+): boolean {
+  if (teacher) return true;
+  if (status !== "formation") return true;
+  return isPreferenceComplete(myPreference);
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any -- lean() docs are untyped here */
-export function serializeProject(project: any): SerializedGroupProject {
+export function serializeProject(
+  project: any,
+  { hideDescription = false }: { hideDescription?: boolean } = {}
+): SerializedGroupProject {
   return {
     _id: project._id.toString(),
     title: project.title,
-    description: project.description || "",
+    description: hideDescription ? "" : project.description || "",
+    descriptionLocked: hideDescription,
     module: project.module ?? null,
     startDate: new Date(project.startDate).toISOString(),
     endDate: new Date(project.endDate).toISOString(),
@@ -103,6 +141,8 @@ export function serializePreference(pref: any): SerializedPreference {
     ambition: pref.ambition || "",
     focus: pref.focus || [],
     techStack: pref.techStack || [],
+    schedule: pref.schedule || "",
+    location: pref.location || "",
     about: pref.about || "",
   };
 }

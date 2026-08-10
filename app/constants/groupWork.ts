@@ -61,6 +61,36 @@ export const FOCUS_ICONS: Record<string, string> = {
   Management: "hugeicons:time-management",
 };
 
+// When and where a student wants to work. Teachers use these to avoid teams
+// whose members can never actually meet — a daytime-at-school student paired
+// with an evenings-from-home one rarely works out.
+export const SCHEDULE_OPTIONS = [
+  "Daytime only",
+  "Evenings only",
+  "Partly daytime, partly evenings",
+] as const;
+
+export const LOCATION_OPTIONS = [
+  "At school",
+  "At home",
+  "Partly at school, partly at home",
+] as const;
+
+export type ScheduleOption = (typeof SCHEDULE_OPTIONS)[number];
+export type LocationOption = (typeof LOCATION_OPTIONS)[number];
+
+export const SCHEDULE_ICONS: Record<string, string> = {
+  "Daytime only": "ph:sun-bold",
+  "Evenings only": "ph:moon-bold",
+  "Partly daytime, partly evenings": "ph:sun-horizon-bold",
+};
+
+export const LOCATION_ICONS: Record<string, string> = {
+  "At school": "mdi:school-outline",
+  "At home": "mdi:home-outline",
+  "Partly at school, partly at home": "uil:arrows-h",
+};
+
 // Modules that have a group project. Which stack choices make sense depends on
 // how far into the programme the module is (derived from the guides taught in
 // each module — e.g. Module 1 only covers HTML/CSS/Figma, React arrives in

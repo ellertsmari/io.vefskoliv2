@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import styled from "styled-components";
+import { Icon } from "@iconify/react";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import {
   EvaluationReports,
@@ -44,6 +45,13 @@ const Description = styled.div`
   border: 1px solid #e9ecef;
   border-radius: 12px;
   padding: 1rem 1.5rem;
+`;
+
+const LockedDescription = styled(Description)`
+  border-style: dashed;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 `;
 
 type Props = {
@@ -105,10 +113,21 @@ export const ProjectView = ({
         </HeaderInfo>
       </PageHeader>
 
-      {project.description && (
-        <Description>
-          <MarkdownReader>{project.description}</MarkdownReader>
-        </Description>
+      {project.descriptionLocked ? (
+        <LockedDescription>
+          <Icon icon="mdi:lock-outline" aria-hidden />
+          <MutedText>
+            The project brief unlocks once you&apos;ve filled in your
+            preferences — head to <strong>My Preferences</strong> and answer the
+            questions there.
+          </MutedText>
+        </LockedDescription>
+      ) : (
+        project.description && (
+          <Description>
+            <MarkdownReader>{project.description}</MarkdownReader>
+          </Description>
+        )
       )}
 
       <TabBar role="tablist">

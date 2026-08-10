@@ -6,6 +6,8 @@ import { GroupPreference } from "models/groupPreference";
 import {
   AMBITION_OPTIONS,
   FOCUS_OPTIONS,
+  LOCATION_OPTIONS,
+  SCHEDULE_OPTIONS,
   TECH_STACK_OPTIONS,
   techStackOptionsForModule,
 } from "constants/groupWork";
@@ -18,6 +20,7 @@ import {
 } from "utils/errors";
 import { applyLifecycle } from "./lifecycle";
 import {
+  isPreferenceComplete,
   nextFormationProjectId,
   objectIdSchema,
   requireSession,
@@ -28,6 +31,8 @@ const SavePreferencesSchema = z.object({
   ambition: z.enum(AMBITION_OPTIONS).or(z.literal("")),
   focus: z.array(z.enum(FOCUS_OPTIONS)).max(FOCUS_OPTIONS.length),
   techStack: z.array(z.enum(TECH_STACK_OPTIONS)).max(TECH_STACK_OPTIONS.length),
+  schedule: z.enum(SCHEDULE_OPTIONS).or(z.literal("")),
+  location: z.enum(LOCATION_OPTIONS).or(z.literal("")),
   about: z.string().max(2000),
 });
 
@@ -47,6 +52,14 @@ export async function savePreferences(
     );
   }
   const { projectId, ...preferences } = validated.data;
+
+  // Every question except the free-text one must be answered — an empty save
+  // would otherwise unlock the project brief without telling teachers anything.
+  if (!isPreferenceComplete(preferences)) {
+    return failure(
+      "Please answer every question before saving — ambition, focus, tech, when you want to work and where"
+    );
+  }
 
   try {
     await connectToDatabase();

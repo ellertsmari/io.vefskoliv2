@@ -18,6 +18,11 @@ const groupPreferenceSchema = new Schema({
   ambition: { type: Schema.Types.String, required: false, default: "" },
   focus: [{ type: Schema.Types.String }],
   techStack: [{ type: Schema.Types.String }],
+  // When and where the student wants to work (SCHEDULE_/LOCATION_OPTIONS).
+  // Added after the first projects ran, so older documents lack them — which
+  // is exactly what `isPreferenceComplete` treats as "not filled in yet".
+  schedule: { type: Schema.Types.String, required: false, default: "" },
+  location: { type: Schema.Types.String, required: false, default: "" },
   about: { type: Schema.Types.String, required: false, default: "" },
   updatedAt: { type: Schema.Types.Date, required: true, default: Date.now },
 });

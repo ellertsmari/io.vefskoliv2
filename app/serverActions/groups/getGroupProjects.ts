@@ -6,7 +6,13 @@ import { GroupPreference } from "models/groupPreference";
 import { logError } from "utils/errors";
 import { GroupProjectListItem } from "types/groupTypes";
 import { applyLifecycle } from "./lifecycle";
-import { isTeacher, requireSession, serializeProject } from "./helpers";
+import {
+  canReadDescription,
+  isPreferenceComplete,
+  isTeacher,
+  requireSession,
+  serializeProject,
+} from "./helpers";
 
 export async function getGroupProjects(): Promise<GroupProjectListItem[]> {
   const session = await requireSession();
@@ -35,6 +41,7 @@ export async function getGroupProjects(): Promise<GroupProjectListItem[]> {
     }
 
     const userId = session.user.id;
+    const teacher = isTeacher(session);
 
     return await Promise.all(
       projects.map(async (project) => {
@@ -44,15 +51,28 @@ export async function getGroupProjects(): Promise<GroupProjectListItem[]> {
             { project: project._id, members: userId },
             { name: 1 }
           ).lean<{ _id: unknown; name: string } | null>(),
-          GroupPreference.exists({ project: project._id, user: userId }),
+          GroupPreference.findOne({
+            project: project._id,
+            user: userId,
+          }).lean(),
         ]);
 
         return {
-          ...serializeProject(project),
+          ...serializeProject(project, {
+            // Cards don't render the description, but it would still ship in
+            // the payload — withhold it on the same terms as the detail page.
+            hideDescription: !canReadDescription(
+              project.status,
+              teacher,
+              myPreference
+            ),
+          }),
           teamCount,
           myTeamId: myTeam ? String(myTeam._id) : null,
           myTeamName: myTeam ? myTeam.name : null,
-          hasPreferences: !!myPreference,
+          // "Filled in" means every required question is answered — a partial
+          // draft still gets the "fill in your preferences" nudge.
+          hasPreferences: isPreferenceComplete(myPreference),
         };
       })
     );

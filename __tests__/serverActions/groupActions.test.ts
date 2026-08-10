@@ -16,6 +16,7 @@ import { createGroupProject } from "serverActions/groups/manageGroupProject";
 import { saveAssignments, createTeam, deleteTeam } from "serverActions/groups/manageTeams";
 import { savePreferences } from "serverActions/groups/savePreferences";
 import { getGroupProjects } from "serverActions/groups/getGroupProjects";
+import { getGroupProject } from "serverActions/groups/getGroupProject";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import { submitPeerEvaluations } from "serverActions/groups/submitPeerEvaluations";
 import { submitTeamEvaluation } from "serverActions/groups/submitTeamEvaluation";
@@ -42,6 +43,18 @@ const loginAs = (user: UserDocument, role: string = user.role) => {
     user: { id: user._id.toString(), role },
   });
 };
+
+// savePreferences requires every question to be answered, so tests that care
+// about something else start from a complete set and override one field.
+const completePrefs = (overrides: Record<string, unknown> = {}) => ({
+  ambition: "Basics" as const,
+  focus: ["Frontend" as const],
+  techStack: ["HTML" as const],
+  schedule: "Daytime only" as const,
+  location: "At school" as const,
+  about: "",
+  ...overrides,
+});
 
 const createProject = async (
   overrides: Record<string, unknown> = {},
@@ -222,25 +235,51 @@ describe("group work server actions", () => {
 
       const first = await savePreferences({
         projectId: project._id.toString(),
-        ambition: "Ambitious",
-        focus: ["Frontend"],
-        techStack: ["React"],
-        about: "I love CSS",
+        ...completePrefs({
+          ambition: "Ambitious",
+          techStack: ["React"],
+          about: "I love CSS",
+        }),
       });
       expect(first.success).toBe(true);
 
       const second = await savePreferences({
         projectId: project._id.toString(),
-        ambition: "Basics",
-        focus: ["Design"],
-        techStack: [],
-        about: "",
+        ...completePrefs({
+          focus: ["Design"],
+          schedule: "Evenings only",
+          location: "At home",
+        }),
       });
       expect(second.success).toBe(true);
 
       const prefs = await GroupPreference.find({ project: project._id });
       expect(prefs).toHaveLength(1);
       expect(prefs[0].ambition).toBe("Basics");
+      expect(prefs[0].schedule).toBe("Evenings only");
+      expect(prefs[0].location).toBe("At home");
+    });
+
+    it("rejects a half-filled form so the brief stays locked", async () => {
+      const student = await createDummyUser("user");
+      const project = await createProject();
+      loginAs(student);
+
+      for (const missing of [
+        { ambition: "" },
+        { focus: [] },
+        { techStack: [] },
+        { schedule: "" },
+        { location: "" },
+      ]) {
+        const result = await savePreferences({
+          projectId: project._id.toString(),
+          ...completePrefs(missing),
+        });
+        expect(result.success).toBe(false);
+      }
+
+      expect(await GroupPreference.countDocuments({})).toBe(0);
     });
 
     it("only accepts preferences for the next upcoming project", async () => {
@@ -259,19 +298,13 @@ describe("group work server actions", () => {
 
       const rejected = await savePreferences({
         projectId: later._id.toString(),
-        ambition: "Basics",
-        focus: [],
-        techStack: [],
-        about: "",
+        ...completePrefs(),
       });
       expect(rejected.success).toBe(false);
 
       const accepted = await savePreferences({
         projectId: next._id.toString(),
-        ambition: "Basics",
-        focus: [],
-        techStack: [],
-        about: "",
+        ...completePrefs(),
       });
       expect(accepted.success).toBe(true);
     });
@@ -302,6 +335,51 @@ describe("group work server actions", () => {
       expect(teacherList).toHaveLength(3);
     });
 
+    it("withholds the project brief from students until the form is filled in", async () => {
+      const teacher = await createDummyUser("teacher");
+      const student = await createDummyUser("user");
+      const project = await createProject(
+        { description: "Build a sustainable island" },
+        teacher
+      );
+      const projectId = project._id.toString();
+
+      loginAs(student);
+      const before = await getGroupProject(projectId);
+      expect(before?.project.description).toBe("");
+      expect(before?.project.descriptionLocked).toBe(true);
+
+      // ...and not in the list payload either
+      const listBefore = await getGroupProjects();
+      expect(listBefore[0].description).toBe("");
+      expect(listBefore[0].hasPreferences).toBe(false);
+
+      await savePreferences({ projectId, ...completePrefs() });
+
+      const after = await getGroupProject(projectId);
+      expect(after?.project.description).toBe("Build a sustainable island");
+      expect(after?.project.descriptionLocked).toBe(false);
+      expect((await getGroupProjects())[0].hasPreferences).toBe(true);
+
+      // teachers are never gated
+      loginAs(teacher);
+      const asTeacher = await getGroupProject(projectId);
+      expect(asTeacher?.project.description).toBe("Build a sustainable island");
+    });
+
+    it("opens the brief to everyone once formation is over", async () => {
+      const student = await createDummyUser("user");
+      const project = await createProject({
+        status: "active",
+        description: "Build a sustainable island",
+      });
+      loginAs(student);
+
+      const details = await getGroupProject(project._id.toString());
+      expect(details?.project.description).toBe("Build a sustainable island");
+      expect(details?.project.descriptionLocked).toBe(false);
+    });
+
     it("rejects changes once the project is active", async () => {
       const student = await createDummyUser("user");
       const project = await createProject({ status: "active" });
@@ -309,10 +387,7 @@ describe("group work server actions", () => {
 
       const result = await savePreferences({
         projectId: project._id.toString(),
-        ambition: "Basics",
-        focus: [],
-        techStack: [],
-        about: "",
+        ...completePrefs(),
       });
       expect(result.success).toBe(false);
     });
@@ -609,19 +684,13 @@ describe("group work server actions", () => {
 
       const invalid = await savePreferences({
         projectId: project._id.toString(),
-        ambition: "Basics",
-        focus: [],
-        techStack: ["NextJS"],
-        about: "",
+        ...completePrefs({ techStack: ["NextJS"] }),
       });
       expect(invalid.success).toBe(false);
 
       const valid = await savePreferences({
         projectId: project._id.toString(),
-        ambition: "Basics",
-        focus: [],
-        techStack: ["HTML", "Figma"],
-        about: "",
+        ...completePrefs({ techStack: ["HTML", "Figma"] }),
       });
       expect(valid.success).toBe(true);
     });
