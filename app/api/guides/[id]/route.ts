@@ -88,13 +88,32 @@ const GuideUpdateSchema = z.object({
   exercise: z
     .object({
       passThreshold: z.number().min(0).max(1),
-      poolSize: z.number().int().min(1).optional(),
+      // How many of each type to serve per visit. Validated per type below:
+      // a pool must be smaller than the number of tasks of THAT type.
+      poolSizes: z
+        .object({
+          quiz: z.number().int().min(1).optional(),
+          shortAnswer: z.number().int().min(1).optional(),
+          code: z.number().int().min(1).optional(),
+        })
+        .optional(),
       tasks: z.array(exerciseTaskSchema),
     })
-    .refine(
-      (ex) => ex.poolSize === undefined || ex.poolSize < ex.tasks.length,
-      { message: "poolSize must be smaller than the number of questions" }
-    )
+    .superRefine((ex, ctx) => {
+      for (const [type, size] of Object.entries(ex.poolSizes ?? {})) {
+        if (size === undefined) continue;
+        const available = ex.tasks.filter(
+          (t) => (t.type ?? "quiz") === type
+        ).length;
+        if (size >= available) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["poolSizes", type],
+            message: `The ${type} pool must be smaller than the ${available} ${type} task(s) available`,
+          });
+        }
+      }
+    })
     .nullable()
     .optional(),
 });

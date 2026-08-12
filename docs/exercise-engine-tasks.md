@@ -128,10 +128,21 @@ re-minted them and silently detached past attempts from their questions.
   written into the guide document and the editor holds them as opaque, passing them through
   a save untouched.
 
-**Still open from decision 8:** pool sizes are still global, not per type. Deferred
-deliberately — it only bites once a real mixed exercise exists, which is Phase 3. Do it
-before authoring the merged TypeScript guide, or a pooled draw will serve uneven mixtures
-of quiz and code tasks.
+**Decision 8 — per-type pools. DONE.** `poolSize` became
+`poolSizes: { quiz?, shortAnswer?, code? }`. A type is pooled when its entry is an integer
+in `[1, number of tasks of that type)`; a type with no entry is served whole.
+
+- **Why it could not wait:** the draw was blind to type. With 14 quiz questions, 3 short
+  answers and 5 code tasks drawn 8 at a time, C(17,8)/C(22,8) ≈ **7.6%** of students would
+  have received no code task at all, and ~4% would have got four or five.
+- **The draw picks which tasks, never their order.** Served tasks keep the authored order,
+  so an exercise still reads as a progression and never opens on a code task.
+- **No migration.** A legacy global `poolSize` is read as the quiz pool — every exercise
+  that has one is quiz-only, so the two are provably identical.
+- `ExercisePublic.poolTotal` became `pools: { type, served, total }[]`, so the UI can say
+  "drawn from a pool of 14" for one type and name them when there are several.
+- `tasksToGrade` validates per type: exactly the pool size of each pooled type, and unpooled
+  types graded whole so a blank one still scores zero rather than dropping out.
 
 **Phase 2 — code. DONE.** Decisions 3–7.
 

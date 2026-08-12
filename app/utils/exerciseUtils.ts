@@ -2,6 +2,7 @@ import {
   ExercisePublic,
   ExerciseTaskPublic,
   ExerciseTaskType,
+  type ExercisePool,
   ExerciseAnswerValue,
   TaskStatus,
   CodeConstruct,
@@ -88,12 +89,26 @@ export const DEFAULT_CONSTRUCT_WEIGHT = 0.2;
  */
 export type UnknownServerTask = ServerTaskBase & { type: string };
 
+/**
+ * How many tasks of each type to serve per visit. A type is pooled when its
+ * entry is an integer in [1, number of tasks of that type); anything else means
+ * "serve them all".
+ *
+ * Per type rather than one number for the whole exercise: a mixed exercise with
+ * a single pool serves wildly uneven drafts — with 14 quiz questions, 3 short
+ * answers and 5 code tasks drawn 8 at a time, about one student in thirteen
+ * gets no code task at all, and one in twenty-five gets four or five.
+ */
+export type PoolSizes = Partial<Record<ExerciseTaskType, number>>;
+
 export type ServerExercise = {
   tasks: (ServerTask | UnknownServerTask)[];
   passThreshold?: number;
+  poolSizes?: PoolSizes;
   /**
-   * When set (and smaller than tasks.length), each visit serves a random
-   * subset of this many questions instead of the full set.
+   * Legacy single pool size. Every exercise that has one is quiz-only — the
+   * other task types did not exist when it was written — so it means exactly
+   * the quiz pool, and is read as such. No migration needed.
    */
   poolSize?: number;
 };
@@ -196,18 +211,45 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export const knownTasks = (exercise: ServerExercise): ServerTask[] =>
   (exercise.tasks ?? []).filter(isKnownTask);
 
-/** poolSize is only meaningful as an integer in [1, gradeable task count). */
-const normalizedPoolSize = (exercise: ServerExercise): number | undefined => {
-  const { poolSize } = exercise;
-  if (
-    typeof poolSize === "number" &&
-    Number.isInteger(poolSize) &&
-    poolSize >= 1 &&
-    poolSize < knownTasks(exercise).length
-  ) {
-    return poolSize;
+/** How many gradeable tasks of each type the exercise holds. */
+const taskCountsByType = (exercise: ServerExercise): Map<string, number> => {
+  const counts = new Map<string, number>();
+  for (const task of knownTasks(exercise)) {
+    counts.set(task.type, (counts.get(task.type) ?? 0) + 1);
   }
-  return undefined;
+  return counts;
+};
+
+/** The configured pool sizes, reading the legacy global one as the quiz pool. */
+const configuredPoolSizes = (exercise: ServerExercise): PoolSizes => {
+  if (exercise.poolSizes) return exercise.poolSizes;
+  if (typeof exercise.poolSize === "number") {
+    return { [ExerciseTaskType.QUIZ]: exercise.poolSize };
+  }
+  return {};
+};
+
+/**
+ * Pool sizes that actually apply, by task type. A size only counts when it is
+ * an integer in [1, number of tasks of that type) — asking for more than exist
+ * is the same as not pooling.
+ */
+const normalizedPoolSizes = (exercise: ServerExercise): Map<string, number> => {
+  const counts = taskCountsByType(exercise);
+  const applied = new Map<string, number>();
+
+  for (const [type, size] of Object.entries(configuredPoolSizes(exercise))) {
+    const available = counts.get(type) ?? 0;
+    if (
+      typeof size === "number" &&
+      Number.isInteger(size) &&
+      size >= 1 &&
+      size < available
+    ) {
+      applied.set(type, size);
+    }
+  }
+  return applied;
 };
 
 /**
@@ -345,33 +387,41 @@ const gradeShortAnswerTask = (
 /**
  * Resolve which tasks a submission should be graded against.
  *
- * Full set: every task. Pooled: exactly the served subset, identified by the
- * submitted answer keys. The subset must contain poolSize distinct, valid task
- * ids — anything else is a malformed submission. (A determined student could
- * hand-craft which pool questions they answer; for a formative quiz with
- * unlimited retries that buys them little, and we accept the tradeoff rather
- * than tracking served sets server-side. Revisit if these ever become summative.)
+ * Nothing pooled: every task, answered or not. Pooled: for each pooled type,
+ * exactly the tasks the student answered, and there must be exactly as many as
+ * that type's pool size — anything else is a malformed submission. Types that
+ * are not pooled are graded whole, so leaving one blank still scores zero
+ * rather than silently dropping out.
+ *
+ * (A determined student could hand-craft which pooled tasks they answer. With
+ * unlimited retries and best-score-counts they can already reroll for an easier
+ * draw, so pooling was never a security control — it exists to make retries
+ * meaningful and to vary problems between students. Revisit if these ever
+ * become summative.)
  */
 const tasksToGrade = (
   exercise: ServerExercise,
   answers: ExerciseAnswers
 ): ServerTask[] => {
   const allTasks = knownTasks(exercise);
-  const poolSize = normalizedPoolSize(exercise);
-  if (!poolSize) return allTasks;
+  const pools = normalizedPoolSizes(exercise);
+  if (pools.size === 0) return allTasks;
 
-  const byId = new Map(allTasks.map((t) => [taskId(t), t]));
-  const submittedIds = [...new Set(Object.keys(answers))].filter((id) =>
-    byId.has(id)
+  const answeredIds = new Set(Object.keys(answers));
+  const graded = allTasks.filter(
+    (task) => !pools.has(task.type) || answeredIds.has(taskId(task))
   );
 
-  if (submittedIds.length !== poolSize) {
-    throw new ExerciseGradingError(
-      "Your submission didn't match the questions you were given. Please refresh the page and try again."
-    );
+  for (const [type, expected] of pools) {
+    const got = graded.filter((task) => task.type === type).length;
+    if (got !== expected) {
+      throw new ExerciseGradingError(
+        "Your submission didn't match the questions you were given. Please refresh the page and try again."
+      );
+    }
   }
 
-  return submittedIds.map((id) => byId.get(id)!);
+  return graded;
 };
 
 /**
@@ -451,18 +501,51 @@ export const gradeExercise = (
   };
 };
 
-/** Fisher–Yates sample of `count` tasks; rng injectable for tests. */
-const sampleTasks = (
-  tasks: ServerTask[],
-  count: number,
-  rng: () => number
-): ServerTask[] => {
-  const pool = [...tasks];
+/** Fisher–Yates sample of `count` items; rng injectable for tests. */
+const sample = <T>(items: T[], count: number, rng: () => number): T[] => {
+  const pool = [...items];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   return pool.slice(0, count);
+};
+
+/**
+ * Which tasks to serve this visit.
+ *
+ * The draw decides WHICH tasks appear, never the order they appear in: the
+ * result keeps the order the teacher authored, so an exercise still reads as a
+ * progression — recall questions first, code at the end — instead of opening on
+ * whatever the shuffle happened to put first.
+ */
+const selectServedTasks = (
+  exercise: ServerExercise,
+  rng: () => number
+): ServerTask[] => {
+  const tasks = knownTasks(exercise);
+  const pools = normalizedPoolSizes(exercise);
+  if (pools.size === 0) return tasks;
+
+  const indicesByType = new Map<string, number[]>();
+  tasks.forEach((task, index) => {
+    const list = indicesByType.get(task.type) ?? [];
+    list.push(index);
+    indicesByType.set(task.type, list);
+  });
+
+  const keep = new Set<number>();
+  for (const [type, indices] of indicesByType) {
+    const size = pools.get(type);
+    // A type with no pool is served whole.
+    if (size === undefined) {
+      indices.forEach((i) => keep.add(i));
+      continue;
+    }
+    sample(indices, size, rng).forEach((i) => keep.add(i));
+  }
+
+  return tasks.filter((_, index) => keep.has(index));
 };
 
 /**
@@ -480,21 +563,24 @@ export const sanitizeExerciseForClient = (
 ): ExercisePublic | undefined => {
   if (!exercise || !Array.isArray(exercise.tasks)) return undefined;
 
-  // Only gradeable tasks are candidates: filtering BEFORE the draw keeps a
-  // pooled exercise serving exactly poolSize questions.
-  const candidates = knownTasks(exercise);
-  const poolSize = normalizedPoolSize(exercise);
-  const servedTasks = poolSize
-    ? sampleTasks(candidates, poolSize, rng)
-    : candidates;
-
+  // Only gradeable tasks are candidates: filtering happens BEFORE the draw, so
+  // a pooled exercise still serves exactly its pool size.
+  const servedTasks = selectServedTasks(exercise, rng);
   const tasks: ExerciseTaskPublic[] = servedTasks.map(publicTask);
+
+  const applied = normalizedPoolSizes(exercise);
+  const counts = taskCountsByType(exercise);
+  const pools: ExercisePool[] = [...applied.entries()].map(([type, served]) => ({
+    type: type as ExerciseTaskType,
+    served,
+    total: counts.get(type) ?? served,
+  }));
 
   return {
     tasks,
     passThreshold: exercise.passThreshold ?? DEFAULT_PASS_THRESHOLD,
-    // lets the UI say "6 questions (drawn from a pool of 14)"
-    poolTotal: poolSize ? candidates.length : undefined,
+    // lets the UI say "6 of 14 questions · 2 of 5 coding problems"
+    pools: pools.length > 0 ? pools : undefined,
   };
 };
 

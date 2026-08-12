@@ -40,6 +40,13 @@ import { CodeTaskFields, CodeFeedbackView } from "./CodeTask";
 
 type Answers = Record<string, ExerciseAnswerValue>;
 
+/** How each pooled type is named in the "6 of 14 …" summary. */
+const POOL_LABELS: Record<ExerciseTaskType, string> = {
+  [ExerciseTaskType.QUIZ]: "questions",
+  [ExerciseTaskType.SHORT_ANSWER]: "short answers",
+  [ExerciseTaskType.CODE]: "coding problems",
+};
+
 /** Has the student put anything in this task yet? Shape depends on the type. */
 const isAnswered = (task: ExerciseTaskPublic, answer?: ExerciseAnswerValue) => {
   if (task.type === ExerciseTaskType.QUIZ) {
@@ -171,15 +178,25 @@ export const ExerciseView = ({
   const taskCount = exercise.tasks.length;
   const passPercent = Math.round(exercise.passThreshold * 100);
 
+  // One pooled type reads better without naming it — "drawn from a pool of 14".
+  // With several, each has to be named or the numbers are meaningless.
+  const pools = exercise.pools ?? [];
+  const poolSummary =
+    pools.length === 0
+      ? ""
+      : pools.length === 1
+      ? `drawn from a pool of ${pools[0].total}`
+      : `drawn from pools: ${pools
+          .map((p) => `${p.served} of ${p.total} ${POOL_LABELS[p.type]}`)
+          .join(", ")}`;
+
   return (
     <Wrapper>
       <Heading1>Exercise</Heading1>
       <ExerciseMeta>
         {taskCount} question{taskCount === 1 ? "" : "s"}
-        {exercise.poolTotal
-          ? ` (drawn from a pool of ${exercise.poolTotal})`
-          : ""}{" "}
-        · {passPercent}% to pass · unlimited attempts — your best score counts
+        {poolSummary ? ` (${poolSummary})` : ""} · {passPercent}% to pass ·
+        unlimited attempts — your best score counts
       </ExerciseMeta>
       {bestAttempt && !result && (
         <ExerciseMeta>

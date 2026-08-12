@@ -159,12 +159,22 @@ export type ExerciseAnswerValue = number[] | string;
  */
 export type TaskStatus = "correct" | "incorrect" | "pending";
 
+/**
+ * One task type being drawn from a pool: how many were served this visit and
+ * how many exist. Lets the UI say "6 of 14 questions · 2 of 5 coding problems".
+ */
+export type ExercisePool = {
+  type: ExerciseTaskType;
+  served: number;
+  total: number;
+};
+
 export type ExercisePublic = {
   tasks: ExerciseTaskPublic[];
   /** fraction of total points required to pass, 0..1 */
   passThreshold: number;
-  /** total pool size when questions are drawn from a pool (tasks.length < poolTotal) */
-  poolTotal?: number;
+  /** present for each type that is pooled; absent when nothing is pooled */
+  pools?: ExercisePool[];
 };
 
 /**

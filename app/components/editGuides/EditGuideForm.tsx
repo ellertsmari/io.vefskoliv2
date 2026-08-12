@@ -88,7 +88,9 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
             goal: t.goal || "",
           } as const;
         }),
-        poolSize: ex.poolSize ?? 0,
+        // The editor authors quiz questions only, so its pool field is the
+        // quiz pool. A legacy global poolSize means exactly that.
+        poolSize: ex.poolSizes?.quiz ?? ex.poolSize ?? 0,
       };
     }
     return { passThreshold: 0.7, poolSize: 0, tasks: [emptyTask()] };
@@ -181,8 +183,9 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
       if (task.correctAnswers.length === 0)
         return `Question ${n}: mark at least one correct answer.`;
     }
-    if (exercise.poolSize >= exercise.tasks.length && exercise.poolSize > 0)
-      return "The question pool must be smaller than the total number of questions (leave it empty to serve all).";
+    const quizCount = exercise.tasks.filter((t) => t.kind === "quiz").length;
+    if (exercise.poolSize >= quizCount && exercise.poolSize > 0)
+      return `The question pool must be smaller than the ${quizCount} quiz question(s) available (leave it empty to serve all).`;
     return null;
   };
 
@@ -222,7 +225,9 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
                   ...(t.goal.trim() ? { goal: t.goal.trim() } : {}),
                 }
           ),
-          ...(exercise.poolSize > 0 ? { poolSize: exercise.poolSize } : {}),
+          ...(exercise.poolSize > 0
+            ? { poolSizes: { quiz: exercise.poolSize } }
+            : {}),
         },
       };
     } else {

@@ -145,21 +145,34 @@ describe("gradeExercise", () => {
 describe("question pools", () => {
   const pooled = (): ServerExercise => ({
     ...makeExercise(),
-    poolSize: 1,
+    poolSizes: { quiz: 1 },
   });
 
-  it("serves a random subset of poolSize questions", () => {
+  it("serves a random subset of the pool size", () => {
     const rng = () => 0; // deterministic shuffle
     const sanitized = sanitizeExerciseForClient(pooled(), rng);
     expect(sanitized!.tasks).toHaveLength(1);
-    expect(sanitized!.poolTotal).toBe(2);
+    expect(sanitized!.pools).toEqual([
+      { type: ExerciseTaskType.QUIZ, served: 1, total: 2 },
+    ]);
   });
 
-  it("does not pool when poolSize >= question count", () => {
-    const exercise = { ...makeExercise(), poolSize: 5 };
+  it("reads a legacy global poolSize as the quiz pool", () => {
+    // Every exercise with a global poolSize is quiz-only, so the two mean
+    // the same thing and no migration is needed.
+    const legacy = { ...makeExercise(), poolSize: 1 };
+    const sanitized = sanitizeExerciseForClient(legacy, () => 0);
+    expect(sanitized!.tasks).toHaveLength(1);
+    expect(sanitized!.pools).toEqual([
+      { type: ExerciseTaskType.QUIZ, served: 1, total: 2 },
+    ]);
+  });
+
+  it("does not pool when the pool is not smaller than the task count", () => {
+    const exercise = { ...makeExercise(), poolSizes: { quiz: 5 } };
     const sanitized = sanitizeExerciseForClient(exercise);
     expect(sanitized!.tasks).toHaveLength(2);
-    expect(sanitized!.poolTotal).toBeUndefined();
+    expect(sanitized!.pools).toBeUndefined();
   });
 
   it("grades a pooled submission against exactly the answered subset", () => {
@@ -177,6 +190,98 @@ describe("question pools", () => {
     // unknown task ids don't count toward the subset
     expect(() => gradeExercise(pooled(), { nonsense: [0] })).toThrow(
       ExerciseGradingError
+    );
+  });
+});
+
+/**
+ * The reason pools are per type: one pool across a mixed exercise draws blind
+ * to type, so some students would get no code task at all while others get
+ * nothing but code.
+ */
+describe("pools across a mixed exercise", () => {
+  const mixed = (poolSizes?: Record<string, number>): ServerExercise => ({
+    passThreshold: 0.5,
+    poolSizes,
+    tasks: [
+      { id: "q1", type: "quiz", prompt: "Q1", options: ["a", "b"], correctAnswers: [0], points: 1 },
+      { id: "q2", type: "quiz", prompt: "Q2", options: ["a", "b"], correctAnswers: [0], points: 1 },
+      { id: "q3", type: "quiz", prompt: "Q3", options: ["a", "b"], correctAnswers: [0], points: 1 },
+      { id: "s1", type: "shortAnswer", prompt: "S1", acceptedAnswers: ["x"], points: 1 },
+      { id: "s2", type: "shortAnswer", prompt: "S2", acceptedAnswers: ["y"], points: 1 },
+      { id: "c1", type: "code", prompt: "C1", entryPoint: "f", tests: [], points: 1 },
+      { id: "c2", type: "code", prompt: "C2", entryPoint: "f", tests: [], points: 1 },
+    ] as never,
+  });
+
+  it("serves the configured number of EACH type, whatever the draw", () => {
+    // Every rng, including degenerate ones, must produce the same shape.
+    for (const rng of [() => 0, () => 0.5, () => 0.999, Math.random]) {
+      const served = sanitizeExerciseForClient(
+        mixed({ quiz: 2, code: 1 }),
+        rng
+      )!.tasks;
+      const byType = (t: string) => served.filter((s) => s.type === t).length;
+      expect(byType("quiz")).toBe(2);
+      expect(byType("code")).toBe(1);
+      // shortAnswer has no pool, so both are always served
+      expect(byType("shortAnswer")).toBe(2);
+    }
+  });
+
+  it("keeps the teacher's authored order — the draw picks which, not the order", () => {
+    const served = sanitizeExerciseForClient(
+      mixed({ quiz: 2, code: 1 }),
+      () => 0.7
+    )!.tasks;
+    const authored = ["q1", "q2", "q3", "s1", "s2", "c1", "c2"];
+    const positions = served.map((t) => authored.indexOf(t.id));
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    // and the code task is still last, not opening the exercise
+    expect(served[served.length - 1].type).toBe(ExerciseTaskType.CODE);
+  });
+
+  it("reports each pooled type separately", () => {
+    const sanitized = sanitizeExerciseForClient(mixed({ quiz: 2, code: 1 }));
+    expect(sanitized!.pools).toEqual(
+      expect.arrayContaining([
+        { type: ExerciseTaskType.QUIZ, served: 2, total: 3 },
+        { type: ExerciseTaskType.CODE, served: 1, total: 2 },
+      ])
+    );
+    // shortAnswer is not pooled, so it is not listed
+    expect(sanitized!.pools).toHaveLength(2);
+  });
+
+  it("grades the served shape and rejects a submission of the wrong shape", () => {
+    const exercise = mixed({ quiz: 2, code: 1 });
+    // 2 quiz + 1 code answered, plus both (unpooled) short answers
+    const ok = gradeExercise(exercise, {
+      q1: [0],
+      q2: [0],
+      c1: "code",
+      s1: "x",
+      s2: "y",
+    });
+    expect(ok.totalPoints).toBe(5);
+
+    // three quiz answers when only two were served
+    expect(() =>
+      gradeExercise(exercise, { q1: [0], q2: [0], q3: [0], c1: "code" })
+    ).toThrow(ExerciseGradingError);
+    // no code answer when one was served
+    expect(() => gradeExercise(exercise, { q1: [0], q2: [0] })).toThrow(
+      ExerciseGradingError
+    );
+  });
+
+  it("grades unpooled types whole, so leaving one blank still scores zero", () => {
+    const exercise = mixed({ quiz: 2, code: 1 });
+    const result = gradeExercise(exercise, { q1: [0], q2: [0], c1: "code" });
+    // both short answers still counted against the total, unanswered
+    expect(result.totalPoints).toBe(5);
+    expect(result.results.filter((r) => r.taskId.startsWith("s"))).toHaveLength(
+      2
     );
   });
 });
@@ -489,10 +594,12 @@ describe("tasks of an unsupported type", () => {
 
   it("is excluded from the pool, so a pooled exercise still serves poolSize questions", () => {
     const exercise = withUnknownTask();
-    exercise.poolSize = 1;
+    exercise.poolSizes = { quiz: 1 };
     const sanitized = sanitizeExerciseForClient(exercise, () => 0.99);
     expect(sanitized?.tasks).toHaveLength(1);
-    expect(sanitized?.poolTotal).toBe(2); // the two gradeable tasks, not three
+    expect(sanitized?.pools).toEqual([
+      { type: ExerciseTaskType.QUIZ, served: 1, total: 2 }, // not three
+    ]);
   });
 
   it("throws rather than scoring zero if one is somehow submitted", () => {

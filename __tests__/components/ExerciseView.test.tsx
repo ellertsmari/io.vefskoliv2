@@ -88,7 +88,10 @@ describe("ExerciseView", () => {
     render(
       <ExerciseView
         guideId="g1"
-        exercise={{ ...exercise, poolTotal: 10 }}
+        exercise={{
+          ...exercise,
+          pools: [{ type: ExerciseTaskType.QUIZ, served: 2, total: 10 }],
+        }}
         bestAttempt={{
           score: 8,
           passed: true,

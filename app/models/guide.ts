@@ -114,8 +114,23 @@ const exerciseSchema = new Schema({
   tasks: { type: [exerciseTaskSchema], required: true },
   // fraction of total points required to pass (0..1)
   passThreshold: { type: Schema.Types.Number, required: true, default: 0.7 },
-  // When set (1 <= poolSize < tasks.length), each visit serves a random
-  // subset of this many questions; absent = serve all questions.
+  // How many tasks of each type to serve per visit. A type is pooled when its
+  // entry is an integer in [1, number of tasks of that type); absent = serve
+  // them all. Per type because one pool across a mixed exercise serves very
+  // uneven drafts — some students would get no code task at all.
+  poolSizes: {
+    type: new Schema(
+      {
+        quiz: { type: Schema.Types.Number, required: false, min: 1 },
+        shortAnswer: { type: Schema.Types.Number, required: false, min: 1 },
+        code: { type: Schema.Types.Number, required: false, min: 1 },
+      },
+      { _id: false }
+    ),
+    required: false,
+  },
+  // Legacy single pool size, kept so existing guides keep working. Every
+  // exercise that has one is quiz-only, so it is read as the quiz pool.
   poolSize: { type: Schema.Types.Number, required: false, min: 1 },
 });
 
