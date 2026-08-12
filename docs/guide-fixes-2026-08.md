@@ -51,25 +51,10 @@ Once the real dates exist, three places need them:
   recurring fixture (fragile — it runs with two partner schools).
 - Check `Design UX - Las Palmas Facilitator 24h` (Module 6, order 6) still lands *before* the trip.
 
-### 2. Merge the TypeScript fundamentals into one quiz → unblocks the parked #11
+### 2. Merge the TypeScript fundamentals — DONE (see #23 below)
 
-Collapse Module 3's Data types (7), Conditionals (8), Loops & Iterators (9) and Functions (10) into
-a single auto-graded quiz guide, then practise those topics in React (Module 4). The machinery
-already exists: `gradingMode: "auto"` + the `exercise` subdoc, server-side grading in
-`app/utils/exerciseUtils.ts`, and the authoring UI in `EditGuideForm`.
-
-Consequences to work through:
-
-- Frees ~22–27h of Module 3 — decide what fills it
-- Retires the Mockaroo exercise data entirely (parked #11): the Conditionals endpoint returns CSV
-  while Loops returns JSON, the randomised countries mean the Iceland/Spain/Korea switch branches
-  essentially never fire, and both keys share a 200-req/day free tier across the class. **Check
-  first whether the randomness is deliberate anti-copying** — that was never settled.
-- The four guides cross-reference each other ("This guide is part of the TypeScript Introduction
-  Guides. Please follow the order:") — that block disappears
-- `Reading code` (order 6) stays as-is: it is the pre-TypeScript self-check
-- Module 3 orders 5–13 need resequencing afterwards
-- The live sample quizzes have one question each; a real assessment needs more
+Done on 2026-08-12, after the exercise engine was extended to support short-answer and code
+tasks (`docs/exercise-engine-tasks.md`). The full write-up is in **#23**.
 
 ### 3. Curriculum gaps, confirmed but unwritten
 
@@ -95,7 +80,8 @@ Consequences to work through:
 
 ## Final state
 
-**45 guides** (was 46 — one hidden duplicate deleted), **204 KB** (was 428 KB).
+**42 guides** (was 46: one hidden duplicate deleted, then four TypeScript guides merged into one),
+**241 KB** (was 428 KB).
 
 Automated checks, all passing:
 
@@ -114,7 +100,75 @@ Automated checks, all passing:
 
 Snapshots of anything deleted:
 `dbBackup/deleted-design-sprint-guide-2026-08-11.json`,
+`dbBackup/deleted-typescript-intro-guides-2026-08-12.json`,
 `dbBackup/deleted-local-test-guides-2026-08-11.json` (local `test` DB only).
+
+---
+
+## #23 — The four TypeScript Introduction guides became one auto-graded guide
+
+Module 3's Data types (7), Conditionals (8), Loops & Iterators (9) and Functions (10) are now a
+single guide, **TypeScript Introduction (16h-20h.)** at order 7, with `gradingMode: "auto"`.
+
+**Why it waited.** The original plan was one auto-graded *quiz*. But all four guides carry skill
+objectives phrased as doing — "Be able to use loops and iterators" — and a multiple-choice engine
+cannot assess one of them. Merging onto a quiz-only engine would have meant rewriting four skill
+objectives into knowledge objectives so the tool could measure them, letting the engine set the
+curriculum. So the engine was extended first (short answer, then code tasks running in a sandbox);
+this merge came after. All five skill objectives survive, and a sixth was added: *be able to read a
+TypeScript error and fix what it points at*, which is now genuinely assessed because submissions
+are type-checked before they run.
+
+**The exercise.** 25 tasks, of which each visit serves 14:
+
+| Type | Authored | Served | Assessing |
+|---|---|---|---|
+| quiz | 17 | 10 | the knowledge objectives across all four topics |
+| short answer | 4 | 2 | recall — `const`, `length`, `return`, "truthy" |
+| code | 4 | 2 | the skill objectives, by running the student's TypeScript |
+
+70% to pass, unlimited attempts, best score counts. Every question carries a hint, an explanation
+and a knowledge goal, so students get per-goal feedback.
+
+The four coding problems are lifted from the assignments they replace, so nothing was invented:
+`totalChildren` (the Loops guide's "how many children in total"), `greetByCountry` (the
+Conditionals guide's Iceland/Spain/Korea branches), `describePeople` (the Loops guide's
+`name: Age` formatting) and `addContact` (the Functions guide's contact list, with its
+"Missing fields" / "Duplicate was found" messages). Each has 3–5 test cases with at least one
+hidden, and requires a construct — `iteration` rather than `loop`, so `.reduce()` is not punished.
+
+**Verified before shipping**, since there is no authoring UI to fix a bad test case with: a
+reference solution for each coding problem passes every case and satisfies its construct; the
+untouched starter code fails; every quiz key indexes a real option; every short answer accepts its
+own accepted answers; no answer key or hidden expected value survives `sanitizeExerciseForClient`;
+the served shape is identical across 25 draws; and a fully correct submission scores exactly 10.
+
+**Watch this on import.** Every task carries an explicit `_id`. Mongoose mints subdocument ids on
+save, but this collection is imported by hand as raw JSON and **nothing generates them there** —
+without ids every task shares the id `""`, which collapses answer keying, pooling and grading.
+Stored attempts key their answers by these ids, so they must not be regenerated once students have
+submitted.
+
+**What changed around it:**
+
+- **Deleted** the four guides; snapshot at `dbBackup/deleted-typescript-intro-guides-2026-08-12.json`.
+  Any returns or reviews from past cohorts against those four `_id`s are orphaned — accepted
+  deliberately.
+- Collection: **45 → 42 guides**. Module 3 resequenced and contiguous 0–10 (Web APIs 11→8,
+  prototype handoff 12→9, GitHub 13→10).
+- The cross-reference block ("This guide is part of the TypeScript Introduction Guides. Please
+  follow the order:") is gone with the guides that carried it.
+- **Mockaroo is retired.** The CSV/JSON mismatch between guides, the switch branches that
+  essentially never fired, and the 200-request/day key shared across a class are all gone. The
+  anti-copying property it may have been reaching for is now provided properly by per-type question
+  pools — students draw different coding problems from the same pool.
+- **Codewars survives** as optional extra practice inside the merged guide, dinner bet included.
+- `Reading code` (order 6) is unchanged: it is still the pre-TypeScript self-check.
+
+**Still to decide:** the four guides were 22–27h and the merged one is set at 16–20h, so roughly
+**6–10h of Module 3 is freed**. Less than the 22–27h originally imagined, because students still
+write code — what is saved is three hand-in cycles and their peer reviews, not the learning. What
+fills that time is a curriculum call.
 
 ---
 
