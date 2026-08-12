@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" width="920" height="400" role="img" aria-labelledby="t d">
+  <title id="t">Choosing a chart for the question you are answering</title>
+  <desc id="d">Four questions and the chart that answers each: comparing values uses a bar chart, change over time uses a line chart, parts of a whole uses a stacked bar, and relationship between two values uses a scatter plot.</desc>
+  <style>
+    .card { fill: #ffffff; stroke: #14202e; stroke-width: 2.5; }
+    .q    { font: 700 15px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #14202e; }
+    .n    { font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #0e7f8c; }
+    .sub  { font: 400 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #4a5b6e; }
+    .head { font: 700 18px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #14202e; }
+    .bar  { fill: #29b6c8; }
+    .axis { stroke: #9aa9b8; stroke-width: 2; }
+    .line { stroke: #29b6c8; stroke-width: 3; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+    .dot  { fill: #29b6c8; }
+  </style>
+
+  <rect x="1.5" y="1.5" width="917" height="397" rx="14" fill="#f7f9fb" stroke="#d7dfe7" stroke-width="3"/>
+  <text class="head" x="460" y="42" text-anchor="middle">Pick the chart that answers the question. Not the one that looks nicest.</text>
+
+  <!-- 1 comparison -->
+  <rect class="card" x="34" y="70" width="200" height="290" rx="12"/>
+  <text class="q"   x="54" y="102">Which is biggest?</text>
+  <text class="sub" x="54" y="124">Comparing categories</text>
+  <g transform="translate(60,150)">
+    <path class="axis" d="M0 110 L150 110 M0 0 L0 110"/>
+    <rect class="bar" x="16"  y="44" width="26" height="66"/>
+    <rect class="bar" x="56"  y="18" width="26" height="92"/>
+    <rect class="bar" x="96"  y="70" width="26" height="40"/>
+  </g>
+  <text class="n"   x="54" y="335">Bar chart</text>
+
+  <!-- 2 time -->
+  <rect class="card" x="254" y="70" width="200" height="290" rx="12"/>
+  <text class="q"   x="274" y="102">Is it going up?</text>
+  <text class="sub" x="274" y="124">Change over time</text>
+  <g transform="translate(280,150)">
+    <path class="axis" d="M0 110 L150 110 M0 0 L0 110"/>
+    <path class="line" d="M10 92 L45 70 L80 78 L115 30 L145 14"/>
+    <circle class="dot" cx="10" cy="92" r="4"/>
+    <circle class="dot" cx="45" cy="70" r="4"/>
+    <circle class="dot" cx="80" cy="78" r="4"/>
+    <circle class="dot" cx="115" cy="30" r="4"/>
+    <circle class="dot" cx="145" cy="14" r="4"/>
+  </g>
+  <text class="n"   x="274" y="335">Line chart</text>
+
+  <!-- 3 composition -->
+  <rect class="card" x="474" y="70" width="200" height="290" rx="12"/>
+  <text class="q"   x="494" y="102">What is it made of?</text>
+  <text class="sub" x="494" y="124">Parts of a whole</text>
+  <g transform="translate(500,150)">
+    <path class="axis" d="M0 110 L150 110 M0 0 L0 110"/>
+    <rect class="bar" x="24" y="62" width="34" height="48" opacity="1"/>
+    <rect class="bar" x="24" y="30" width="34" height="32" opacity="0.62"/>
+    <rect class="bar" x="24" y="10" width="34" height="20" opacity="0.34"/>
+    <rect class="bar" x="86" y="74" width="34" height="36" opacity="1"/>
+    <rect class="bar" x="86" y="42" width="34" height="32" opacity="0.62"/>
+    <rect class="bar" x="86" y="24" width="34" height="18" opacity="0.34"/>
+  </g>
+  <text class="n"   x="494" y="335">Stacked bar</text>
+
+  <!-- 4 relationship -->
+  <rect class="card" x="694" y="70" width="200" height="290" rx="12"/>
+  <text class="q"   x="714" y="102">Are they related?</text>
+  <text class="sub" x="714" y="124">Two values together</text>
+  <g transform="translate(720,150)">
+    <path class="axis" d="M0 110 L150 110 M0 0 L0 110"/>
+    <circle class="dot" cx="22"  cy="94" r="5"/>
+    <circle class="dot" cx="46"  cy="80" r="5"/>
+    <circle class="dot" cx="58"  cy="88" r="5"/>
+    <circle class="dot" cx="80"  cy="62" r="5"/>
+    <circle class="dot" cx="96"  cy="48" r="5"/>
+    <circle class="dot" cx="112" cy="54" r="5"/>
+    <circle class="dot" cx="132" cy="26" r="5"/>
+  </g>
+  <text class="n"   x="714" y="335">Scatter plot</text>
+</svg>
