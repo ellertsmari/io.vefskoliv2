@@ -53,6 +53,19 @@ export const OptionInput = styled.input`
   cursor: pointer;
 `;
 
+export const ShortAnswerInput = styled.input`
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font: inherit;
+  background: transparent;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+`;
+
 export const ResultBanner = styled.div<{ $passed: boolean }>`
   padding: 0.75rem 1rem;
   border-radius: 8px;

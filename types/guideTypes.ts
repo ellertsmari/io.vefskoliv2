@@ -30,6 +30,7 @@ export enum GradingMode {
  */
 export enum ExerciseTaskType {
   QUIZ = "quiz",
+  SHORT_ANSWER = "shortAnswer",
 }
 
 /** What every task carries, whatever its type. */
@@ -52,17 +53,34 @@ export type QuizTaskPublic = TaskPublicBase & {
   allowMultiple: boolean;
 };
 
+/**
+ * A short-answer task as sent to the CLIENT. The accepted answers and the
+ * optional pattern are the answer key and stay server-side.
+ */
+export type ShortAnswerTaskPublic = TaskPublicBase & {
+  type: ExerciseTaskType.SHORT_ANSWER;
+  /** optional example of the expected form, e.g. "one word" */
+  placeholder?: string;
+};
+
 /** Discriminated on `type`; gains members as the phases land. */
-export type ExerciseTaskPublic = QuizTaskPublic;
+export type ExerciseTaskPublic = QuizTaskPublic | ShortAnswerTaskPublic;
 
 /**
  * One task's answer, as submitted. The SHAPE IS DETERMINED BY THE TASK, not by
  * the submission — the server always knows the task's type from the guide, so
  * answers stay untagged and previously stored attempts keep working unchanged.
  *
- * quiz: the selected option indices. (Later: short-answer and code send a string.)
+ * quiz: the selected option indices. shortAnswer: the typed text.
  */
-export type ExerciseAnswerValue = number[];
+export type ExerciseAnswerValue = number[] | string;
+
+/**
+ * How a single task came out. `pending` means the answer was close enough to an
+ * accepted one that it is held for a teacher rather than marked wrong — see
+ * docs/exercise-engine-tasks.md, decision 2.
+ */
+export type TaskStatus = "correct" | "incorrect" | "pending";
 
 export type ExercisePublic = {
   tasks: ExerciseTaskPublic[];

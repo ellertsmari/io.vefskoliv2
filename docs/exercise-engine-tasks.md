@@ -102,12 +102,36 @@ time and memory caps and no filesystem or network access at all.
 
 ## Phases
 
-**Phase 0 — the union refactor.** Turn the quiz task into one member of a discriminated
-union; grading dispatches on `type`. No new capability, no database change, existing tests
-stay green. Carries almost all the risk to what already works, so it lands and is verified
-alone. Includes the `ExerciseEditor` pass-through fix.
+**Phase 0 — the union refactor. DONE** (`38dd4db`). Quiz became one member of a discriminated
+union; grading, serving and rendering dispatch on `type`. Tasks of an unimplemented type are
+dropped from serving, pooling and analytics, and `gradeTask` throws rather than scoring them
+zero. Also fixed a pre-existing bug: the PUT schema dropped task `_id`s, so every save
+re-minted them and silently detached past attempts from their questions.
 
-**Phase 1 — short answer.** Decisions 1 and 2. No sandbox.
+**Phase 1 — short answer. DONE.** Decisions 1 and 2, no sandbox.
+
+- Matching lives in `app/utils/shortAnswer.ts`: normalize (case, whitespace runs, trailing
+  punctuation), exact match against `acceptedAnswers`, optional regex, then a
+  length-scaled near-miss check. Answers under four characters get **no** slack — on `"3"`
+  a single edit is a different answer, not a typo. An invalid pattern is ignored rather
+  than thrown, so a typo in the key cannot break the exercise for students.
+- `TaskResult` gained `status: correct | incorrect | pending` and `GradeResult` gained
+  `pendingCount`. A held answer earns nothing and gets **neither** hint nor explanation —
+  the hint would imply it was wrong, which is what has not been decided yet.
+- Teacher surface: `getShortAnswerReview` / `promoteShortAnswer` in
+  `app/serverActions/shortAnswerReview.ts`, rendered by `ShortAnswerReviewPanel` on the
+  edit-guide page. It lists unmatched answers grouped by normalized form, held ones first.
+  Promoting re-grades every stored attempt — analytics recompute from the current key, but
+  each `ExerciseAttempt` stores the score that drives the student's grade, so without that
+  pass promoting would fix the teacher's view and leave the student's mark untouched.
+- Short-answer tasks have no authoring UI either, consistent with decision 9. They are hand
+  written into the guide document and the editor holds them as opaque, passing them through
+  a save untouched.
+
+**Still open from decision 8:** pool sizes are still global, not per type. Deferred
+deliberately — it only bites once a real mixed exercise exists, which is Phase 3. Do it
+before authoring the merged TypeScript guide, or a pooled draw will serve uneven mixtures
+of quiz and code tasks.
 
 **Phase 2 — code.** Decisions 3–7. The sandbox, the TypeScript pipeline, the structural check.
 

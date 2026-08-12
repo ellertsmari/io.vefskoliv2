@@ -13,6 +13,7 @@ import {
   type ServerExercise,
   type ExerciseAnswers,
 } from "../utils/exerciseUtils";
+import { MAX_ANSWER_LENGTH } from "../utils/shortAnswer";
 import {
   failure,
   success,
@@ -28,10 +29,19 @@ export type SubmitExerciseData = {
 
 type SubmitExerciseState = ActionResult<GradeResult> | undefined;
 
-// Answers: task id -> array of selected option indices.
+// Answers: task id -> that task's answer. The shape depends on the task type,
+// which the server reads from the guide: option indices for quiz, text for
+// short answer. Text is capped here as well as in normalizeAnswer, so an
+// oversized body is rejected before any matching work happens.
 const SubmitExerciseSchema = z.object({
   guideId: z.string().trim().min(1),
-  answers: z.record(z.string(), z.array(z.number().int().min(0))),
+  answers: z.record(
+    z.string(),
+    z.union([
+      z.array(z.number().int().min(0)),
+      z.string().max(MAX_ANSWER_LENGTH),
+    ])
+  ),
 });
 
 /**

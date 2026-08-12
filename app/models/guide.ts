@@ -42,26 +42,38 @@ const guideResourceSchema = new Schema({
 });
 
 /**
- * An auto-graded exercise task. Phase 1 supports `type: "quiz"` only.
+ * An auto-graded exercise task. Supports `quiz` (multiple choice) and
+ * `shortAnswer` (typed text); `code` follows — see docs/exercise-engine-tasks.md.
  *
- * `correctAnswers` is the answer key (option indices) and `explanation` is the
- * post-submission rationale. BOTH are server-only — they must be stripped before
- * a guide is sent to a student (see `sanitizeGuideForClient` in utils/exerciseUtils).
+ * The ANSWER KEY is server-only and must be stripped before a guide is sent to a
+ * student (see `sanitizeGuideForClient` in utils/exerciseUtils): `correctAnswers`
+ * for quiz, `acceptedAnswers` and `pattern` for short answer, plus `explanation`
+ * and `hint` for both.
+ *
+ * Type-specific fields are optional at the schema level and required per type in
+ * the API's zod schema, because one collection holds every task type.
  */
 const exerciseTaskSchema = new Schema(
   {
     type: {
       type: Schema.Types.String,
       required: true,
-      enum: ["quiz"],
+      enum: ["quiz", "shortAnswer"],
       default: "quiz",
     },
     prompt: { type: Schema.Types.String, required: true },
-    options: { type: [Schema.Types.String], required: true },
-    allowMultiple: { type: Schema.Types.Boolean, required: true, default: false },
+    options: { type: [Schema.Types.String], required: false },
+    allowMultiple: { type: Schema.Types.Boolean, required: false, default: false },
     points: { type: Schema.Types.Number, required: true, default: 1 },
-    // server-only answer key:
-    correctAnswers: { type: [Schema.Types.Number], required: true },
+    // server-only answer key (quiz):
+    correctAnswers: { type: [Schema.Types.Number], required: false },
+    // server-only answer key (short answer). `acceptedAnswers` are compared
+    // after normalizing case/whitespace/trailing punctuation; `pattern` is an
+    // optional regex for answers with real variation.
+    acceptedAnswers: { type: [Schema.Types.String], required: false },
+    pattern: { type: Schema.Types.String, required: false },
+    // shown inside the input as an example of the expected form
+    placeholder: { type: Schema.Types.String, required: false },
     explanation: { type: Schema.Types.String, required: false },
     // Shown to the student when they answer INCORRECTLY (the explanation is
     // only revealed on a correct answer, so retries stay a learning exercise

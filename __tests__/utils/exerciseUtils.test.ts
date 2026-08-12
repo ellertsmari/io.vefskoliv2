@@ -8,6 +8,7 @@ import {
   type AttemptForAnalytics,
   type ServerExercise,
 } from "utils/exerciseUtils";
+import { ExerciseTaskType } from "types/guideTypes";
 
 const makeExercise = (overrides?: Partial<ServerExercise>): ServerExercise => ({
   passThreshold: 0.7,
@@ -237,7 +238,11 @@ describe("sanitizeExerciseForClient", () => {
     expect(serialized).not.toContain("Understand letters"); // goal stays server-side
     expect(sanitized!.tasks[0]).not.toHaveProperty("correctAnswers");
     expect(sanitized!.tasks[0].id).toBe("t1");
-    expect(sanitized!.tasks[0].options).toEqual(["A", "B", "C"]);
+    const first = sanitized!.tasks[0];
+    expect(first.type).toBe(ExerciseTaskType.QUIZ);
+    if (first.type === ExerciseTaskType.QUIZ) {
+      expect(first.options).toEqual(["A", "B", "C"]);
+    }
   });
 
   it("returns undefined when there is no exercise", () => {
@@ -260,6 +265,80 @@ describe("sanitizeGuideForClient", () => {
     const sanitized = sanitizeGuideForClient(guide);
     expect(sanitized.exercise).toBeUndefined();
     expect(sanitized.title).toBe("Normal guide");
+  });
+});
+
+describe("short-answer tasks", () => {
+  const shortAnswerExercise = (): ServerExercise => ({
+    passThreshold: 0.7,
+    tasks: [
+      {
+        id: "s1",
+        type: "shortAnswer",
+        prompt: "Which keyword declares a value that cannot be reassigned?",
+        points: 1,
+        acceptedAnswers: ["const"],
+        explanation: "const binds the name, not the value",
+        hint: "Re-read the section on declarations",
+        goal: "Understand declarations",
+      } as never,
+    ],
+  });
+
+  it("scores an accepted answer and reveals the explanation", () => {
+    const result = gradeExercise(shortAnswerExercise(), { s1: "const" });
+    expect(result.score).toBe(10);
+    expect(result.passed).toBe(true);
+    expect(result.pendingCount).toBe(0);
+    expect(result.results[0].status).toBe("correct");
+    expect(result.results[0].explanation).toBe(
+      "const binds the name, not the value"
+    );
+  });
+
+  it("scores a wrong answer zero and gives the hint", () => {
+    const result = gradeExercise(shortAnswerExercise(), { s1: "let" });
+    expect(result.score).toBe(0);
+    expect(result.results[0].status).toBe("incorrect");
+    expect(result.results[0].hint).toBe("Re-read the section on declarations");
+  });
+
+  it("holds a near miss, earning nothing yet and withholding the hint", () => {
+    const result = gradeExercise(shortAnswerExercise(), { s1: "konst" });
+    expect(result.results[0].status).toBe("pending");
+    expect(result.pendingCount).toBe(1);
+    expect(result.results[0].pointsEarned).toBe(0);
+    // Neither is revealed: the hint would imply it was wrong, and that is
+    // exactly what has not been decided yet.
+    expect(result.results[0].hint).toBeUndefined();
+    expect(result.results[0].explanation).toBeUndefined();
+  });
+
+  it("counts a held answer in the total, so the score is a floor that can only rise", () => {
+    const result = gradeExercise(shortAnswerExercise(), { s1: "konst" });
+    expect(result.earnedPoints).toBe(0);
+    expect(result.totalPoints).toBe(1);
+    expect(result.passed).toBe(false);
+  });
+
+  it("never leaks the accepted answers or the pattern to the client", () => {
+    const exercise = shortAnswerExercise();
+    (exercise.tasks[0] as never as { pattern: string }).pattern = "^const$";
+    const serialized = JSON.stringify(sanitizeExerciseForClient(exercise));
+    expect(serialized).not.toContain("acceptedAnswers");
+    expect(serialized).not.toContain("const");
+    expect(serialized).not.toContain("pattern");
+  });
+
+  it("mixes with quiz tasks in one exercise", () => {
+    const mixed: ServerExercise = {
+      passThreshold: 0.5,
+      tasks: [...makeExercise().tasks, ...shortAnswerExercise().tasks],
+    };
+    const result = gradeExercise(mixed, { t1: [0], t2: [0, 2], s1: "const" });
+    expect(result.totalPoints).toBe(3);
+    expect(result.score).toBe(10);
+    expect(sanitizeExerciseForClient(mixed)?.tasks).toHaveLength(3);
   });
 });
 

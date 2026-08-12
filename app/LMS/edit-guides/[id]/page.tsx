@@ -7,6 +7,8 @@ import { EditGuideForm } from "../../../components/editGuides/EditGuideForm";
 import { getGuideForTeacher } from "../../../serverActions/getGuide";
 import { getExerciseAnalytics } from "../../../serverActions/getExerciseAnalytics";
 import { ExerciseAnalyticsView } from "../../../components/editGuides/ExerciseAnalyticsView";
+import { getShortAnswerReview } from "../../../serverActions/shortAnswerReview";
+import { ShortAnswerReviewPanel } from "../../../components/editGuides/ShortAnswerReviewPanel";
 import { safeSerialize } from "../../../utils/serialization";
 import { Session } from "next-auth";
 
@@ -40,16 +42,25 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
       );
     }
 
-    const analytics =
-      guide.gradingMode === "auto" && guide.exercise
-        ? await getExerciseAnalytics(id)
-        : null;
+    const isAutoGraded = guide.gradingMode === "auto" && guide.exercise;
+    const [analytics, shortAnswerReviews] = isAutoGraded
+      ? await Promise.all([
+          getExerciseAnalytics(id),
+          getShortAnswerReview(id),
+        ])
+      : [null, null];
 
     return (
       <>
         <EditGuideForm guide={guide} />
         {analytics && (
           <ExerciseAnalyticsView analytics={safeSerialize(analytics)} />
+        )}
+        {shortAnswerReviews && shortAnswerReviews.length > 0 && (
+          <ShortAnswerReviewPanel
+            guideId={id}
+            reviews={safeSerialize(shortAnswerReviews)}
+          />
         )}
       </>
     );

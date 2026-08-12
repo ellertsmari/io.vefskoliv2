@@ -16,9 +16,11 @@ jest.mock("serverActions/submitExercise", () => ({
         { goal: "Understand letters", earnedPoints: 0, totalPoints: 1 },
         { goal: "Understand B", earnedPoints: 1, totalPoints: 1 },
       ],
+      pendingCount: 0,
       results: [
         {
           taskId: "t1",
+          status: "incorrect",
           correct: false,
           pointsEarned: 0,
           pointsPossible: 1,
@@ -26,6 +28,7 @@ jest.mock("serverActions/submitExercise", () => ({
         },
         {
           taskId: "t2",
+          status: "correct",
           correct: true,
           pointsEarned: 1,
           pointsPossible: 1,

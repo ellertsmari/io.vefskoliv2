@@ -3,7 +3,9 @@ import {
   ExerciseTaskPublic,
   ExerciseTaskType,
   ExerciseAnswerValue,
+  TaskStatus,
 } from "types/guideTypes";
+import { matchShortAnswer, type ShortAnswerKey } from "./shortAnswer";
 
 /** Fields every server-side task carries, whatever its type. */
 type ServerTaskBase = {
@@ -32,10 +34,21 @@ export type ServerQuizTask = ServerTaskBase & {
 };
 
 /**
- * Discriminated on `type`. Gains members as phases 1 and 2 land; every consumer
+ * Server-side shape of a short-answer task, including the answer key.
+ * `acceptedAnswers` and `pattern` are the key and never reach a student.
+ */
+export type ServerShortAnswerTask = ServerTaskBase &
+  ShortAnswerKey & {
+    type: "shortAnswer";
+    /** optional hint about the expected form, shown in the input */
+    placeholder?: string;
+  };
+
+/**
+ * Discriminated on `type`. Gains members as the phases land; every consumer
  * dispatches rather than assuming quiz, so adding one is additive.
  */
-export type ServerTask = ServerQuizTask;
+export type ServerTask = ServerQuizTask | ServerShortAnswerTask;
 
 /**
  * A task whose `type` this build does not know how to grade or serve. Reachable
@@ -60,10 +73,29 @@ export type ExerciseAnswers = Record<string, ExerciseAnswerValue>;
 /** Narrow an arbitrary stored task to one this build can grade and serve. */
 export const isKnownTask = (
   task: ServerTask | UnknownServerTask
-): task is ServerTask => task.type === ExerciseTaskType.QUIZ;
+): task is ServerTask =>
+  task.type === ExerciseTaskType.QUIZ ||
+  task.type === ExerciseTaskType.SHORT_ANSWER;
+
+/** What grading one task produced, before it is turned into a TaskResult. */
+export type GradedTask = {
+  status: TaskStatus;
+  /** convenience mirror of `status === "correct"` */
+  correct: boolean;
+  pointsEarned: number;
+  pointsPossible: number;
+  /** short answer only: the accepted answer this matched or nearly matched */
+  matched?: string;
+};
 
 export type TaskResult = {
   taskId: string;
+  /**
+   * `pending` means the answer was close to an accepted one and is held for a
+   * teacher rather than marked wrong. It earns no points yet, so the score a
+   * student sees is a floor that can only rise.
+   */
+  status: TaskStatus;
   /** true only for a FULLY correct answer */
   correct: boolean;
   pointsEarned: number;
@@ -90,6 +122,12 @@ export type GradeResult = {
   results: TaskResult[];
   /** present when at least one graded task is tagged with a knowledge goal */
   goalBreakdown?: GoalResult[];
+  /**
+   * How many answers are held for a teacher. While this is above zero the score
+   * is provisional and can only rise, so the UI says "awaiting review" rather
+   * than "not passed".
+   */
+  pendingCount: number;
 };
 
 /** Thrown when a submission doesn't match the questions that were served. */
@@ -138,10 +176,12 @@ const normalizedPoolSize = (exercise: ServerExercise): number | undefined => {
 export const gradeTask = (
   task: ServerTask | UnknownServerTask,
   answer: ExerciseAnswerValue
-): { correct: boolean; pointsEarned: number; pointsPossible: number } => {
+): GradedTask => {
   switch (task.type) {
     case "quiz":
-      return gradeQuizTask(task as ServerQuizTask, answer);
+      return gradeQuizTask(task as ServerQuizTask, answer as number[]);
+    case "shortAnswer":
+      return gradeShortAnswerTask(task as ServerShortAnswerTask, answer);
     default:
       throw new ExerciseGradingError(
         `This exercise contains a question of an unsupported type ("${task.type}") and cannot be graded. Please tell your teacher.`
@@ -155,10 +195,7 @@ export const gradeTask = (
  * A student who finds 3 of 4 right answers is not in the same place as one who
  * found none; the penalty for wrong selections keeps select-everything at zero.
  */
-const gradeQuizTask = (
-  task: ServerQuizTask,
-  selected: number[]
-): { correct: boolean; pointsEarned: number; pointsPossible: number } => {
+const gradeQuizTask = (task: ServerQuizTask, selected: number[]): GradedTask => {
   const points = task.points ?? 1;
   const correctSet = new Set(task.correctAnswers ?? []);
   const selectedSet = new Set(selected);
@@ -168,6 +205,7 @@ const gradeQuizTask = (
       selectedSet.size === correctSet.size &&
       [...selectedSet].every((i) => correctSet.has(i));
     return {
+      status: correct ? "correct" : "incorrect",
       correct,
       pointsEarned: correct ? points : 0,
       pointsPossible: points,
@@ -184,9 +222,32 @@ const gradeQuizTask = (
       : 0;
 
   return {
+    status: fraction === 1 ? "correct" : "incorrect",
     correct: fraction === 1,
     pointsEarned: round2(points * fraction),
     pointsPossible: points,
+  };
+};
+
+/**
+ * A short answer is correct, wrong, or held for review.
+ *
+ * A held answer earns nothing yet — the score is a floor that rises if the
+ * teacher promotes the phrasing into the key. Scoring it optimistically would
+ * mean a grade that could later go DOWN, which is worse than one that rises.
+ */
+const gradeShortAnswerTask = (
+  task: ServerShortAnswerTask,
+  answer: ExerciseAnswerValue
+): GradedTask => {
+  const points = task.points ?? 1;
+  const { status, matched } = matchShortAnswer(task, answer);
+  return {
+    status,
+    correct: status === "correct",
+    pointsEarned: status === "correct" ? points : 0,
+    pointsPossible: points,
+    matched,
   };
 };
 
@@ -255,6 +316,7 @@ export const gradeExercise = (
 
     return {
       taskId: id,
+      status: graded.status,
       correct: graded.correct,
       pointsEarned: graded.pointsEarned,
       pointsPossible: graded.pointsPossible,
@@ -262,7 +324,9 @@ export const gradeExercise = (
       // once the student has it fully right; otherwise they get the hint,
       // which points back at the material without giving the answer away.
       explanation: graded.correct ? task.explanation : undefined,
-      hint: graded.correct ? undefined : task.hint,
+      // A held answer gets neither: the hint would imply it was wrong, which
+      // is exactly what has not been decided yet.
+      hint: graded.status === "incorrect" ? task.hint : undefined,
     };
   });
 
@@ -280,7 +344,15 @@ export const gradeExercise = (
         }))
       : undefined;
 
-  return { score, passed, earnedPoints, totalPoints, results, goalBreakdown };
+  return {
+    score,
+    passed,
+    earnedPoints,
+    totalPoints,
+    results,
+    goalBreakdown,
+    pendingCount: results.filter((r) => r.status === "pending").length,
+  };
 };
 
 /** Fisher–Yates sample of `count` tasks; rng injectable for tests. */
@@ -348,12 +420,26 @@ const publicTask = (task: ServerTask): ExerciseTaskPublic => {
         options: task.options ?? [],
         allowMultiple: task.allowMultiple ?? false,
       };
+    case "shortAnswer":
+      // acceptedAnswers and pattern are the answer key — deliberately absent.
+      return {
+        type: ExerciseTaskType.SHORT_ANSWER,
+        id: taskId(task),
+        prompt: task.prompt,
+        points: task.points ?? 1,
+        ...(task.placeholder ? { placeholder: task.placeholder } : {}),
+      };
+    default: {
+      // Exhaustiveness guard: adding a member to ServerTask without handling it
+      // here is now a compile error, not a task that fails at runtime.
+      const unhandled: never = task;
+      throw new Error(
+        `Unhandled exercise task type: ${JSON.stringify(
+          (unhandled as { type?: unknown }).type
+        )}`
+      );
+    }
   }
-  // Unreachable while ServerTask has one member. Once it is a real union, make
-  // this `const _: never = task` so a missing case fails to compile.
-  throw new Error(
-    `Unhandled exercise task type: ${JSON.stringify((task as { type?: unknown }).type)}`
-  );
 };
 
 /**

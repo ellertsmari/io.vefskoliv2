@@ -11,7 +11,13 @@ import {
 import { submitExercise } from "serverActions/submitExercise";
 import type { BestAttemptInfo } from "serverActions/getExerciseAttempts";
 import type { TaskResult } from "utils/exerciseUtils";
-import { ExercisePublic } from "types/guideTypes";
+import { MAX_ANSWER_LENGTH } from "utils/shortAnswer";
+import {
+  ExercisePublic,
+  ExerciseTaskPublic,
+  ExerciseTaskType,
+  type ExerciseAnswerValue,
+} from "types/guideTypes";
 import { Button } from "globalStyles/buttons/default/style";
 import { Heading1, SubHeading1 } from "globalStyles/text";
 import { Border, Wrapper } from "globalStyles/globalStyles";
@@ -22,6 +28,7 @@ import {
   ExerciseMeta,
   Option,
   OptionInput,
+  ShortAnswerInput,
   ResultBanner,
   TaskResultNote,
   SubmitRow,
@@ -30,7 +37,15 @@ import {
   GoalItem,
 } from "./style";
 
-type Answers = Record<string, number[]>;
+type Answers = Record<string, ExerciseAnswerValue>;
+
+/** Has the student put anything in this task yet? Shape depends on the type. */
+const isAnswered = (task: ExerciseTaskPublic, answer?: ExerciseAnswerValue) => {
+  if (task.type === ExerciseTaskType.QUIZ) {
+    return Array.isArray(answer) && answer.length > 0;
+  }
+  return typeof answer === "string" && answer.trim().length > 0;
+};
 
 /** Fisher–Yates shuffle of [0..n), used for per-mount option display order. */
 const shuffledIndices = (n: number): number[] => {
@@ -72,7 +87,9 @@ export const ExerciseView = ({
   useEffect(() => {
     const order: Record<string, number[]> = {};
     for (const task of exercise.tasks) {
-      order[task.id] = shuffledIndices(task.options.length);
+      if (task.type === ExerciseTaskType.QUIZ) {
+        order[task.id] = shuffledIndices(task.options.length);
+      }
     }
     setOptionOrder(order);
   }, [exercise.tasks]);
@@ -105,21 +122,24 @@ export const ExerciseView = ({
     return map;
   }, [result]);
 
+  // Once graded, changing an answer invalidates that task's feedback note.
+  const markChanged = (taskId: string) => {
+    if (!result) return;
+    setChangedSinceResult((prev) => {
+      const next = new Set(prev);
+      next.add(taskId);
+      return next;
+    });
+  };
+
   const toggleOption = (
     taskId: string,
     optionIndex: number,
     allowMultiple: boolean
   ) => {
-    // Once graded, changing an answer invalidates that task's feedback note.
-    if (result) {
-      setChangedSinceResult((prev) => {
-        const next = new Set(prev);
-        next.add(taskId);
-        return next;
-      });
-    }
+    markChanged(taskId);
     setAnswers((prev) => {
-      const current = prev[taskId] ?? [];
+      const current = (prev[taskId] as number[]) ?? [];
       if (!allowMultiple) {
         return { ...prev, [taskId]: [optionIndex] };
       }
@@ -130,6 +150,11 @@ export const ExerciseView = ({
     });
   };
 
+  const setTextAnswer = (taskId: string, text: string) => {
+    markChanged(taskId);
+    setAnswers((prev) => ({ ...prev, [taskId]: text }));
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     startTransition(() => {
@@ -137,8 +162,8 @@ export const ExerciseView = ({
     });
   };
 
-  const answeredCount = exercise.tasks.filter(
-    (task) => (answers[task.id] ?? []).length > 0
+  const answeredCount = exercise.tasks.filter((task) =>
+    isAnswered(task, answers[task.id])
   ).length;
   const allAnswered = answeredCount === exercise.tasks.length;
 
@@ -168,10 +193,20 @@ export const ExerciseView = ({
       <div ref={bannerRef} aria-live="polite">
         {result && (
           <ResultBanner $passed={result.passed}>
-            {result.passed ? "Passed" : "Not passed yet"} — score{" "}
-            {result.score}/10 ({result.earnedPoints}/{result.totalPoints}{" "}
-            points)
-            {!result.passed && " — adjust your answers and try again."}
+            {result.passed
+              ? "Passed"
+              : result.pendingCount > 0
+              ? "Awaiting review"
+              : "Not passed yet"}{" "}
+            — score {result.score}/10 ({result.earnedPoints}/
+            {result.totalPoints} points)
+            {result.pendingCount > 0
+              ? ` — ${result.pendingCount} answer${
+                  result.pendingCount === 1 ? " is" : "s are"
+                } with your teacher. This score can only go up.`
+              : !result.passed
+              ? " — adjust your answers and try again."
+              : ""}
           </ResultBanner>
         )}
         {errorMessage && (
@@ -196,10 +231,7 @@ export const ExerciseView = ({
         {exercise.tasks.map((task, taskIndex) => {
           const isStale = changedSinceResult.has(task.id);
           const taskResult = isStale ? undefined : resultByTask[task.id];
-          const selected = answers[task.id] ?? [];
-          const displayOrder =
-            optionOrder[task.id] ??
-            task.options.map((_, originalIndex) => originalIndex);
+          const answer = answers[task.id];
           return (
             <TaskCard key={task.id}>
               <TaskPrompt>
@@ -207,38 +239,74 @@ export const ExerciseView = ({
                   {taskIndex + 1}. {task.prompt}
                 </SubHeading1>
               </TaskPrompt>
-              <TaskMeta>
-                {task.allowMultiple
-                  ? "Select all that apply · partial credit"
-                  : "Choose one"}
-              </TaskMeta>
-              <Border>
-                {displayOrder.map((originalIndex) => (
-                  <Option key={originalIndex}>
-                    <OptionInput
-                      type={task.allowMultiple ? "checkbox" : "radio"}
-                      name={task.id}
-                      checked={selected.includes(originalIndex)}
+
+              {task.type === ExerciseTaskType.QUIZ ? (
+                <>
+                  <TaskMeta>
+                    {task.allowMultiple
+                      ? "Select all that apply · partial credit"
+                      : "Choose one"}
+                  </TaskMeta>
+                  <Border>
+                    {(
+                      optionOrder[task.id] ??
+                      task.options.map((_, originalIndex) => originalIndex)
+                    ).map((originalIndex) => (
+                      <Option key={originalIndex}>
+                        <OptionInput
+                          type={task.allowMultiple ? "checkbox" : "radio"}
+                          name={task.id}
+                          checked={
+                            Array.isArray(answer) &&
+                            answer.includes(originalIndex)
+                          }
+                          disabled={isPending}
+                          onChange={() =>
+                            toggleOption(
+                              task.id,
+                              originalIndex,
+                              task.allowMultiple
+                            )
+                          }
+                        />
+                        <span>{task.options[originalIndex]}</span>
+                      </Option>
+                    ))}
+                  </Border>
+                </>
+              ) : (
+                <>
+                  <TaskMeta>Type your answer</TaskMeta>
+                  <Border>
+                    <ShortAnswerInput
+                      type="text"
+                      value={typeof answer === "string" ? answer : ""}
+                      placeholder={task.placeholder ?? ""}
                       disabled={isPending}
-                      onChange={() =>
-                        toggleOption(task.id, originalIndex, task.allowMultiple)
-                      }
+                      maxLength={MAX_ANSWER_LENGTH}
+                      aria-label={task.prompt}
+                      onChange={(e) => setTextAnswer(task.id, e.target.value)}
                     />
-                    <span>{task.options[originalIndex]}</span>
-                  </Option>
-                ))}
-              </Border>
+                  </Border>
+                </>
+              )}
+
               {taskResult && (
                 <TaskResultNote
                   $correct={taskResult.correct}
-                  $partial={!taskResult.correct && taskResult.pointsEarned > 0}
+                  $partial={
+                    taskResult.status === "pending" ||
+                    (!taskResult.correct && taskResult.pointsEarned > 0)
+                  }
                 >
-                  {taskResult.correct
+                  {taskResult.status === "correct"
                     ? `Correct${
                         taskResult.explanation
                           ? ` — ${taskResult.explanation}`
                           : ""
                       }`
+                    : taskResult.status === "pending"
+                    ? "Close — your teacher is checking this one. It scores nothing for now, and your score can only go up if it is accepted."
                     : taskResult.pointsEarned > 0
                     ? `Partially correct (${taskResult.pointsEarned}/${
                         taskResult.pointsPossible
