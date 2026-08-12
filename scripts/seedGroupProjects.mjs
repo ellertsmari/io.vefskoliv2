@@ -275,6 +275,7 @@ Each group creates an application which **connects to other applications using A
 - **Design Sprint** based on the double diamond: find a problem, interview potential users, analyze, brainstorm, test and finalize from user feedback.
 - **UI design** with a **mobile-first** lo-fi prototype, a well-connected style guide and a fully polished hi-fi prototype. Emphasize **accessibility**.
 - **Tech:** React, TypeScript and a styling library (styled-components or Tailwind). Other JS libraries encouraged. **Use of APIs is mandatory.**
+- **The built product must be accessible, not only the design.** The whole main flow has to work with the keyboard alone: everything reachable by Tab, focus always visible, icon-only buttons labelled. Be ready to demo this live.
 - The final product must be **available online** for the general public.
 
 **Theme ideas:** better feedback on io.vefskoli.is, a Hall of Fame, making more of under-used public APIs, or the UN Sustainable Development Goals.
@@ -284,7 +285,7 @@ Each group creates an application which **connects to other applications using A
 ### Presentation — 30 min
 1. **Introduction (5 min):** trying it out, product demo, work organization, task→feature, tools/tech stack
 2. **Design (7 min):** design sprint tools, user research, discoveries, user testing, mobile first, accessible design, style guide, hi-fi prototype
-3. **Programming (10 min):** TypeScript & API, naming convention, documentation, live code, GitHub (branches, commits, code review)
+3. **Programming (10 min):** TypeScript & API, accessibility walkthrough (keyboard only, no mouse), naming convention, documentation, live code, GitHub (branches, commits, code review)
 4. **Q&A (8 min)**
 
 Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation; the individual grade is calculated from peer- and teacher evaluation equally (50/50). A common retro meeting is held after the presentations.`,
@@ -339,6 +340,11 @@ Grade weight: guest industry professionals and instructors **80%**, audience **2
         "typescript-api",
         "TypeScript and API",
         "Does the project use APIs with typed responses in an organized manner?"
+      ),
+      code(
+        "accessibility-implemented",
+        "Accessibility — implemented",
+        "Can the product be used without a mouse? Walk the whole main flow with the keyboard: is everything reachable, is focus always visible, do icon-only controls have readable names, and did the accessible design actually survive into the code?"
       ),
       code(
         "naming-convention",
