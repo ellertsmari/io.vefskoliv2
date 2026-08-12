@@ -23,6 +23,10 @@ import {
  * app/models/guide.ts; it is teacher-only and includes the answer key.
  */
 export type QuizTaskForm = {
+  kind: "quiz";
+  /** Preserved across a save so the task keeps its identity; stored attempts
+   *  key their answers by this id. Absent on a newly added question. */
+  _id?: string;
   prompt: string;
   options: string[];
   correctAnswers: number[];
@@ -34,14 +38,27 @@ export type QuizTaskForm = {
   goal: string;
 };
 
+/**
+ * A task this editor cannot author — short-answer and code tasks are written by
+ * hand in the database (see docs/exercise-engine-tasks.md). Held verbatim and
+ * written back untouched so an unrelated edit here cannot destroy them.
+ */
+export type OpaqueTaskForm = {
+  kind: "opaque";
+  raw: Record<string, unknown>;
+};
+
+export type TaskForm = QuizTaskForm | OpaqueTaskForm;
+
 export type ExerciseForm = {
   passThreshold: number; // 0..1
   /** 0 = serve every question; N = serve N random questions per visit */
   poolSize: number;
-  tasks: QuizTaskForm[];
+  tasks: TaskForm[];
 };
 
 export const emptyTask = (): QuizTaskForm => ({
+  kind: "quiz",
   prompt: "",
   options: ["", ""],
   correctAnswers: [],
@@ -62,11 +79,20 @@ export const ExerciseEditor = ({
   /** the guide's knowledge items, offered as goal tags for each question */
   knowledgeGoals?: string[];
 }) => {
+  /** Editing only ever applies to quiz tasks; opaque ones pass through. */
   const updateTask = (index: number, patch: Partial<QuizTaskForm>) => {
     onChange({
       ...value,
-      tasks: value.tasks.map((t, i) => (i === index ? { ...t, ...patch } : t)),
+      tasks: value.tasks.map((t, i) =>
+        i === index && t.kind === "quiz" ? { ...t, ...patch } : t
+      ),
     });
+  };
+
+  /** The quiz task at this index, or null when it is an opaque one. */
+  const quizAt = (index: number): QuizTaskForm | null => {
+    const task = value.tasks[index];
+    return task && task.kind === "quiz" ? task : null;
   };
 
   const addTask = () =>
@@ -76,19 +102,22 @@ export const ExerciseEditor = ({
     onChange({ ...value, tasks: value.tasks.filter((_, i) => i !== index) });
 
   const addOption = (taskIndex: number) => {
-    const task = value.tasks[taskIndex];
+    const task = quizAt(taskIndex);
+    if (!task) return;
     updateTask(taskIndex, { options: [...task.options, ""] });
   };
 
   const updateOption = (taskIndex: number, optionIndex: number, text: string) => {
-    const task = value.tasks[taskIndex];
+    const task = quizAt(taskIndex);
+    if (!task) return;
     updateTask(taskIndex, {
       options: task.options.map((o, i) => (i === optionIndex ? text : o)),
     });
   };
 
   const removeOption = (taskIndex: number, optionIndex: number) => {
-    const task = value.tasks[taskIndex];
+    const task = quizAt(taskIndex);
+    if (!task) return;
     // Drop the option and keep `correctAnswers` pointing at the right options:
     // remove this index and shift any higher indices down by one.
     const correctAnswers = task.correctAnswers
@@ -101,7 +130,8 @@ export const ExerciseEditor = ({
   };
 
   const toggleCorrect = (taskIndex: number, optionIndex: number) => {
-    const task = value.tasks[taskIndex];
+    const task = quizAt(taskIndex);
+    if (!task) return;
     if (!task.allowMultiple) {
       // single-choice: exactly one correct option
       updateTask(taskIndex, { correctAnswers: [optionIndex] });
@@ -114,7 +144,8 @@ export const ExerciseEditor = ({
   };
 
   const setAllowMultiple = (taskIndex: number, allowMultiple: boolean) => {
-    const task = value.tasks[taskIndex];
+    const task = quizAt(taskIndex);
+    if (!task) return;
     // When switching to single-choice, keep at most one correct answer.
     const correctAnswers =
       !allowMultiple && task.correctAnswers.length > 1
@@ -175,7 +206,24 @@ export const ExerciseEditor = ({
       </InputGroup>
 
       <ArraySection>
-        {value.tasks.map((task, taskIndex) => (
+        {value.tasks.map((task, taskIndex) =>
+          task.kind === "opaque" ? (
+            <MultiFieldItem key={taskIndex}>
+              <SmallLabel>
+                Question {taskIndex + 1} — {String(task.raw.type)} task
+              </SmallLabel>
+              <p>
+                {typeof task.raw.prompt === "string"
+                  ? task.raw.prompt
+                  : "(no prompt)"}
+              </p>
+              <SmallLabel>
+                This question type is authored directly in the database and
+                cannot be edited here. It is kept exactly as it is when you
+                save.
+              </SmallLabel>
+            </MultiFieldItem>
+          ) : (
           <MultiFieldItem key={taskIndex}>
             <MultiFieldRow>
               <MultiFieldGroup>
@@ -321,7 +369,8 @@ export const ExerciseEditor = ({
               </MultiFieldGroup>
             </MultiFieldRow>
           </MultiFieldItem>
-        ))}
+          )
+        )}
         <AddButton type="button" onClick={addTask}>
           Add Question
         </AddButton>

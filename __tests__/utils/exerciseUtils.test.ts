@@ -1,5 +1,6 @@
 import {
   gradeExercise,
+  gradeTask,
   computeExerciseAnalytics,
   sanitizeExerciseForClient,
   sanitizeGuideForClient,
@@ -259,5 +260,70 @@ describe("sanitizeGuideForClient", () => {
     const sanitized = sanitizeGuideForClient(guide);
     expect(sanitized.exercise).toBeUndefined();
     expect(sanitized.title).toBe("Normal guide");
+  });
+});
+
+/**
+ * Guides are hand-edited in the database, so an exercise can hold a task type
+ * this build does not implement — a typo, or one authored ahead of its phase.
+ * Such a task must never be shown to a student, never leak its fields, and
+ * never be silently scored.
+ */
+describe("tasks of an unsupported type", () => {
+  const withUnknownTask = (): ServerExercise =>
+    makeExercise({
+      tasks: [
+        ...makeExercise().tasks,
+        {
+          id: "t3",
+          type: "code",
+          prompt: "Write a loop that sums the array",
+          points: 5,
+          // fields a future phase would add — must not reach a student
+          solution: "arr.reduce((a, b) => a + b, 0)",
+        } as never,
+      ],
+    });
+
+  it("is not served to the student", () => {
+    const sanitized = sanitizeExerciseForClient(withUnknownTask());
+    expect(sanitized?.tasks).toHaveLength(2);
+    expect(sanitized?.tasks.map((t) => t.id)).toEqual(["t1", "t2"]);
+  });
+
+  it("does not leak its fields to the client", () => {
+    const sanitized = sanitizeExerciseForClient(withUnknownTask());
+    expect(JSON.stringify(sanitized)).not.toContain("solution");
+    expect(JSON.stringify(sanitized)).not.toContain("reduce");
+  });
+
+  it("is excluded from the pool, so a pooled exercise still serves poolSize questions", () => {
+    const exercise = withUnknownTask();
+    exercise.poolSize = 1;
+    const sanitized = sanitizeExerciseForClient(exercise, () => 0.99);
+    expect(sanitized?.tasks).toHaveLength(1);
+    expect(sanitized?.poolTotal).toBe(2); // the two gradeable tasks, not three
+  });
+
+  it("throws rather than scoring zero if one is somehow submitted", () => {
+    const exercise = withUnknownTask();
+    expect(() => gradeTask(exercise.tasks[2], [])).toThrow(
+      ExerciseGradingError
+    );
+  });
+
+  it("is skipped by analytics instead of throwing", () => {
+    const attempts: AttemptForAnalytics[] = [
+      { owner: "u1", answers: { t1: [0], t2: [0, 2] }, score: 10, passed: true },
+    ];
+    const analytics = computeExerciseAnalytics(withUnknownTask(), attempts);
+    expect(analytics.taskStats).toHaveLength(2);
+    expect(analytics.uniqueStudents).toBe(1);
+  });
+
+  it("grades the rest of the exercise normally", () => {
+    const result = gradeExercise(withUnknownTask(), { t1: [0], t2: [0, 2] });
+    expect(result.score).toBe(10);
+    expect(result.totalPoints).toBe(2);
   });
 });

@@ -6,6 +6,55 @@ import { Guide } from "../../../models/guide";
 import { connectToDatabase } from "../../../serverActions/mongoose-connector";
 
 /**
+ * One exercise task as submitted by the editor.
+ *
+ * Two deliberate choices here:
+ *
+ * `_id` is accepted and round-tripped. Tasks are subdocuments with their own
+ * ids, and stored ExerciseAttempts key their answers by that id. Dropping it
+ * made mongoose mint a fresh id on every save, which silently detached every
+ * past attempt from its question and reset the per-question analytics.
+ *
+ * `type` is an open string and unknown keys are preserved, because short-answer
+ * and code tasks are authored by hand in the database (see
+ * docs/exercise-engine-tasks.md). A teacher saving an unrelated edit through
+ * this route must hand those tasks back unchanged rather than flattening them
+ * into broken quiz questions. Quiz requirements are enforced for quiz tasks only.
+ */
+const exerciseTaskSchema = z
+  .object({
+    _id: z.string().optional(),
+    type: z.string().trim().min(1).optional().default("quiz"),
+    prompt: z.string().trim().min(1),
+    points: z.number().int().min(1).optional().default(1),
+    explanation: z.string().optional(),
+    hint: z.string().optional(),
+    goal: z.string().optional(),
+    // Quiz-only; required by the refinement below when type === "quiz".
+    options: z.array(z.string()).min(2).optional(),
+    correctAnswers: z.array(z.number().int().min(0)).min(1).optional(),
+    allowMultiple: z.boolean().optional(),
+  })
+  .passthrough()
+  .superRefine((task, ctx) => {
+    if (task.type !== "quiz") return;
+    if (!task.options || task.options.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["options"],
+        message: "A quiz question needs at least two options",
+      });
+    }
+    if (!task.correctAnswers || task.correctAnswers.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["correctAnswers"],
+        message: "A quiz question needs at least one correct answer",
+      });
+    }
+  });
+
+/**
  * Whitelist of fields a teacher may update through the edit form. The previous
  * implementation spread the raw request body into findByIdAndUpdate, which let
  * a client write arbitrary keys (mass assignment). This schema mirrors what
@@ -40,19 +89,7 @@ const GuideUpdateSchema = z.object({
     .object({
       passThreshold: z.number().min(0).max(1),
       poolSize: z.number().int().min(1).optional(),
-      tasks: z.array(
-        z.object({
-          type: z.literal("quiz").optional().default("quiz"),
-          prompt: z.string().trim().min(1),
-          options: z.array(z.string()).min(2),
-          correctAnswers: z.array(z.number().int().min(0)).min(1),
-          allowMultiple: z.boolean().optional().default(false),
-          points: z.number().int().min(1).optional().default(1),
-          explanation: z.string().optional(),
-          hint: z.string().optional(),
-          goal: z.string().optional(),
-        })
-      ),
+      tasks: z.array(exerciseTaskSchema),
     })
     .refine(
       (ex) => ex.poolSize === undefined || ex.poolSize < ex.tasks.length,

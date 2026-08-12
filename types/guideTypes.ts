@@ -20,28 +20,49 @@ export enum GradingMode {
   AUTO = "auto",
 }
 
-/** Kinds of auto-graded task. Phase 1 ships QUIZ; short-answer / code follow. */
+/**
+ * Kinds of auto-graded task. QUIZ ships today; SHORT_ANSWER and CODE follow in
+ * phases 1 and 2 (see docs/exercise-engine-tasks.md).
+ *
+ * Everything downstream discriminates on this field rather than assuming quiz:
+ * grading dispatches in `gradeTask`, serving dispatches in
+ * `sanitizeExerciseForClient`, and rendering dispatches in `ExerciseView`.
+ */
 export enum ExerciseTaskType {
   QUIZ = "quiz",
 }
+
+/** What every task carries, whatever its type. */
+export type TaskPublicBase = {
+  id: string;
+  prompt: string;
+  /** points this task contributes to the exercise total */
+  points: number;
+};
 
 /**
  * A quiz task as sent to the CLIENT — note it deliberately omits the answer key
  * (`correctAnswers`) and any solution explanation. Those stay server-side; see
  * `sanitizeGuideForClient` in utils/exerciseUtils.
  */
-export type QuizTaskPublic = {
+export type QuizTaskPublic = TaskPublicBase & {
   type: ExerciseTaskType.QUIZ;
-  id: string;
-  prompt: string;
   options: string[];
   /** true for multi-select, false for single-choice */
   allowMultiple: boolean;
-  /** points this task contributes to the exercise total */
-  points: number;
 };
 
+/** Discriminated on `type`; gains members as the phases land. */
 export type ExerciseTaskPublic = QuizTaskPublic;
+
+/**
+ * One task's answer, as submitted. The SHAPE IS DETERMINED BY THE TASK, not by
+ * the submission — the server always knows the task's type from the guide, so
+ * answers stay untagged and previously stored attempts keep working unchanged.
+ *
+ * quiz: the selected option indices. (Later: short-answer and code send a string.)
+ */
+export type ExerciseAnswerValue = number[];
 
 export type ExercisePublic = {
   tasks: ExerciseTaskPublic[];

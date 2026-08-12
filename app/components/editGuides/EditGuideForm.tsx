@@ -63,16 +63,31 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
     if (ex && Array.isArray(ex.tasks) && ex.tasks.length > 0) {
       return {
         passThreshold: ex.passThreshold ?? 0.7,
-        tasks: ex.tasks.map((t: any) => ({
-          prompt: t.prompt || "",
-          options: Array.isArray(t.options) ? t.options : ["", ""],
-          correctAnswers: Array.isArray(t.correctAnswers) ? t.correctAnswers : [],
-          allowMultiple: !!t.allowMultiple,
-          points: t.points ?? 1,
-          explanation: t.explanation || "",
-          hint: t.hint || "",
-          goal: t.goal || "",
-        })),
+        tasks: ex.tasks.map((t: any) => {
+          // Tasks this editor cannot author (short-answer, code — written by
+          // hand in the database) are carried verbatim and written back
+          // untouched. Reading them into the quiz shape below would replace
+          // their fields with empty options and lose the task.
+          if (t.type && t.type !== "quiz") {
+            return { kind: "opaque", raw: t } as const;
+          }
+          return {
+            kind: "quiz",
+            // Preserved so the task keeps its identity across a save; stored
+            // attempts key their answers by this id.
+            _id: typeof t._id === "string" ? t._id : undefined,
+            prompt: t.prompt || "",
+            options: Array.isArray(t.options) ? t.options : ["", ""],
+            correctAnswers: Array.isArray(t.correctAnswers)
+              ? t.correctAnswers
+              : [],
+            allowMultiple: !!t.allowMultiple,
+            points: t.points ?? 1,
+            explanation: t.explanation || "",
+            hint: t.hint || "",
+            goal: t.goal || "",
+          } as const;
+        }),
         poolSize: ex.poolSize ?? 0,
       };
     }
@@ -157,6 +172,8 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
     for (let i = 0; i < exercise.tasks.length; i++) {
       const task = exercise.tasks[i];
       const n = i + 1;
+      // Opaque tasks are authored in the database and validated there.
+      if (task.kind !== "quiz") continue;
       if (!task.prompt.trim()) return `Question ${n}: add a prompt.`;
       const filledOptions = task.options.filter((o) => o.trim());
       if (filledOptions.length < 2)
@@ -184,19 +201,27 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
         gradingMode: "auto",
         exercise: {
           passThreshold: exercise.passThreshold,
-          tasks: exercise.tasks.map((t) => ({
-            type: "quiz",
-            prompt: t.prompt.trim(),
-            options: t.options.map((o) => o.trim()),
-            allowMultiple: t.allowMultiple,
-            points: t.points,
-            correctAnswers: t.correctAnswers,
-            ...(t.explanation.trim()
-              ? { explanation: t.explanation.trim() }
-              : {}),
-            ...(t.hint.trim() ? { hint: t.hint.trim() } : {}),
-            ...(t.goal.trim() ? { goal: t.goal.trim() } : {}),
-          })),
+          tasks: exercise.tasks.map((t) =>
+            // Hand-authored task types go back exactly as they came.
+            t.kind === "opaque"
+              ? t.raw
+              : {
+                  type: "quiz",
+                  // Keeps the task's identity across the save, so stored
+                  // attempts stay attached to their question.
+                  ...(t._id ? { _id: t._id } : {}),
+                  prompt: t.prompt.trim(),
+                  options: t.options.map((o) => o.trim()),
+                  allowMultiple: t.allowMultiple,
+                  points: t.points,
+                  correctAnswers: t.correctAnswers,
+                  ...(t.explanation.trim()
+                    ? { explanation: t.explanation.trim() }
+                    : {}),
+                  ...(t.hint.trim() ? { hint: t.hint.trim() } : {}),
+                  ...(t.goal.trim() ? { goal: t.goal.trim() } : {}),
+                }
+          ),
           ...(exercise.poolSize > 0 ? { poolSize: exercise.poolSize } : {}),
         },
       };
