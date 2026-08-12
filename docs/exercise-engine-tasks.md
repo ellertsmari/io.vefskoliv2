@@ -133,7 +133,33 @@ deliberately — it only bites once a real mixed exercise exists, which is Phase
 before authoring the merged TypeScript guide, or a pooled draw will serve uneven mixtures
 of quiz and code tasks.
 
-**Phase 2 — code.** Decisions 3–7. The sandbox, the TypeScript pipeline, the structural check.
+**Phase 2 — code. DONE.** Decisions 3–7.
+
+- `app/utils/codeRunner.ts` (server only): type-check with the real compiler → transpile →
+  run each test case in QuickJS. `app/utils/codeConstructs.ts` does the structural check
+  against the TypeScript AST, before types are stripped.
+- **Line mapping was necessary.** Transpiling does *not* preserve line numbers — erasing a
+  type alias shifts everything below it — so a runtime error would otherwise point at a line
+  the student never wrote. The emitted source map is decoded (a small VLQ reader, no
+  dependency) into a generated→original line table.
+- **Grading stays synchronous.** The sandbox is async and expensive, but `gradeExercise` is
+  re-run whenever a key changes (analytics, promoting a short answer). So code tasks run
+  ONCE at submission and their `CodeFeedback` is stored on the attempt
+  (`ExerciseAttempt.codeResults`) and passed back into grading. Quiz and short answer still
+  recompute from the current key; code does not.
+- **Scoring:** `testFraction × (1 − constructWeight) + constructMet × constructWeight`, with
+  `constructWeight` defaulting to 0.2 and dropping to 0 when nothing is required. All tests
+  passing without the construct scores 8/10, never 0 — the `.reduce()` case from decision 6.
+- Sandbox verified: `process`, `require` and `fetch` are all `undefined` inside it, an
+  endless loop is interrupted, and the memory cap fires.
+
+**Two packaging notes, both load-bearing:**
+1. The **single-file CJS variant** (`@jitl/quickjs-singlefile-cjs-release-sync`) is used
+   rather than `getQuickJS()`, which reaches its `.wasm` through a dynamic import — that
+   fails under Jest's CJS VM and is fragile for Vercel's file tracing.
+2. `typescript` and the QuickJS packages are in **`serverExternalPackages`** in
+   `next.config.mjs`. Without it the build fails: the embedded WebAssembly string breaks the
+   bundler with "octal escape sequences are not allowed in template strings".
 
 **Phase 3 — the guides.** Return to merging the four TypeScript Introduction guides, now
 against an engine that can assess their skill objectives. See `docs/guide-fixes-2026-08.md`.

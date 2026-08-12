@@ -14,6 +14,7 @@ import {
   type ExerciseAnswers,
 } from "../utils/exerciseUtils";
 import { MAX_ANSWER_LENGTH } from "../utils/shortAnswer";
+import { runCodeTasks } from "../utils/runCodeTasks";
 import {
   failure,
   success,
@@ -88,9 +89,20 @@ export async function submitExercise(
       return failure("This guide is not an auto-graded exercise");
     }
 
+    // Code tasks run before grading: the sandbox is async, while gradeExercise
+    // stays synchronous so analytics and re-grading can call it freely.
+    const codeResults = await runCodeTasks(
+      guide.exercise as ServerExercise,
+      answers
+    );
+
     let result: GradeResult;
     try {
-      result = gradeExercise(guide.exercise as ServerExercise, answers);
+      result = gradeExercise(
+        guide.exercise as ServerExercise,
+        answers,
+        codeResults
+      );
     } catch (e) {
       // A pooled submission that doesn't match the served questions is a bad
       // request, not a server error — tell the student what to do.
@@ -104,6 +116,8 @@ export async function submitExercise(
       guide: new ObjectId(guideId),
       owner: new ObjectId(session.user.id),
       answers,
+      // Kept so the attempt can be re-graded later without re-running the code.
+      ...(Object.keys(codeResults).length > 0 ? { codeResults } : {}),
       score: result.score,
       passed: result.passed,
     });

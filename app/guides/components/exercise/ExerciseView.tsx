@@ -36,6 +36,7 @@ import {
   GoalBreakdownList,
   GoalItem,
 } from "./style";
+import { CodeTaskFields, CodeFeedbackView } from "./CodeTask";
 
 type Answers = Record<string, ExerciseAnswerValue>;
 
@@ -274,7 +275,7 @@ export const ExerciseView = ({
                     ))}
                   </Border>
                 </>
-              ) : (
+              ) : task.type === ExerciseTaskType.SHORT_ANSWER ? (
                 <>
                   <TaskMeta>Type your answer</TaskMeta>
                   <Border>
@@ -289,6 +290,15 @@ export const ExerciseView = ({
                     />
                   </Border>
                 </>
+              ) : (
+                <CodeTaskFields
+                  task={task}
+                  value={
+                    typeof answer === "string" ? answer : task.starterCode
+                  }
+                  disabled={isPending}
+                  onChange={(text) => setTextAnswer(task.id, text)}
+                />
               )}
 
               {taskResult && (
@@ -319,6 +329,10 @@ export const ExerciseView = ({
                         "review the materials above and try again."
                       }`}
                 </TaskResultNote>
+              )}
+
+              {taskResult?.code && (
+                <CodeFeedbackView feedback={taskResult.code} />
               )}
             </TaskCard>
           );

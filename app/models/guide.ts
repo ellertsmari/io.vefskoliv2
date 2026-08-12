@@ -58,7 +58,7 @@ const exerciseTaskSchema = new Schema(
     type: {
       type: Schema.Types.String,
       required: true,
-      enum: ["quiz", "shortAnswer"],
+      enum: ["quiz", "shortAnswer", "code"],
       default: "quiz",
     },
     prompt: { type: Schema.Types.String, required: true },
@@ -74,6 +74,28 @@ const exerciseTaskSchema = new Schema(
     pattern: { type: Schema.Types.String, required: false },
     // shown inside the input as an example of the expected form
     placeholder: { type: Schema.Types.String, required: false },
+    // Code tasks. `tests` is answer key in its own right — some cases are
+    // hidden, and every case carries its expected value.
+    entryPoint: { type: Schema.Types.String, required: false },
+    starterCode: { type: Schema.Types.String, required: false },
+    tests: {
+      type: [
+        new Schema(
+          {
+            label: { type: Schema.Types.String, required: false },
+            args: { type: [Schema.Types.Mixed], required: true },
+            expected: { type: Schema.Types.Mixed, required: false },
+            hidden: { type: Schema.Types.Boolean, required: false, default: false },
+          },
+          { _id: false }
+        ),
+      ],
+      required: false,
+    },
+    // Constructs the solution is expected to use; worth a slice of the marks
+    // (constructWeight, default 0.2), never a gate.
+    requires: { type: [Schema.Types.String], required: false },
+    constructWeight: { type: Schema.Types.Number, required: false, min: 0, max: 1 },
     explanation: { type: Schema.Types.String, required: false },
     // Shown to the student when they answer INCORRECTLY (the explanation is
     // only revealed on a correct answer, so retries stay a learning exercise

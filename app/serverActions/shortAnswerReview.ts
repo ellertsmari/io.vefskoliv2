@@ -15,6 +15,7 @@ import {
   type ExerciseAnswers,
   type ServerExercise,
   type ServerShortAnswerTask,
+  type CodeResults,
 } from "utils/exerciseUtils";
 import {
   matchShortAnswer,
@@ -197,7 +198,7 @@ export const promoteShortAnswer = async (
 
     const attempts = await ExerciseAttempt.find({
       guide: new ObjectId(guideId),
-    }).select("answers score passed");
+    }).select("answers codeResults score passed");
 
     let regradedAttempts = 0;
     for (const attempt of attempts) {
@@ -205,7 +206,10 @@ export const promoteShortAnswer = async (
       try {
         regraded = gradeExercise(
           updatedExercise,
-          attempt.answers as ExerciseAnswers
+          attempt.answers as ExerciseAnswers,
+          // Reuse what the code tasks did when they ran; only the short-answer
+          // key changed, and re-running a sandbox here would be pointless.
+          (attempt.codeResults ?? {}) as CodeResults
         );
       } catch {
         // A pooled attempt whose served subset no longer matches cannot be

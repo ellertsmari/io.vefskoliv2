@@ -268,6 +268,115 @@ describe("sanitizeGuideForClient", () => {
   });
 });
 
+describe("code tasks", () => {
+  const codeExercise = (): ServerExercise => ({
+    passThreshold: 0.7,
+    tasks: [
+      {
+        id: "c1",
+        type: "code",
+        prompt: "Sum the kids",
+        points: 10,
+        entryPoint: "totalKids",
+        tests: [{ args: [[]], expected: 0 }],
+        requires: ["iteration"],
+      } as never,
+    ],
+  });
+
+  /** What the runner would have produced, as stored on the attempt. */
+  const feedback = (
+    testsPassed: number,
+    testsTotal: number,
+    constructsMet: boolean
+  ) => ({
+    compiled: true,
+    typeErrors: [],
+    tests: [],
+    testsPassed,
+    testsTotal,
+    constructsMet,
+    missingConstructs: constructsMet ? [] : ["iteration"],
+  });
+
+  it("gives full marks when every test passes and the construct was used", () => {
+    const result = gradeExercise(
+      codeExercise(),
+      { c1: "code" },
+      { c1: feedback(4, 4, true) as never }
+    );
+    expect(result.score).toBe(10);
+    expect(result.results[0].correct).toBe(true);
+  });
+
+  it("gives partial credit per passing test", () => {
+    // 3 of 4 tests = 0.75 of the 80% carried by tests, plus the full 20%
+    const result = gradeExercise(
+      codeExercise(),
+      { c1: "code" },
+      { c1: feedback(3, 4, true) as never }
+    );
+    expect(result.earnedPoints).toBe(8);
+    expect(result.results[0].correct).toBe(false);
+  });
+
+  it("costs a slice, not everything, when the construct is missing", () => {
+    // All tests pass but no iteration: keeps the 80%, loses the 20%.
+    const result = gradeExercise(
+      codeExercise(),
+      { c1: "code" },
+      { c1: feedback(4, 4, false) as never }
+    );
+    expect(result.earnedPoints).toBe(8);
+    expect(result.score).toBe(8);
+    // A working .reduce() solution is still a strong score, never a zero.
+    expect(result.earnedPoints).toBeGreaterThan(0);
+  });
+
+  it("lets tests carry the whole task when nothing is required", () => {
+    const exercise = codeExercise();
+    delete (exercise.tasks[0] as never as { requires?: unknown }).requires;
+    const result = gradeExercise(
+      exercise,
+      { c1: "code" },
+      { c1: feedback(2, 4, false) as never }
+    );
+    expect(result.earnedPoints).toBe(5); // half the tests, half the marks
+  });
+
+  it("scores zero rather than guessing when the code never ran", () => {
+    const result = gradeExercise(codeExercise(), { c1: "code" });
+    expect(result.earnedPoints).toBe(0);
+    expect(result.results[0].correct).toBe(false);
+  });
+
+  it("never sends the test cases' expected values to the client", () => {
+    const serialized = JSON.stringify(
+      sanitizeExerciseForClient(codeExercise())
+    );
+    expect(serialized).not.toContain("acceptedAnswers");
+    expect(serialized).toContain("totalKids");
+  });
+
+  it("shows a hidden test by label only", () => {
+    const exercise = codeExercise();
+    (exercise.tasks[0] as never as { tests: unknown[] }).tests = [
+      { label: "visible", args: [[1]], expected: 1 },
+      { label: "secret", args: [[9]], expected: 9, hidden: true },
+    ];
+    const task = sanitizeExerciseForClient(exercise)!.tasks[0];
+    if (task.type !== ExerciseTaskType.CODE) throw new Error("wrong type");
+    expect(task.tests[0]).toEqual({
+      label: "visible",
+      hidden: false,
+      args: "[[1]]",
+      expected: "1",
+    });
+    expect(task.tests[1]).toEqual({ label: "secret", hidden: true });
+    expect(JSON.stringify(task.tests[1])).not.toContain("9");
+  });
+});
+
 describe("short-answer tasks", () => {
   const shortAnswerExercise = (): ServerExercise => ({
     passThreshold: 0.7,
@@ -354,12 +463,14 @@ describe("tasks of an unsupported type", () => {
       tasks: [
         ...makeExercise().tasks,
         {
+          // A type this build does not implement: a typo, or one authored
+          // ahead of the phase that adds it.
           id: "t3",
-          type: "code",
-          prompt: "Write a loop that sums the array",
+          type: "diagram",
+          prompt: "Draw the request flow",
           points: 5,
-          // fields a future phase would add — must not reach a student
-          solution: "arr.reduce((a, b) => a + b, 0)",
+          // fields such a task would carry — must not reach a student
+          solution: "browser -> server -> database",
         } as never,
       ],
     });

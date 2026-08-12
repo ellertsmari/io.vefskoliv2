@@ -4,8 +4,12 @@ import {
   ExerciseTaskType,
   ExerciseAnswerValue,
   TaskStatus,
+  CodeConstruct,
+  type CodeFeedback,
 } from "types/guideTypes";
 import { matchShortAnswer, type ShortAnswerKey } from "./shortAnswer";
+// Type-only: the runner itself is server-only (TypeScript compiler + WASM).
+import type { CodeTestCase } from "./codeRunner";
 
 /** Fields every server-side task carries, whatever its type. */
 type ServerTaskBase = {
@@ -45,10 +49,37 @@ export type ServerShortAnswerTask = ServerTaskBase &
   };
 
 /**
+ * Server-side shape of a code task. `tests` carry the expected values and some
+ * are hidden, so the whole array is answer key — only labels and the visible
+ * cases reach a student.
+ */
+export type ServerCodeTask = ServerTaskBase & {
+  type: "code";
+  /** the function the tests call */
+  entryPoint: string;
+  starterCode?: string;
+  tests: CodeTestCase[];
+  /** constructs the solution is expected to use */
+  requires?: CodeConstruct[];
+  /**
+   * Share of the task's points carried by the structural check, 0..1.
+   * Deliberately a slice rather than a gate — a student who solves an iteration
+   * exercise with .reduce() should not be zeroed for it.
+   */
+  constructWeight?: number;
+};
+
+/**
  * Discriminated on `type`. Gains members as the phases land; every consumer
  * dispatches rather than assuming quiz, so adding one is additive.
  */
-export type ServerTask = ServerQuizTask | ServerShortAnswerTask;
+export type ServerTask =
+  | ServerQuizTask
+  | ServerShortAnswerTask
+  | ServerCodeTask;
+
+/** Default share of a code task's points carried by the structural check. */
+export const DEFAULT_CONSTRUCT_WEIGHT = 0.2;
 
 /**
  * A task whose `type` this build does not know how to grade or serve. Reachable
@@ -75,7 +106,18 @@ export const isKnownTask = (
   task: ServerTask | UnknownServerTask
 ): task is ServerTask =>
   task.type === ExerciseTaskType.QUIZ ||
-  task.type === ExerciseTaskType.SHORT_ANSWER;
+  task.type === ExerciseTaskType.SHORT_ANSWER ||
+  task.type === ExerciseTaskType.CODE;
+
+/**
+ * Code results computed at submission time, keyed by task id.
+ *
+ * Running a sandbox is asynchronous and expensive, while `gradeExercise` is
+ * synchronous and is re-run whenever the answer key changes (analytics,
+ * promoting a short answer). So code tasks are executed ONCE, at submission,
+ * and their outcome is stored on the attempt and passed back in here.
+ */
+export type CodeResults = Record<string, CodeFeedback>;
 
 /** What grading one task produced, before it is turned into a TaskResult. */
 export type GradedTask = {
@@ -104,6 +146,8 @@ export type TaskResult = {
   explanation?: string;
   /** revealed when the task was answered incorrectly or only partially */
   hint?: string;
+  /** code tasks only: test outcomes, type errors and the mapped runtime error */
+  code?: CodeFeedback;
 };
 
 /** Per-knowledge-goal score aggregation across the graded tasks. */
@@ -175,13 +219,16 @@ const normalizedPoolSize = (exercise: ServerExercise): number | undefined => {
  */
 export const gradeTask = (
   task: ServerTask | UnknownServerTask,
-  answer: ExerciseAnswerValue
+  answer: ExerciseAnswerValue,
+  codeFeedback?: CodeFeedback
 ): GradedTask => {
   switch (task.type) {
     case "quiz":
       return gradeQuizTask(task as ServerQuizTask, answer as number[]);
     case "shortAnswer":
       return gradeShortAnswerTask(task as ServerShortAnswerTask, answer);
+    case "code":
+      return gradeCodeTask(task as ServerCodeTask, codeFeedback);
     default:
       throw new ExerciseGradingError(
         `This exercise contains a question of an unsupported type ("${task.type}") and cannot be graded. Please tell your teacher.`
@@ -236,6 +283,50 @@ const gradeQuizTask = (task: ServerQuizTask, selected: number[]): GradedTask => 
  * teacher promotes the phrasing into the key. Scoring it optimistically would
  * mean a grade that could later go DOWN, which is worse than one that rises.
  */
+/**
+ * Partial credit per passing test, with the structural check worth its own
+ * slice of the marks rather than acting as a gate (decision 6).
+ *
+ * Without feedback — an attempt stored before the code ran, or an exercise
+ * re-graded outside submission — the task scores zero rather than guessing.
+ */
+const gradeCodeTask = (
+  task: ServerCodeTask,
+  feedback?: CodeFeedback
+): GradedTask => {
+  const points = task.points ?? 1;
+  if (!feedback) {
+    return {
+      status: "incorrect",
+      correct: false,
+      pointsEarned: 0,
+      pointsPossible: points,
+    };
+  }
+
+  const requires = task.requires ?? [];
+  // With nothing required, the tests carry the whole task.
+  const constructWeight =
+    requires.length === 0
+      ? 0
+      : task.constructWeight ?? DEFAULT_CONSTRUCT_WEIGHT;
+
+  const testFraction =
+    feedback.testsTotal > 0 ? feedback.testsPassed / feedback.testsTotal : 0;
+  const constructFraction = feedback.constructsMet ? 1 : 0;
+
+  const fraction =
+    testFraction * (1 - constructWeight) + constructFraction * constructWeight;
+
+  const correct = testFraction === 1 && constructFraction === 1;
+  return {
+    status: correct ? "correct" : "incorrect",
+    correct,
+    pointsEarned: round2(points * fraction),
+    pointsPossible: points,
+  };
+};
+
 const gradeShortAnswerTask = (
   task: ServerShortAnswerTask,
   answer: ExerciseAnswerValue
@@ -290,7 +381,8 @@ const tasksToGrade = (
  */
 export const gradeExercise = (
   exercise: ServerExercise,
-  answers: ExerciseAnswers
+  answers: ExerciseAnswers,
+  codeResults: CodeResults = {}
 ): GradeResult => {
   const tasks = tasksToGrade(exercise, answers);
   const threshold = exercise.passThreshold ?? DEFAULT_PASS_THRESHOLD;
@@ -302,7 +394,8 @@ export const gradeExercise = (
   const results: TaskResult[] = tasks.map((task) => {
     const id = taskId(task);
     const selected = answers[id] ?? [];
-    const graded = gradeTask(task, selected);
+    const feedback = codeResults[id];
+    const graded = gradeTask(task, selected, feedback);
 
     earnedPoints += graded.pointsEarned;
     totalPoints += graded.pointsPossible;
@@ -327,6 +420,9 @@ export const gradeExercise = (
       // A held answer gets neither: the hint would imply it was wrong, which
       // is exactly what has not been decided yet.
       hint: graded.status === "incorrect" ? task.hint : undefined,
+      // Test outcomes, type errors and the mapped runtime error. Already
+      // stripped of hidden test details by the runner.
+      code: feedback,
     };
   });
 
@@ -429,6 +525,29 @@ const publicTask = (task: ServerTask): ExerciseTaskPublic => {
         points: task.points ?? 1,
         ...(task.placeholder ? { placeholder: task.placeholder } : {}),
       };
+    case "code":
+      return {
+        type: ExerciseTaskType.CODE,
+        id: taskId(task),
+        prompt: task.prompt,
+        points: task.points ?? 1,
+        entryPoint: task.entryPoint,
+        starterCode: task.starterCode ?? "",
+        requires: task.requires ?? [],
+        // Hidden cases appear by label only: the student knows how many there
+        // are and that they exist, without being able to special-case them.
+        tests: (task.tests ?? []).map((test, i) => {
+          const label = test.label ?? `Test ${i + 1}`;
+          return test.hidden
+            ? { label, hidden: true }
+            : {
+                label,
+                hidden: false,
+                args: JSON.stringify(test.args),
+                expected: JSON.stringify(test.expected ?? null),
+              };
+        }),
+      };
     default: {
       // Exhaustiveness guard: adding a member to ServerTask without handling it
       // here is now a compile error, not a task that fails at runtime.
@@ -469,6 +588,8 @@ export type AttemptForAnalytics = {
   answers: ExerciseAnswers;
   score: number;
   passed: boolean;
+  /** what the code tasks did when they ran; never recomputed here */
+  codeResults?: CodeResults;
 };
 
 export type TaskStats = {
@@ -526,7 +647,13 @@ export const computeExerciseAnalytics = (
       const selected = attempt.answers?.[id];
       if (!selected) continue;
       timesAnswered += 1;
-      if (gradeTask(task, selected).correct) fullyCorrect += 1;
+      // Quiz and short answer are recomputed against the CURRENT key, so
+      // promoting an answer updates these stats for free. Code tasks use what
+      // was recorded when they ran — re-running a sandbox per attempt would be
+      // both slow and beside the point.
+      if (gradeTask(task, selected, attempt.codeResults?.[id]).correct) {
+        fullyCorrect += 1;
+      }
     }
     return {
       taskId: id,

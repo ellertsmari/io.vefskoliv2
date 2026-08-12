@@ -19,8 +19,17 @@ const exerciseAttemptSchema = new Schema({
   guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide", index: true },
   owner: { type: Schema.Types.ObjectId, required: true, ref: "User", index: true },
 
-  // Raw student answers, keyed by task id -> selected option indices.
+  // Raw student answers, keyed by task id. The value's shape follows the task:
+  // option indices for quiz, text for short answer and code.
   answers: { type: Schema.Types.Mixed, required: true },
+
+  // Code tasks only: the outcome of running the submission, keyed by task id.
+  //
+  // Stored rather than recomputed because running the sandbox is asynchronous
+  // and expensive, while grading is re-run synchronously whenever the answer
+  // key changes (analytics, promoting a short answer). The code ran once, at
+  // submission; this is what it did.
+  codeResults: { type: Schema.Types.Mixed, required: false },
 
   // 0..10, matching the peer-review grade scale.
   score: { type: Schema.Types.Number, required: true },

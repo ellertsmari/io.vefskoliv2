@@ -31,6 +31,29 @@ export enum GradingMode {
 export enum ExerciseTaskType {
   QUIZ = "quiz",
   SHORT_ANSWER = "shortAnswer",
+  CODE = "code",
+}
+
+/** Longest submission a code task will accept. */
+export const MAX_CODE_LENGTH = 20000;
+
+/**
+ * Constructs a code task can require the student to use. Deliberately a small,
+ * fixed vocabulary covering what Module 3 teaches rather than a general query
+ * language — see docs/exercise-engine-tasks.md, decision 9.
+ *
+ * `iteration` is usually the right choice over `loop`: it accepts an array
+ * method too, so a student who reaches for .reduce() is not punished for
+ * writing the better solution.
+ */
+export enum CodeConstruct {
+  LOOP = "loop",
+  ARRAY_METHOD = "arrayMethod",
+  ITERATION = "iteration",
+  CONDITIONAL = "conditional",
+  FUNCTION = "function",
+  TYPE_ANNOTATION = "typeAnnotation",
+  RECURSION = "recursion",
 }
 
 /** What every task carries, whatever its type. */
@@ -63,15 +86,69 @@ export type ShortAnswerTaskPublic = TaskPublicBase & {
   placeholder?: string;
 };
 
+/** A test case as shown to the student. Hidden ones carry no inputs. */
+export type CodeTestPublic = {
+  label: string;
+  hidden: boolean;
+  /** JSON-rendered arguments, omitted for hidden tests */
+  args?: string;
+  /** JSON-rendered expected value, omitted for hidden tests */
+  expected?: string;
+};
+
+/**
+ * A code task as sent to the CLIENT. Hidden test cases appear by label only, so
+ * the student knows how many there are without being able to special-case them.
+ */
+export type CodeTaskPublic = TaskPublicBase & {
+  type: ExerciseTaskType.CODE;
+  /** the function the tests will call */
+  entryPoint: string;
+  starterCode: string;
+  tests: CodeTestPublic[];
+  /** constructs the solution is expected to use, for display */
+  requires: CodeConstruct[];
+};
+
 /** Discriminated on `type`; gains members as the phases land. */
-export type ExerciseTaskPublic = QuizTaskPublic | ShortAnswerTaskPublic;
+export type ExerciseTaskPublic =
+  | QuizTaskPublic
+  | ShortAnswerTaskPublic
+  | CodeTaskPublic;
+
+/** One test case's outcome. Hidden cases report pass/fail and nothing else. */
+export type CodeTestResult = {
+  label: string;
+  hidden: boolean;
+  passed: boolean;
+  /** JSON-rendered, visible tests only */
+  expected?: string;
+  actual?: string;
+  /** the error this case threw, if any */
+  error?: string;
+};
+
+/** Everything a student is told about their code submission. */
+export type CodeFeedback = {
+  /** false when type errors stopped it from running at all */
+  compiled: boolean;
+  /** positions refer to the student's own source lines */
+  typeErrors: { line: number; column: number; message: string }[];
+  tests: CodeTestResult[];
+  testsPassed: number;
+  testsTotal: number;
+  /** plain-language cause plus the real error, mapped to the student's line */
+  runtimeError?: { summary: string; detail: string; line?: number };
+  constructsMet: boolean;
+  missingConstructs: CodeConstruct[];
+};
 
 /**
  * One task's answer, as submitted. The SHAPE IS DETERMINED BY THE TASK, not by
  * the submission — the server always knows the task's type from the guide, so
  * answers stay untagged and previously stored attempts keep working unchanged.
  *
- * quiz: the selected option indices. shortAnswer: the typed text.
+ * quiz: the selected option indices. shortAnswer and code: the typed text.
  */
 export type ExerciseAnswerValue = number[] | string;
 

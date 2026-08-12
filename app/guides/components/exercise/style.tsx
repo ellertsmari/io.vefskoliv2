@@ -53,6 +53,74 @@ export const OptionInput = styled.input`
   cursor: pointer;
 `;
 
+export const CodeEditor = styled.textarea`
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  tab-size: 2;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+`;
+
+export const TestList = styled.ul`
+  list-style: none;
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+  font-size: 0.85rem;
+`;
+
+export const TestRow = styled.li<{ $passed?: boolean }>`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  color: ${({ $passed }) =>
+    $passed === undefined ? "inherit" : $passed ? "#0f5132" : "#842029"};
+`;
+
+export const TestName = styled.span`
+  font-weight: 600;
+  white-space: nowrap;
+`;
+
+export const TestDetail = styled.code`
+  opacity: 0.8;
+  word-break: break-word;
+`;
+
+export const ErrorBox = styled.div`
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: #fff3cd;
+  color: #664d03;
+  font-size: 0.85rem;
+`;
+
+export const ErrorSummary = styled.p`
+  margin: 0;
+  font-weight: 600;
+`;
+
+export const ErrorDetail = styled.code`
+  display: block;
+  margin-top: 0.25rem;
+  word-break: break-word;
+`;
+
+export const TypeErrorList = styled.ul`
+  margin: 0.35rem 0 0 1rem;
+  padding: 0;
+`;
+
 export const ShortAnswerInput = styled.input`
   width: 100%;
   padding: 0.6rem 1rem;

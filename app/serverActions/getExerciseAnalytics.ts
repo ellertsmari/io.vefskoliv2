@@ -36,7 +36,9 @@ export const getExerciseAnalytics = async (
 
   const attempts = (await ExerciseAttempt.find(
     { guide: new ObjectId(guideId) },
-    { owner: 1, answers: 1, score: 1, passed: 1 }
+    // codeResults: code tasks are not re-run for stats, so their recorded
+    // outcome is what the per-question correct rates are computed from.
+    { owner: 1, answers: 1, codeResults: 1, score: 1, passed: 1 }
   ).lean()) as unknown as AttemptForAnalytics[];
 
   return computeExerciseAnalytics(guide.exercise, attempts);
