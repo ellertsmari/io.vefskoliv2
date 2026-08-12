@@ -23,7 +23,7 @@ or the four images below will 404.
 
 ## Still open
 
-Nothing below has been applied. Ordered by what unblocks what.
+Ordered by what unblocks what. Item 2 is done (see #23); the rest is unapplied.
 
 ### 0. Not yet imported
 
@@ -87,21 +87,36 @@ Automated checks, all passing:
 
 | Check | Result |
 |---|---|
-| No dead hosts in any link | 213 links |
+| No dead hosts in any link | 192 links |
 | Local images present in `public/guides/` | 4 images |
+| Internal `/guides/…` links resolve | 2 links |
 | Every module contiguous from order 0 | 8 modules |
 | No base64 data URIs | — |
 | No placeholder rows | — |
-| `knowledge` + `skills` + `topicsList` on every guide | 45/45 |
+| `knowledge` + `skills` + `topicsList` on every guide | 42/42 |
 | No empty outcome entries | — |
-| At least one resource per guide | 45/45 |
-| Assignment titles 1–80 chars | 45/45 |
+| At least one resource per guide | 42/42 |
+| Assignment titles 1–80 chars | 42/42 |
 | Balanced `<p>` tags | — |
 
 Snapshots of anything deleted:
 `dbBackup/deleted-design-sprint-guide-2026-08-11.json`,
 `dbBackup/deleted-typescript-intro-guides-2026-08-12.json`,
 `dbBackup/deleted-local-test-guides-2026-08-11.json` (local `test` DB only).
+
+---
+
+## #24 — Two dead internal guide links
+
+`Getting started - Tooling` and `Getting started - Concepts` link to each other with
+`href="/guides/getting-started-tooling"` and `href="/guides/getting-started-concepts"` — the
+guide's `uid`. But `findGuide` (`app/serverActions/getGuide.ts:12`) returns null for anything
+that is not a valid ObjectId, so both rendered "Guide Not Found". These are the first two guides
+a student reads, pointing at each other.
+
+Both now use the target's `_id`. Note the coupling this creates: the links are correct only as
+long as guide `_id`s are preserved across an import, which is already required for returns and
+reviews to stay attached.
 
 ---
 
