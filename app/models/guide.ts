@@ -67,6 +67,9 @@ const exerciseTaskSchema = new Schema(
     points: { type: Schema.Types.Number, required: true, default: 1 },
     // server-only answer key (quiz):
     correctAnswers: { type: [Schema.Types.Number], required: false },
+    // Why each option is right or wrong, parallel to `options`. Answer key —
+    // only the notes for options a student picked are ever returned.
+    optionFeedback: { type: [Schema.Types.String], required: false },
     // server-only answer key (short answer). `acceptedAnswers` are compared
     // after normalizing case/whitespace/trailing punctuation; `pattern` is an
     // optional regex for answers with real variation.

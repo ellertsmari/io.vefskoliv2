@@ -44,6 +44,7 @@ import {
   ScoreBig,
   SegmentBar,
   Segment,
+  ConfirmNotice,
 } from "./runnerStyle";
 
 /**
@@ -99,6 +100,7 @@ export const ExerciseRunner = ({
   const [checking, setChecking] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, CheckedAnswer>>({});
   const [result, setResult] = useState<FinishedExercise | null>(null);
+  const [confirmingFinish, setConfirmingFinish] = useState(false);
 
   const promptRef = useRef<HTMLHeadingElement>(null);
 
@@ -279,6 +281,57 @@ export const ExerciseRunner = ({
 
   if (!task) return null;
 
+  /**
+   * Finishing ends the attempt for good: the next one draws a different set of
+   * questions, so there is no coming back to these. That is worth saying
+   * plainly rather than discovering.
+   */
+  if (confirmingFinish) {
+    return (
+      <RunnerShell>
+        <RunnerBody>
+          <Prompt as="h2">Finish this attempt?</Prompt>
+          <TaskMeta>
+            {correctCount} of {tasks.length} correct so far.
+          </TaskMeta>
+          <ConfirmNotice>
+            <strong>This attempt is scored and closed.</strong> You cannot come
+            back to these questions — starting again gives you a different set
+            drawn from the pool, and your best score is the one that counts.
+            {untriedCount > 0 && (
+              <>
+                {" "}
+                <strong>
+                  {untriedCount} question{untriedCount === 1 ? "" : "s"} you have
+                  not attempted
+                </strong>{" "}
+                will score nothing.
+              </>
+            )}
+          </ConfirmNotice>
+        </RunnerBody>
+        <RunnerFooter>
+          <Button
+            $styletype="outlined"
+            type="button"
+            onClick={() => setConfirmingFinish(false)}
+          >
+            ← Keep working
+          </Button>
+          <Spacer />
+          <Button
+            $styletype="default"
+            type="button"
+            disabled={checking}
+            onClick={finish}
+          >
+            {checking ? "Scoring…" : "Finish and see my score"}
+          </Button>
+        </RunnerFooter>
+      </RunnerShell>
+    );
+  }
+
   return (
     <RunnerShell>
       <RunnerHeader>
@@ -414,6 +467,17 @@ export const ExerciseRunner = ({
             )
           )}
 
+          {/* What they actually chose, explained. Comes before the generic
+              hint because it answers the question they really asked. */}
+          {current && current.status !== "correct" && current.optionNotes?.length ? (
+            <>
+              <HelpHeading>About your answer</HelpHeading>
+              {current.optionNotes.map((note, i) => (
+                <HelpBody key={i}>{note}</HelpBody>
+              ))}
+            </>
+          ) : null}
+
           {/* The hint arrives once they have actually tried, so it nudges
               rather than answers. */}
           {current && current.status !== "correct" && current.hint && (
@@ -465,14 +529,7 @@ export const ExerciseRunner = ({
           $styletype="default"
           type="button"
           disabled={checking}
-          onClick={finish}
-          title={
-            untriedCount > 0
-              ? `${untriedCount} question${
-                  untriedCount === 1 ? "" : "s"
-                } not attempted — they will score nothing`
-              : undefined
-          }
+          onClick={() => setConfirmingFinish(true)}
         >
           Finish
           {untriedCount > 0 ? ` (${untriedCount} left)` : ""}

@@ -91,6 +91,11 @@ export type CheckedAnswer = {
   explanation?: string;
   /** revealed on a wrong one */
   hint?: string;
+  /**
+   * Why the options the student picked are wrong, in the order they picked
+   * them. Specific to their choice rather than to the question.
+   */
+  optionNotes?: string[];
   /** code tasks only */
   code?: CodeFeedback;
 };
@@ -389,10 +394,28 @@ export const checkAnswer = async (
     if (code) attempt.markModified("codeResults");
     await attempt.save();
 
+    // Explain what they actually chose. Only the notes for options they picked
+    // and got wrong — saying anything about the others would give the answer.
+    let optionNotes: string[] | undefined;
+    if (
+      !isCorrect &&
+      task.type === ExerciseTaskType.QUIZ &&
+      Array.isArray(answer) &&
+      task.optionFeedback?.length
+    ) {
+      const correctSet = new Set(task.correctAnswers ?? []);
+      const notes = answer
+        .filter((i) => !correctSet.has(i))
+        .map((i) => task.optionFeedback?.[i])
+        .filter((note): note is string => !!note && note.trim().length > 0);
+      if (notes.length > 0) optionNotes = notes;
+    }
+
     return success(
       {
         status: graded.status,
         tries,
+        ...(optionNotes ? { optionNotes } : {}),
         ...(isCorrect && task.explanation
           ? { explanation: task.explanation }
           : {}),

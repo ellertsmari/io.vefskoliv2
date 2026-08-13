@@ -41,6 +41,16 @@ export type ServerQuizTask = ServerTaskBase & {
   options: string[];
   allowMultiple?: boolean;
   correctAnswers: number[];
+  /**
+   * Why each option is right or wrong, parallel to `options`.
+   *
+   * ANSWER KEY: a note explains whether its option is correct, so the array
+   * never reaches the client. Only the notes for options the student actually
+   * chose come back, and only once they have chosen them — a generic hint says
+   * "an empty array is not falsy" to someone who picked "0", which answers a
+   * question they did not ask.
+   */
+  optionFeedback?: (string | null)[];
 };
 
 /**

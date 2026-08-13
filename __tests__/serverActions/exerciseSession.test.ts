@@ -200,6 +200,54 @@ describe("exercise session", () => {
     expect(res.success).toBe(false);
   });
 
+  /**
+   * A generic hint answers a question the student did not ask: telling someone
+   * who picked "0" that an empty array is truthy explains the wrong thing.
+   */
+  it("explains the option the student actually picked, and only that one", async () => {
+    const guide = await Guide.findById(guideId);
+    guide!.set("exercise.tasks.0.optionFeedback", [
+      null,
+      "B is wrong because of reasons specific to B",
+    ]);
+    await guide!.save();
+
+    const started = await startExercise(guideId);
+    if (!started.success) throw new Error("could not start");
+    const one = started.data.exercise.tasks[0];
+
+    const res = await checkAnswer({ guideId, taskId: one.id, answer: [1] });
+    if (!res.success) throw new Error("check failed");
+    expect(res.data.optionNotes).toEqual([
+      "B is wrong because of reasons specific to B",
+    ]);
+  });
+
+  it("never sends option notes for options that were not picked", async () => {
+    const guide = await Guide.findById(guideId);
+    guide!.set("exercise.tasks.0.optionFeedback", [
+      "note about the CORRECT option",
+      "note about the wrong one",
+    ]);
+    await guide!.save();
+
+    const started = await startExercise(guideId);
+    if (!started.success) throw new Error("could not start");
+
+    // Nothing about the options travels before an answer is given...
+    expect(JSON.stringify(started)).not.toContain("note about");
+
+    // ...and picking the wrong one reveals only its own note.
+    const res = await checkAnswer({
+      guideId,
+      taskId: started.data.exercise.tasks[0].id,
+      answer: [1],
+    });
+    const serialized = JSON.stringify(res);
+    expect(serialized).toContain("note about the wrong one");
+    expect(serialized).not.toContain("note about the CORRECT option");
+  });
+
   it("never sends the answer key to the client", async () => {
     const started = await startExercise(guideId);
     const serialized = JSON.stringify(started);

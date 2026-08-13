@@ -101,6 +101,11 @@ export const SegmentBar = styled.div`
   display: flex;
   gap: 3px;
   width: 100%;
+  /* Room for the focus ring and the hover lift. The modal's scroll container
+     clips anything drawn outside this box, which was cutting the ring off on
+     the first and last segments. */
+  padding: 5px 4px;
+  margin: -5px -4px;
 `;
 
 export const Segment = styled.button<{
@@ -116,16 +121,17 @@ export const Segment = styled.button<{
   transition: transform 120ms ease;
   background: ${({ $state }) =>
     $state === "correct" ? "#1a7f4b" : $state === "wrong" ? "#c0392b" : "#dcdce4"};
-  outline: ${({ $current }) => ($current ? "2px solid #6563eb" : "none")};
-  outline-offset: 2px;
+  /* A ring drawn with box-shadow rather than outline: it follows the border
+     radius and stays within the padding above, so nothing is clipped. */
+  box-shadow: ${({ $current }) =>
+    $current ? "0 0 0 2px #fff, 0 0 0 4px #6563eb" : "none"};
 
   &:hover {
     transform: scaleY(1.4);
   }
 
   &:focus-visible {
-    outline: 2px solid #6563eb;
-    outline-offset: 2px;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6563eb;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -207,4 +213,14 @@ export const GoalList = styled.ul`
 
 export const GoalRow = styled.li<{ $mastered: boolean }>`
   color: ${({ $mastered }) => ($mastered ? "#0f5132" : "#664d03")};
+`;
+
+export const ConfirmNotice = styled.p`
+  margin: 0;
+  padding: 0.9rem 1.1rem;
+  border-radius: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffe08a;
+  color: #664d03;
+  line-height: 1.55;
 `;
