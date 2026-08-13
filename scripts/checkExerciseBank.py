@@ -140,6 +140,26 @@ def check_answer_notes(tasks: list[dict]) -> None:
         where = f"task {i + 1} ({(t.get('prompt') or '')[:45]}…)"
         feedback = t.get("answerFeedback") or []
 
+        # Ambiguity cannot be detected, but the phrasings that produce it can
+        # be. A short answer has to have ONE answer; these ask for a judgement,
+        # which a marker matching exact strings cannot grade.
+        # Narrow on purpose. The distinction is not the phrase but whether the
+        # answer is a TERM: "what should the annotation be" has one answer,
+        # while "what should you check" asks the reader what to do, which has
+        # several defensible ones. Only the second shape is flagged.
+        open_ended = [
+            "first thing", "why ", "how would you", "how do you",
+            "what should you", "what would you", "explain", "describe ",
+            "in your own words",
+        ]
+        prompt = (t.get("prompt") or "").lower()
+        for phrase in open_ended:
+            if phrase in prompt:
+                warn(f"{where}: the wording {phrase.strip()!r} asks for a judgement "
+                     f"rather than a term. A reasonable answer that is not on the "
+                     f"accepted list will be marked wrong — make it a quiz question.")
+                break
+
         if not feedback:
             warn(f"{where}: no answerFeedback. A wrong answer gets only the generic "
                  f"hint, which explains the question rather than what they typed.")

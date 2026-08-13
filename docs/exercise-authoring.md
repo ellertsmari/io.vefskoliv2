@@ -53,7 +53,15 @@ question has not done the work.
   the value of…*), some diagnosis (*why does this not work…*). A bank of pure recall makes
   a student who memorised the guide indistinguishable from one who understood it.
 - Short-answer questions want a **single unambiguous answer** — a keyword or a term. If a
-  reasonable student could phrase it five ways, make it a quiz question instead. Write
+  reasonable student could phrase it five ways, make it a quiz question instead.
+
+  The test: **cover the accepted answers and answer your own question.** If you cannot,
+  neither can a student. One shipped reading *"TypeScript says a property does not exist on
+  type. What is the first thing to check?"* — the intended answer was "spelling", and the
+  teacher who wrote the material tried the type, the interface, the union and the object
+  before giving up. Every one of those was a reasonable thing to check first. A marker that
+  compares strings cannot grade a judgement; ask for the term, or make it multiple choice
+  where the reasoning is visible in the options. Write
   `answerFeedback` for the wrong answers you can predict, especially the mirror-image ones:
   `==` for `===`, "arguments" for "parameters", `for...in` for `for...of`. Those are the
   cases where a student is closest to understanding and a specific explanation lands hardest.
