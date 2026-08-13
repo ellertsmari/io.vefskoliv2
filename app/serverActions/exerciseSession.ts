@@ -15,7 +15,6 @@ import {
   sanitizeExerciseForClient,
   scoreFromProgress,
   taskId,
-  SHORT_ANSWER_MAX_TRIES,
   type ExerciseProgress,
   type ServerExercise,
   type ServerTask,
@@ -80,17 +79,14 @@ export type ExerciseSummary = {
 export type StartedExercise = {
   attemptNumber: number;
   exercise: ExercisePublic;
-  /** which served tasks are already resolved, and how */
+  /** how each served task has gone so far */
   progress: ExerciseProgress;
-  shortAnswerMaxTries: number;
 };
 
 export type CheckedAnswer = {
   status: TaskStatus;
-  /** move the student on to the next question */
-  advance: boolean;
-  /** short answer only: how many tries remain before it moves on regardless */
-  triesLeft?: number;
+  /** tries spent on this question so far, including this one */
+  tries: number;
   /** revealed on a correct answer */
   explanation?: string;
   /** revealed on a wrong one */
@@ -263,7 +259,6 @@ export const startExercise = async (
         attemptNumber,
         exercise: sanitized,
         progress: (attempt.taskProgress ?? {}) as ExerciseProgress,
-        shortAnswerMaxTries: SHORT_ANSWER_MAX_TRIES,
       },
       "Exercise started"
     );
@@ -317,9 +312,12 @@ export const checkAnswer = async (
     const progress = (attempt.taskProgress ?? {}) as ExerciseProgress;
     const before = progress[id] ?? emptyProgress();
 
-    // Already resolved: nothing more to record, just move on.
-    if (before.correct || before.skipped) {
-      return success({ status: "correct", advance: true }, "Already answered");
+    // Already right: re-checking changes nothing, and must not cost a try.
+    if (before.correct) {
+      return success(
+        { status: "correct", tries: before.tries, ...(task.explanation ? { explanation: task.explanation } : {}) },
+        "Already answered"
+      );
     }
 
     let code: CodeFeedback | undefined;
@@ -359,12 +357,6 @@ export const checkAnswer = async (
       firstAnswer: tries === 1 ? answer : before.firstAnswer,
     };
 
-    // A short answer moves on once its tries run out, recorded as not correct.
-    const outOfTries =
-      !isCorrect &&
-      task.type === ExerciseTaskType.SHORT_ANSWER &&
-      tries >= SHORT_ANSWER_MAX_TRIES;
-
     attempt.taskProgress = { ...progress, [id]: after };
     attempt.answers = { ...(attempt.answers ?? {}), [id]: answer };
     if (code) {
@@ -378,10 +370,7 @@ export const checkAnswer = async (
     return success(
       {
         status: graded.status,
-        advance: isCorrect || outOfTries,
-        ...(task.type === ExerciseTaskType.SHORT_ANSWER && !isCorrect
-          ? { triesLeft: Math.max(0, SHORT_ANSWER_MAX_TRIES - tries) }
-          : {}),
+        tries,
         ...(isCorrect && task.explanation
           ? { explanation: task.explanation }
           : {}),
@@ -392,39 +381,6 @@ export const checkAnswer = async (
     );
   } catch (e) {
     return handleActionError("checkAnswer", e, "Could not check that answer");
-  }
-};
-
-/** Give up on a question and move on. It scores nothing. */
-export const skipTask = async (
-  guideId: string,
-  id: string
-): Promise<ActionResult<{ skipped: true }>> => {
-  const ownerId = await requireUser();
-  if (!ownerId) return failure(ErrorMessages.NOT_LOGGED_IN);
-
-  try {
-    const attempt = await ExerciseAttempt.findOne({
-      guide: new ObjectId(guideId),
-      owner: new ObjectId(ownerId),
-      status: "inProgress",
-    });
-    if (!attempt) return failure("Start the exercise before skipping");
-
-    const progress = (attempt.taskProgress ?? {}) as ExerciseProgress;
-    const before = progress[id] ?? emptyProgress();
-    if (before.correct) return success({ skipped: true } as const, "Already answered");
-
-    attempt.taskProgress = {
-      ...progress,
-      [id]: { ...before, skipped: true, correct: false },
-    };
-    attempt.markModified("taskProgress");
-    await attempt.save();
-
-    return success({ skipped: true } as const, "Skipped");
-  } catch (e) {
-    return handleActionError("skipTask", e, "Could not skip that question");
   }
 };
 

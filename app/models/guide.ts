@@ -74,6 +74,22 @@ const exerciseTaskSchema = new Schema(
     pattern: { type: Schema.Types.String, required: false },
     // shown inside the input as an example of the expected form
     placeholder: { type: Schema.Types.String, required: false },
+    // Where to read up on this question, shown beside it from the start.
+    // NOT answer key — a student who follows the link and reads the material
+    // has done exactly what the exercise is for.
+    helpLinks: {
+      type: [
+        new Schema(
+          {
+            label: { type: Schema.Types.String, required: true },
+            url: { type: Schema.Types.String, required: true },
+          },
+          { _id: false }
+        ),
+      ],
+      required: false,
+    },
+    helpText: { type: Schema.Types.String, required: false },
     // Code tasks. `tests` is answer key in its own right — some cases are
     // hidden, and every case carries its expected value.
     entryPoint: { type: Schema.Types.String, required: false },

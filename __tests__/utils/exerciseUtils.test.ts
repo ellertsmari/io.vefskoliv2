@@ -656,6 +656,19 @@ describe("short-answer tasks", () => {
     expect(result.passed).toBe(false);
   });
 
+  it("sends help links to the client — they are material, not answer key", () => {
+    const exercise = shortAnswerExercise();
+    (exercise.tasks[0] as never as { helpLinks: unknown }).helpLinks = [
+      { label: "MDN — declarations", url: "https://example.test/declarations" },
+    ];
+    const served = sanitizeExerciseForClient(exercise)!.tasks[0];
+    expect(served.helpLinks).toEqual([
+      { label: "MDN — declarations", url: "https://example.test/declarations" },
+    ]);
+    // ...while the key still does not travel
+    expect(JSON.stringify(served)).not.toContain("acceptedAnswers");
+  });
+
   it("never leaks the accepted answers or the pattern to the client", () => {
     const exercise = shortAnswerExercise();
     (exercise.tasks[0] as never as { pattern: string }).pattern = "^const$";

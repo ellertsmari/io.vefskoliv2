@@ -30,6 +30,10 @@ const exerciseTaskSchema = z
     explanation: z.string().optional(),
     hint: z.string().optional(),
     goal: z.string().optional(),
+    helpLinks: z
+      .array(z.object({ label: z.string(), url: z.string().url() }))
+      .optional(),
+    helpText: z.string().optional(),
     // Quiz-only; required by the refinement below when type === "quiz".
     options: z.array(z.string()).min(2).optional(),
     correctAnswers: z.array(z.number().int().min(0)).min(1).optional(),

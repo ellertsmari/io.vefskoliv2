@@ -3,6 +3,7 @@ import {
   ExerciseTaskPublic,
   ExerciseTaskType,
   type ExercisePool,
+  type HelpLink,
   ExerciseAnswerValue,
   TaskStatus,
   CodeConstruct,
@@ -22,6 +23,10 @@ type ServerTaskBase = {
   hint?: string;
   /** Optional knowledge goal (one of the guide's knowledge items) this task assesses. */
   goal?: string;
+  /** Where to read up on this. Shown from the start; not answer key. */
+  helpLinks?: HelpLink[];
+  /** Longer guidance shown beside the question. Also not answer key. */
+  helpText?: string;
 };
 
 /**
@@ -213,15 +218,6 @@ export type TaskProgress = {
 /** Per-task record for an attempt, keyed by task id. */
 export type ExerciseProgress = Record<string, TaskProgress>;
 
-/**
- * Short answers move on after this many wrong tries.
- *
- * Quiz and code tasks stay until they are right, because a student can always
- * reason their way to a quiz answer and a code task is meant to be worked at.
- * A short answer can be genuinely unguessable when you do not know the word, so
- * it needs a floor — and the student is told how many tries remain.
- */
-export const SHORT_ANSWER_MAX_TRIES = 3;
 
 /**
  * The score for a completed attempt: first-try accuracy.
@@ -709,6 +705,8 @@ const publicTask = (task: ServerTask): ExerciseTaskPublic => {
         id: taskId(task),
         prompt: task.prompt,
         points: task.points ?? 1,
+        ...(task.helpLinks?.length ? { helpLinks: task.helpLinks } : {}),
+        ...(task.helpText ? { helpText: task.helpText } : {}),
         options: task.options ?? [],
         allowMultiple: task.allowMultiple ?? false,
       };
@@ -719,6 +717,8 @@ const publicTask = (task: ServerTask): ExerciseTaskPublic => {
         id: taskId(task),
         prompt: task.prompt,
         points: task.points ?? 1,
+        ...(task.helpLinks?.length ? { helpLinks: task.helpLinks } : {}),
+        ...(task.helpText ? { helpText: task.helpText } : {}),
         ...(task.placeholder ? { placeholder: task.placeholder } : {}),
       };
     case "code":
@@ -727,6 +727,8 @@ const publicTask = (task: ServerTask): ExerciseTaskPublic => {
         id: taskId(task),
         prompt: task.prompt,
         points: task.points ?? 1,
+        ...(task.helpLinks?.length ? { helpLinks: task.helpLinks } : {}),
+        ...(task.helpText ? { helpText: task.helpText } : {}),
         entryPoint: task.entryPoint,
         starterCode: task.starterCode ?? "",
         requires: task.requires ?? [],

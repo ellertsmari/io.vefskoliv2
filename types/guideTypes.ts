@@ -74,12 +74,26 @@ export const CONSTRUCT_LABELS: Record<CodeConstruct, string> = {
   [CodeConstruct.RECURSION]: "a function that calls itself",
 };
 
+/** A pointer to the material that answers a question. */
+export type HelpLink = {
+  label: string;
+  url: string;
+};
+
 /** What every task carries, whatever its type. */
 export type TaskPublicBase = {
   id: string;
   prompt: string;
   /** points this task contributes to the exercise total */
   points: number;
+  /**
+   * Where to read up on this question. Shown beside the question from the
+   * start — not answer key, and a student who goes and reads the material has
+   * done exactly what the exercise is for.
+   */
+  helpLinks?: HelpLink[];
+  /** Longer guidance shown alongside the links. Also not answer key. */
+  helpText?: string;
 };
 
 /**

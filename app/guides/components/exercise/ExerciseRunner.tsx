@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   startExercise,
   checkAnswer,
-  skipTask,
   finishExercise,
   getExerciseSummary,
   type CheckedAnswer,
@@ -24,24 +23,18 @@ import { MAX_ANSWER_LENGTH } from "utils/shortAnswer";
 import { Button } from "globalStyles/buttons/default/style";
 import { Border } from "globalStyles/globalStyles";
 import { CodeTaskFields, CodeFeedbackView } from "./CodeTask";
-import {
-  Option,
-  OptionInput,
-  ShortAnswerInput,
-  TaskMeta,
-} from "./style";
-import {
-  ProgressTrack,
-  ProgressFill,
-  ProgressLabel,
-  Trophy,
-  PerfectBanner,
-  PerfectText,
-} from "./launcherStyle";
+import { Option, OptionInput, ShortAnswerInput, TaskMeta } from "./style";
+import { Trophy, PerfectBanner, PerfectText, ProgressLabel } from "./launcherStyle";
 import {
   RunnerShell,
   RunnerHeader,
+  RunnerColumns,
   RunnerBody,
+  HelpPanel,
+  HelpHeading,
+  HelpBody,
+  HelpLinkList,
+  HelpLinkItem,
   RunnerFooter,
   Prompt,
   Feedback,
@@ -49,28 +42,44 @@ import {
   GoalList,
   GoalRow,
   ScoreBig,
+  SegmentBar,
+  Segment,
 } from "./runnerStyle";
 
 /**
- * The exercise, one question at a time.
+ * The exercise, one question at a time, with free movement between them.
  *
- * A correct answer moves the student on; a wrong one keeps them on the
- * question, because being told the answer teaches less than finding it. Short
- * answers move on after three tries — unlike a quiz you cannot narrow those
- * down by elimination, and the count is shown so it is never a surprise. Skip
- * is always available: being stuck with no way forward is worse than the wall
- * of questions this replaced.
+ * Nothing advances on its own and nothing is locked: Previous and Next always
+ * work, the segmented bar jumps straight to any question, and Check can be
+ * pressed as many times as the student likes. A question left unanswered simply
+ * earns nothing, which is what skipping already meant.
  *
- * Every answer is checked on the SERVER. The answer key never reaches the
- * browser, and first-try accuracy — which is the grade — is recorded there too.
+ * Answers are checked on the SERVER. The key never reaches the browser, and
+ * first-try accuracy — the grade — is recorded there rather than reported by
+ * the client.
  */
-
-const AUTO_ADVANCE_MS = 1200;
 
 type Phase = "loading" | "running" | "finished" | "error";
 
-const isResolved = (progress: ExerciseProgress, id: string) =>
-  !!(progress[id]?.correct || progress[id]?.skipped);
+/** How a question looks in the progress bar. */
+type SegmentState = "untried" | "correct" | "wrong";
+
+const segmentState = (
+  progress: ExerciseProgress,
+  id: string
+): SegmentState => {
+  const entry = progress[id];
+  if (entry?.correct) return "correct";
+  if ((entry?.tries ?? 0) > 0) return "wrong";
+  return "untried";
+};
+
+const blankDraft = (task: ExerciseTaskPublic): ExerciseAnswerValue =>
+  task.type === ExerciseTaskType.CODE
+    ? task.starterCode
+    : task.type === ExerciseTaskType.SHORT_ANSWER
+    ? ""
+    : [];
 
 export const ExerciseRunner = ({
   guideId,
@@ -86,19 +95,23 @@ export const ExerciseRunner = ({
   const [started, setStarted] = useState<StartedExercise | null>(null);
   const [progress, setProgress] = useState<ExerciseProgress>({});
   const [index, setIndex] = useState(0);
-  const [draft, setDraft] = useState<ExerciseAnswerValue>([]);
+  const [drafts, setDrafts] = useState<Record<string, ExerciseAnswerValue>>({});
   const [checking, setChecking] = useState(false);
-  const [feedback, setFeedback] = useState<CheckedAnswer | null>(null);
+  const [feedback, setFeedback] = useState<Record<string, CheckedAnswer>>({});
   const [result, setResult] = useState<FinishedExercise | null>(null);
 
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const promptRef = useRef<HTMLHeadingElement>(null);
 
   const exercise: ExercisePublic | null = started?.exercise ?? null;
   const tasks = exercise?.tasks ?? [];
   const task: ExerciseTaskPublic | undefined = tasks[index];
 
-  const resolvedCount = tasks.filter((t) => isResolved(progress, t.id)).length;
+  const correctCount = tasks.filter(
+    (t) => segmentState(progress, t.id) === "correct"
+  ).length;
+  const untriedCount = tasks.filter(
+    (t) => segmentState(progress, t.id) === "untried"
+  ).length;
 
   // ---- open -------------------------------------------------------------
 
@@ -114,9 +127,8 @@ export const ExerciseRunner = ({
       }
       setStarted(res.data);
       setProgress(res.data.progress);
-      // Resume at the first question that is not already resolved.
       const firstOpen = res.data.exercise.tasks.findIndex(
-        (t) => !isResolved(res.data.progress, t.id)
+        (t) => !res.data.progress[t.id]?.correct
       );
       setIndex(firstOpen === -1 ? 0 : firstOpen);
       setPhase("running");
@@ -126,67 +138,33 @@ export const ExerciseRunner = ({
     };
   }, [guideId]);
 
-  useEffect(
-    () => () => {
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    },
-    []
-  );
-
-  // Reset the draft whenever the question changes, and move focus to it so a
-  // keyboard user is not left at the top of the modal each time.
+  // Focus the question on each move, so a keyboard user lands on the content
+  // rather than back at the top of the modal.
   useEffect(() => {
-    setFeedback(null);
-    if (!task) return;
-    setDraft(
-      task.type === ExerciseTaskType.CODE
-        ? task.starterCode
-        : task.type === ExerciseTaskType.SHORT_ANSWER
-        ? ""
-        : []
-    );
     promptRef.current?.focus();
-  }, [task?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ---- moving on --------------------------------------------------------
-
-  const goToNextOpen = useCallback(
-    (updated: ExerciseProgress) => {
-      const next = tasks.findIndex(
-        (t, i) => i > index && !isResolved(updated, t.id)
-      );
-      if (next !== -1) {
-        setIndex(next);
-        return;
-      }
-      // Nothing after this one — wrap to anything still open earlier.
-      const earlier = tasks.findIndex((t) => !isResolved(updated, t.id));
-      if (earlier !== -1) {
-        setIndex(earlier);
-        return;
-      }
-      setIndex(tasks.length); // past the end: the finish screen
-    },
-    [tasks, index]
-  );
-
-  const scheduleAdvance = (updated: ExerciseProgress) => {
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    advanceTimer.current = setTimeout(
-      () => goToNextOpen(updated),
-      AUTO_ADVANCE_MS
-    );
-  };
+  }, [index]);
 
   // ---- answering --------------------------------------------------------
+
+  const draft = task
+    ? drafts[task.id] ?? blankDraft(task)
+    : ([] as ExerciseAnswerValue);
+
+  const setDraft = (value: ExerciseAnswerValue) => {
+    if (!task) return;
+    setDrafts((prev) => ({ ...prev, [task.id]: value }));
+  };
 
   const hasDraft =
     task?.type === ExerciseTaskType.QUIZ
       ? Array.isArray(draft) && draft.length > 0
       : typeof draft === "string" && draft.trim().length > 0;
 
+  const current = task ? feedback[task.id] : undefined;
+  const isCorrect = task ? !!progress[task.id]?.correct : false;
+
   const submitAnswer = async () => {
-    if (!task || checking || !hasDraft) return;
+    if (!task || checking || !hasDraft || isCorrect) return;
     setChecking(true);
     const res = await checkAnswer({ guideId, taskId: task.id, answer: draft });
     setChecking(false);
@@ -196,47 +174,17 @@ export const ExerciseRunner = ({
       return;
     }
 
-    setFeedback(res.data);
-    const updated: ExerciseProgress = {
-      ...progress,
+    setFeedback((prev) => ({ ...prev, [task.id]: res.data }));
+    setProgress((prev) => ({
+      ...prev,
       [task.id]: {
-        tries: (progress[task.id]?.tries ?? 0) + 1,
+        tries: res.data.tries,
         correct: res.data.status === "correct",
         firstTryCorrect:
-          res.data.status === "correct" && (progress[task.id]?.tries ?? 0) === 0,
+          res.data.status === "correct" && res.data.tries === 1,
         skipped: false,
       },
-    };
-    // A short answer that ran out of tries is done with, without being correct.
-    if (res.data.advance && res.data.status !== "correct") {
-      updated[task.id] = { ...updated[task.id], skipped: true };
-    }
-    setProgress(updated);
-
-    if (res.data.advance) scheduleAdvance(updated);
-  };
-
-  const skipCurrent = async () => {
-    if (!task || checking) return;
-    setChecking(true);
-    const res = await skipTask(guideId, task.id);
-    setChecking(false);
-    if (!res.success) {
-      setErrorMessage(res.message);
-      return;
-    }
-    const updated: ExerciseProgress = {
-      ...progress,
-      [task.id]: {
-        tries: progress[task.id]?.tries ?? 0,
-        correct: false,
-        firstTryCorrect: false,
-        skipped: true,
-      },
-    };
-    setProgress(updated);
-    setFeedback(null);
-    goToNextOpen(updated);
+    }));
   };
 
   const finish = async () => {
@@ -329,215 +277,206 @@ export const ExerciseRunner = ({
     );
   }
 
-  // Past the last open question: offer to finish.
-  if (!task) {
-    const skipped = tasks.filter((t) => progress[t.id]?.skipped);
-    return (
-      <RunnerShell>
-        <RunnerHeader>
-          <ProgressTrack
-            role="progressbar"
-            aria-valuenow={resolvedCount}
-            aria-valuemin={0}
-            aria-valuemax={tasks.length}
-          >
-            <ProgressFill $percent={100} $complete />
-          </ProgressTrack>
-          <ProgressLabel>All {tasks.length} questions answered</ProgressLabel>
-        </RunnerHeader>
-        <RunnerBody>
-          <Prompt as="h2">Ready to finish?</Prompt>
-          {skipped.length > 0 ? (
-            <TaskMeta>
-              {skipped.length} question{skipped.length === 1 ? " was" : "s were"}{" "}
-              skipped and will score nothing. You can still go back to{" "}
-              {skipped.length === 1 ? "it" : "them"}.
-            </TaskMeta>
-          ) : (
-            <TaskMeta>
-              Your score is how many you got right on the first try.
-            </TaskMeta>
-          )}
-        </RunnerBody>
-        <RunnerFooter>
-          {skipped.length > 0 && (
-            <Button
-              $styletype="outlined"
-              type="button"
-              onClick={() => {
-                const first = tasks.findIndex((t) => progress[t.id]?.skipped);
-                const cleared = { ...progress };
-                delete cleared[tasks[first].id];
-                setProgress(cleared);
-                setIndex(first);
-              }}
-            >
-              Go back to a skipped question
-            </Button>
-          )}
-          <Spacer />
-          <Button
-            $styletype="default"
-            type="button"
-            disabled={checking}
-            onClick={finish}
-          >
-            {checking ? "Scoring…" : "Finish and see my score"}
-          </Button>
-        </RunnerFooter>
-      </RunnerShell>
-    );
-  }
-
-  const triesSoFar = progress[task.id]?.tries ?? 0;
-  const isShortAnswer = task.type === ExerciseTaskType.SHORT_ANSWER;
-  const showTriesLeft =
-    isShortAnswer && started ? started.shortAnswerMaxTries - triesSoFar : null;
+  if (!task) return null;
 
   return (
     <RunnerShell>
       <RunnerHeader>
-        <ProgressTrack
-          role="progressbar"
-          aria-valuenow={resolvedCount}
-          aria-valuemin={0}
-          aria-valuemax={tasks.length}
-          aria-label="Exercise progress"
-        >
-          <ProgressFill $percent={(resolvedCount / tasks.length) * 100} />
-        </ProgressTrack>
+        <SegmentBar aria-label="Questions">
+          {tasks.map((t, i) => {
+            const state = segmentState(progress, t.id);
+            return (
+              <Segment
+                key={t.id}
+                type="button"
+                $state={state}
+                $current={i === index}
+                aria-current={i === index ? "step" : undefined}
+                aria-label={`Question ${i + 1}: ${
+                  state === "correct"
+                    ? "correct"
+                    : state === "wrong"
+                    ? "not right yet"
+                    : "not attempted"
+                }`}
+                onClick={() => setIndex(i)}
+              />
+            );
+          })}
+        </SegmentBar>
         <ProgressLabel>
-          Question {index + 1} of {tasks.length} · {resolvedCount} answered
+          Question {index + 1} of {tasks.length} · {correctCount} correct
+          {untriedCount > 0 && ` · ${untriedCount} not attempted`}
         </ProgressLabel>
       </RunnerHeader>
 
-      <RunnerBody>
-        <Prompt ref={promptRef} tabIndex={-1}>
-          {task.prompt}
-        </Prompt>
+      <RunnerColumns>
+        <RunnerBody>
+          <Prompt ref={promptRef} tabIndex={-1}>
+            {task.prompt}
+          </Prompt>
 
-        {task.type === ExerciseTaskType.QUIZ && (
-          <>
-            <TaskMeta>
-              {task.allowMultiple ? "Select all that apply" : "Choose one"}
-            </TaskMeta>
-            <Border>
-              {task.options.map((option, i) => (
-                <Option key={i}>
-                  <OptionInput
-                    type={task.allowMultiple ? "checkbox" : "radio"}
-                    name={task.id}
-                    checked={Array.isArray(draft) && draft.includes(i)}
-                    disabled={checking}
-                    onChange={() =>
-                      setDraft((prev) => {
-                        const current = Array.isArray(prev) ? prev : [];
-                        if (!task.allowMultiple) return [i];
-                        return current.includes(i)
-                          ? current.filter((x) => x !== i)
-                          : [...current, i];
-                      })
-                    }
-                  />
-                  <span>{option}</span>
-                </Option>
-              ))}
-            </Border>
-          </>
-        )}
-
-        {isShortAnswer && (
-          <>
-            <TaskMeta>
-              Type your answer
-              {showTriesLeft !== null &&
-                ` · ${showTriesLeft} ${
-                  showTriesLeft === 1 ? "try" : "tries"
-                } left before it moves on`}
-            </TaskMeta>
-            <Border>
-              <ShortAnswerInput
-                type="text"
-                autoFocus
-                value={typeof draft === "string" ? draft : ""}
-                placeholder={task.placeholder ?? ""}
-                disabled={checking}
-                maxLength={MAX_ANSWER_LENGTH}
-                aria-label={task.prompt}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    void submitAnswer();
-                  }
-                }}
-              />
-            </Border>
-          </>
-        )}
-
-        {task.type === ExerciseTaskType.CODE && (
-          <CodeTaskFields
-            task={task}
-            value={typeof draft === "string" ? draft : task.starterCode}
-            disabled={checking}
-            onChange={(text) => setDraft(text.slice(0, MAX_CODE_LENGTH))}
-          />
-        )}
-
-        <div aria-live="polite">
-          {feedback && (
-            <Feedback
-              $tone={feedback.status === "correct" ? "right" : "wrong"}
-            >
-              {feedback.status === "correct"
-                ? `Correct${
-                    feedback.explanation ? ` — ${feedback.explanation}` : ""
-                  }`
-                : feedback.advance
-                ? "That's the last try — moving on. This one scores nothing."
-                : `Not quite${feedback.hint ? ` — ${feedback.hint}` : ""}`}
-            </Feedback>
+          {task.type === ExerciseTaskType.QUIZ && (
+            <>
+              <TaskMeta>
+                {task.allowMultiple ? "Select all that apply" : "Choose one"}
+              </TaskMeta>
+              <Border>
+                {task.options.map((option, i) => (
+                  <Option key={i}>
+                    <OptionInput
+                      type={task.allowMultiple ? "checkbox" : "radio"}
+                      name={`${task.id}-option`}
+                      checked={Array.isArray(draft) && draft.includes(i)}
+                      disabled={checking || isCorrect}
+                      onChange={() => {
+                        const currentDraft = Array.isArray(draft) ? draft : [];
+                        setDraft(
+                          !task.allowMultiple
+                            ? [i]
+                            : currentDraft.includes(i)
+                            ? currentDraft.filter((x) => x !== i)
+                            : [...currentDraft, i]
+                        );
+                      }}
+                    />
+                    <span>{option}</span>
+                  </Option>
+                ))}
+              </Border>
+            </>
           )}
-          {feedback?.code && <CodeFeedbackView feedback={feedback.code} />}
-        </div>
-      </RunnerBody>
+
+          {task.type === ExerciseTaskType.SHORT_ANSWER && (
+            <>
+              <TaskMeta>Type your answer — as many tries as you like</TaskMeta>
+              <Border>
+                <ShortAnswerInput
+                  type="text"
+                  value={typeof draft === "string" ? draft : ""}
+                  placeholder={task.placeholder ?? ""}
+                  disabled={checking || isCorrect}
+                  maxLength={MAX_ANSWER_LENGTH}
+                  aria-label={task.prompt}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void submitAnswer();
+                    }
+                  }}
+                />
+              </Border>
+            </>
+          )}
+
+          {task.type === ExerciseTaskType.CODE && (
+            <CodeTaskFields
+              task={task}
+              value={typeof draft === "string" ? draft : task.starterCode}
+              disabled={checking || isCorrect}
+              onChange={(text) => setDraft(text.slice(0, MAX_CODE_LENGTH))}
+            />
+          )}
+
+          <div aria-live="polite">
+            {current && (
+              <Feedback $tone={current.status === "correct" ? "right" : "wrong"}>
+                {current.status === "correct"
+                  ? `Correct${
+                      current.explanation ? ` — ${current.explanation}` : ""
+                    }`
+                  : `Not quite — try again, or move on and come back to it.`}
+              </Feedback>
+            )}
+            {current?.code && <CodeFeedbackView feedback={current.code} />}
+          </div>
+        </RunnerBody>
+
+        <HelpPanel aria-label="Help with this question">
+          <HelpHeading>Where to look</HelpHeading>
+          {task.helpText && <HelpBody>{task.helpText}</HelpBody>}
+          {task.helpLinks?.length ? (
+            <HelpLinkList>
+              {task.helpLinks.map((link) => (
+                <HelpLinkItem key={link.url}>
+                  <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    {link.label} ↗
+                  </a>
+                </HelpLinkItem>
+              ))}
+            </HelpLinkList>
+          ) : (
+            !task.helpText && (
+              <HelpBody>
+                The guide behind this exercise covers everything asked here.
+              </HelpBody>
+            )
+          )}
+
+          {/* The hint arrives once they have actually tried, so it nudges
+              rather than answers. */}
+          {current && current.status !== "correct" && current.hint && (
+            <>
+              <HelpHeading>Hint</HelpHeading>
+              <HelpBody>{current.hint}</HelpBody>
+            </>
+          )}
+        </HelpPanel>
+      </RunnerColumns>
 
       <RunnerFooter>
         <Button
           $styletype="outlined"
           type="button"
-          disabled={checking}
-          onClick={skipCurrent}
+          disabled={index === 0}
+          onClick={() => setIndex((i) => Math.max(0, i - 1))}
         >
-          Skip
+          ← Previous
+        </Button>
+
+        <Spacer />
+        <Button
+          $styletype="default"
+          type="button"
+          disabled={checking || !hasDraft || isCorrect}
+          onClick={submitAnswer}
+        >
+          {checking
+            ? task.type === ExerciseTaskType.CODE
+              ? "Running your code…"
+              : "Checking…"
+            : isCorrect
+            ? "Correct ✓"
+            : "Check"}
         </Button>
         <Spacer />
-        {feedback?.advance ? (
-          <Button
-            $styletype="default"
-            type="button"
-            onClick={() => {
-              if (advanceTimer.current) clearTimeout(advanceTimer.current);
-              goToNextOpen(progress);
-            }}
-          >
-            Next
-          </Button>
-        ) : (
-          <Button
-            $styletype="default"
-            type="button"
-            disabled={checking || !hasDraft}
-            onClick={submitAnswer}
-          >
-            {checking
-              ? task.type === ExerciseTaskType.CODE
-                ? "Running your code…"
-                : "Checking…"
-              : "Check"}
-          </Button>
-        )}
+
+        <Button
+          $styletype="outlined"
+          type="button"
+          disabled={index >= tasks.length - 1}
+          onClick={() => setIndex((i) => Math.min(tasks.length - 1, i + 1))}
+        >
+          Next →
+        </Button>
+
+        <Button
+          $styletype="default"
+          type="button"
+          disabled={checking}
+          onClick={finish}
+          title={
+            untriedCount > 0
+              ? `${untriedCount} question${
+                  untriedCount === 1 ? "" : "s"
+                } not attempted — they will score nothing`
+              : undefined
+          }
+        >
+          Finish
+          {untriedCount > 0 ? ` (${untriedCount} left)` : ""}
+        </Button>
       </RunnerFooter>
     </RunnerShell>
   );
