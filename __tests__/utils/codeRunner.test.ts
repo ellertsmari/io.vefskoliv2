@@ -89,6 +89,34 @@ function totalKids(people: Person[]): number {
     expect(feedback.tests).toEqual([]);
   });
 
+  /**
+   * Regression: in production the TypeScript standard library was missing from
+   * the deployment, so `Array` was unknown, `Person[]` degraded to `{}`, and
+   * this submission came back with four errors — three of them nonsense about
+   * `{}` having no `length`. Only the genuine mistake should be reported.
+   */
+  it("reports only the student's real mistake, not missing-library noise", async () => {
+    const withOneRealError = `type Person = { name: string; kids: number };
+
+function totalChildren(people: Person[]): number {
+  if (!people.length) return "people is not an array";
+  let total = 0;
+  for (let i = 0; i < people.length; i++) {
+    total += people[i].kids;
+  }
+  return total;
+}`;
+    const feedback = await runCodeSubmission(sumSpec, withOneRealError);
+    expect(feedback.compiled).toBe(false);
+    expect(feedback.typeErrors).toHaveLength(1);
+    expect(feedback.typeErrors[0].line).toBe(4);
+    expect(feedback.typeErrors[0].message).toMatch(
+      /'string' is not assignable to type 'number'/
+    );
+    // Nothing about `{}` — that only appears when the library is absent.
+    expect(JSON.stringify(feedback.typeErrors)).not.toContain("'{}'");
+  });
+
   it("maps a runtime error back to the line the student wrote", async () => {
     // The type alias is erased when compiling, shifting the emitted lines —
     // the reported line must still be the one in the student's source.

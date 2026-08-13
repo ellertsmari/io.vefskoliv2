@@ -150,6 +150,22 @@ const typeCheck = (source: string): CodeFeedback["typeErrors"] => {
     // a file with no import/export as a script; nothing to force here.
   }, host);
 
+  // If the standard library did not load, every global type is missing:
+  // `Array` is unknown, so `Person[]` degrades to `{}` and a correct
+  // submission is buried in errors about `{}` having no `length`. That is our
+  // problem, not the student's, so report nothing and let the tests decide.
+  // TypeScript surfaces this as global diagnostics ("cannot find global type").
+  if (program.getGlobalDiagnostics().length > 0) {
+    console.error(
+      "[codeRunner] TypeScript standard library unavailable — skipping the type check.",
+      program
+        .getGlobalDiagnostics()
+        .slice(0, 3)
+        .map((d) => ts.flattenDiagnosticMessageText(d.messageText, " "))
+    );
+    return [];
+  }
+
   return ts
     .getPreEmitDiagnostics(program)
     .filter((d) => d.file?.fileName === STUDENT_FILE && d.start !== undefined)
