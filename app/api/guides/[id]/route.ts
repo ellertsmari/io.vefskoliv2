@@ -34,6 +34,15 @@ const exerciseTaskSchema = z
       .array(z.object({ label: z.string(), url: z.string().url() }))
       .optional(),
     helpText: z.string().optional(),
+    answerFeedback: z
+      .array(
+        z.object({
+          match: z.string().optional(),
+          pattern: z.string().optional(),
+          note: z.string(),
+        })
+      )
+      .optional(),
     // Quiz-only; required by the refinement below when type === "quiz".
     options: z.array(z.string()).min(2).optional(),
     correctAnswers: z.array(z.number().int().min(0)).min(1).optional(),

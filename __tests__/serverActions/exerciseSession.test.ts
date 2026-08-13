@@ -218,7 +218,7 @@ describe("exercise session", () => {
 
     const res = await checkAnswer({ guideId, taskId: one.id, answer: [1] });
     if (!res.success) throw new Error("check failed");
-    expect(res.data.optionNotes).toEqual([
+    expect(res.data.answerNotes).toEqual([
       "B is wrong because of reasons specific to B",
     ]);
   });
@@ -246,6 +246,43 @@ describe("exercise session", () => {
     const serialized = JSON.stringify(res);
     expect(serialized).toContain("note about the wrong one");
     expect(serialized).not.toContain("note about the CORRECT option");
+  });
+
+  /**
+   * The same idea as option notes, for typed answers: someone who writes `==`
+   * should be told why `==` is not it, rather than reminded what the question
+   * asked.
+   */
+  it("explains an anticipated wrong answer that was typed", async () => {
+    const guide = await Guide.findById(guideId);
+    guide!.set("exercise.tasks.0", {
+      type: "shortAnswer",
+      prompt: "Which operator compares without converting types?",
+      acceptedAnswers: ["==="],
+      answerFeedback: [
+        { match: "==", note: "`==` converts types first, which is the bit to avoid." },
+      ],
+      points: 1,
+    });
+    await guide!.save();
+
+    const started = await startExercise(guideId);
+    if (!started.success) throw new Error("could not start");
+    const one = started.data.exercise.tasks.find(
+      (t) => t.prompt === "Which operator compares without converting types?"
+    )!;
+
+    const wrong = await checkAnswer({ guideId, taskId: one.id, answer: "==" });
+    expect(wrong.success && wrong.data.answerNotes).toEqual([
+      "`==` converts types first, which is the bit to avoid.",
+    ]);
+
+    // An answer nobody anticipated gets no note rather than a wrong one.
+    const other = await checkAnswer({ guideId, taskId: one.id, answer: "equals" });
+    expect(other.success && other.data.answerNotes).toBeUndefined();
+
+    // And nothing about the anticipated answers travels before they answer.
+    expect(JSON.stringify(started)).not.toContain("converts types first");
   });
 
   it("never sends the answer key to the client", async () => {

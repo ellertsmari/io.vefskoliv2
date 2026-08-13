@@ -132,6 +132,39 @@ def check_option_notes(tasks: list[dict]) -> None:
                  "one option: " + "; ".join(places))
 
 
+def check_answer_notes(tasks: list[dict]) -> None:
+    """Short answers: anticipated wrong answers, and none that contradict."""
+    for i, t in enumerate(tasks):
+        if t["type"] != "shortAnswer":
+            continue
+        where = f"task {i + 1} ({(t.get('prompt') or '')[:45]}…)"
+        feedback = t.get("answerFeedback") or []
+
+        if not feedback:
+            warn(f"{where}: no answerFeedback. A wrong answer gets only the generic "
+                 f"hint, which explains the question rather than what they typed.")
+            continue
+
+        accepted = {normalise_answer(a) for a in (t.get("acceptedAnswers") or [])}
+        for entry in feedback:
+            if not (entry.get("note") or "").strip():
+                fail(f"{where}: an answerFeedback entry has no note")
+            if not entry.get("match") and not entry.get("pattern"):
+                fail(f"{where}: an answerFeedback entry matches nothing "
+                     f"(no `match`, no `pattern`)")
+            match = entry.get("match")
+            if match and normalise_answer(match) in accepted:
+                fail(f"{where}: answerFeedback explains why {match!r} is wrong, but it "
+                     f"is in acceptedAnswers — a student who gets it RIGHT would be "
+                     f"told why they are wrong")
+
+
+def normalise_answer(text: str) -> str:
+    """Mirrors normalizeAnswer in app/utils/shortAnswer.ts."""
+    out = re.sub(r"\s+", " ", (text or "").strip().lower())
+    return re.sub(r"[.,;:!?]+$", "", out).strip()
+
+
 STOPWORDS = {
     "a", "an", "the", "of", "in", "is", "are", "to", "and", "or", "what", "which",
     "these", "this", "that", "it", "you", "your", "does", "do", "for", "with",
@@ -260,6 +293,7 @@ def main() -> int:
 
     check_structure(tasks)
     check_option_notes(tasks)
+    check_answer_notes(tasks)
     check_duplicates(tasks)
     check_coverage(guide, tasks)
     check_pools(exercise, tasks)

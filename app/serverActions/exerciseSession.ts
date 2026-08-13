@@ -22,7 +22,7 @@ import {
   type GoalResult,
 } from "utils/exerciseUtils";
 import { runCodeSubmission } from "utils/codeRunner";
-import { MAX_ANSWER_LENGTH } from "utils/shortAnswer";
+import { MAX_ANSWER_LENGTH, normalizeAnswer } from "utils/shortAnswer";
 import {
   ExerciseTaskType,
   MAX_CODE_LENGTH,
@@ -92,10 +92,10 @@ export type CheckedAnswer = {
   /** revealed on a wrong one */
   hint?: string;
   /**
-   * Why the options the student picked are wrong, in the order they picked
-   * them. Specific to their choice rather than to the question.
+   * Why what the student actually gave is wrong — the options they picked, or
+   * the text they typed. Specific to their answer rather than to the question.
    */
-  optionNotes?: string[];
+  answerNotes?: string[];
   /** code tasks only */
   code?: CodeFeedback;
 };
@@ -394,28 +394,53 @@ export const checkAnswer = async (
     if (code) attempt.markModified("codeResults");
     await attempt.save();
 
-    // Explain what they actually chose. Only the notes for options they picked
-    // and got wrong — saying anything about the others would give the answer.
-    let optionNotes: string[] | undefined;
-    if (
-      !isCorrect &&
-      task.type === ExerciseTaskType.QUIZ &&
-      Array.isArray(answer) &&
-      task.optionFeedback?.length
-    ) {
-      const correctSet = new Set(task.correctAnswers ?? []);
-      const notes = answer
-        .filter((i) => !correctSet.has(i))
-        .map((i) => task.optionFeedback?.[i])
-        .filter((note): note is string => !!note && note.trim().length > 0);
-      if (notes.length > 0) optionNotes = notes;
+    // Explain what they actually gave. Only notes matching their own answer —
+    // anything else would be telling them about options they did not pick.
+    let answerNotes: string[] | undefined;
+    if (!isCorrect) {
+      if (
+        task.type === ExerciseTaskType.QUIZ &&
+        Array.isArray(answer) &&
+        task.optionFeedback?.length
+      ) {
+        const correctSet = new Set(task.correctAnswers ?? []);
+        const notes = answer
+          .filter((i) => !correctSet.has(i))
+          .map((i) => task.optionFeedback?.[i])
+          .filter((note): note is string => !!note && note.trim().length > 0);
+        if (notes.length > 0) answerNotes = notes;
+      }
+
+      if (
+        task.type === ExerciseTaskType.SHORT_ANSWER &&
+        typeof answer === "string" &&
+        task.answerFeedback?.length
+      ) {
+        const written = normalizeAnswer(answer);
+        const notes = task.answerFeedback
+          .filter((entry) => {
+            if (entry.match && normalizeAnswer(entry.match) === written) {
+              return true;
+            }
+            if (entry.pattern) {
+              try {
+                return new RegExp(entry.pattern, "i").test(written);
+              } catch {
+                return false;
+              }
+            }
+            return false;
+          })
+          .map((entry) => entry.note);
+        if (notes.length > 0) answerNotes = notes;
+      }
     }
 
     return success(
       {
         status: graded.status,
         tries,
-        ...(optionNotes ? { optionNotes } : {}),
+        ...(answerNotes ? { answerNotes } : {}),
         ...(isCorrect && task.explanation
           ? { explanation: task.explanation }
           : {}),

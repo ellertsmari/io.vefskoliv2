@@ -75,6 +75,21 @@ const exerciseTaskSchema = new Schema(
     // optional regex for answers with real variation.
     acceptedAnswers: { type: [Schema.Types.String], required: false },
     pattern: { type: Schema.Types.String, required: false },
+    // Anticipated wrong answers and why each is wrong. Answer key — only the
+    // note matching what the student typed is ever returned.
+    answerFeedback: {
+      type: [
+        new Schema(
+          {
+            match: { type: Schema.Types.String, required: false },
+            pattern: { type: Schema.Types.String, required: false },
+            note: { type: Schema.Types.String, required: true },
+          },
+          { _id: false }
+        ),
+      ],
+      required: false,
+    },
     // shown inside the input as an example of the expected form
     placeholder: { type: Schema.Types.String, required: false },
     // Where to read up on this question, shown beside it from the start.

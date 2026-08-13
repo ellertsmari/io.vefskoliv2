@@ -498,10 +498,10 @@ export const ExerciseRunner = ({
 
           {/* What they actually chose, explained. Comes before the generic
               hint because it answers the question they really asked. */}
-          {current && current.status !== "correct" && current.optionNotes?.length ? (
+          {current && current.status !== "correct" && current.answerNotes?.length ? (
             <>
               <HelpHeading>About your answer</HelpHeading>
-              {current.optionNotes.map((note, i) => (
+              {current.answerNotes.map((note, i) => (
                 <HelpBody key={i}>{note}</HelpBody>
               ))}
             </>

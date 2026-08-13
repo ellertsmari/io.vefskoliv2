@@ -62,6 +62,18 @@ export type ServerShortAnswerTask = ServerTaskBase &
     type: "shortAnswer";
     /** optional hint about the expected form, shown in the input */
     placeholder?: string;
+    /**
+     * Anticipated wrong answers and why each is wrong — the short-answer
+     * equivalent of `optionFeedback`.
+     *
+     * A generic hint has to explain the question; this explains what the
+     * student actually typed. Someone who answers `==` should be told why `==`
+     * is not it, not reminded what the question was asking.
+     *
+     * ANSWER KEY: never sent to the client, and only the note matching what
+     * they wrote comes back.
+     */
+    answerFeedback?: { match?: string; pattern?: string; note: string }[];
   };
 
 /**

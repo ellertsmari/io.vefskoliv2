@@ -53,7 +53,10 @@ question has not done the work.
   the value of…*), some diagnosis (*why does this not work…*). A bank of pure recall makes
   a student who memorised the guide indistinguishable from one who understood it.
 - Short-answer questions want a **single unambiguous answer** — a keyword or a term. If a
-  reasonable student could phrase it five ways, make it a quiz question instead.
+  reasonable student could phrase it five ways, make it a quiz question instead. Write
+  `answerFeedback` for the wrong answers you can predict, especially the mirror-image ones:
+  `==` for `===`, "arguments" for "parameters", `for...in` for `for...of`. Those are the
+  cases where a student is closest to understanding and a specific explanation lands hardest.
 - Code tasks want a problem with **one obvious shape and several valid solutions**, so the
   structural check can require iteration without dictating a `for` loop.
 
@@ -71,6 +74,8 @@ that nothing else in the bank does.
   and grading.
 - Every wrong option needs a note. **No correct option may have one** — a note on a correct
   option tells the student which one it is.
+- A short answer's `answerFeedback` must never `match` something in `acceptedAnswers`. The
+  checker fails on it: a student who gets the question right would be told why they are wrong.
 - Every question needs `helpLinks` pointing at material that actually answers it, and every
   link must return 200.
 - Code tasks need at least one hidden test, a reference solution that passes every case, and
