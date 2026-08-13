@@ -192,6 +192,88 @@ export type GradeResult = {
 /** Thrown when a submission doesn't match the questions that were served. */
 export class ExerciseGradingError extends Error {}
 
+/** How one task went while the student worked through the exercise. */
+export type TaskProgress = {
+  tries: number;
+  /** got there in the end (or was already right) */
+  correct: boolean;
+  /** right on the very first try — this is what the score is made of */
+  firstTryCorrect: boolean;
+  skipped: boolean;
+  /**
+   * What the student answered on their FIRST try, kept so first-try
+   * correctness can be re-evaluated if the answer key changes later — a
+   * teacher accepting a short-answer phrasing has to be able to fix the grade
+   * of everyone who wrote it, and "were they right first time" cannot be
+   * recovered from the last answer alone.
+   */
+  firstAnswer?: ExerciseAnswerValue;
+};
+
+/** Per-task record for an attempt, keyed by task id. */
+export type ExerciseProgress = Record<string, TaskProgress>;
+
+/**
+ * Short answers move on after this many wrong tries.
+ *
+ * Quiz and code tasks stay until they are right, because a student can always
+ * reason their way to a quiz answer and a code task is meant to be worked at.
+ * A short answer can be genuinely unguessable when you do not know the word, so
+ * it needs a floor — and the student is told how many tries remain.
+ */
+export const SHORT_ANSWER_MAX_TRIES = 3;
+
+/**
+ * The score for a completed attempt: first-try accuracy.
+ *
+ * Getting a question right on the second try still teaches the student
+ * something, which is why they are kept on it, but it earns nothing. Skipped
+ * questions likewise. Computed from the SERVER's record of how each task went,
+ * never from anything the client reports.
+ */
+export const scoreFromProgress = (
+  tasks: ServerTask[],
+  progress: ExerciseProgress,
+  passThreshold = DEFAULT_PASS_THRESHOLD
+): Omit<GradeResult, "results"> => {
+  let earnedPoints = 0;
+  let totalPoints = 0;
+  const goalTotals = new Map<string, { earned: number; total: number }>();
+
+  for (const task of tasks) {
+    const points = task.points ?? 1;
+    const earned = progress[taskId(task)]?.firstTryCorrect ? points : 0;
+
+    earnedPoints += earned;
+    totalPoints += points;
+
+    if (task.goal) {
+      const entry = goalTotals.get(task.goal) ?? { earned: 0, total: 0 };
+      entry.earned += earned;
+      entry.total += points;
+      goalTotals.set(task.goal, entry);
+    }
+  }
+
+  const fraction = totalPoints > 0 ? earnedPoints / totalPoints : 0;
+
+  return {
+    score: Math.round(fraction * 10 * 10) / 10,
+    passed: fraction >= passThreshold,
+    earnedPoints: round2(earnedPoints),
+    totalPoints,
+    pendingCount: 0,
+    goalBreakdown:
+      goalTotals.size > 0
+        ? [...goalTotals.entries()].map(([goal, { earned, total }]) => ({
+            goal,
+            earnedPoints: round2(earned),
+            totalPoints: total,
+          }))
+        : undefined,
+  };
+};
+
 const DEFAULT_PASS_THRESHOLD = 0.7;
 
 /** Stable string id for a task, whether it's a mongoose doc or serialized JSON. */
@@ -547,7 +629,7 @@ const sample = <T>(items: T[], count: number, rng: () => number): T[] => {
  * progression — recall questions first, code at the end — instead of opening on
  * whatever the shuffle happened to put first.
  */
-const selectServedTasks = (
+export const selectServedTasks = (
   exercise: ServerExercise,
   rng: () => number
 ): ServerTask[] => {

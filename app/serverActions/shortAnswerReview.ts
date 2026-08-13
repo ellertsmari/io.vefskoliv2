@@ -16,6 +16,10 @@ import {
   type ServerExercise,
   type ServerShortAnswerTask,
   type CodeResults,
+  type ExerciseProgress,
+  selectServedTasks,
+  seededRng,
+  scoreFromProgress,
 } from "utils/exerciseUtils";
 import {
   matchShortAnswer,
@@ -198,25 +202,68 @@ export const promoteShortAnswer = async (
 
     const attempts = await ExerciseAttempt.find({
       guide: new ObjectId(guideId),
-    }).select("answers codeResults score passed");
+      status: { $ne: "inProgress" },
+    }).select("owner answers codeResults score passed attemptNumber taskProgress status");
 
     let regradedAttempts = 0;
     for (const attempt of attempts) {
-      let regraded;
-      try {
-        regraded = gradeExercise(
+      let regraded: { score: number; passed: boolean } | null = null;
+
+      if (attempt.taskProgress) {
+        // Worked through one question at a time: the grade is first-try
+        // accuracy, so accepting this phrasing only changes anything for a
+        // student who wrote it on their FIRST try.
+        const progress = { ...(attempt.taskProgress as ExerciseProgress) };
+        const entry = progress[id];
+        if (
+          entry &&
+          !entry.firstTryCorrect &&
+          matchShortAnswer(
+            { acceptedAnswers: [...(task.acceptedAnswers ?? []), normalized] },
+            entry.firstAnswer
+          ).status === "correct"
+        ) {
+          progress[id] = { ...entry, firstTryCorrect: true, correct: true };
+          attempt.taskProgress = progress;
+          attempt.markModified("taskProgress");
+        }
+
+        const served = selectServedTasks(
           updatedExercise,
-          attempt.answers as ExerciseAnswers,
-          // Reuse what the code tasks did when they ran; only the short-answer
-          // key changed, and re-running a sandbox here would be pointless.
-          (attempt.codeResults ?? {}) as CodeResults
+          seededRng(
+            `${String(attempt.owner)}:${guideId}:${attempt.attemptNumber ?? 1}`
+          )
         );
-      } catch {
-        // A pooled attempt whose served subset no longer matches cannot be
-        // re-graded; leave its stored score alone rather than corrupting it.
-        continue;
+        const scored = scoreFromProgress(
+          served,
+          progress,
+          updatedExercise.passThreshold
+        );
+        regraded = { score: scored.score, passed: scored.passed };
+      } else {
+        // Legacy attempt: everything answered, then submitted in one go.
+        try {
+          const graded = gradeExercise(
+            updatedExercise,
+            attempt.answers as ExerciseAnswers,
+            // Reuse what the code tasks did when they ran; only the
+            // short-answer key changed, and re-running a sandbox here would be
+            // pointless.
+            (attempt.codeResults ?? {}) as CodeResults
+          );
+          regraded = { score: graded.score, passed: graded.passed };
+        } catch {
+          // A pooled attempt whose served subset no longer matches cannot be
+          // re-graded; leave its stored score alone rather than corrupting it.
+          continue;
+        }
       }
-      if (regraded.score === attempt.score && regraded.passed === attempt.passed) {
+
+      if (
+        !regraded ||
+        (regraded.score === attempt.score && regraded.passed === attempt.passed)
+      ) {
+        if (attempt.isModified()) await attempt.save();
         continue;
       }
       attempt.score = regraded.score;

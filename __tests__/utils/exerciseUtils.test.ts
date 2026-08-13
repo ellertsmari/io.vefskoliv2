@@ -6,6 +6,7 @@ import {
   sanitizeGuideForClient,
   ExerciseGradingError,
   seededRng,
+  scoreFromProgress,
   type AttemptForAnalytics,
   type ServerExercise,
 } from "utils/exerciseUtils";
@@ -398,6 +399,98 @@ describe("sanitizeGuideForClient", () => {
     const sanitized = sanitizeGuideForClient(guide);
     expect(sanitized.exercise).toBeUndefined();
     expect(sanitized.title).toBe("Normal guide");
+  });
+});
+
+/**
+ * The exercise is worked through one question at a time, and a wrong answer
+ * keeps the student on the question. So "how many did you get right" cannot be
+ * the grade — everyone who finishes has everything right. The grade is how many
+ * they got right FIRST time.
+ */
+describe("scoreFromProgress", () => {
+  const tasks = [
+    { id: "a", type: "quiz", prompt: "A", options: ["x"], correctAnswers: [0], points: 1, goal: "Understand A" },
+    { id: "b", type: "quiz", prompt: "B", options: ["x"], correctAnswers: [0], points: 1, goal: "Understand A" },
+    { id: "c", type: "code", prompt: "C", entryPoint: "f", tests: [], points: 2, goal: "Understand C" },
+  ] as never as Parameters<typeof scoreFromProgress>[0];
+
+  const record = (
+    over: Partial<{ tries: number; correct: boolean; firstTryCorrect: boolean; skipped: boolean }>
+  ) => ({ tries: 1, correct: false, firstTryCorrect: false, skipped: false, ...over });
+
+  it("scores a question answered right first time", () => {
+    const result = scoreFromProgress(tasks, {
+      a: record({ correct: true, firstTryCorrect: true }),
+      b: record({ correct: true, firstTryCorrect: true }),
+      c: record({ correct: true, firstTryCorrect: true }),
+    });
+    expect(result.earnedPoints).toBe(4);
+    expect(result.totalPoints).toBe(4);
+    expect(result.score).toBe(10);
+    expect(result.passed).toBe(true);
+  });
+
+  it("scores nothing for a question that took a second try", () => {
+    const result = scoreFromProgress(tasks, {
+      a: record({ correct: true, firstTryCorrect: true }),
+      // right in the end, but not first time
+      b: record({ tries: 3, correct: true, firstTryCorrect: false }),
+      c: record({ correct: true, firstTryCorrect: true }),
+    });
+    expect(result.earnedPoints).toBe(3);
+    expect(result.score).toBe(7.5);
+  });
+
+  it("scores nothing for a skipped question", () => {
+    const result = scoreFromProgress(tasks, {
+      a: record({ correct: true, firstTryCorrect: true }),
+      b: record({ correct: true, firstTryCorrect: true }),
+      c: record({ tries: 0, skipped: true }),
+    });
+    // the code task is worth 2 of the 4 points
+    expect(result.earnedPoints).toBe(2);
+    expect(result.score).toBe(5);
+  });
+
+  it("counts an unanswered question against the total", () => {
+    const result = scoreFromProgress(tasks, {
+      a: record({ correct: true, firstTryCorrect: true }),
+    });
+    expect(result.earnedPoints).toBe(1);
+    expect(result.totalPoints).toBe(4);
+  });
+
+  it("weights each task by its points", () => {
+    // only the 2-point code task right first time
+    const result = scoreFromProgress(tasks, {
+      c: record({ correct: true, firstTryCorrect: true }),
+    });
+    expect(result.earnedPoints).toBe(2);
+    expect(result.score).toBe(5);
+  });
+
+  it("reports per-goal totals so a student sees what to revisit", () => {
+    const result = scoreFromProgress(tasks, {
+      a: record({ correct: true, firstTryCorrect: true }),
+      b: record({ tries: 2, correct: true, firstTryCorrect: false }),
+      c: record({ correct: true, firstTryCorrect: true }),
+    });
+    expect(result.goalBreakdown).toEqual(
+      expect.arrayContaining([
+        { goal: "Understand A", earnedPoints: 1, totalPoints: 2 },
+        { goal: "Understand C", earnedPoints: 2, totalPoints: 2 },
+      ])
+    );
+  });
+
+  it("respects the pass threshold", () => {
+    const progress = {
+      a: record({ correct: true, firstTryCorrect: true }),
+      b: record({ correct: true, firstTryCorrect: true }),
+    };
+    expect(scoreFromProgress(tasks, progress, 0.7).passed).toBe(false);
+    expect(scoreFromProgress(tasks, progress, 0.5).passed).toBe(true);
   });
 });
 

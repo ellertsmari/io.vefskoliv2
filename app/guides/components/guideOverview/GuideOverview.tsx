@@ -2,11 +2,11 @@
 
 import MarkdownReader from "UIcomponents/markdown/reader";
 import { ReturnForm } from "../../../LMS/components/feedback/returnForm/ReturnForm";
-import { ExerciseView } from "../exercise/ExerciseView";
+import { ExerciseLauncher } from "../exercise/ExerciseLauncher";
 import { Border, Wrapper, MaterialButton } from "globalStyles/globalStyles";
 import { Heading1, SubHeading1, SubHeading1Bold } from "globalStyles/text";
 import { ClientGuide, GradingMode } from "types/guideTypes";
-import type { BestAttemptInfo } from "serverActions/getExerciseAttempts";
+import type { ExerciseSummary } from "serverActions/exerciseSession";
 import {
   Main,
   Side,
@@ -20,11 +20,11 @@ import {
 export const GuideOverview = ({
   guide,
   isAuthenticated = true, // Default to true to maintain backwards compatibility
-  bestAttempt,
+  exerciseSummary,
 }: {
   guide: ClientGuide;
   isAuthenticated?: boolean;
-  bestAttempt?: BestAttemptInfo;
+  exerciseSummary?: ExerciseSummary;
 }) => {
   if (!guide) {
     return <h1>Guide not found</h1>;
@@ -145,13 +145,12 @@ export const GuideOverview = ({
 
       {isAuthenticated && (
         <ReturnWrapper>
-          {isAutoGraded ? (
-            <ExerciseView
+          {isAutoGraded && exerciseSummary ? (
+            <ExerciseLauncher
               guideId={guide._id.toString()}
-              exercise={guide.exercise!}
-              bestAttempt={bestAttempt}
+              summary={exerciseSummary}
             />
-          ) : (
+          ) : isAutoGraded ? null : (
             <ReturnForm guideId={guide._id.toString()} />
           )}
         </ReturnWrapper>

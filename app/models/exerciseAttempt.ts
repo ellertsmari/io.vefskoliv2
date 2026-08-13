@@ -31,6 +31,34 @@ const exerciseAttemptSchema = new Schema({
   // submission; this is what it did.
   codeResults: { type: Schema.Types.Mixed, required: false },
 
+  // Which attempt this is for the student, counting from 1. The question pool
+  // is drawn from this, so an attempt keeps its questions from start to finish
+  // and a later attempt gets a different set. Without it, "improve your grade"
+  // would re-serve the questions whose answers the student was just shown.
+  attemptNumber: { type: Schema.Types.Number, required: true, default: 1 },
+
+  // An attempt is worked through one question at a time and only scores when
+  // it is finished. Exactly one in-progress attempt exists per student per
+  // guide (partial unique index below).
+  status: {
+    type: Schema.Types.String,
+    required: true,
+    enum: ["inProgress", "submitted"],
+    default: "submitted",
+  },
+
+  // Per-task record, keyed by task id: how it went while working through.
+  //
+  // Kept SERVER-SIDE because the grade depends on it. The score is first-try
+  // accuracy, so a client that reported its own progress could simply claim
+  // everything was right first time.
+  //
+  //   { tries: number, correct: boolean, firstTryCorrect: boolean,
+  //     skipped: boolean }
+  taskProgress: { type: Schema.Types.Mixed, required: false },
+
+  submittedAt: { type: Schema.Types.Date, required: false },
+
   // 0..10, matching the peer-review grade scale.
   score: { type: Schema.Types.Number, required: true },
   passed: { type: Schema.Types.Boolean, required: true },
@@ -40,6 +68,18 @@ const exerciseAttemptSchema = new Schema({
 
 // Common query: this user's attempts on a given guide.
 exerciseAttemptSchema.index({ guide: 1, owner: 1 });
+
+// At most one attempt in progress per student per guide, enforced by the
+// database rather than by the code that creates them. Partial, so the many
+// submitted attempts are unaffected.
+exerciseAttemptSchema.index(
+  { guide: 1, owner: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: "inProgress" },
+    name: "one_in_progress_attempt_per_guide",
+  }
+);
 
 export type ExerciseAttemptType = InferSchemaType<typeof exerciseAttemptSchema> & {
   _id: Types.ObjectId;
