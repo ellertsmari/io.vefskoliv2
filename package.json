@@ -12,7 +12,7 @@
     "doctor": "npx react-doctor@latest",
     "typecheck": "tsc --noEmit",
     "verify:trace": "node scripts/verifyBuildTrace.mjs",
-    "verify": "npm run typecheck && npm test && npm run build && npm run verify:trace"
+    "verify": "npm run build && npm run typecheck && npm test && npm run verify:trace"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
