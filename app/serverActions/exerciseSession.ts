@@ -188,6 +188,64 @@ const requireUser = async () => {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Bring stored scores up to date with the current rules.
+ *
+ * `attempt.score` is written when the attempt is finished, so it is a cache of
+ * a rule rather than a fact. When the rule changes — as it did when code tasks
+ * stopped being scored on first try — every attempt already finished keeps its
+ * old number forever. That is not only a stale display: `guideUtils` reads the
+ * same field as the student's GRADE for the guide.
+ *
+ * So attempts are recomputed from what was recorded (their progress, and what
+ * their code did) and corrected in place. It converges after one pass: a second
+ * run produces the same number and writes nothing.
+ *
+ * Only progress-based attempts. Ones from the old submit-everything-at-once
+ * flow have no taskProgress and are left exactly as they are.
+ */
+const rescoreStoredAttempts = async (
+  exercise: ServerExercise,
+  ownerId: string,
+  guideId: string,
+  attempts: {
+    _id?: unknown;
+    attemptNumber?: number;
+    score: number;
+    passed: boolean;
+    taskProgress?: ExerciseProgress;
+    codeResults?: CodeResults;
+  }[]
+): Promise<void> => {
+  for (const attempt of attempts) {
+    if (!attempt.taskProgress || !attempt._id) continue;
+
+    const served = servedFor(
+      exercise,
+      ownerId,
+      guideId,
+      attempt.attemptNumber ?? 1
+    );
+    const graded = scoreFromProgress(
+      served,
+      attempt.taskProgress,
+      exercise.passThreshold ?? undefined,
+      attempt.codeResults ?? {}
+    );
+
+    if (graded.score === attempt.score && graded.passed === attempt.passed) {
+      continue;
+    }
+
+    attempt.score = graded.score;
+    attempt.passed = graded.passed;
+    await ExerciseAttempt.updateOne(
+      { _id: attempt._id },
+      { $set: { score: graded.score, passed: graded.passed } }
+    );
+  }
+};
+
 /** What the guide page needs to label its button and draw a progress bar. */
 export const getExerciseSummary = async (
   guideId: string
@@ -202,16 +260,20 @@ export const getExerciseSummary = async (
     guide: new ObjectId(guideId),
     owner: new ObjectId(ownerId),
   })
-    .select("status score passed attemptNumber taskProgress")
+    .select("status score passed attemptNumber taskProgress codeResults")
     .lean()) as unknown as {
+    _id?: unknown;
     status?: string;
     score: number;
     passed: boolean;
     attemptNumber?: number;
     taskProgress?: ExerciseProgress;
+    codeResults?: CodeResults;
   }[];
 
   const submitted = attempts.filter((a) => a.status !== "inProgress");
+  // Correct anything scored under an older rule before reading the best.
+  await rescoreStoredAttempts(exercise, ownerId, guideId, submitted);
   const inProgress = attempts.find((a) => a.status === "inProgress");
 
   const best = submitted.reduce<number | null>(

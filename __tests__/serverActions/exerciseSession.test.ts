@@ -8,6 +8,7 @@ import {
   createDummyUser,
   connect,
 } from "../__mocks__/mongoHandler";
+import { ObjectId } from "mongodb";
 import { Guide } from "models/guide";
 import { ExerciseAttempt } from "models/exerciseAttempt";
 import {
@@ -284,6 +285,52 @@ describe("exercise session", () => {
 
     // And nothing about the anticipated answers travels before they answer.
     expect(JSON.stringify(started)).not.toContain("converts types first");
+  });
+
+  /**
+   * `attempt.score` is a cache of whatever rule was in force when it was
+   * finished — and it is also what guideUtils reads as the student's grade.
+   * When the rule changes, every attempt already finished keeps the old number
+   * forever unless something corrects it.
+   */
+  it("corrects a stored score that was written under an older rule", async () => {
+    const started = await startExercise(guideId);
+    if (!started.success) throw new Error("could not start");
+    const [one, two] = started.data.exercise.tasks;
+    await checkAnswer({ guideId, taskId: one.id, answer: [0] });
+    await checkAnswer({ guideId, taskId: two.id, answer: [1] });
+    await finishExercise(guideId);
+
+    // Pretend it was scored by an older, harsher rule.
+    await ExerciseAttempt.updateOne(
+      { guide: new ObjectId(guideId) },
+      { $set: { score: 5, passed: false } }
+    );
+    expect((await ExerciseAttempt.findOne({}))?.score).toBe(5);
+
+    // Reading the summary puts it right, in the database as well as on screen.
+    const summary = await getExerciseSummary(guideId);
+    expect(summary?.bestScore).toBe(10);
+    expect((await ExerciseAttempt.findOne({}))?.score).toBe(10);
+  });
+
+  it("writes nothing when the stored score is already right", async () => {
+    const started = await startExercise(guideId);
+    if (!started.success) throw new Error("could not start");
+    await checkAnswer({
+      guideId,
+      taskId: started.data.exercise.tasks[0].id,
+      answer: [0],
+    });
+    await finishExercise(guideId);
+
+    const before = await ExerciseAttempt.findOne({});
+    await getExerciseSummary(guideId);
+    await getExerciseSummary(guideId);
+    const after = await ExerciseAttempt.findOne({});
+    // Converged: repeated reads do not keep rewriting it.
+    expect(after?.score).toBe(before?.score);
+    expect(after?.__v).toBe(before?.__v);
   });
 
   /**
