@@ -16,6 +16,7 @@ import {
 import { MAX_ANSWER_LENGTH } from "../utils/shortAnswer";
 import { runCodeTasks } from "../utils/runCodeTasks";
 import { hasTeacherPermissions } from "../utils/userUtils";
+import { connectToDatabase } from "./mongoose-connector";
 import {
   failure,
   success,
@@ -78,6 +79,12 @@ export async function submitExercise(
   }
 
   try {
+    // Mongoose buffers queries when it has no connection and gives up after
+    // 10s. A server action can land on a lambda where nothing has connected
+    // yet — locally the page render always connects first, which is why this
+    // only ever failed in production.
+    await connectToDatabase();
+
     const guide = (await Guide.findById(new ObjectId(guideId)).lean()) as
       | { gradingMode?: string; exercise?: ServerExercise }
       | null;

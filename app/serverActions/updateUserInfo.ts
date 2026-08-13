@@ -8,6 +8,7 @@ import {
 import { objOnlyHasEnumKeys } from "utils/typeGuards";
 import { ObjectId } from "mongodb";
 import { auth } from "../../auth";
+import { connectToDatabase } from "./mongoose-connector";
 import {
   failure,
   successNoData,
@@ -34,6 +35,11 @@ export const updateUserInfo = async (
   }
 
   try {
+    // Mongoose buffers queries when it has no connection and gives up after
+    // 10s. A server action can land on a lambda where nothing has connected
+    // yet, so every entry point connects for itself.
+    await connectToDatabase();
+
     const user = (await User.findById(
       new ObjectId(session.user.id)
     )) as UserDocument;

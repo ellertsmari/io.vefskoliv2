@@ -3,6 +3,7 @@ import { AdapterUser } from "next-auth/adapters";
 import { auth } from "../../auth";
 import { Return } from "../models/return";
 import { ObjectId } from "mongodb";
+import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
 import {
   failure,
@@ -54,6 +55,11 @@ export async function returnGuide(
   const user = session?.user as AdapterUser;
 
   try {
+    // Mongoose buffers queries when it has no connection and gives up after
+    // 10s. A server action can land on a lambda where nothing has connected
+    // yet, so every entry point connects for itself.
+    await connectToDatabase();
+
     await Return.create({
       projectUrl,
       projectName,
