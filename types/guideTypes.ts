@@ -52,6 +52,7 @@ export enum CodeConstruct {
   ITERATION = "iteration",
   CONDITIONAL = "conditional",
   FUNCTION = "function",
+  ARROW_FUNCTION = "arrowFunction",
   TYPE_ANNOTATION = "typeAnnotation",
   RECURSION = "recursion",
 }
@@ -70,6 +71,7 @@ export const CONSTRUCT_LABELS: Record<CodeConstruct, string> = {
   [CodeConstruct.ITERATION]: "a loop or an array method",
   [CodeConstruct.CONDITIONAL]: "a conditional (if, switch or ?:)",
   [CodeConstruct.FUNCTION]: "a function",
+  [CodeConstruct.ARROW_FUNCTION]: "an arrow function",
   [CodeConstruct.TYPE_ANNOTATION]: "type annotations on your variables",
   [CodeConstruct.RECURSION]: "a function that calls itself",
 };

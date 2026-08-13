@@ -132,13 +132,36 @@ def check_option_notes(tasks: list[dict]) -> None:
                  "one option: " + "; ".join(places))
 
 
+STOPWORDS = {
+    "a", "an", "the", "of", "in", "is", "are", "to", "and", "or", "what", "which",
+    "these", "this", "that", "it", "you", "your", "does", "do", "for", "with",
+    "when", "how", "write", "function", "returns", "return", "given", "each",
+    "javascript", "typescript", "at", "on", "be", "as", "so", "from", "by",
+}
+
+
+def content_words(text: str) -> set[str]:
+    return {w for w in normalise(text).split() if w not in STOPWORDS and len(w) > 2}
+
+
 def check_duplicates(tasks: list[dict]) -> None:
-    """§4 — the same question twice in different words."""
-    prompts = [(i, normalise(t.get("prompt") or "")) for i, t in enumerate(tasks)]
+    """§4 — the same question twice in different words.
+
+    Compares the words that carry meaning rather than the whole sentence:
+    "Which of these run JavaScript?" and "Which of these are falsy in
+    JavaScript?" are 84% identical as strings and about entirely different
+    things. A detector that cries wolf gets ignored.
+    """
+    prompts = [(i, normalise(t.get("prompt") or ""), content_words(t.get("prompt") or ""))
+               for i, t in enumerate(tasks)]
     for a in range(len(prompts)):
         for b in range(a + 1, len(prompts)):
+            words_a, words_b = prompts[a][2], prompts[b][2]
+            if not words_a or not words_b:
+                continue
+            overlap = len(words_a & words_b) / len(words_a | words_b)
             ratio = SequenceMatcher(None, prompts[a][1], prompts[b][1]).ratio()
-            if ratio > 0.75:
+            if overlap > 0.6 and ratio > 0.6:
                 warn(f"tasks {prompts[a][0] + 1} and {prompts[b][0] + 1} read "
                      f"{ratio:.0%} alike — the same question twice?\n"
                      f"      1: {tasks[prompts[a][0]]['prompt'][:70]}\n"
@@ -146,8 +169,14 @@ def check_duplicates(tasks: list[dict]) -> None:
 
 
 def check_coverage(guide: dict, tasks: list[dict]) -> None:
-    """§3 — every goal assessed, and a mix of what the questions demand."""
+    """§3 — every goal assessed, and a mix of what the questions demand.
+
+    Skills count as goals too: "be able to write a function" is exactly the kind
+    of objective a question should be tagged to, and tagging only knowledge
+    items would leave half the guide's promises unassessed.
+    """
     goals = [k["knowledge"] if isinstance(k, dict) else k for k in guide.get("knowledge", [])]
+    goals += [s["skill"] if isinstance(s, dict) else s for s in guide.get("skills", [])]
     tagged = Counter(t.get("goal") for t in tasks if t.get("goal"))
 
     for goal in goals:

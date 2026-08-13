@@ -134,23 +134,43 @@ this merge came after. All five skill objectives survive, and a sixth was added:
 TypeScript error and fix what it points at*, which is now genuinely assessed because submissions
 are type-checked before they run.
 
-**The exercise.** 25 tasks, of which each visit serves 14:
+**The exercise.** 80 tasks, of which each attempt serves 21:
 
-| Type | Authored | Served | Assessing |
+| Type | Authored | Served | Two students share |
 |---|---|---|---|
-| quiz | 17 | 10 | the knowledge objectives across all four topics |
-| short answer | 4 | 2 | recall — `const`, `length`, `return`, "truthy" |
-| code | 4 | 2 | the skill objectives, by running the student's TypeScript |
+| quiz | 44 | 11 | 2.8 |
+| short answer | 20 | 5 | 1.2 |
+| code | 16 | 5 | 1.6 |
 
-70% to pass, unlimited attempts, best score counts. Every question carries a hint, an explanation
-and a knowledge goal, so students get per-goal feedback.
+70% to pass, unlimited attempts, best score counts.
 
-The four coding problems are lifted from the assignments they replace, so nothing was invented:
-`totalChildren` (the Loops guide's "how many children in total"), `greetByCountry` (the
-Conditionals guide's Iceland/Spain/Korea branches), `describePeople` (the Loops guide's
-`name: Age` formatting) and `addContact` (the Functions guide's contact list, with its
-"Missing fields" / "Duplicate was found" messages). Each has 3–5 test cases with at least one
-hidden, and requires a construct — `iteration` rather than `loop`, so `.reduce()` is not punished.
+The guide makes eleven promises — six knowledge items and five skills — and **every student is
+asked about all eleven in multiple choice**. That is not luck: the quiz draw is stratified, taking
+one question per goal before filling the rest at random, so coverage is guaranteed while different
+students still get different questions. Four quiz questions per goal, all of which get used across
+a cohort. A test simulates 200 students and asserts no goal is ever missed.
+
+Every wrong option carries a note explaining **that option** — 48 of them across the bank. A
+student who picks the string `"0"` on the falsy question is told about `"0"`, not about empty
+arrays.
+
+**The coding problems climb.** They start at `helloWorld` — a function with no parameters and one
+return value — and add one idea at a time: a parameter (`greet`), a number in and out (`double`),
+a boolean and the first conditional (`isAdult`), three branches (`describeNumber`), an arrow
+function (`triple`), the first loop (`sumNumbers`), carrying a value across a loop (`largest`),
+counting with a condition (`countAdults`), objects in an array (`namesOf`), filtering
+(`adultsOnly`), formatting (`describePeople`), totalling a field (`totalChildren`), branching on a
+value (`greetByCountry`), a function taking a function (`applyTwice`), and finally the contact list
+(`addContact`) which combines several at once.
+
+The last four are the ones lifted from the assignments this guide replaces. The difference is that
+a student now arrives at them already knowing what a parameter is, what a return value is, and how
+an arrow function differs from a normal one — which the old jump straight to a contact list did not
+give them.
+
+Each has at least one hidden test, and requires a construct — `iteration` rather than `loop`, so
+`.reduce()` is not punished. `applyTwice` passes a real function as a test argument, which needed
+the runner to support it.
 
 **Verified before shipping**, since there is no authoring UI to fix a bad test case with: a
 reference solution for each coding problem passes every case and satisfies its construct; the

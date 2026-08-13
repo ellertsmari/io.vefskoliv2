@@ -121,6 +121,19 @@ export type ServerExercise = {
   passThreshold?: number;
   poolSizes?: PoolSizes;
   /**
+   * Task types whose draw must include at least one question for EVERY goal
+   * present in the bank.
+   *
+   * A plain random draw leaves gaps: with 11 goals and 12 of 44 questions
+   * served, some students would never be asked about conditionals at all.
+   * Stratifying the draw fixes coverage without giving everyone the same set —
+   * each student gets a different question per goal.
+   *
+   * Coverage wins over the pool size: if there are more goals than the pool
+   * would serve, the extra questions are served anyway.
+   */
+  coverGoals?: ExerciseTaskType[];
+  /**
    * Legacy single pool size. Every exercise that has one is quiz-only — the
    * other task types did not exist when it was written — so it means exactly
    * the quiz pool, and is read as such. No migration needed.
@@ -650,6 +663,8 @@ export const selectServedTasks = (
     indicesByType.set(task.type, list);
   });
 
+  const mustCoverGoals = new Set<string>(exercise.coverGoals ?? []);
+
   const keep = new Set<number>();
   for (const [type, indices] of indicesByType) {
     const size = pools.get(type);
@@ -658,6 +673,27 @@ export const selectServedTasks = (
       indices.forEach((i) => keep.add(i));
       continue;
     }
+
+    if (mustCoverGoals.has(type)) {
+      // One question per goal first, then fill the remaining places at random.
+      const byGoal = new Map<string, number[]>();
+      for (const i of indices) {
+        const goal = tasks[i].goal ?? "";
+        const group = byGoal.get(goal);
+        if (group) group.push(i);
+        else byGoal.set(goal, [i]);
+      }
+      for (const group of byGoal.values()) {
+        sample(group, 1, rng).forEach((i) => keep.add(i));
+      }
+      const chosen = indices.filter((i) => keep.has(i)).length;
+      if (chosen < size) {
+        const rest = indices.filter((i) => !keep.has(i));
+        sample(rest, size - chosen, rng).forEach((i) => keep.add(i));
+      }
+      continue;
+    }
+
     sample(indices, size, rng).forEach((i) => keep.add(i));
   }
 
@@ -751,7 +787,15 @@ const publicTask = (task: ServerTask): ExerciseTaskPublic => {
             : {
                 label,
                 hidden: false,
-                args: JSON.stringify(test.args),
+                // A function argument is shown as its source rather than as
+                // JSON, which would render it as an unhelpful empty object.
+                args: JSON.stringify(
+                  (test.args ?? []).map((a) =>
+                    a && typeof a === "object" && "__fn" in (a as object)
+                      ? (a as { __fn: string }).__fn
+                      : a
+                  )
+                ),
                 expected: JSON.stringify(test.expected ?? null),
               };
         }),

@@ -195,6 +195,23 @@ const embed = (value: unknown): string =>
     .replace(/\u2028/g, "\\u2028")
     .replace(/\u2029/g, "\\u2029");
 
+/**
+ * Embed one argument. A test case can pass a FUNCTION by writing
+ * `{ __fn: "n => n + 3" }` — JSON cannot carry a function, and higher-order
+ * functions are part of what this guide teaches. The source comes from the
+ * teacher's answer key, never from a student, and it runs inside the same
+ * sandbox as everything else.
+ */
+const embedArg = (value: unknown): string => {
+  if (value && typeof value === "object" && "__fn" in (value as object)) {
+    return String((value as { __fn: unknown }).__fn);
+  }
+  return embed(value);
+};
+
+const embedArgs = (args: unknown[]): string =>
+  `[${(args ?? []).map(embedArg).join(", ")}]`;
+
 /** Turn a QuickJS error into something a beginner can act on. */
 const describeError = (
   error: { name?: string; message?: string; stack?: string },
@@ -315,7 +332,7 @@ export const runCodeSubmission = async (
         if (typeof fn !== "function") {
           throw new ReferenceError("Could not find a function called ${spec.entryPoint}");
         }
-        return JSON.stringify(fn.apply(null, ${embed(test.args)}) ?? null);
+        return JSON.stringify(fn.apply(null, ${embedArgs(test.args)}) ?? null);
       })()`;
 
       const run = vm.evalCode(harness, "harness.js");

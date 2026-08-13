@@ -104,6 +104,7 @@ export const findConstructs = (source: string): Found => {
     if (isConditional(node)) found.add(CodeConstruct.CONDITIONAL);
     if (isFunctionLike(node)) {
       found.add(CodeConstruct.FUNCTION);
+      if (ts.isArrowFunction(node)) found.add(CodeConstruct.ARROW_FUNCTION);
       const name = functionName(node);
       const body = (node as ts.FunctionLikeDeclaration).body;
       if (name && body && callsName(body, name)) {
