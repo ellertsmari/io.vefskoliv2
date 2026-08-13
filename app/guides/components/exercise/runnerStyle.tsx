@@ -2,12 +2,23 @@
 
 import styled from "styled-components";
 
+/**
+ * Fills the modal rather than sitting in a narrow column inside it. The shared
+ * modal already grows to 90dvw, so capping the content at a fixed width left a
+ * wide empty box with the questions stranded in the middle — and squeezed the
+ * code editor into whatever the help panel did not take.
+ *
+ * The max-width is still there so a line of text never runs the full width of
+ * an ultrawide display, but it is generous enough that code has room.
+ */
 export const RunnerShell = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  width: min(48rem, 92vw);
-  max-height: 80vh;
+  width: 100%;
+  max-width: 90rem;
+  margin: 0 auto;
+  min-height: min(34rem, 70dvh);
 `;
 
 export const RunnerHeader = styled.header`
@@ -19,12 +30,15 @@ export const RunnerHeader = styled.header`
 /** Question on the left, help on the right; stacked on a narrow screen. */
 export const RunnerColumns = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 17rem;
-  gap: 1.25rem;
+  /* The question takes the room; the help panel grows a little on a wide
+     screen but never dominates. */
+  grid-template-columns: minmax(0, 1fr) clamp(16rem, 22%, 24rem);
+  gap: 1.5rem;
   flex: 1;
   min-height: 0;
+  align-items: start;
 
-  @media (max-width: 48rem) {
+  @media (max-width: 60rem) {
     grid-template-columns: minmax(0, 1fr);
   }
 `;
@@ -38,9 +52,9 @@ export const HelpPanel = styled.aside`
   background: #f6f6fb;
   border: 1px solid #e6e6f2;
   font-size: 0.85rem;
-  overflow-y: auto;
   align-self: start;
-  max-height: 100%;
+  position: sticky;
+  top: 0;
 `;
 
 export const HelpHeading = styled.h4`
@@ -126,17 +140,23 @@ export const RunnerBody = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
+  min-width: 0;
 `;
 
+/**
+ * Sticks to the bottom of the modal's scroll area: the modal scrolls, and on a
+ * long code question the controls would otherwise scroll out of reach.
+ */
 export const RunnerFooter = styled.footer`
+  position: sticky;
+  bottom: 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
-  padding-top: 0.5rem;
+  padding: 0.75rem 0 0 0;
   border-top: 1px solid #eee;
+  background: var(--primary-white, #fff);
 `;
 
 export const Spacer = styled.div`
