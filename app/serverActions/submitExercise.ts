@@ -15,6 +15,7 @@ import {
 } from "../utils/exerciseUtils";
 import { MAX_ANSWER_LENGTH } from "../utils/shortAnswer";
 import { runCodeTasks } from "../utils/runCodeTasks";
+import { hasTeacherPermissions } from "../utils/userUtils";
 import {
   failure,
   success,
@@ -91,9 +92,11 @@ export async function submitExercise(
 
     // Code tasks run before grading: the sandbox is async, while gradeExercise
     // stays synchronous so analytics and re-grading can call it freely.
+    const isTeacher = hasTeacherPermissions(session);
     const codeResults = await runCodeTasks(
       guide.exercise as ServerExercise,
-      answers
+      answers,
+      { revealErrors: isTeacher }
     );
 
     let result: GradeResult;
@@ -127,6 +130,21 @@ export async function submitExercise(
 
     return success(result, "Exercise submitted");
   } catch (e) {
-    return handleActionError("submitExercise", e, "Failed to submit exercise");
+    const generic = handleActionError(
+      "submitExercise",
+      e,
+      "Failed to submit exercise"
+    );
+    // Teachers get the real message. "Failed to submit exercise" is all a
+    // student should ever see, but it is not enough to debug from, and the
+    // logs for this app are not practically reachable.
+    if (hasTeacherPermissions(await auth())) {
+      return failure(
+        `Failed to submit exercise — [teacher only] ${
+          e instanceof Error ? `${e.name}: ${e.message}` : String(e)
+        }`
+      );
+    }
+    return generic;
   }
 }

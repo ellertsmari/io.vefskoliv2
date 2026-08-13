@@ -17,7 +17,14 @@ import { runCodeSubmission } from "./codeRunner";
  */
 export const runCodeTasks = async (
   exercise: ServerExercise,
-  answers: ExerciseAnswers
+  answers: ExerciseAnswers,
+  /**
+   * Put the real failure in the feedback rather than hiding it. Teachers only:
+   * a student should never be shown an internal error, but this is a
+   * single-teacher school with no practical log access, so a failure needs to
+   * be diagnosable from the page it happened on.
+   */
+  options: { revealErrors?: boolean } = {}
 ): Promise<CodeResults> => {
   const codeTasks = knownTasks(exercise).filter(
     (t): t is ServerCodeTask => t.type === "code"
@@ -58,8 +65,13 @@ export const runCodeTasks = async (
         runtimeError: {
           summary:
             "The code grader could not run. This is a problem on our side, not with your code.",
-          detail:
-            "Your other answers were still graded. Please try submitting again — your best attempt is the one that counts.",
+          detail: options.revealErrors
+            ? `[teacher only] ${
+                error instanceof Error
+                  ? `${error.name}: ${error.message}`
+                  : String(error)
+              }`
+            : "Your other answers were still graded. Please try submitting again — your best attempt is the one that counts.",
         },
       };
     }
