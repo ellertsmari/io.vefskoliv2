@@ -332,7 +332,14 @@ export const runCodeSubmission = async (
         if (typeof fn !== "function") {
           throw new ReferenceError("Could not find a function called ${spec.entryPoint}");
         }
-        return JSON.stringify(fn.apply(null, ${embedArgs(test.args)}) ?? null);
+        var result = fn.apply(null, ${embedArgs(test.args)});
+        // NaN and Infinity both stringify to "null", which hides the single
+        // most common novice result behind the least informative word
+        // available. Report them by name instead.
+        if (typeof result === "number" && !isFinite(result)) {
+          return JSON.stringify(String(result));
+        }
+        return JSON.stringify(result ?? null);
       })()`;
 
       const run = vm.evalCode(harness, "harness.js");

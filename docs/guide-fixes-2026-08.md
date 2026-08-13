@@ -163,10 +163,22 @@ counting with a condition (`countAdults`), objects in an array (`namesOf`), filt
 value (`greetByCountry`), a function taking a function (`applyTwice`), and finally the contact list
 (`addContact`) which combines several at once.
 
-The last four are the ones lifted from the assignments this guide replaces. The difference is that
-a student now arrives at them already knowing what a parameter is, what a return value is, and how
-an arrow function differs from a normal one — which the old jump straight to a contact list did not
-give them.
+The final four are new, and each asks for a different **kind** of thinking rather than a different
+topic (see `docs/exercise-authoring.md` §6):
+
+- `averageOf` — **debugging.** Given already written and already broken, with two of the commonest
+  bugs in it: a loop starting at 1 and an empty input dividing by zero. Reading and repairing code
+  is a separate skill from writing it, and one students are rarely asked to practise.
+- `runningTotals` — **two known plans at once.** A running total and an array being built, in one
+  pass. Each half is familiar; holding both together is the step.
+- `longestWord` — **transfer.** The same plan as `largest`, with the surface changed to strings.
+  It only works if the plan was understood rather than the shape memorised.
+- `summarise` — **integration**, and a new shape of answer: three plans in one pass, returning an
+  object rather than a single value.
+
+The old assignments this guide replaces are gone entirely. They began at roughly the difficulty of
+the contact list, which assumes parameters, return values and array methods a student meeting them
+cold has not necessarily used.
 
 Each has at least one hidden test, and requires a construct — `iteration` rather than `loop`, so
 `.reduce()` is not punished. `applyTwice` passes a real function as a test argument, which needed

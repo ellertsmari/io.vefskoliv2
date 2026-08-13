@@ -78,6 +78,47 @@ that nothing else in the bank does.
 
 ---
 
+## 6. Designing code tasks
+
+Beginners do not get better at programming mainly by writing more programs from a blank
+page. A few things are well established about how they do improve, and each one suggests a
+kind of task:
+
+- **Cognitive load is the limiting factor.** A task that introduces two unfamiliar ideas at
+  once mostly measures which one they had already met. Add one idea at a time — which is why
+  the tasks here start at `helloWorld` and reach `summarise` sixteen steps later, and why a
+  student meets a parameter, a return value and an arrow function separately before meeting
+  a problem that needs all three.
+
+- **Completion beats blank pages.** Finishing partly-written code costs less working memory
+  than producing it from nothing, and transfers about as well. Every task ships starter code
+  with the signature and the shape already there; the student supplies the idea.
+
+- **Reading and repairing is a separate skill from writing**, and one students are rarely
+  asked to practise even though they will spend more career hours doing it. `averageOf` is
+  given already written and already broken, with two of the most common bugs in it: a loop
+  that starts at 1, and an empty input that divides by zero. The instruction is explicitly
+  *do not rewrite it from scratch*.
+
+- **Transfer needs the surface to change.** A student who can total a list of numbers has
+  not necessarily learned the accumulator plan — they may have learned that shape of code.
+  `longestWord` is the same plan as `largest` with strings and a different comparison, so it
+  only works if the plan was understood rather than copied.
+
+- **Combining two known plans is its own difficulty.** `runningTotals` needs a running total
+  *and* an array being built, in one pass. Each half is already familiar; holding both at
+  once is the step, and it is reliably harder than either alone.
+
+- **Edge cases are where understanding shows.** Empty input, one item, a tie, the answer
+  being first rather than last. Put at least one of these in the hidden test, because the
+  visible cases teach the shape and the hidden one asks whether it generalises.
+
+What to avoid: puzzles that reward a trick rather than the concept, problems whose hard part
+is understanding the wording, and anything where the naive solution passes every visible test
+and fails only on something arbitrary.
+
+---
+
 ## Before you say it is done
 
 Run the checker:

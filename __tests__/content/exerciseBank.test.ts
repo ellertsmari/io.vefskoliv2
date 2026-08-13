@@ -80,45 +80,48 @@ function namesOf(people: Person[]): string[] {
 function adultsOnly(people: Person[]): Person[] {
   return people.filter((person) => person.age >= 18);
 }`,
-  describePeople: `type Person = { name: string; age: number };
-
-function describePeople(people: Person[]): string[] {
-  const out: string[] = [];
-  for (const person of people) {
-    out.push(\`\${person.name}: \${person.age}\`);
-  }
-  return out;
-}`,
-  totalChildren: `type Person = { name: string; kids: number };
-
-function totalChildren(people: Person[]): number {
-  let total: number = 0;
-  for (const person of people) {
-    total += person.kids;
-  }
-  return total;
-}`,
-  greetByCountry: `function greetByCountry(country: string): string {
-  if (country === "Iceland") return "Hæ";
-  if (country === "Spain") return "Hola";
-  if (country === "Korea") return "안녕";
-  return "Hello";
-}`,
   applyTwice: `function applyTwice(fn: (n: number) => number, value: number): number {
   return fn(fn(value));
 }`,
-  addContact: `type Contact = { name?: string; email?: string; phone?: string };
-
-function addContact(list: Contact[], contact: Contact): string {
-  if (!contact.name || !contact.email) {
-    return "Missing fields";
+  averageOf: `function averageOf(numbers: number[]): number {
+  if (numbers.length === 0) return 0;
+  let total: number = 0;
+  for (let i = 0; i < numbers.length; i++) {
+    total += numbers[i];
   }
-  for (const existing of list) {
-    if (existing.email === contact.email) {
-      return "Duplicate was found";
+  return total / numbers.length;
+}`,
+  runningTotals: `function runningTotals(numbers: number[]): number[] {
+  const out: number[] = [];
+  let total: number = 0;
+  for (const n of numbers) {
+    total += n;
+    out.push(total);
+  }
+  return out;
+}`,
+  longestWord: `function longestWord(words: string[]): string {
+  let best: string = "";
+  for (const word of words) {
+    if (word.length > best.length) best = word;
+  }
+  return best;
+}`,
+  summarise: `type Person = { name: string; age: number };
+type Summary = { count: number; totalAge: number; oldestName: string };
+
+function summarise(people: Person[]): Summary {
+  let totalAge: number = 0;
+  let oldestName: string = "";
+  let oldestAge: number = -1;
+  for (const person of people) {
+    totalAge += person.age;
+    if (person.age > oldestAge) {
+      oldestAge = person.age;
+      oldestName = person.name;
     }
   }
-  return \`\${contact.name} was added\`;
+  return { count: people.length, totalAge, oldestName };
 }`,
 };
 
