@@ -2,6 +2,7 @@
 
 import {
   CodeConstruct,
+  CONSTRUCT_LABELS,
   MAX_CODE_LENGTH,
   type CodeFeedback,
   type CodeTaskPublic,
@@ -20,18 +21,6 @@ import {
   TypeErrorList,
 } from "./style";
 
-/** How each required construct is described to a student. Mirrors the labels in
- *  utils/codeConstructs, kept here so the client bundle stays free of the
- *  TypeScript compiler that module imports. */
-const CONSTRUCT_LABELS: Record<CodeConstruct, string> = {
-  [CodeConstruct.LOOP]: "a loop (for, for…of or while)",
-  [CodeConstruct.ARRAY_METHOD]: "an array method such as .map or .reduce",
-  [CodeConstruct.ITERATION]: "a loop or an array method",
-  [CodeConstruct.CONDITIONAL]: "a conditional (if, switch or ?:)",
-  [CodeConstruct.FUNCTION]: "a function",
-  [CodeConstruct.TYPE_ANNOTATION]: "type annotations on your variables",
-  [CodeConstruct.RECURSION]: "a function that calls itself",
-};
 
 /** The editor plus the test cases the student is allowed to see. */
 export const CodeTaskFields = ({

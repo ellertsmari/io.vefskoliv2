@@ -150,14 +150,3 @@ export const missingConstructs = (
   const found = findConstructs(source);
   return required.filter((c) => !found.has(c));
 };
-
-/** How a missing construct is described to the student. */
-export const CONSTRUCT_LABELS: Record<CodeConstruct, string> = {
-  [CodeConstruct.LOOP]: "a loop (for, for…of or while)",
-  [CodeConstruct.ARRAY_METHOD]: "an array method such as .map or .reduce",
-  [CodeConstruct.ITERATION]: "a loop or an array method",
-  [CodeConstruct.CONDITIONAL]: "a conditional (if, switch or ?:)",
-  [CodeConstruct.FUNCTION]: "a function",
-  [CodeConstruct.TYPE_ANNOTATION]: "type annotations on your variables",
-  [CodeConstruct.RECURSION]: "a function that calls itself",
-};

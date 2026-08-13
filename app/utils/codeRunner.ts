@@ -11,7 +11,7 @@ import {
   type CodeFeedback,
   type CodeTestResult,
 } from "types/guideTypes";
-import { missingConstructs, CONSTRUCT_LABELS } from "./codeConstructs";
+import { missingConstructs } from "./codeConstructs";
 
 /**
  * Runs a student's TypeScript against a teacher's test cases.
@@ -365,7 +365,3 @@ export const runCodeSubmission = async (
     runtime.dispose();
   }
 };
-
-/** Human-readable list of what the structural check was looking for. */
-export const describeMissingConstructs = (missing: CodeConstruct[]): string =>
-  missing.map((c) => CONSTRUCT_LABELS[c]).join(", ");

@@ -56,6 +56,24 @@ export enum CodeConstruct {
   RECURSION = "recursion",
 }
 
+/**
+ * How a required construct is described to a student.
+ *
+ * Lives here, beside the enum, rather than next to the AST code that detects
+ * them: that module imports the TypeScript compiler, and the student-facing
+ * exercise view must not drag that into the browser bundle. This file has no
+ * heavy imports, so both sides can share one copy.
+ */
+export const CONSTRUCT_LABELS: Record<CodeConstruct, string> = {
+  [CodeConstruct.LOOP]: "a loop (for, for…of or while)",
+  [CodeConstruct.ARRAY_METHOD]: "an array method such as .map or .reduce",
+  [CodeConstruct.ITERATION]: "a loop or an array method",
+  [CodeConstruct.CONDITIONAL]: "a conditional (if, switch or ?:)",
+  [CodeConstruct.FUNCTION]: "a function",
+  [CodeConstruct.TYPE_ANNOTATION]: "type annotations on your variables",
+  [CodeConstruct.RECURSION]: "a function that calls itself",
+};
+
 /** What every task carries, whatever its type. */
 export type TaskPublicBase = {
   id: string;

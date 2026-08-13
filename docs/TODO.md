@@ -4,6 +4,53 @@ Work that is understood and agreed but not done. Newest first.
 
 ---
 
+## Decide what "view as user" means for teacher permissions
+
+**Status:** needs a product decision, not a refactor. Nothing is broken or exploitable;
+the app is answering the same question two different ways.
+
+There are three ways to ask whether the current user is a teacher, and they disagree
+whenever a teacher is aliased as a student:
+
+| Check | Where | Reads | Aliased teacher |
+|---|---|---|---|
+| `hasTeacherPermissions(session)` | `app/utils/userUtils.ts` | `originalUser.role` | **true** |
+| `isTeacher(session)` | `app/serverActions/groups/helpers.ts` | `session.user.role` | **false** |
+| `session.user.role === "teacher"` | inline, 8 files | same as above | **false** |
+
+Aliasing rewrites `session.user.role` to the aliased user's role and keeps the real one
+in `originalUser` (`auth.ts:95-120`). So a teacher currently viewing as a student **can**
+still fetch answer keys through `getGuideForTeacher` and see the teacher-only submission
+errors, but **cannot** use `manageTeams`, `manageGroupProject` or `submitTeamEvaluation`
+— those return NOT_AUTHORIZED.
+
+Not a security hole: only teachers can alias, so nobody gains anything they did not
+already have. But it is undecided rather than designed, and the names do not hint that
+the two differ.
+
+**The decision:** while aliased, does a teacher keep their powers (they are still a
+teacher, just looking around) or lose them (they are pretending to be a student, so the
+app should treat them like one)? Both are defensible. Whichever is chosen, the names
+should make it visible — something like `isTeacherAccount()` versus
+`isActingAsTeacher()` — and the eight inline checks should use them.
+
+---
+
+## Spread `requireSession` beyond the groups actions
+
+**Status:** cosmetic. Worth doing while touching these files, not on its own.
+
+`groups/helpers.ts` already has the auth wrapper, and 12 of 37 action files use it. The
+other 25 hand-roll `await auth()`, a null check, and a bespoke failure message.
+
+The reason it never spread is probably that the messages genuinely differ ("You must be
+logged in to submit a return" versus "…to give a grade"), so the wrapper needs to take
+the message. Same shape as the connection problem above: the solution exists, it is just
+not reached for. Lower value, because forgetting it fails loudly and immediately rather
+than silently in production.
+
+---
+
 ## Make database connection automatic, like Prisma does
 
 **Status:** designed, not started. Deliberately deferred — it changes the data path
