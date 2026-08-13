@@ -113,15 +113,32 @@ const buildLineTable = (sourceMapText: string): Map<number, number> => {
 
 const STUDENT_FILE = "/student.ts";
 
+/**
+ * Parsed default library files (lib.es2020.d.ts and friends), cached across
+ * submissions. They are identical every time and parsing them is by far the
+ * most expensive part of a type check — without this, every submission pays
+ * the full cost again, which is the difference between a fast response and a
+ * serverless function running out of time.
+ */
+const libFileCache = new Map<string, ts.SourceFile | undefined>();
+
 const typeCheck = (source: string): CodeFeedback["typeErrors"] => {
   const files = new Map([[STUDENT_FILE, source]]);
   const host = ts.createCompilerHost({});
   const originalGetSourceFile = host.getSourceFile.bind(host);
 
-  host.getSourceFile = (name, languageVersion, ...rest) =>
-    files.has(name)
-      ? ts.createSourceFile(name, files.get(name)!, languageVersion, true)
-      : originalGetSourceFile(name, languageVersion, ...rest);
+  host.getSourceFile = (name, languageVersion, ...rest) => {
+    if (files.has(name)) {
+      return ts.createSourceFile(name, files.get(name)!, languageVersion, true);
+    }
+    if (!libFileCache.has(name)) {
+      libFileCache.set(
+        name,
+        originalGetSourceFile(name, languageVersion, ...rest)
+      );
+    }
+    return libFileCache.get(name);
+  };
   host.writeFile = () => {};
 
   const program = ts.createProgram([STUDENT_FILE], {

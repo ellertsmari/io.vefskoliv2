@@ -30,14 +30,39 @@ export const runCodeTasks = async (
     const submission = answers[id];
     if (typeof submission !== "string") continue;
 
-    results[id] = await runCodeSubmission(
-      {
-        entryPoint: task.entryPoint,
-        tests: task.tests ?? [],
-        requires: task.requires,
-      },
-      submission
-    );
+    try {
+      results[id] = await runCodeSubmission(
+        {
+          entryPoint: task.entryPoint,
+          tests: task.tests ?? [],
+          requires: task.requires,
+        },
+        submission
+      );
+    } catch (error) {
+      // The sandbox itself failed — a module that would not load, a budget
+      // that ran out, something environmental. That must not cost the student
+      // the rest of their submission: without this, one broken code task
+      // throws away ten correct quiz answers and they see only "Failed to
+      // submit exercise". Attempts are unlimited and the best one counts, so a
+      // zero here costs nothing once the grader is working again.
+      console.error(`[runCodeTasks] grader failed for task ${id}`, error);
+      results[id] = {
+        compiled: false,
+        typeErrors: [],
+        tests: [],
+        testsPassed: 0,
+        testsTotal: (task.tests ?? []).length,
+        constructsMet: false,
+        missingConstructs: task.requires ?? [],
+        runtimeError: {
+          summary:
+            "The code grader could not run. This is a problem on our side, not with your code.",
+          detail:
+            "Your other answers were still graded. Please try submitting again — your best attempt is the one that counts.",
+        },
+      };
+    }
   }
   return results;
 };
