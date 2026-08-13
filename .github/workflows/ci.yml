@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push makes an in-flight run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Dummy values only. The build must not need real credentials, and nothing
+    # here connects to anything: pages that touch the database at build time
+    # handle the failure and carry on. Never put real secrets in this file.
+    env:
+      MONGODB_CONNECTION: mongodb://127.0.0.1:27017/ci
+      AUTH_SECRET: ci-dummy-secret-value-for-build-only
+      NEXTAUTH_SECRET: ci-dummy-secret-value-for-build-only
+      NEXTAUTH_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npx jest --ci
+
+      - name: Build
+        run: npx next build
+
+      # The build succeeding does not mean the deployment carries the files the
+      # code opens at runtime. It did not, once, and students saw the result.
+      - name: Verify the build ships what it reads at runtime
+        run: node scripts/verifyBuildTrace.mjs
