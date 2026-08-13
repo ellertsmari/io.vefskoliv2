@@ -75,6 +75,23 @@ const segmentState = (
   return "untried";
 };
 
+/**
+ * Display order for a question's options, shuffled once per mount.
+ *
+ * Selections always store the ORIGINAL index, so grading is unaffected. Without
+ * this the answer sits in the authored position every time, which makes "it is
+ * usually the third one" learnable and lets two students compare positions
+ * instead of reasoning.
+ */
+const shuffledIndices = (n: number): number[] => {
+  const order = Array.from({ length: n }, (_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+};
+
 const blankDraft = (task: ExerciseTaskPublic): ExerciseAnswerValue =>
   task.type === ExerciseTaskType.CODE
     ? task.starterCode
@@ -103,6 +120,7 @@ export const ExerciseRunner = ({
   const [confirmingFinish, setConfirmingFinish] = useState(false);
 
   const promptRef = useRef<HTMLHeadingElement>(null);
+  const [optionOrder, setOptionOrder] = useState<Record<string, number[]>>({});
 
   const exercise: ExercisePublic | null = started?.exercise ?? null;
   const tasks = exercise?.tasks ?? [];
@@ -133,6 +151,15 @@ export const ExerciseRunner = ({
         (t) => !res.data.progress[t.id]?.correct
       );
       setIndex(firstOpen === -1 ? 0 : firstOpen);
+      // Shuffled after load rather than during render: shuffling while
+      // rendering would not match what the server sent.
+      const order: Record<string, number[]> = {};
+      for (const t of res.data.exercise.tasks) {
+        if (t.type === ExerciseTaskType.QUIZ) {
+          order[t.id] = shuffledIndices(t.options.length);
+        }
+      }
+      setOptionOrder(order);
       setPhase("running");
     })();
     return () => {
@@ -375,25 +402,27 @@ export const ExerciseRunner = ({
                 {task.allowMultiple ? "Select all that apply" : "Choose one"}
               </TaskMeta>
               <Border>
-                {task.options.map((option, i) => (
-                  <Option key={i}>
+                {(
+                  optionOrder[task.id] ?? task.options.map((_, i) => i)
+                ).map((original) => (
+                  <Option key={original}>
                     <OptionInput
                       type={task.allowMultiple ? "checkbox" : "radio"}
                       name={`${task.id}-option`}
-                      checked={Array.isArray(draft) && draft.includes(i)}
+                      checked={Array.isArray(draft) && draft.includes(original)}
                       disabled={checking || isCorrect}
                       onChange={() => {
                         const currentDraft = Array.isArray(draft) ? draft : [];
                         setDraft(
                           !task.allowMultiple
-                            ? [i]
-                            : currentDraft.includes(i)
-                            ? currentDraft.filter((x) => x !== i)
-                            : [...currentDraft, i]
+                            ? [original]
+                            : currentDraft.includes(original)
+                            ? currentDraft.filter((x) => x !== original)
+                            : [...currentDraft, original]
                         );
                       }}
                     />
-                    <span>{option}</span>
+                    <span>{task.options[original]}</span>
                   </Option>
                 ))}
               </Border>

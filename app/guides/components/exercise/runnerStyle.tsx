@@ -101,11 +101,11 @@ export const SegmentBar = styled.div`
   display: flex;
   gap: 3px;
   width: 100%;
-  /* Room for the focus ring and the hover lift. The modal's scroll container
-     clips anything drawn outside this box, which was cutting the ring off on
-     the first and last segments. */
-  padding: 5px 4px;
-  margin: -5px -4px;
+  /* Room for the focus ring and the hover lift, INSIDE the bar's own box.
+     The modal is a scroll container, so anything drawn outside it is clipped —
+     and a negative margin here would hand that space straight back, which is
+     why the ring was still cropped at the top. The 4px ring needs 6px. */
+  padding: 6px;
 `;
 
 export const Segment = styled.button<{
