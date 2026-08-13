@@ -101,7 +101,7 @@ export const ExerciseLauncher = ({
         <Modal
           state={[isReviewOpen, setIsReviewOpen]}
           modalTrigger={
-            <Button $styletype="textButton" type="button">
+            <Button $styletype="outlined" type="button">
               Review your last attempt
             </Button>
           }
@@ -168,7 +168,7 @@ export const ExerciseLauncher = ({
         <Modal
           state={[isReviewOpen, setIsReviewOpen]}
           modalTrigger={
-            <Button $styletype="textButton" type="button">
+            <Button $styletype="outlined" type="button">
               Review your last attempt
             </Button>
           }
