@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export const TaskCard = styled.fieldset`
   display: flex;
@@ -53,17 +53,76 @@ export const OptionInput = styled.input`
   cursor: pointer;
 `;
 
-export const CodeEditor = styled.textarea`
-  width: 100%;
+/**
+ * The highlight layer and the textarea are stacked, so every rule that affects
+ * where a character lands has to be identical in both. Changing one of these
+ * without the other makes the colours drift away from the text as it is typed.
+ */
+const editorBox = css`
+  margin: 0;
   padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  border: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.9rem;
   line-height: 1.5;
-  resize: vertical;
   tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+`;
+
+export const EditorWrap = styled.div`
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  background: #1e1e2a;
+  overflow: hidden;
+`;
+
+export const EditorHighlight = styled.pre`
+  ${editorBox};
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  pointer-events: none;
+  color: #e6e6ef;
+
+  .tok-comment {
+    color: #7c8296;
+    font-style: italic;
+  }
+  .tok-string,
+  .tok-template {
+    color: #b6e29a;
+  }
+  .tok-number {
+    color: #f2b880;
+  }
+  .tok-keyword {
+    color: #c792ea;
+  }
+  .tok-type {
+    color: #82c8f0;
+  }
+`;
+
+export const EditorTextArea = styled.textarea`
+  ${editorBox};
+  position: relative;
+  display: block;
+  width: 100%;
+  resize: vertical;
+  min-height: 12rem;
+  background: transparent;
+  /* The text itself is invisible: the layer behind supplies the colours. The
+     caret and the selection must stay visible or the box is unusable. */
+  color: transparent;
+  caret-color: #ffffff;
+  outline: none;
+
+  &::selection {
+    background: rgba(101, 99, 235, 0.45);
+  }
 
   &:disabled {
     opacity: 0.6;

@@ -113,6 +113,11 @@ export const findConstructs = (source: string): Found => {
     }
     if (arrayMethodName(node)) found.add(CodeConstruct.ARRAY_METHOD);
 
+    // A template literal with something interpolated. A plain `\`hello\`` with
+    // no ${} is just a string in different quotes, and requiring it would be
+    // satisfied without doing the thing the task is about.
+    if (ts.isTemplateExpression(node)) found.add(CodeConstruct.TEMPLATE_LITERAL);
+
     // A type annotation anywhere: `let n: number`, a typed parameter, a return
     // type, or a declared type/interface.
     if (

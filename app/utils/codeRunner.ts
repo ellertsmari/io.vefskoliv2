@@ -12,6 +12,7 @@ import {
   type CodeTestResult,
 } from "types/guideTypes";
 import { missingConstructs } from "./codeConstructs";
+import { styleNotes } from "./codeStyle";
 
 /**
  * Runs a student's TypeScript against a teacher's test cases.
@@ -271,7 +272,10 @@ export const runCodeSubmission = async (
 
   if (!source.trim()) return feedback;
 
-  // Structure is read from what the student wrote, before types are stripped.
+  // Read from what the student wrote, before types are stripped.
+  const notes = styleNotes(source);
+  if (notes.length > 0) feedback.styleNotes = notes;
+
   const missing = missingConstructs(source, spec.requires);
   feedback.missingConstructs = missing;
   feedback.constructsMet = missing.length === 0;

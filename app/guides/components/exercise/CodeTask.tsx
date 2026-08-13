@@ -7,10 +7,9 @@ import {
   type CodeFeedback,
   type CodeTaskPublic,
 } from "types/guideTypes";
-import { Border } from "globalStyles/globalStyles";
+import { CodeInput } from "./CodeInput";
 import {
   TaskMeta,
-  CodeEditor,
   TestList,
   TestRow,
   TestName,
@@ -52,17 +51,13 @@ export const CodeTaskFields = ({
         )}
       </TaskMeta>
 
-      <Border>
-        <CodeEditor
-          value={value}
-          disabled={disabled}
-          maxLength={MAX_CODE_LENGTH}
-          spellCheck={false}
-          rows={12}
-          aria-label={`Your code for ${task.entryPoint}`}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </Border>
+      <CodeInput
+        value={value}
+        disabled={disabled}
+        maxLength={MAX_CODE_LENGTH}
+        ariaLabel={`Your code for ${task.entryPoint}`}
+        onChange={onChange}
+      />
 
       <TestList>
         {task.tests.map((test) => (
@@ -131,6 +126,12 @@ export const CodeFeedbackView = ({ feedback }: { feedback: CodeFeedback }) => (
         ))}
       </TestList>
     )}
+
+    {feedback.styleNotes?.length ? (
+      <TaskMeta>
+        {feedback.styleNotes.join(" ")} (This does not affect your score.)
+      </TaskMeta>
+    ) : null}
 
     {feedback.compiled && feedback.missingConstructs.length > 0 && (
       <TaskMeta>

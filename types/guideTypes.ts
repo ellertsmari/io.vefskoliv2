@@ -53,6 +53,7 @@ export enum CodeConstruct {
   CONDITIONAL = "conditional",
   FUNCTION = "function",
   ARROW_FUNCTION = "arrowFunction",
+  TEMPLATE_LITERAL = "templateLiteral",
   TYPE_ANNOTATION = "typeAnnotation",
   RECURSION = "recursion",
 }
@@ -72,6 +73,7 @@ export const CONSTRUCT_LABELS: Record<CodeConstruct, string> = {
   [CodeConstruct.CONDITIONAL]: "a conditional (if, switch or ?:)",
   [CodeConstruct.FUNCTION]: "a function",
   [CodeConstruct.ARROW_FUNCTION]: "an arrow function",
+  [CodeConstruct.TEMPLATE_LITERAL]: "a template literal (backticks with ${…} inside)",
   [CodeConstruct.TYPE_ANNOTATION]: "type annotations on your variables",
   [CodeConstruct.RECURSION]: "a function that calls itself",
 };
@@ -175,6 +177,11 @@ export type CodeFeedback = {
   runtimeError?: { summary: string; detail: string; line?: number };
   constructsMet: boolean;
   missingConstructs: CodeConstruct[];
+  /**
+   * Formatting nudges. Advisory only — they never affect the score. Working
+   * code that is laid out badly is still working code.
+   */
+  styleNotes?: string[];
 };
 
 /**
