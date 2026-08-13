@@ -18,7 +18,7 @@ export const RunnerShell = styled.div`
   width: 100%;
   max-width: 90rem;
   margin: 0 auto;
-  min-height: min(34rem, 70dvh);
+  min-height: min(26rem, 55dvh);
 `;
 
 export const RunnerHeader = styled.header`

@@ -272,8 +272,14 @@ export const promoteShortAnswer = async (
       regradedAttempts += 1;
     }
 
-    revalidatePath("/guides");
-    revalidatePath(`/LMS/edit-guides/${guideId}`);
+    // Same reasoning as exerciseSession: the re-grade is already persisted.
+    for (const path of ["/guides", `/LMS/edit-guides/${guideId}`]) {
+      try {
+        revalidatePath(path);
+      } catch (error) {
+        console.warn("[promoteShortAnswer] revalidatePath failed", path, error);
+      }
+    }
 
     return success(
       { regradedAttempts },

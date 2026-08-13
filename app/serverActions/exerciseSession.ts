@@ -106,6 +106,23 @@ export type FinishedExercise = {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Revalidation is a cache hint, not part of the outcome.
+ *
+ * It sits after the attempt has already been saved, so letting it throw would
+ * turn a successfully scored attempt into an error for the student — the work
+ * is done and recorded either way.
+ */
+const revalidateQuietly = (...paths: string[]) => {
+  for (const path of paths) {
+    try {
+      revalidatePath(path);
+    } catch (error) {
+      console.warn("[exerciseSession] revalidatePath failed", path, error);
+    }
+  }
+};
+
 const emptyProgress = (): TaskProgress => ({
   tries: 0,
   correct: false,
@@ -182,17 +199,22 @@ export const getExerciseSummary = async (
   );
 
   const progress = inProgress?.taskProgress ?? {};
+  // "Attempted" means they actually tried it, not that a row exists. Opening
+  // the modal creates the attempt, so counting rows told a student they were
+  // "part way through" with nothing answered — and promised their answers were
+  // saved when there were none.
   const answered = served.filter(
-    (t) => progress[taskId(t)]?.correct || progress[taskId(t)]?.skipped
+    (t) => (progress[taskId(t)]?.tries ?? 0) > 0
   ).length;
 
-  const status: ExerciseStatus = inProgress
-    ? "inProgress"
-    : best === null
-    ? "notStarted"
-    : best >= 10
-    ? "perfect"
-    : "canImprove";
+  const status: ExerciseStatus =
+    inProgress && answered > 0
+      ? "inProgress"
+      : best === null
+      ? "notStarted"
+      : best >= 10
+      ? "perfect"
+      : "canImprove";
 
   return {
     status,
@@ -422,8 +444,7 @@ export const finishExercise = async (
     attempt.submittedAt = new Date();
     await attempt.save();
 
-    revalidatePath("/guides");
-    revalidatePath(`/guides/${guideId}`);
+    revalidateQuietly("/guides", `/guides/${guideId}`);
 
     return success(
       {
