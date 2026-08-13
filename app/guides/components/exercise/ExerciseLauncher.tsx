@@ -5,6 +5,7 @@ import Modal from "UIcomponents/modal/modal";
 import { Button } from "globalStyles/buttons/default/style";
 import type { ExerciseSummary } from "serverActions/exerciseSession";
 import { ExerciseRunner } from "./ExerciseRunner";
+import { AttemptReview } from "./AttemptReview";
 import {
   LauncherCard,
   LauncherHeading,
@@ -41,9 +42,9 @@ const LABELS: Record<
     note: "Pick up where you left off — your answers so far are saved.",
   },
   canImprove: {
-    button: "Improve your grade",
+    button: "Start a new attempt",
     heading: "Finished — you can do better",
-    note: "A new attempt draws a different set of questions from the pool.",
+    note: "A new attempt is the whole exercise again with a different set of questions, and your best score is the one that counts.",
   },
   perfect: {
     button: "Take it again",
@@ -60,6 +61,7 @@ export const ExerciseLauncher = ({
   summary: ExerciseSummary;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [current, setCurrent] = useState(summary);
 
   const labels = LABELS[current.status];
@@ -94,6 +96,23 @@ export const ExerciseLauncher = ({
             />
           }
         />
+
+      {current.attemptCount > 0 && (
+        <Modal
+          state={[isReviewOpen, setIsReviewOpen]}
+          modalTrigger={
+            <Button $styletype="textButton" type="button">
+              Review your last attempt
+            </Button>
+          }
+          modalContent={
+            <AttemptReview
+              guideId={guideId}
+              onClose={() => setIsReviewOpen(false)}
+            />
+          }
+        />
+      )}
       </LauncherCard>
     );
   }
@@ -144,6 +163,23 @@ export const ExerciseLauncher = ({
           />
         }
       />
+
+      {current.attemptCount > 0 && (
+        <Modal
+          state={[isReviewOpen, setIsReviewOpen]}
+          modalTrigger={
+            <Button $styletype="textButton" type="button">
+              Review your last attempt
+            </Button>
+          }
+          modalContent={
+            <AttemptReview
+              guideId={guideId}
+              onClose={() => setIsReviewOpen(false)}
+            />
+          }
+        />
+      )}
     </LauncherCard>
   );
 };

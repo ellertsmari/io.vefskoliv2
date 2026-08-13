@@ -15,6 +15,7 @@ import {
   startExercise,
   checkAnswer,
   finishExercise,
+  getAttemptReview,
 } from "serverActions/exerciseSession";
 import type { UserDocument } from "models/user";
 
@@ -283,6 +284,59 @@ describe("exercise session", () => {
 
     // And nothing about the anticipated answers travels before they answer.
     expect(JSON.stringify(started)).not.toContain("converts types first");
+  });
+
+  /**
+   * A finished attempt used to be unreachable — the score was all that
+   * survived, and everything the student had done was gone.
+   */
+  describe("reviewing a finished attempt", () => {
+    it("says what was answered and how it went", async () => {
+      const started = await startExercise(guideId);
+      if (!started.success) throw new Error("could not start");
+      const [one, two] = started.data.exercise.tasks;
+
+      await checkAnswer({ guideId, taskId: one.id, answer: [0] }); // right away
+      await checkAnswer({ guideId, taskId: two.id, answer: [0] }); // wrong
+      await checkAnswer({ guideId, taskId: two.id, answer: [1] }); // then right
+      await finishExercise(guideId);
+
+      const review = await getAttemptReview(guideId);
+      expect(review?.attemptNumber).toBe(1);
+      expect(review?.tasks).toHaveLength(2);
+
+      const first = review!.tasks.find((t) => t.prompt === "Pick A")!;
+      expect(first.outcome).toBe("firstTry");
+      expect(first.yourAnswer).toBe("A");
+
+      const second = review!.tasks.find((t) => t.prompt === "Pick B")!;
+      expect(second.outcome).toBe("gotThere");
+      expect(second.tries).toBe(2);
+      expect(second.yourAnswer).toBe("B");
+    });
+
+    it("reveals nothing they were not already shown", async () => {
+      const started = await startExercise(guideId);
+      if (!started.success) throw new Error("could not start");
+      // Never answered at all, so they never saw the explanation.
+      await checkAnswer({
+        guideId,
+        taskId: started.data.exercise.tasks[1].id,
+        answer: [1],
+      });
+      await finishExercise(guideId);
+
+      const review = await getAttemptReview(guideId);
+      const untouched = review!.tasks.find((t) => t.prompt === "Pick A")!;
+      expect(untouched.outcome).toBe("notAttempted");
+      // "A is right" is the explanation on that question; it must not leak.
+      expect(JSON.stringify(review)).not.toContain("A is right");
+    });
+
+    it("has nothing to show before anything is finished", async () => {
+      await startExercise(guideId);
+      expect(await getAttemptReview(guideId)).toBeNull();
+    });
   });
 
   it("never sends the answer key to the client", async () => {

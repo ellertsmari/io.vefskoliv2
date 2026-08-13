@@ -224,3 +224,44 @@ export const ConfirmNotice = styled.p`
   color: #664d03;
   line-height: 1.55;
 `;
+
+export const ReviewRow = styled.div`
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
+  align-items: start;
+
+  @media (max-width: 36rem) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+`;
+
+export const ReviewOutcome = styled.span<{
+  $tone: "good" | "ok" | "bad" | "none";
+}>`
+  font-weight: 600;
+  white-space: nowrap;
+  color: ${({ $tone }) =>
+    $tone === "good"
+      ? "#0f5132"
+      : $tone === "ok"
+      ? "#664d03"
+      : $tone === "bad"
+      ? "#842029"
+      : "#777"};
+`;
+
+export const ReviewAnswer = styled.p`
+  margin: 0.15rem 0 0 0;
+  color: #555;
+  overflow-wrap: anywhere;
+`;
+
+export const ReviewNote = styled.p`
+  margin: 0.25rem 0 0 0;
+  color: #0f5132;
+`;

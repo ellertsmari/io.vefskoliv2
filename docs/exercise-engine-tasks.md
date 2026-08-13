@@ -128,6 +128,14 @@ re-minted them and silently detached past attempts from their questions.
   written into the guide document and the editor holds them as opaque, passing them through
   a save untouched.
 
+**Decision 6 revisited — code is scored by its tests, not by first try.** First-try accuracy
+was applied to every task type. On a coding problem "first try" is the very first press of
+Check, and almost nobody writes working code first time — one typo cost the whole task, and
+code carries about 55% of the points in a typical attempt. A student who solved every coding
+problem correctly, iterating as anyone does, scored around 5/10. Quiz and short answers keep
+first-try scoring, where a second guess is elimination rather than knowledge; code is scored
+by what it finally did, using the partial-credit rule that was already there.
+
 **Decision 8 — per-type pools. DONE.** `poolSize` became
 `poolSizes: { quiz?, shortAnswer?, code? }`. A type is pooled when its entry is an integer
 in `[1, number of tasks of that type)`; a type with no entry is served whole.

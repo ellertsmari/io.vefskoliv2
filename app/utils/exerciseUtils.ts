@@ -265,7 +265,8 @@ export type ExerciseProgress = Record<string, TaskProgress>;
 export const scoreFromProgress = (
   tasks: ServerTask[],
   progress: ExerciseProgress,
-  passThreshold = DEFAULT_PASS_THRESHOLD
+  passThreshold = DEFAULT_PASS_THRESHOLD,
+  codeResults: CodeResults = {}
 ): Omit<GradeResult, "results"> => {
   let earnedPoints = 0;
   let totalPoints = 0;
@@ -273,7 +274,22 @@ export const scoreFromProgress = (
 
   for (const task of tasks) {
     const points = task.points ?? 1;
-    const earned = progress[taskId(task)]?.firstTryCorrect ? points : 0;
+    const id = taskId(task);
+
+    // Code is scored by what it does, not by whether it worked first time.
+    //
+    // "First try" on a coding problem means the very first press of Check, and
+    // almost nobody writes working code first time — one typo and the task was
+    // worth nothing however good the finished solution. Iterating IS how code
+    // gets written, and reading the error to get there is the skill. A first
+    // answer to a QUIZ reveals what the student knew, so first-try still
+    // applies there: a second guess is elimination.
+    const earned =
+      task.type === ExerciseTaskType.CODE
+        ? gradeCodeTask(task, codeResults[id]).pointsEarned
+        : progress[id]?.firstTryCorrect
+        ? points
+        : 0;
 
     earnedPoints += earned;
     totalPoints += points;

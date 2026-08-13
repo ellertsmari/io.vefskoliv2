@@ -237,7 +237,8 @@ export const promoteShortAnswer = async (
         const scored = scoreFromProgress(
           served,
           progress,
-          updatedExercise.passThreshold
+          updatedExercise.passThreshold,
+          (attempt.codeResults ?? {}) as CodeResults
         );
         regraded = { score: scored.score, passed: scored.passed };
       } else {

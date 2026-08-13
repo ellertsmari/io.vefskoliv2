@@ -20,6 +20,8 @@ import {
   type ServerTask,
   type TaskProgress,
   type GoalResult,
+  type CodeResults,
+  type ExerciseAnswers,
 } from "utils/exerciseUtils";
 import { runCodeSubmission } from "utils/codeRunner";
 import { MAX_ANSWER_LENGTH, normalizeAnswer } from "utils/shortAnswer";
@@ -98,6 +100,28 @@ export type CheckedAnswer = {
   answerNotes?: string[];
   /** code tasks only */
   code?: CodeFeedback;
+};
+
+/** One question as it went, for looking back at a finished attempt. */
+export type ReviewedTask = {
+  prompt: string;
+  type: ExerciseTaskType;
+  /** what the student gave, rendered for display */
+  yourAnswer: string;
+  tries: number;
+  outcome: "firstTry" | "gotThere" | "wrong" | "notAttempted";
+  /** only for questions they got right — nothing new is revealed here */
+  explanation?: string;
+  /** code tasks: how many of the tests passed in the end */
+  testsPassed?: number;
+  testsTotal?: number;
+};
+
+export type AttemptReview = {
+  attemptNumber: number;
+  score: number;
+  passed: boolean;
+  tasks: ReviewedTask[];
 };
 
 export type FinishedExercise = {
@@ -454,6 +478,91 @@ export const checkAnswer = async (
   }
 };
 
+/**
+ * Look back at the last finished attempt.
+ *
+ * Only what the student was already shown during the attempt: their own
+ * answers, whether each was right, and the explanation for the ones they got
+ * right — which they saw at the time. Nothing new is revealed, because the
+ * question pool overlaps between attempts and handing over the answers to
+ * questions they may meet again would make "improve your grade" meaningless.
+ */
+export const getAttemptReview = async (
+  guideId: string
+): Promise<AttemptReview | null> => {
+  const ownerId = await requireUser();
+  if (!ownerId) return null;
+
+  const exercise = await loadExercise(guideId);
+  if (!exercise) return null;
+
+  const attempt = (await ExerciseAttempt.findOne({
+    guide: new ObjectId(guideId),
+    owner: new ObjectId(ownerId),
+    status: { $ne: "inProgress" },
+  })
+    .sort({ attemptNumber: -1, createdAt: -1 })
+    .lean()) as unknown as {
+    attemptNumber?: number;
+    score: number;
+    passed: boolean;
+    answers?: ExerciseAnswers;
+    taskProgress?: ExerciseProgress;
+    codeResults?: Record<string, CodeFeedback>;
+  } | null;
+
+  if (!attempt) return null;
+
+  const attemptNumber = attempt.attemptNumber ?? 1;
+  const served = servedFor(exercise, ownerId, guideId, attemptNumber);
+  const progress = attempt.taskProgress ?? {};
+  const answers = attempt.answers ?? {};
+
+  const tasks: ReviewedTask[] = served.map((task) => {
+    const id = taskId(task);
+    const entry = progress[id];
+    const answer = answers[id];
+
+    const outcome: ReviewedTask["outcome"] = !entry || entry.tries === 0
+      ? "notAttempted"
+      : entry.firstTryCorrect
+      ? "firstTry"
+      : entry.correct
+      ? "gotThere"
+      : "wrong";
+
+    let yourAnswer = "—";
+    if (task.type === ExerciseTaskType.QUIZ && Array.isArray(answer)) {
+      yourAnswer =
+        answer.map((i) => task.options?.[i]).filter(Boolean).join(", ") || "—";
+    } else if (typeof answer === "string" && answer.trim()) {
+      yourAnswer = answer;
+    }
+
+    const code = attempt.codeResults?.[id];
+    return {
+      prompt: task.prompt,
+      type: task.type as ExerciseTaskType,
+      yourAnswer,
+      tries: entry?.tries ?? 0,
+      outcome,
+      ...(entry?.correct && task.explanation
+        ? { explanation: task.explanation }
+        : {}),
+      ...(code
+        ? { testsPassed: code.testsPassed, testsTotal: code.testsTotal }
+        : {}),
+    };
+  });
+
+  return {
+    attemptNumber,
+    score: attempt.score,
+    passed: attempt.passed,
+    tasks,
+  };
+};
+
 /** Finish the attempt and score it. */
 export const finishExercise = async (
   guideId: string
@@ -483,7 +592,8 @@ export const finishExercise = async (
     const graded = scoreFromProgress(
       served,
       progress,
-      exercise.passThreshold ?? undefined
+      exercise.passThreshold ?? undefined,
+      (attempt.codeResults ?? {}) as CodeResults
     );
 
     attempt.score = graded.score;

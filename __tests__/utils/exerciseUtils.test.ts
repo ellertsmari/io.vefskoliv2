@@ -412,7 +412,7 @@ describe("scoreFromProgress", () => {
   const tasks = [
     { id: "a", type: "quiz", prompt: "A", options: ["x"], correctAnswers: [0], points: 1, goal: "Understand A" },
     { id: "b", type: "quiz", prompt: "B", options: ["x"], correctAnswers: [0], points: 1, goal: "Understand A" },
-    { id: "c", type: "code", prompt: "C", entryPoint: "f", tests: [], points: 2, goal: "Understand C" },
+    { id: "c", type: "quiz", prompt: "C", options: ["x"], correctAnswers: [0], points: 2, goal: "Understand C" },
   ] as never as Parameters<typeof scoreFromProgress>[0];
 
   const record = (
@@ -491,6 +491,77 @@ describe("scoreFromProgress", () => {
     };
     expect(scoreFromProgress(tasks, progress, 0.7).passed).toBe(false);
     expect(scoreFromProgress(tasks, progress, 0.5).passed).toBe(true);
+  });
+
+  /**
+   * Code is scored by what it does, not by whether it worked first time.
+   * Almost nobody writes working code on the first press of Check, and one
+   * typo used to be worth the whole task — which made a student who solved
+   * every coding problem score near zero on more than half the marks.
+   */
+  describe("code tasks", () => {
+    const withCode = [
+      { id: "a", type: "quiz", prompt: "A", options: ["x"], correctAnswers: [0], points: 1, goal: "Understand A" },
+      { id: "b", type: "quiz", prompt: "B", options: ["x"], correctAnswers: [0], points: 1, goal: "Understand A" },
+      { id: "c", type: "code", prompt: "C", entryPoint: "f", tests: [], points: 2, goal: "Understand C" },
+    ] as never as Parameters<typeof scoreFromProgress>[0];
+
+    const passing = {
+      compiled: true,
+      typeErrors: [],
+      tests: [],
+      testsPassed: 4,
+      testsTotal: 4,
+      constructsMet: true,
+      missingConstructs: [],
+    };
+
+    it("earns full marks for working code, however many tries it took", () => {
+      const result = scoreFromProgress(
+        withCode,
+        {
+          a: record({ correct: true, firstTryCorrect: true }),
+          b: record({ correct: true, firstTryCorrect: true }),
+          // right in the end, after several goes — which is how code is written
+          c: record({ tries: 5, correct: true, firstTryCorrect: false }),
+        },
+        0.7,
+        { c: passing as never }
+      );
+      expect(result.earnedPoints).toBe(4);
+      expect(result.score).toBe(10);
+    });
+
+    it("still gives partial credit for code that half works", () => {
+      const result = scoreFromProgress(
+        withCode,
+        { c: record({ tries: 2, correct: false }) },
+        0.7,
+        { c: { ...passing, testsPassed: 2, testsTotal: 4 } as never }
+      );
+      // 2 of 4 tests on a 2-point task, nothing required, so half of 2.
+      expect(result.earnedPoints).toBe(1);
+    });
+
+    it("earns nothing for code that never ran", () => {
+      const result = scoreFromProgress(withCode, {
+        a: record({ correct: true, firstTryCorrect: true }),
+      });
+      expect(result.earnedPoints).toBe(1);
+    });
+
+    it("keeps first-try scoring for quiz answers", () => {
+      const result = scoreFromProgress(
+        withCode,
+        {
+          // right, but only on the second go — a quiz second guess is
+          // elimination, so it earns nothing
+          a: record({ tries: 2, correct: true, firstTryCorrect: false }),
+        },
+        0.7
+      );
+      expect(result.earnedPoints).toBe(0);
+    });
   });
 });
 
