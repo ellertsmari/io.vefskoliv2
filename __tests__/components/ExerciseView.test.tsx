@@ -62,6 +62,10 @@ const exercise: ExercisePublic = {
 };
 
 describe("ExerciseView", () => {
+  // In-progress answers are saved to localStorage so they survive a refresh.
+  // Without clearing it, one test mounts holding the previous test's answers.
+  beforeEach(() => window.localStorage.clear());
+
   it("shows expectations up front and the answered count", async () => {
     render(<ExerciseView guideId="g1" exercise={exercise} />);
 
@@ -139,5 +143,32 @@ describe("ExerciseView", () => {
       screen.queryByText(/Not quite — Re-read the section on letters/)
     ).not.toBeInTheDocument();
     expect(screen.getByText(/Correct — B is correct/)).toBeInTheDocument();
+  });
+
+  it("restores answers in progress after a refresh", () => {
+    const { unmount } = render(
+      <ExerciseView guideId="g1" exercise={exercise} />
+    );
+    fireEvent.click(screen.getByRole("radio", { name: /^A$/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /^B$/ }));
+    expect(screen.queryByText(/of 2 answered/)).not.toBeInTheDocument();
+    unmount();
+
+    // Remounting is what a refresh does. The answers should still be there.
+    render(<ExerciseView guideId="g1" exercise={exercise} />);
+    expect(screen.getByRole("radio", { name: /^A$/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /^B$/ })).toBeChecked();
+    expect(screen.getByRole("button", { name: /submit/i })).toBeEnabled();
+  });
+
+  it("drops a saved answer for a task that is no longer served", () => {
+    window.localStorage.setItem(
+      "exercise-draft:g1",
+      JSON.stringify({ t1: [0], "task-from-another-life": [1] })
+    );
+    render(<ExerciseView guideId="g1" exercise={exercise} />);
+    // t1 restored, the stale id ignored — so it cannot reach a submission.
+    expect(screen.getByRole("radio", { name: /^A$/ })).toBeChecked();
+    expect(screen.getByText("1 of 2 answered")).toBeInTheDocument();
   });
 });

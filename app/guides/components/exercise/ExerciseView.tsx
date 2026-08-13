@@ -75,7 +75,45 @@ export const ExerciseView = ({
   /** the student's best previous attempt, for "your best so far" context */
   bestAttempt?: BestAttemptInfo;
 }) => {
+  // Answers in progress survive a refresh. The served set is now stable per
+  // student per guide, so a restored draft still lines up with what is on
+  // screen. Only the student's own answers are stored — never anything from
+  // the answer key, which does not reach the browser at all.
+  const draftKey = `exercise-draft:${guideId}`;
   const [answers, setAnswers] = useState<Answers>({});
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(draftKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as Answers;
+        // Drop anything that is not among the tasks currently served, so a
+        // stale draft can never produce a submission of the wrong shape.
+        const served = new Set(exercise.tasks.map((t) => t.id));
+        setAnswers(
+          Object.fromEntries(
+            Object.entries(parsed).filter(([id]) => served.has(id))
+          )
+        );
+      }
+    } catch {
+      // A corrupt or unavailable draft is not worth failing the page over.
+    }
+    setDraftLoaded(true);
+    // Restoring once on mount is deliberate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+    try {
+      window.localStorage.setItem(draftKey, JSON.stringify(answers));
+    } catch {
+      // Storage full or blocked — the exercise still works, it just will not
+      // survive a refresh.
+    }
+  }, [answers, draftKey, draftLoaded]);
   const [state, formAction, isPending] = useActionState(
     submitExercise,
     undefined

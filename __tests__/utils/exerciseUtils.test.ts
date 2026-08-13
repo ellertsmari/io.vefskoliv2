@@ -5,6 +5,7 @@ import {
   sanitizeExerciseForClient,
   sanitizeGuideForClient,
   ExerciseGradingError,
+  seededRng,
   type AttemptForAnalytics,
   type ServerExercise,
 } from "utils/exerciseUtils";
@@ -239,6 +240,33 @@ describe("pools across a mixed exercise", () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
     // and the code task is still last, not opening the exercise
     expect(served[served.length - 1].type).toBe(ExerciseTaskType.CODE);
+  });
+
+  /**
+   * The draw must not change between renders. A server action refreshes the
+   * page when it completes, and an unstable draw swapped the questions out
+   * from under a half-answered exercise.
+   */
+  it("serves the identical set every time for the same seed", () => {
+    const exercise = mixed({ quiz: 2, code: 1 });
+    const draw = () =>
+      sanitizeExerciseForClient(exercise, seededRng("student-1:guide-9"))!
+        .tasks.map((t) => t.id)
+        .join(",");
+    const first = draw();
+    for (let i = 0; i < 10; i++) expect(draw()).toBe(first);
+  });
+
+  it("gives different students different sets", () => {
+    const exercise = mixed({ quiz: 2, code: 1 });
+    const sets = new Set(
+      ["a", "b", "c", "d", "e", "f"].map((s) =>
+        sanitizeExerciseForClient(exercise, seededRng(`${s}:guide-9`))!
+          .tasks.map((t) => t.id)
+          .join(",")
+      )
+    );
+    expect(sets.size).toBeGreaterThan(1);
   });
 
   it("reports each pooled type separately", () => {

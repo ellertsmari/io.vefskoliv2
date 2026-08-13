@@ -416,7 +416,7 @@ const tasksToGrade = (
     const got = graded.filter((task) => task.type === type).length;
     if (got !== expected) {
       throw new ExerciseGradingError(
-        "Your submission didn't match the questions you were given. Please refresh the page and try again."
+        "Something went wrong reading your answers. Nothing was lost — press Submit again."
       );
     }
   }
@@ -498,6 +498,34 @@ export const gradeExercise = (
     results,
     goalBreakdown,
     pendingCount: results.filter((r) => r.status === "pending").length,
+  };
+};
+
+/**
+ * A deterministic random number generator seeded from a string (mulberry32).
+ *
+ * Question pools must draw the SAME set every time for a given student and
+ * guide. `Math.random` cannot: the page re-renders whenever a server action
+ * completes, so the questions were being redrawn underneath the student —
+ * their answers, keyed by task id, stopped matching what was on screen.
+ *
+ * Seeding by student and guide keeps the set stable across renders, refreshes
+ * and retries, while still giving different students different problems, which
+ * is what the pool is for.
+ */
+export const seededRng = (seed: string): (() => number) => {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let state = h >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 };
 
@@ -653,14 +681,23 @@ const publicTask = (task: ServerTask): ExerciseTaskPublic => {
  * guide is sent to a student/public view. Teacher-only views may use the raw guide.
  */
 export const sanitizeGuideForClient = <T extends Record<string, any>>(
-  guide: T
+  guide: T,
+  /**
+   * Seed for the question-pool draw. Pass a value that is stable for one
+   * student on one guide (see `seededRng`) so the served set does not change
+   * between renders. Omitted means a fresh random draw each call.
+   */
+  poolSeed?: string
 ): Omit<T, "exercise"> & { exercise?: ExercisePublic } => {
   const { exercise, ...rest } = guide as T & {
     exercise?: ServerExercise | null;
   };
   return {
     ...(rest as Omit<T, "exercise">),
-    exercise: sanitizeExerciseForClient(exercise),
+    exercise: sanitizeExerciseForClient(
+      exercise,
+      poolSeed ? seededRng(poolSeed) : undefined
+    ),
   };
 };
 

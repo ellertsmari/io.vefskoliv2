@@ -28,8 +28,17 @@ const findGuide = async (id: string): Promise<GuideType | null> => {
 export const getGuide = async (id: string): Promise<ClientGuide | null> => {
   const guide = await findGuide(id);
   if (!guide) return null;
+
+  // Seed the question-pool draw per student per guide, so the same set comes
+  // back on every render. Without this the page redraws its questions whenever
+  // a server action completes, and the student's in-progress answers — keyed
+  // by task id — stop matching what is on screen.
+  const session = await auth();
+  const poolSeed = session?.user?.id ? `${session.user.id}:${id}` : undefined;
+
   return sanitizeGuideForClient(
-    safeSerialize(guide) as Record<string, unknown>
+    safeSerialize(guide) as Record<string, unknown>,
+    poolSeed
   ) as unknown as ClientGuide;
 };
 
