@@ -1,17 +1,32 @@
 "use client"
 import styled from "styled-components";
 
-export const ResourcesContainer = styled.div`
+import { PageContainer } from "globalStyles/pageStyles";
+
+/* Full width so the video grid keeps adding columns instead of stopping at
+   three with the rest of the screen empty. */
+export const ResourcesContainer = styled(PageContainer).attrs({
+  $width: "full" as const,
+})``;
+
+export const Section = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px 0;
+  gap: 1rem;
+`;
+
+export const Notice = styled.p`
+  color: var(--primary-black-60);
+  background: var(--primary-black-5);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
-  color: var(--primary-black-100, #1a1a1a);
+  color: var(--primary-black-100);
   margin: 0;
 `;
 

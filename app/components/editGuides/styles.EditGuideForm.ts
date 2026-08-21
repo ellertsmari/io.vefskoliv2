@@ -2,16 +2,16 @@ import styled from "styled-components";
 
 export const FormContainer = styled.div`
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0;
   padding: 2rem;
 `;
 
 export const BackLink = styled.a`
   display: inline-block;
   margin-bottom: 1.5rem;
-  color: #3b82f6;
+  color: var(--theme-module3-100);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   
   &:hover {
     text-decoration: underline;
@@ -23,15 +23,15 @@ export const FormHeader = styled.header`
 `;
 
 export const FormTitle = styled.h1`
-  font-size: 2rem;
+  font-size: var(--text-3xl);
   font-weight: bold;
-  color: #1f2937;
+  color: var(--primary-black-100);
   margin: 0;
 `;
 
 export const Form = styled.form`
   background: white;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-lg);
   padding: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
@@ -45,12 +45,12 @@ export const Section = styled.section`
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
   font-weight: 600;
-  color: #1f2937;
+  color: var(--primary-black-100);
   margin: 0 0 1rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--primary-black-10);
 `;
 
 export const InputGroup = styled.div`
@@ -59,43 +59,43 @@ export const InputGroup = styled.div`
 
 export const Label = styled.label`
   display: block;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 500;
-  color: #374151;
+  color: var(--primary-black-60);
   margin-bottom: 0.5rem;
 `;
 
 export const Input = styled.input`
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 1rem;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   
   &:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--theme-module3-100);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
   
   &:disabled {
-    background-color: #f9fafb;
-    color: #6b7280;
+    background-color: var(--primary-black-5);
+    color: var(--primary-black-60);
   }
 `;
 
 export const TextArea = styled.textarea`
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 1rem;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   resize: vertical;
   min-height: 100px;
   
   &:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--theme-module3-100);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 `;
@@ -103,20 +103,20 @@ export const TextArea = styled.textarea`
 export const Select = styled.select`
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 1rem;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   background: white;
   
   &:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--theme-module3-100);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
   
   &:disabled {
-    background-color: #f9fafb;
-    color: #6b7280;
+    background-color: var(--primary-black-5);
+    color: var(--primary-black-60);
   }
 `;
 
@@ -133,30 +133,30 @@ export const ArrayItem = styled.div`
 
 export const RemoveButton = styled.button`
   padding: 0.75rem 1rem;
-  background: #ef4444;
+  background: var(--error-failure-100);
   color: white;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   cursor: pointer;
   white-space: nowrap;
   
   &:hover {
-    background: #dc2626;
+    background: var(--error-failure-100);
   }
 `;
 
 export const AddButton = styled.button`
   padding: 0.5rem 1rem;
-  background: #10b981;
+  background: var(--error-success-100);
   color: white;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   cursor: pointer;
   
   &:hover {
-    background: #059669;
+    background: var(--error-success-100);
   }
 `;
 
@@ -165,7 +165,7 @@ export const ButtonGroup = styled.div`
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--primary-black-10);
 `;
 
 interface ButtonProps {
@@ -175,8 +175,8 @@ interface ButtonProps {
 export const Button = styled.button<ButtonProps>`
   padding: 0.75rem 2rem;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 1rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -187,32 +187,32 @@ export const Button = styled.button<ButtonProps>`
   }
 
   ${props => props.$variant === 'primary' && `
-    background: #3b82f6;
+    background: var(--theme-module3-100);
     color: white;
 
     &:hover:not(:disabled) {
-      background: #2563eb;
+      background: var(--theme-module3-100);
     }
   `}
 
   ${props => (!props.$variant || props.$variant === 'secondary') ? `
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    background: var(--primary-black-5);
+    color: var(--primary-black-60);
+    border: 1px solid var(--primary-black-30);
 
     &:hover:not(:disabled) {
-      background: #e5e7eb;
+      background: var(--primary-black-10);
     }
   ` : ''}
 `;
 
 export const MarkdownEditorWrapper = styled.div`
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
   overflow: hidden;
 
   &:focus-within {
-    border-color: #3b82f6;
+    border-color: var(--theme-module3-100);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
@@ -222,8 +222,8 @@ export const MarkdownEditorWrapper = styled.div`
   }
 
   .w-md-editor-toolbar {
-    border-bottom: 1px solid #e5e7eb !important;
-    background: #f9fafb !important;
+    border-bottom: 1px solid var(--primary-black-10) !important;
+    background: var(--primary-black-5) !important;
   }
 
   .w-md-editor-content {
@@ -232,9 +232,9 @@ export const MarkdownEditorWrapper = styled.div`
 `;
 
 export const MultiFieldItem = styled.div`
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  background: var(--primary-black-5);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 1rem;
   margin-bottom: 0.75rem;
 `;
@@ -257,24 +257,24 @@ export const MultiFieldGroup = styled.div`
 
 export const SmallLabel = styled.label`
   display: block;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 500;
-  color: #6b7280;
+  color: var(--primary-black-60);
   margin-bottom: 0.25rem;
 `;
 
 export const RemoveButtonSmall = styled.button`
   padding: 0.5rem 0.75rem;
-  background: #ef4444;
+  background: var(--error-failure-100);
   color: white;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
   cursor: pointer;
   white-space: nowrap;
   align-self: flex-end;
 
   &:hover {
-    background: #dc2626;
+    background: var(--error-failure-100);
   }
 `;

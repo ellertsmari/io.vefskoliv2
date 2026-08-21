@@ -15,6 +15,7 @@ import {
 export const HowGradingWorksCard = () => {
   return (
     <Modal
+      size="lg"
       modalTrigger={
         <HowItWorksCard type="button" aria-haspopup="dialog">
           <CardIcon aria-hidden="true">🎓</CardIcon>

@@ -16,7 +16,7 @@ const SpinnerRow = styled.div`
   align-items: center;
   gap: 0.6rem;
   padding: 1rem 0;
-  color: #555;
+  color: var(--primary-black-60);
 `;
 
 const SpinnerCircle = styled.span`
@@ -24,8 +24,8 @@ const SpinnerCircle = styled.span`
   height: 1.1rem;
   flex: 0 0 auto;
   border-radius: 50%;
-  border: 2px solid #ccc;
-  border-top-color: #555;
+  border: 2px solid var(--primary-black-30);
+  border-top-color: var(--primary-black-60);
   animation: ${spin} 0.8s linear infinite;
 `;
 
@@ -47,13 +47,13 @@ const StateContainer = styled.div`
 
 const StateTitle = styled.h2`
   margin: 0;
-  font-size: 1.4rem;
+  font-size: var(--text-2xl);
 `;
 
 const StateText = styled.p`
   margin: 0;
   line-height: 1.5;
-  color: #444;
+  color: var(--primary-black-60);
 `;
 
 export const EmptyState = ({

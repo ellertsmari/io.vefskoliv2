@@ -35,21 +35,21 @@ const Layout = styled.div`
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 
   th {
     text-align: left;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #6c757d;
+    color: var(--primary-black-60);
     padding: 0.5rem;
-    border-bottom: 2px solid #e9ecef;
+    border-bottom: 2px solid var(--primary-black-10);
   }
 
   td {
     padding: 0.5rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--primary-black-10);
   }
 `;
 
@@ -57,7 +57,7 @@ const ExpandableRow = styled.tr`
   cursor: pointer;
 
   &:hover {
-    background: #f8f9fa;
+    background: var(--primary-black-5);
   }
 `;
 
@@ -65,7 +65,7 @@ const ScoreCell = styled.td<{ $value: number | null }>`
   font-weight: 700;
   color: ${({ $value }) =>
     $value === null
-      ? "#6c757d"
+      ? "var(--primary-black-60)"
       : $value < -0.5
         ? "var(--error-failure-100)"
         : $value > 0.5
@@ -74,15 +74,15 @@ const ScoreCell = styled.td<{ $value: number | null }>`
 `;
 
 const ReceivedEval = styled.div`
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  background: var(--primary-black-5);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 0.75rem;
   margin: 0.4rem 0;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 `;
 
 const PlotWrapper = styled.div`
@@ -115,19 +115,19 @@ const ScatterPlot = ({ reports }: { reports: PeerEvalStudentReport[] }) => {
           y1={pad}
           x2={scale(0)}
           y2={size - pad}
-          stroke="#e9ecef"
+          stroke="var(--primary-black-10)"
         />
         <line
           x1={pad}
           y1={size - scale(0)}
           x2={size - pad}
           y2={size - scale(0)}
-          stroke="#e9ecef"
+          stroke="var(--primary-black-10)"
         />
-        <text x={size - pad} y={size - scale(0) - 6} fontSize="10" textAnchor="end" fill="#6c757d">
+        <text x={size - pad} y={size - scale(0) - 6} fontSize="10" textAnchor="end" fill="var(--primary-black-60)">
           contribution →
         </text>
-        <text x={scale(0) + 6} y={pad + 4} fontSize="10" fill="#6c757d">
+        <text x={scale(0) + 6} y={pad + 4} fontSize="10" fill="var(--primary-black-60)">
           teamwork ↑
         </text>
         {points.map((report) => (
@@ -148,7 +148,7 @@ const ScatterPlot = ({ reports }: { reports: PeerEvalStudentReport[] }) => {
               x={scale(report.contributionAvg!) + 7}
               y={size - scale(report.teambuildingAvg!) + 3}
               fontSize="9"
-              fill="#495057"
+              fill="var(--primary-black-60)"
             >
               {report.name.split(" ")[0]}
             </text>
@@ -315,7 +315,7 @@ export const TeacherEvaluations = ({
             .filter((team) => team.entries.length > 0)
             .map((team) => (
               <div key={team.teamId}>
-                <SectionTitle as="h3" style={{ fontSize: "0.95rem" }}>
+                <SectionTitle as="h3" style={{ fontSize: "var(--text-base)" }}>
                   {team.teamName}
                 </SectionTitle>
                 <ChipRow style={{ margin: "0.5rem 0" }}>

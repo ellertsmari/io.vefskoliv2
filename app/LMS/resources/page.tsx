@@ -1,37 +1,54 @@
-"use server"
-
 import { getUserRecordings } from "serverActions/Zoom/getZoomRec";
 import VideoCard from "./components/videoCard/videoCard";
 import GoogleDriveButton from "./components/googleDriveButton/googleDriveButton";
-import { ResourcesContainer, SectionTitle, VideoGrid, ButtonContainer } from "./style";
+import {
+  ResourcesContainer,
+  SectionTitle,
+  VideoGrid,
+  ButtonContainer,
+  Section,
+  Notice,
+} from "./style";
+import { PageTitle, TitleBlock } from "globalStyles/pageStyles";
 
 const Resources = async () => {
-  const getRecordings = await getUserRecordings();
-  const recordings = getRecordings?.meetings ?? [];
+  const { meetings, unavailable } = await getUserRecordings();
 
   return (
     <ResourcesContainer>
-      <div>
-        <SectionTitle>Resources</SectionTitle>
+      <TitleBlock>
+        <PageTitle>Resources</PageTitle>
+      </TitleBlock>
+
+      <Section>
         <ButtonContainer>
           <GoogleDriveButton />
         </ButtonContainer>
-      </div>
+      </Section>
 
-      <div>
+      <Section>
         <SectionTitle>Lecture Recordings</SectionTitle>
-        <VideoGrid>
-          {recordings.map((recording: any) => (
-            <VideoCard
-              key={recording.uuid}
-              link={recording.share_url}
-              title={recording.topic}
-              date={recording.start_time}
-              duration={recording.duration}
-            />
-          ))}
-        </VideoGrid>
-      </div>
+        {unavailable ? (
+          <Notice>
+            Lecture recordings are temporarily unavailable. Please try again in
+            a moment — everything else on this page still works.
+          </Notice>
+        ) : meetings.length === 0 ? (
+          <Notice>No lecture recordings have been published yet.</Notice>
+        ) : (
+          <VideoGrid>
+            {meetings.map((recording: any) => (
+              <VideoCard
+                key={recording.uuid}
+                link={recording.share_url}
+                title={recording.topic}
+                date={recording.start_time}
+                duration={recording.duration}
+              />
+            ))}
+          </VideoGrid>
+        )}
+      </Section>
     </ResourcesContainer>
   );
 };

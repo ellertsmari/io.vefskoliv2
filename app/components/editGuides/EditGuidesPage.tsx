@@ -199,7 +199,7 @@ export const EditGuidesPage = ({ guides }: EditGuidesPageProps) => {
       </GuidesList>
 
       {filteredGuides.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--primary-black-60)' }}>
           No guides found matching your search criteria.
         </div>
       )}

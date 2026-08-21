@@ -31,28 +31,28 @@ const ProjectNameRow = styled.div`
 const TeamLogo = styled.img`
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   object-fit: cover;
 `;
 
 const ProjectName = styled.p`
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   margin: 0;
   color: var(--theme-module3-100);
 `;
 
 const Tagline = styled.p`
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-style: italic;
   margin: 0;
-  color: #6c757d;
+  color: var(--primary-black-60);
 `;
 
 const DescriptionText = styled.p`
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   margin: 0;
-  color: #495057;
+  color: var(--primary-black-60);
   white-space: pre-wrap;
 `;
 

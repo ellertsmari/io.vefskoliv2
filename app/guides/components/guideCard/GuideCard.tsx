@@ -55,6 +55,7 @@ const GuideCard = ({
                 <Notification />
               )}
               <Modal
+                size="xl"
                 modalTrigger={
                   <GuideCardOverview
                     moduleTitle={extractModuleNumber(guide.module.title).toString()}

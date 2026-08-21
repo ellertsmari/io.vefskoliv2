@@ -1,32 +1,22 @@
 "use client";
 
 import styled from "styled-components";
+import { PageContainer } from "globalStyles/pageStyles";
 
-export const DocsContainer = styled.div`
-  padding: 2rem;
-  max-width: 800px;
-`;
+/* Prose width, from the shared page chrome. */
+export const DocsContainer = styled(PageContainer).attrs({
+  $width: "narrow" as const,
+})``;
 
-export const PageTitle = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--primary-black-100);
-  margin: 0 0 0.5rem 0;
-`;
-
-export const PageSubtitle = styled.p`
-  font-size: 1rem;
-  color: var(--primary-black-60);
-  margin: 0 0 2rem 0;
-`;
+export { PageTitle, PageSubtitle } from "globalStyles/pageStyles";
 
 export const FormulaBox = styled.div`
   background: var(--primary-black-5);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
   margin: 1rem 0;
   font-family: monospace;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-100);
   border-left: 3px solid var(--error-success-100);
 `;
@@ -34,10 +24,12 @@ export const FormulaBox = styled.div`
 export const StatusBadge = styled.span<{ $color: string }>`
   display: inline-block;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
   font-weight: 500;
-  background: ${props => props.$color}20;
+  /* $color is a CSS variable, so an appended hex alpha ("var(--x)20") is
+     invalid and renders no background at all. */
+  background: ${props => `color-mix(in srgb, ${props.$color} 12%, transparent)`};
   color: ${props => props.$color};
   margin-right: 0.5rem;
 `;
@@ -50,6 +42,6 @@ export const GradeScale = styled.div`
 `;
 
 export const GradeDescription = styled.div`
-  font-size: 0.9rem;
-  color: var(--primary-black-80);
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
 `;

@@ -5,9 +5,9 @@ import {
   Form,
   ProfileDetails,
   AdditionalInfo,
+  UserEmail,
   ButtonWrapper,
   ProfileInfo,
-  Logout,
 } from "./style";
 import ProfilePicture from "./profilePicture";
 import Modal from "UIcomponents/modal/modal";
@@ -59,24 +59,19 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
   return (
     <ProfileWrapper>
       <ProfileDetails>
-        <ProfilePicture name={user.name} url={user.avatarUrl} />
+        <ProfilePicture name={user.name} url={user.avatarUrl} stacked />
         <ProfileInfo>
           <AdditionalInfo>{user.role}</AdditionalInfo>
-          <AdditionalInfo
-            style={{ color: "var(--primary-black-100)", textTransform: "none" }}
-          >
-            {user.email}
-          </AdditionalInfo>
+          <UserEmail>{user.email}</UserEmail>
         </ProfileInfo>
-        <Logout>
-          <LogoutButton
-            onClick={async () => await signOut({ redirectTo: "/" })}
-            aria-label="logout button"
-          >
-            <p style={{ fontSize: "12px" }}>LOGOUT</p>
-            <LogoutIcon />
-          </LogoutButton>
-        </Logout>
+        <LogoutButton
+          type="button"
+          onClick={async () => await signOut({ redirectTo: "/" })}
+          aria-label="logout button"
+        >
+          LOGOUT
+          <LogoutIcon size={14} />
+        </LogoutButton>
       </ProfileDetails>
       <Form>
         <Input

@@ -1,15 +1,23 @@
 "use client";
 import ExitButton from "globalStyles/buttons/exit";
 import { useModal } from "./ModalProvider";
-import { ButtonWrapper, Content, ContentWrapper, ModalWrapper } from "./style";
+import {
+  ButtonWrapper,
+  Content,
+  ContentWrapper,
+  ModalWrapper,
+  type ModalSize,
+} from "./style";
 import { useEffect } from "react";
 
 export const ModalContent = ({
   content,
   hideExitButton = false,
+  size = "md",
 }: {
   content: React.ReactNode;
   hideExitButton?: boolean;
+  size?: ModalSize;
 }) => {
   const { isModalOpen, setIsModalOpen } = useModal();
 
@@ -33,7 +41,7 @@ export const ModalContent = ({
         }}
         data-testid="modal-wrapper"
       >
-        <ContentWrapper onClick={(e) => e.stopPropagation()}>
+        <ContentWrapper $size={size} onClick={(e) => e.stopPropagation()}>
           {!hideExitButton && (
             <ButtonWrapper>
               <ExitButton onClick={() => setIsModalOpen(false)} />

@@ -52,21 +52,21 @@ const Footer = styled.div`
 `;
 
 const FeedbackEntry = styled.div`
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  background: var(--primary-black-5);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 `;
 
 const ShowcaseLink = styled.a`
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--theme-module3-100);
   text-decoration: none;
@@ -77,9 +77,9 @@ const ShowcaseLink = styled.a`
 `;
 
 const ShowcaseBanner = styled.div`
-  background: linear-gradient(135deg, #6563eb 0%, #2c2b76 100%);
+  background: linear-gradient(135deg, var(--theme-module3-100) 0%, var(--theme-module3-hover) 100%);
   color: white;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
@@ -90,7 +90,7 @@ const ShowcaseBanner = styled.div`
 
 const BannerText = styled.span`
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 `;
 
 const BannerActions = styled.span`
@@ -101,25 +101,25 @@ const BannerActions = styled.span`
 
 const BannerButton = styled.button`
   background: white;
-  color: var(--theme-module3-hover, #2c2b76);
+  color: var(--theme-module3-hover);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.45rem 1rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   cursor: pointer;
 
   &:hover {
-    background: var(--theme-module3-10, #f0f0fd);
+    background: var(--theme-module3-10);
   }
 `;
 
 const BannerLink = styled.a`
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.45rem 1rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   text-decoration: none;
 

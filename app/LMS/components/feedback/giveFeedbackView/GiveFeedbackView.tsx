@@ -30,8 +30,8 @@ import { LoadingSpinner } from "UIcomponents/states/States";
 import styled from "styled-components";
 
 const ErrorMessage = styled.div`
-  color: #dc3545;
-  font-size: 14px;
+  color: var(--error-failure-100);
+  font-size: var(--text-sm);
   margin-top: 4px;
   display: flex;
   align-items: center;
@@ -43,11 +43,11 @@ const ErrorMessage = styled.div`
 `;
 
 const TipsPanel = styled.div`
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
-  background: #fafafa;
-  font-size: 0.9rem;
+  background: var(--primary-black-5);
+  font-size: var(--text-sm);
 
   ul {
     margin: 0.5rem 0 0 0;

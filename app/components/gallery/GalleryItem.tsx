@@ -137,7 +137,7 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
             style={{
               display: 'inline-block',
               marginTop: '12px',
-              color: 'var(--primary-blue-100)',
+              color: 'var(--theme-module3-100)',
               textDecoration: 'none',
               fontWeight: '600'
             }}

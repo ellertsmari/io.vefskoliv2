@@ -33,9 +33,9 @@ export const Button = styled.button<{ $styletype: "default" | "outlined" | "defa
       : props.$styletype === "textButton"
       ? "var(--primary-white)"
       : "var(--primary-black-100)"};
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -68,6 +68,6 @@ export const Button = styled.button<{ $styletype: "default" | "outlined" | "defa
 
   @media (min-width: ${BREAKPOINT}) {
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
 `;

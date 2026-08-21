@@ -1,28 +1,17 @@
 import styled from "styled-components";
 import { ReturnStatus } from "types/guideTypes";
+import { PageContainer } from "globalStyles/pageStyles";
 
-export const ReportsContainer = styled.div`
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-`;
+/* Dense tables, so the wide page width. */
+export const ReportsContainer = styled(PageContainer).attrs({
+  $width: "wide" as const,
+})``;
 
-export const Header = styled.div`
-  margin-bottom: 2rem;
-`;
-
-export const Title = styled.h1`
-  font-size: 2rem;
-  font-weight: 700;
-  color: #000;
-  margin: 0 0 0.5rem 0;
-`;
-
-export const Subtitle = styled.p`
-  font-size: 1rem;
-  color: #6c757d;
-  margin: 0;
-`;
+export {
+  TitleBlock as Header,
+  PageTitle as Title,
+  PageSubtitle as Subtitle,
+} from "globalStyles/pageStyles";
 
 export const ContentLayout = styled.div`
   display: grid;
@@ -33,15 +22,15 @@ export const ContentLayout = styled.div`
 
 export const StudentsPanel = styled.div`
   background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 1.5rem;
 `;
 
 export const StudentsTitle = styled.h2`
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
-  color: #000;
+  color: var(--primary-black-100);
   margin: 0 0 1rem 0;
 `;
 
@@ -52,56 +41,56 @@ export const StudentsList = styled.div`
 `;
 
 export const StudentItem = styled.button<{ selected: boolean }>`
-  background: ${props => props.selected ? '#f8f9fa' : 'transparent'};
-  border: 1px solid ${props => props.selected ? '#000' : 'transparent'};
-  border-radius: 6px;
+  background: ${props => props.selected ? 'var(--primary-black-5)' : 'transparent'};
+  border: 1px solid ${props => props.selected ? 'var(--primary-black-100)' : 'transparent'};
+  border-radius: var(--radius-md);
   padding: 0.75rem;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    background: #f8f9fa;
-    border-color: #6c757d;
+    background: var(--primary-black-5);
+    border-color: var(--primary-black-60);
   }
 `;
 
 export const StudentName = styled.div`
   font-weight: 500;
-  color: #000;
-  font-size: 0.9rem;
+  color: var(--primary-black-100);
+  font-size: var(--text-sm);
 `;
 
 export const StudentEmail = styled.div`
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
   margin-top: 0.25rem;
 `;
 
 export const StudentReportPanel = styled.div`
   background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 2rem;
 `;
 
 export const EmptyState = styled.div`
   text-align: center;
-  color: #6c757d;
+  color: var(--primary-black-60);
   padding: 3rem 1rem;
 `;
 
 export const ReportTitle = styled.h2`
-  font-size: 1.3rem;
+  font-size: var(--text-xl);
   font-weight: 600;
-  color: #000;
+  color: var(--primary-black-100);
   margin: 0 0 1.5rem 0;
 `;
 
 export const SectionTitle = styled.h3`
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
-  color: #000;
+  color: var(--primary-black-100);
   margin: 2rem 0 1rem 0;
   
   &:first-child {
@@ -116,78 +105,78 @@ export const GuideGrid = styled.div`
 `;
 
 export const GuideCard = styled.div`
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    border-color: #007bff;
+    border-color: var(--theme-module3-100);
     box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
     transform: translateY(-1px);
   }
 `;
 
 export const GuideTitle = styled.h4`
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: #000;
+  color: var(--primary-black-100);
   margin: 0 0 0.5rem 0;
 `;
 
 export const GuideStatus = styled.span<{ status: ReturnStatus }>`
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
   font-weight: 500;
   text-transform: uppercase;
   
   background: ${props => {
     switch (props.status) {
       case ReturnStatus.PASSED:
-        return '#d4edda';
+        return 'var(--error-success-30)';
       case ReturnStatus.HALL_OF_FAME:
-        return '#fff3cd';
+        return 'var(--error-warning-30)';
       case ReturnStatus.FAILED:
-        return '#f8d7da';
+        return 'var(--error-failure-30)';
       case ReturnStatus.AWAITING_REVIEWS:
-        return '#cce5ff';
+        return 'var(--theme-module3-30)';
       default:
-        return '#e9ecef';
+        return 'var(--primary-black-10)';
     }
   }};
   
   color: ${props => {
     switch (props.status) {
       case ReturnStatus.PASSED:
-        return '#155724';
+        return 'var(--primary-black-100)';
       case ReturnStatus.HALL_OF_FAME:
-        return '#856404';
+        return 'var(--primary-black-100)';
       case ReturnStatus.FAILED:
-        return '#721c24';
+        return 'var(--primary-black-100)';
       case ReturnStatus.AWAITING_REVIEWS:
-        return '#004085';
+        return 'var(--theme-module3-hover)';
       default:
-        return '#495057';
+        return 'var(--primary-black-60)';
     }
   }};
 `;
 
 export const GuideDetails = styled.div`
   margin-top: 0.75rem;
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
 `;
 
 export const ModuleBadge = styled.span`
   display: inline-block;
-  background: #e9ecef;
-  color: #495057;
+  background: var(--primary-black-10);
+  color: var(--primary-black-60);
   padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-xs);
   font-weight: 600;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
@@ -195,6 +184,6 @@ export const ModuleBadge = styled.span`
 
 export const LoadingState = styled.div`
   text-align: center;
-  color: #6c757d;
+  color: var(--primary-black-60);
   padding: 2rem;
 `;

@@ -1,21 +1,10 @@
 import styled from "styled-components";
 
-export const PageContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-`;
-
-export const Header = styled.header`
-  margin-bottom: 2rem;
-`;
-
-export const Title = styled.h1`
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #1f2937;
-  margin: 0;
-`;
+export {
+  PageContainer,
+  TitleBlock as Header,
+  PageTitle as Title,
+} from "globalStyles/pageStyles";
 
 export const SearchContainer = styled.div`
   margin-bottom: 1.5rem;
@@ -25,13 +14,13 @@ export const SearchInput = styled.input`
   width: 100%;
   max-width: 400px;
   padding: 0.75rem 1rem;
-  border: 2px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border: 2px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   
   &:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--theme-module3-100);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 `;
@@ -50,15 +39,15 @@ export const FilterContainer = styled.div`
 
 export const FilterSelect = styled.select`
   padding: 0.75rem 1rem;
-  border: 2px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border: 2px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   background: white;
   min-width: 200px;
   
   &:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--theme-module3-100);
   }
 `;
 
@@ -70,8 +59,8 @@ export const GuidesList = styled.div`
 
 export const GuideCard = styled.div`
   background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
@@ -83,15 +72,15 @@ export const GuideCard = styled.div`
 `;
 
 export const GuideTitle = styled.h3`
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
   font-weight: 600;
-  color: #1f2937;
+  color: var(--primary-black-100);
   margin: 0 0 0.75rem 0;
 `;
 
 export const GuideDescription = styled.p`
-  color: #6b7280;
-  font-size: 0.9rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
   line-height: 1.5;
   margin: 0 0 1rem 0;
 `;
@@ -109,27 +98,27 @@ interface ActionButtonProps {
 export const ActionButton = styled.button<ActionButtonProps>`
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   
   ${props => props.$variant === 'primary' && `
-    background: #3b82f6;
+    background: var(--theme-module3-100);
     color: white;
     
     &:hover {
-      background: #2563eb;
+      background: var(--theme-module3-100);
     }
   `}
   
   ${props => props.$variant === 'danger' && `
-    background: #ef4444;
+    background: var(--error-failure-100);
     color: white;
     
     &:hover {
-      background: #dc2626;
+      background: var(--error-failure-100);
     }
   `}
   

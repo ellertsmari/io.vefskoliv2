@@ -21,7 +21,7 @@ export const HowItWorksCard = styled.button`
   background: var(--primary-white);
   border: 1px solid var(--primary-black-10);
   border-left: 4px solid var(--theme-module3-100);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   font: inherit;
   color: inherit;
@@ -37,7 +37,7 @@ export const HowItWorksCard = styled.button`
 `;
 
 export const CardIcon = styled.div`
-  font-size: 2rem;
+  font-size: var(--text-3xl);
   line-height: 1;
   flex-shrink: 0;
 `;
@@ -50,7 +50,7 @@ export const CardTextWrap = styled.div`
 `;
 
 export const CardKicker = styled.span`
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -58,19 +58,19 @@ export const CardKicker = styled.span`
 `;
 
 export const CardTitle = styled.span`
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--primary-black-100);
 `;
 
 export const CardDesc = styled.span`
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
 `;
 
 export const CardCta = styled.span`
   margin-top: 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--theme-module3-100);
 `;
@@ -95,7 +95,7 @@ export const ProgressBarTrack = styled.div`
   flex: 1;
   height: 8px;
   background: var(--primary-black-10);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 `;
 
@@ -103,12 +103,12 @@ export const ProgressBarFill = styled.div<{ $pct: number }>`
   height: 100%;
   width: ${(p) => p.$pct}%;
   background: var(--theme-module3-100);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   transition: width 0.25s ease;
 `;
 
 export const StepCount = styled.span`
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--primary-black-60);
   white-space: nowrap;
@@ -133,26 +133,26 @@ export const Slide = styled.div`
 `;
 
 export const SlideIcon = styled.div`
-  font-size: 2.75rem;
+  font-size: var(--text-4xl);
   line-height: 1;
   margin-bottom: 0.75rem;
 `;
 
 export const SlideTitle = styled.h2`
-  font-size: 1.5rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--primary-black-100);
   margin: 0 0 0.5rem 0;
 `;
 
 export const SlideSubtitle = styled.p`
-  font-size: 1rem;
+  font-size: var(--text-base);
   color: var(--primary-black-60);
   margin: 0 0 1.25rem 0;
 `;
 
 export const SlideBody = styled.div`
-  font-size: 0.97rem;
+  font-size: var(--text-base);
   line-height: 1.65;
   color: var(--primary-black-100);
 
@@ -166,10 +166,10 @@ export const SlideBody = styled.div`
 
 export const Callout = styled.div`
   background: var(--theme-module3-10);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
   margin: 1rem 0 0 0;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-100);
   border-left: 3px solid var(--theme-module3-100);
 `;
@@ -194,7 +194,7 @@ export const Dots = styled.div`
 export const Dot = styled.button<{ $active: boolean }>`
   width: ${(p) => (p.$active ? "22px" : "8px")};
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   padding: 0;
   cursor: pointer;
@@ -205,11 +205,11 @@ export const Dot = styled.button<{ $active: boolean }>`
 
 export const NavButton = styled.button<{ $variant?: "primary" | "ghost" }>`
   font: inherit;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   padding: 0.6rem 1.25rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: background 0.15s ease, opacity 0.15s ease;
 
   ${(p) =>
@@ -237,14 +237,14 @@ export const NavButton = styled.button<{ $variant?: "primary" | "ghost" }>`
 
 export const CalcWrap = styled.div`
   background: var(--primary-black-10);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   margin-top: 0.5rem;
 `;
 
 export const RangeLabel = styled.label`
   display: block;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--primary-black-100);
   margin-bottom: 0.75rem;
@@ -264,7 +264,7 @@ export const RangeValue = styled.span`
 export const StackBar = styled.div`
   display: flex;
   height: 40px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   margin: 1.25rem 0 0.5rem 0;
   background: var(--primary-white);
@@ -278,7 +278,7 @@ export const StackBase = styled.div`
   align-items: center;
   justify-content: center;
   color: var(--primary-white);
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: 600;
 `;
 
@@ -289,7 +289,7 @@ export const StackReview = styled.div<{ $pct: number }>`
   align-items: center;
   justify-content: center;
   color: var(--primary-white);
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   transition: width 0.2s ease;
   overflow: hidden;
@@ -302,14 +302,14 @@ export const CalcReadout = styled.div`
 `;
 
 export const BigGrade = styled.div`
-  font-size: 2.75rem;
+  font-size: var(--text-4xl);
   font-weight: 800;
   color: var(--primary-black-100);
   line-height: 1;
 `;
 
 export const BigGradeLabel = styled.div`
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
   margin-top: 0.25rem;
 `;
@@ -325,11 +325,11 @@ export const PillRow = styled.div`
 
 export const Pill = styled.button<{ $active: boolean }>`
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   padding: 0.45rem 0.9rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid
     ${(p) => (p.$active ? "var(--theme-module3-100)" : "var(--primary-black-10)")};
   background: ${(p) =>
@@ -340,9 +340,9 @@ export const Pill = styled.button<{ $active: boolean }>`
 
 export const PillDesc = styled.div`
   background: var(--primary-black-10);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   color: var(--primary-black-100);
   min-height: 3.5rem;
   display: flex;
@@ -365,12 +365,12 @@ export const DuoGrid = styled.div`
 export const DuoCard = styled.div`
   background: var(--primary-white);
   border: 1px solid var(--primary-black-10);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
 `;
 
 export const DuoEmoji = styled.div`
-  font-size: 1.75rem;
+  font-size: var(--text-2xl);
   margin-bottom: 0.5rem;
 `;
 
@@ -381,7 +381,7 @@ export const DuoHeading = styled.div`
 `;
 
 export const DuoText = styled.div`
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
   line-height: 1.5;
 `;

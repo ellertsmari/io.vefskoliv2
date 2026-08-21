@@ -51,6 +51,7 @@ export const TopbarContainer = styled.div`
 export const Main = styled.div`
   max-width: 100%;
   height: 100%;
-  overflow: scroll;
+  /* overflow:scroll renders a scrollbar permanently, even on pages that fit. */
+  overflow: auto;
   grid-area: main;
 `;

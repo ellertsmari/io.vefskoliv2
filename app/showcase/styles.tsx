@@ -9,16 +9,16 @@ import Link from "next/link";
 export const Page = styled.div`
   min-height: 100vh;
   background:
-    radial-gradient(1200px 400px at 80% -10%, #f0f0fd 0%, transparent 60%),
-    radial-gradient(900px 400px at 0% 10%, #f7f7ff 0%, transparent 55%),
-    #fdfdff;
-  color: var(--primary-black-100, #111);
+    radial-gradient(1200px 400px at 80% -10%, var(--theme-module3-10) 0%, transparent 60%),
+    radial-gradient(900px 400px at 0% 10%, var(--theme-module3-10) 0%, transparent 55%),
+    var(--theme-module3-10);
+  color: var(--primary-black-100);
 `;
 
 export const Hero = styled.header`
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #6563eb 0%, #4a48c4 55%, #2c2b76 100%);
+  background: linear-gradient(135deg, var(--theme-module3-100) 0%, var(--theme-module3-hover) 55%, var(--theme-module3-hover) 100%);
   color: white;
   padding: 4.5rem 1.5rem 5rem;
   text-align: center;
@@ -47,11 +47,11 @@ export const Hero = styled.header`
 
 export const HeroKicker = styled.p`
   margin: 0 0 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #d1d1f9;
+  color: var(--theme-module3-30);
 `;
 
 export const HeroTitle = styled.h1`
@@ -88,12 +88,12 @@ export const ProjectHeader = styled.div`
 `;
 
 export const ModuleBadge = styled.span`
-  background: var(--theme-module3-10, #f0f0fd);
-  color: var(--theme-module3-100, #6563eb);
-  border: 1px solid var(--theme-module3-30, #d1d1f9);
-  border-radius: 999px;
+  background: var(--theme-module3-10);
+  color: var(--theme-module3-100);
+  border: 1px solid var(--theme-module3-30);
+  border-radius: var(--radius-pill);
   padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -101,13 +101,13 @@ export const ModuleBadge = styled.span`
 
 export const ProjectTitle = styled.h2`
   margin: 0;
-  font-size: 1.4rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
 `;
 
 export const ProjectDates = styled.span`
-  color: var(--primary-black-60, #666);
-  font-size: 0.9rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
 `;
 
 export const TeamGrid = styled.div`
@@ -120,8 +120,8 @@ export const TeamCard = styled(Link)`
   display: flex;
   flex-direction: column;
   background: white;
-  border: 1px solid #ececf5;
-  border-radius: 18px;
+  border: 1px solid var(--theme-module3-30);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
@@ -139,7 +139,7 @@ export const TeamCard = styled(Link)`
 export const CardCover = styled.div`
   position: relative;
   height: 185px;
-  background: linear-gradient(135deg, #f0f0fd 0%, #d1d1f9 100%);
+  background: linear-gradient(135deg, var(--theme-module3-10) 0%, var(--theme-module3-30) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,9 +157,9 @@ export const CardCoverImage = styled.img`
 `;
 
 export const CoverFallbackLetter = styled.span`
-  font-size: 3.5rem;
+  font-size: var(--text-5xl);
   font-weight: 800;
-  color: var(--theme-module3-60, #a3a1f3);
+  color: var(--theme-module3-60);
 `;
 
 export const CardBody = styled.div`
@@ -179,52 +179,52 @@ export const CardTitleRow = styled.div`
 export const CardLogo = styled.img`
   width: 36px;
   height: 36px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   flex-shrink: 0;
 `;
 
 export const CardTitle = styled.h3`
   margin: 0;
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
 `;
 
 export const CardTagline = styled.p`
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   line-height: 1.5;
-  color: var(--primary-black-60, #666);
+  color: var(--primary-black-60);
 `;
 
 export const CardMeta = styled.p`
   margin: auto 0 0;
   padding-top: 0.75rem;
-  font-size: 0.82rem;
-  color: var(--primary-black-60, #666);
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
 `;
 
 export const CardCta = styled.span`
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--theme-module3-100, #6563eb);
+  color: var(--theme-module3-100);
 `;
 
 export const EmptyNote = styled.p`
   text-align: center;
-  color: var(--primary-black-60, #666);
+  color: var(--primary-black-60);
   padding: 4rem 0;
 `;
 
 export const Footer = styled.footer`
   text-align: center;
   padding: 2.5rem 1.5rem 3.5rem;
-  color: var(--primary-black-60, #666);
-  font-size: 0.9rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
 
   a {
-    color: var(--theme-module3-100, #6563eb);
+    color: var(--theme-module3-100);
     font-weight: 600;
     text-decoration: none;
   }
@@ -242,9 +242,9 @@ export const DetailTopBar = styled.nav`
 `;
 
 export const BackLink = styled(Link)`
-  color: var(--theme-module3-100, #6563eb);
+  color: var(--theme-module3-100);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   text-decoration: none;
 
   &:hover {
@@ -255,8 +255,8 @@ export const BackLink = styled(Link)`
 export const Wordmark = styled.span`
   font-weight: 800;
   letter-spacing: 1px;
-  color: var(--primary-black-60, #666);
-  font-size: 0.9rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
   text-transform: uppercase;
 `;
 
@@ -280,7 +280,7 @@ export const DetailHeader = styled.header`
 export const DetailLogo = styled.img`
   width: 76px;
   height: 76px;
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   object-fit: cover;
   box-shadow: 0 8px 20px rgba(44, 43, 118, 0.18);
 `;
@@ -297,7 +297,7 @@ export const DetailTagline = styled.p`
   max-width: 640px;
   font-size: clamp(1.05rem, 2.4vw, 1.3rem);
   line-height: 1.55;
-  color: var(--primary-black-60, #666);
+  color: var(--primary-black-60);
 `;
 
 export const LinkButtons = styled.div`
@@ -309,41 +309,41 @@ export const LinkButtons = styled.div`
 `;
 
 export const PrimaryLink = styled.a`
-  background: var(--theme-module3-100, #6563eb);
+  background: var(--theme-module3-100);
   color: white;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.7rem 1.5rem;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   text-decoration: none;
   box-shadow: 0 6px 16px rgba(101, 99, 235, 0.35);
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--theme-module3-hover, #2c2b76);
+    background: var(--theme-module3-hover);
   }
 `;
 
 export const SecondaryLink = styled.a`
   background: white;
-  color: var(--primary-black-100, #111);
-  border: 1px solid #dcdcec;
-  border-radius: 10px;
+  color: var(--primary-black-100);
+  border: 1px solid var(--theme-module3-30);
+  border-radius: var(--radius-md);
   padding: 0.7rem 1.5rem;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   text-decoration: none;
   transition: border-color 0.15s ease;
 
   &:hover {
-    border-color: var(--theme-module3-100, #6563eb);
+    border-color: var(--theme-module3-100);
   }
 `;
 
 export const HeroImage = styled.img`
   width: 100%;
-  border-radius: 20px;
-  border: 1px solid #ececf5;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--theme-module3-30);
   box-shadow: 0 24px 60px rgba(44, 43, 118, 0.16);
 `;
 
@@ -354,7 +354,7 @@ export const DetailSection = styled.section`
 `;
 
 export const SectionHeading = styled.h2`
-  font-size: 1.2rem;
+  font-size: var(--text-xl);
   font-weight: 700;
   margin: 0 0 1rem;
   text-align: center;
@@ -362,16 +362,16 @@ export const SectionHeading = styled.h2`
 
 export const Description = styled.p`
   margin: 0;
-  font-size: 1.02rem;
+  font-size: var(--text-base);
   line-height: 1.75;
-  color: #333;
+  color: var(--primary-black-60);
   white-space: pre-wrap;
 `;
 
 export const TeamPhotoImage = styled.img`
   width: 100%;
-  border-radius: 20px;
-  border: 1px solid #ececf5;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--theme-module3-30);
   box-shadow: 0 12px 32px rgba(44, 43, 118, 0.1);
   margin-bottom: 1rem;
 `;
@@ -384,17 +384,17 @@ export const MemberChips = styled.div`
 `;
 
 export const MemberChip = styled.span`
-  background: var(--theme-module3-10, #f0f0fd);
-  color: var(--theme-module3-hover, #2c2b76);
-  border-radius: 999px;
+  background: var(--theme-module3-10);
+  color: var(--theme-module3-hover);
+  border-radius: var(--radius-pill);
   padding: 0.4rem 1rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 `;
 
 export const ContextNote = styled.p`
   text-align: center;
-  color: var(--primary-black-60, #666);
-  font-size: 0.9rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
   margin: 0;
 `;

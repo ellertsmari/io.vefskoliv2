@@ -1,39 +1,19 @@
-import {
-  ProfileImageContainer,
-  ProfileImage,
-  ProfileInitials,
-  ImageWrapper,
-} from "./style";
+import { ImageWrapper } from "./style";
 import { SubHeading2 } from "globalStyles/text";
+import { Avatar } from "UIcomponents/avatar/Avatar";
 
 type Props = {
   url?: string | null | undefined;
   name: string | null | undefined;
+  /** Avatar above the name, for the profile modal header. */
+  stacked?: boolean;
 };
 
-const ProfilePicture = ({ url, name }: Props) => {
-  const initials = name
-  ?.split(" ")
-  .filter((w): w is string => !!w)
-  .map(w => w[0])
-  .slice(0, 3)
-  .join("")
-  .toUpperCase()
-
-  return (
-    <ImageWrapper>
-      <SubHeading2>{name}</SubHeading2>
-      <ProfileImageContainer>
-        {url ? (
-          <ProfileImage src={url} alt="user picture" />
-        ) : (
-          <>
-            <ProfileInitials>{initials}</ProfileInitials>
-          </>
-        )}
-      </ProfileImageContainer>
-    </ImageWrapper>
-  );
-};
+const ProfilePicture = ({ url, name, stacked = false }: Props) => (
+  <ImageWrapper $stacked={stacked}>
+    <SubHeading2>{name}</SubHeading2>
+    <Avatar name={name} url={url} size={stacked ? 72 : 58} />
+  </ImageWrapper>
+);
 
 export default ProfilePicture;

@@ -1,17 +1,18 @@
 import styled from "styled-components";
 
+export { PageContainer } from "globalStyles/pageStyles";
+
+/* Width and padding come from PageContainer, which wraps this. */
 export const ActionGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
-  max-width: 1200px;
-  padding: 2rem;
 `;
 
 export const ActionCard = styled.button`
   background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-lg);
   padding: 2rem;
   text-align: center;
   cursor: pointer;
@@ -24,7 +25,7 @@ export const ActionCard = styled.button`
   gap: 0.5rem;
 
   &:hover {
-    border-color: #000;
+    border-color: var(--primary-black-100);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `;
@@ -32,8 +33,8 @@ export const ActionCard = styled.button`
 export const ActionIcon = styled.div`
   width: 48px;
   height: 48px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: var(--primary-black-5);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,26 +43,26 @@ export const ActionIcon = styled.div`
   svg {
     width: 24px;
     height: 24px;
-    stroke: #000;
+    stroke: var(--primary-black-100);
   }
 `;
 
 export const ActionTitle = styled.h3`
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: #000;
+  color: var(--primary-black-100);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 `;
 
 export const BadgeCount = styled.span`
-  background: #dc3545;
+  background: var(--error-failure-100);
   color: white;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 0.25rem 0.5rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   min-width: 24px;
   text-align: center;
 `;
@@ -78,13 +79,13 @@ export const GradingModalHeader = styled.div`
 `;
 
 export const GradingModalTitle = styled.h2`
-  font-size: 1.5rem;
+  font-size: var(--text-2xl);
   font-weight: 600;
   margin: 0 0 0.5rem 0;
 `;
 
 export const GradingModalSubtitle = styled.p`
-  color: #6c757d;
+  color: var(--primary-black-60);
   margin: 0;
 `;
 
@@ -95,9 +96,9 @@ export const ReviewsList = styled.div`
 `;
 
 export const ReviewItem = styled.div`
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  background: var(--primary-black-5);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 1rem;
 `;
 
@@ -113,39 +114,39 @@ export const ReviewItemInfo = styled.div`
 `;
 
 export const ReviewGuideTitle = styled.h4`
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   font-weight: 600;
   margin: 0 0 0.25rem 0;
 `;
 
 export const ReviewMeta = styled.p`
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
   margin: 0;
 `;
 
 export const ReviewVoteBadge = styled.span<{ $vote: string }>`
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 500;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: ${props =>
-    props.$vote === 'pass' ? '#d4edda' :
-    props.$vote === 'no pass' ? '#f8d7da' :
-    '#cce5ff'};
+    props.$vote === 'pass' ? 'var(--error-success-30)' :
+    props.$vote === 'no pass' ? 'var(--error-failure-30)' :
+    'var(--theme-module3-30)'};
   color: ${props =>
-    props.$vote === 'pass' ? '#155724' :
-    props.$vote === 'no pass' ? '#721c24' :
-    '#004085'};
+    props.$vote === 'pass' ? 'var(--primary-black-100)' :
+    props.$vote === 'no pass' ? 'var(--primary-black-100)' :
+    'var(--theme-module3-hover)'};
 `;
 
 export const ReviewComment = styled.div`
-  font-size: 0.9rem;
-  color: #333;
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
   margin-bottom: 1rem;
   padding: 0.75rem;
   background: white;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   max-height: 150px;
   overflow-y: auto;
 `;
@@ -161,8 +162,8 @@ export const GradeSlider = styled.input`
   height: 8px;
   -webkit-appearance: none;
   appearance: none;
-  background: #e9ecef;
-  border-radius: 4px;
+  background: var(--primary-black-10);
+  border-radius: var(--radius-sm);
   outline: none;
 
   &::-webkit-slider-thumb {
@@ -170,7 +171,7 @@ export const GradeSlider = styled.input`
     appearance: none;
     width: 20px;
     height: 20px;
-    background: #000;
+    background: var(--primary-black-100);
     border-radius: 50%;
     cursor: pointer;
   }
@@ -178,7 +179,7 @@ export const GradeSlider = styled.input`
   &::-moz-range-thumb {
     width: 20px;
     height: 20px;
-    background: #000;
+    background: var(--primary-black-100);
     border-radius: 50%;
     cursor: pointer;
     border: none;
@@ -186,29 +187,29 @@ export const GradeSlider = styled.input`
 `;
 
 export const GradeValue = styled.span`
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   min-width: 50px;
   text-align: center;
 `;
 
 export const SubmitGradeButton = styled.button`
-  background: #000;
+  background: var(--primary-black-100);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s ease;
 
   &:hover {
-    background: #333;
+    background: var(--primary-black-60);
   }
 
   &:disabled {
-    background: #6c757d;
+    background: var(--primary-black-60);
     cursor: not-allowed;
   }
 `;
@@ -216,7 +217,7 @@ export const SubmitGradeButton = styled.button`
 export const EmptyGradingState = styled.div`
   text-align: center;
   padding: 3rem;
-  color: #6c757d;
+  color: var(--primary-black-60);
 `;
 
 export const ProjectLinks = styled.div`
@@ -226,8 +227,8 @@ export const ProjectLinks = styled.div`
 `;
 
 export const ProjectLink = styled.a`
-  font-size: 0.75rem;
-  color: #007bff;
+  font-size: var(--text-xs);
+  color: var(--theme-module3-100);
   text-decoration: none;
 
   &:hover {

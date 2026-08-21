@@ -159,6 +159,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
                 <GuideGrid>
                   {combinedGuides.map((guide) => (
                     <Modal
+                      size="xl"
                       key={guide._id.toString()}
                       modalTrigger={
                         <GuideCard>
@@ -190,7 +191,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
                             )}
                             
                             {!guide.hasReturned && !guide.hasReviewed && (
-                              <span style={{ color: '#6c757d' }}>No activity</span>
+                              <span style={{ color: 'var(--primary-black-60)' }}>No activity</span>
                             )}
                           </GuideDetails>
                         </GuideCard>
@@ -205,7 +206,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
                   ))}
                 </GuideGrid>
               ) : (
-                <p style={{ color: '#6c757d' }}>No guide activity yet</p>
+                <p style={{ color: 'var(--primary-black-60)' }}>No guide activity yet</p>
               )}
             </>
           )}

@@ -5,7 +5,7 @@ export const GalleryItemContainer = styled.div`
   display: flex;
   flex-direction: column;
   background: white;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -21,7 +21,7 @@ export const GalleryItemImage = styled.div`
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: #f5f5f5;
+  background: var(--primary-black-5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,30 +47,30 @@ export const GalleryItemContent = styled.div`
 
 export const GalleryItemTitle = styled.h3`
   font-family: "Sunflower", sans-serif;
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--primary-black-100);
   margin: 0;
   line-height: 1.3;
 
   @media (min-width: 768px) {
-    font-size: 20px;
+    font-size: var(--text-xl);
   }
 `;
 
 export const GalleryItemStudent = styled.p`
   font-family: "Source Sans 3", sans-serif;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--primary-blue-100);
+  color: var(--theme-module3-100);
   margin: 0;
 `;
 
 export const GalleryItemDescription = styled.p`
   font-family: "Source Sans 3", sans-serif;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 400;
-  color: var(--primary-black-80);
+  color: var(--primary-black-60);
   margin: 0;
   line-height: 1.5;
   flex: 1;
@@ -84,7 +84,7 @@ export const GalleryItemMeta = styled.div`
 
   span {
     font-family: "Source Sans 3", sans-serif;
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 500;
     color: var(--primary-black-60);
   }
@@ -96,21 +96,17 @@ export const GalleryItemMeta = styled.div`
   }
 `;
 
+/**
+ * auto-fill rather than a hard 4-column cap, so the grid keeps adding columns
+ * on a wide screen instead of leaving the right-hand side empty. The track
+ * minimum is what decides the count; no breakpoints to keep in sync.
+ */
 export const GalleryGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  margin: 0;
 `;
 
 export const GalleryEmpty = styled.div`
@@ -124,14 +120,14 @@ export const GalleryEmpty = styled.div`
 
   h3 {
     font-family: "Sunflower", sans-serif;
-    font-size: 24px;
+    font-size: var(--text-2xl);
     font-weight: 600;
     margin: 0 0 12px 0;
   }
 
   p {
     font-family: "Source Sans 3", sans-serif;
-    font-size: 16px;
+    font-size: var(--text-base);
     margin: 0;
   }
 `;
@@ -142,7 +138,7 @@ export const IframePreviewContainer = styled.div`
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: #f5f5f5;
+  background: var(--primary-black-5);
 
   iframe {
     width: 400%;
@@ -196,8 +192,8 @@ export const PreviewBadge = styled.span<{ $type: 'figma' | 'website' }>`
   top: 8px;
   left: 8px;
   padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 11px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;

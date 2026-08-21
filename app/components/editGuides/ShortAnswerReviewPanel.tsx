@@ -19,20 +19,20 @@ import {
 const Panel = styled.section`
   margin-top: 2rem;
   padding: 1.25rem 1.5rem;
-  border: 1px solid #e3e3e3;
-  border-radius: 12px;
-  background: #fff;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-lg);
+  background: var(--primary-white);
 `;
 
 const Title = styled.h2`
   margin: 0 0 0.25rem 0;
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
 `;
 
 const Summary = styled.p`
   margin: 0 0 1rem 0;
-  color: #555;
-  font-size: 0.9rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
 `;
 
 const Question = styled.div`
@@ -41,13 +41,13 @@ const Question = styled.div`
 
 const Prompt = styled.h3`
   margin: 0 0 0.25rem 0;
-  font-size: 1rem;
+  font-size: var(--text-base);
 `;
 
 const Accepted = styled.p`
   margin: 0 0 0.5rem 0;
-  color: #555;
-  font-size: 0.85rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
 `;
 
 const Row = styled.div`
@@ -55,8 +55,8 @@ const Row = styled.div`
   align-items: center;
   gap: 0.75rem;
   padding: 0.4rem 0;
-  border-bottom: 1px solid #eee;
-  font-size: 0.9rem;
+  border-bottom: 1px solid var(--primary-black-10);
+  font-size: var(--text-sm);
 `;
 
 const Answer = styled.code`
@@ -65,28 +65,28 @@ const Answer = styled.code`
 `;
 
 const Tag = styled.span<{ $pending: boolean }>`
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 0.1rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
-  color: ${({ $pending }) => ($pending ? "#664d03" : "#555")};
-  background: ${({ $pending }) => ($pending ? "#fff3cd" : "#f1f1f1")};
+  color: ${({ $pending }) => ($pending ? "var(--primary-black-100)" : "var(--primary-black-60)")};
+  background: ${({ $pending }) => ($pending ? "var(--error-warning-30)" : "var(--primary-black-5)")};
 `;
 
 const Count = styled.span`
-  color: #777;
+  color: var(--primary-black-60);
   white-space: nowrap;
 `;
 
 const AcceptButton = styled.button`
   padding: 0.3rem 0.75rem;
-  border: 1px solid #0f5132;
-  border-radius: 6px;
-  background: #fff;
-  color: #0f5132;
+  border: 1px solid var(--primary-black-100);
+  border-radius: var(--radius-md);
+  background: var(--primary-white);
+  color: var(--primary-black-100);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 
   &:disabled {
     opacity: 0.5;
@@ -96,8 +96,8 @@ const AcceptButton = styled.button`
 
 const Note = styled.p`
   margin: 0.5rem 0 0 0;
-  font-size: 0.85rem;
-  color: #0f5132;
+  font-size: var(--text-sm);
+  color: var(--primary-black-100);
 `;
 
 export const ShortAnswerReviewPanel = ({

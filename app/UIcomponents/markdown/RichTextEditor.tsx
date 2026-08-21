@@ -3,14 +3,14 @@ import styled from "styled-components";
 import { isCodeCategory } from "utils/guideTaxonomy";
 
 const EditorContainer = styled.div`
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: white;
 `;
 
 const Toolbar = styled.div`
-  background: #000;
+  background: var(--primary-black-100);
   padding: 8px 12px;
   display: flex;
   gap: 12px;
@@ -23,7 +23,7 @@ const ToolbarButton = styled.button<{ $active?: boolean }>`
   color: white;
   cursor: pointer;
   padding: 4px 6px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,13 +40,13 @@ const EditorArea = styled.div`
   min-height: 200px;
   padding: 16px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--text-sm);
   line-height: 1.5;
   outline: none;
   
   &:empty::before {
     content: "Input text...";
-    color: #999;
+    color: var(--primary-black-60);
   }
 
   strong {
@@ -54,7 +54,7 @@ const EditorArea = styled.div`
   }
 
   a {
-    color: #0066cc;
+    color: var(--theme-module3-100);
     text-decoration: underline;
   }
 
@@ -92,10 +92,10 @@ const Tooltip = styled.div<{ $visible: boolean }>`
   right: auto;
   left: auto;
   padding: 12px;
-  background: #333;
+  background: var(--primary-black-60);
   color: white;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
   line-height: 1.4;
   width: 280px;
   z-index: 9999;
@@ -113,7 +113,7 @@ const Tooltip = styled.div<{ $visible: boolean }>`
     height: 0;
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
-    border-top: 6px solid #333;
+    border-top: 6px solid var(--primary-black-60);
   }
 
   ul {

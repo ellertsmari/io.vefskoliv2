@@ -75,7 +75,7 @@ export default function LTIContentPage() {
           onClick={() => window.history.back()}
           style={{
             padding: '10px 20px',
-            backgroundColor: '#007bff',
+            backgroundColor: 'var(--theme-module3-100)',
             color: 'white',
             border: 'none',
             borderRadius: '5px',
@@ -97,13 +97,13 @@ export default function LTIContentPage() {
       lineHeight: '1.6'
     }}>
       <header style={{ 
-        borderBottom: '2px solid #007bff', 
+        borderBottom: '2px solid var(--theme-module3-100)', 
         paddingBottom: '20px', 
         marginBottom: '30px' 
       }}>
-        <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--primary-black-60)', marginBottom: '5px' }}>
           <span style={{ 
-            background: '#f0f0f0', 
+            background: 'var(--primary-black-5)', 
             padding: '2px 6px', 
             borderRadius: '3px',
             marginRight: '10px'
@@ -115,7 +115,7 @@ export default function LTIContentPage() {
           )}
         </div>
         <h1 style={{ 
-          color: '#333', 
+          color: 'var(--primary-black-60)', 
           margin: '10px 0',
           fontSize: '2.5em'
         }}>
@@ -123,7 +123,7 @@ export default function LTIContentPage() {
         </h1>
         {guide.description && (
           <p style={{ 
-            color: '#666', 
+            color: 'var(--primary-black-60)', 
             fontSize: '1.1em',
             fontStyle: 'italic'
           }}>
@@ -135,7 +135,7 @@ export default function LTIContentPage() {
       <main>
         {guide.content ? (
           <div 
-            style={{ fontSize: '16px', color: '#333' }}
+            style={{ fontSize: '16px', color: 'var(--primary-black-60)' }}
           >
             {/* Content should be properly sanitized before display */}
             {guide.content}
@@ -144,9 +144,9 @@ export default function LTIContentPage() {
           <div style={{ 
             textAlign: 'center', 
             padding: '40px',
-            backgroundColor: '#f8f9fa',
+            backgroundColor: 'var(--primary-black-5)',
             borderRadius: '8px',
-            color: '#666'
+            color: 'var(--primary-black-60)'
           }}>
             <h3>Content Coming Soon</h3>
             <p>This guide is being developed. Please check back later.</p>
@@ -157,20 +157,20 @@ export default function LTIContentPage() {
       <footer style={{ 
         marginTop: '40px', 
         paddingTop: '20px', 
-        borderTop: '1px solid #eee',
+        borderTop: '1px solid var(--primary-black-10)',
         textAlign: 'center',
-        color: '#666',
-        fontSize: '14px'
+        color: 'var(--primary-black-60)',
+        fontSize: 'var(--text-sm)'
       }}>
         <p>This content is provided by the Learning Management System</p>
         <a 
           href="/LMS/dashboard" 
           target="_blank"
           style={{ 
-            color: '#007bff', 
+            color: 'var(--theme-module3-100)', 
             textDecoration: 'none',
             padding: '8px 16px',
-            border: '1px solid #007bff',
+            border: '1px solid var(--theme-module3-100)',
             borderRadius: '4px',
             display: 'inline-block',
             marginTop: '10px'

@@ -10,7 +10,7 @@ export const PlayIconWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1e3a5f;
+  color: var(--theme-module3-hover);
   transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
   padding-left: 4px; /* Optical centering for play icon */
 
@@ -23,7 +23,7 @@ export const CardContainer = styled(Link)`
   display: flex;
   flex-direction: column;
   background: white;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -37,7 +37,7 @@ export const CardContainer = styled(Link)`
 
   &:hover ${PlayIconWrapper} {
     transform: scale(1.1);
-    background: var(--primary-blue-100, #2563eb);
+    background: var(--theme-module3-100);
     color: white;
   }
 `;
@@ -46,7 +46,7 @@ export const ThumbnailArea = styled.div`
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  background: linear-gradient(135deg, var(--theme-module3-hover) 0%, var(--theme-module3-hover) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,10 +58,10 @@ export const DurationBadge = styled.span`
   right: 8px;
   background: rgba(0, 0, 0, 0.75);
   color: white;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 `;
 
 export const ModuleBadge = styled.span`
@@ -69,10 +69,10 @@ export const ModuleBadge = styled.span`
   top: 8px;
   left: 8px;
   color: white;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 700;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 `;
@@ -85,9 +85,9 @@ export const CardContent = styled.div`
 `;
 
 export const CardTitle = styled.h3`
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--primary-black-100, #1a1a1a);
+  color: var(--primary-black-100);
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -97,6 +97,6 @@ export const CardTitle = styled.h3`
 `;
 
 export const CardMeta = styled.span`
-  font-size: 12px;
-  color: var(--primary-black-60, #666);
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
 `;

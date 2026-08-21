@@ -1,51 +1,59 @@
 "use client";
-import { useState } from "react";
-import { InfoSubtitle, UserInfoCardWrapper } from "./style";
+import {
+  InfoSubtitle,
+  PeopleGrid,
+  PersonCard,
+  PersonCount,
+  PersonName,
+  SectionHeader,
+  UserInfoCardWrapper,
+  EmptyState,
+} from "./style";
 import { ShareableUserInfo } from "types/types";
 import { UserInfoCard } from "../userInfoCard/UserInfoCard";
-import { ModuleOptions, Option } from "UIcomponents/dropdown/Dropdown";
+import { Avatar } from "UIcomponents/avatar/Avatar";
+import Modal from "UIcomponents/modal/modal";
 
 export const UserInfoCards = ({
   userInfo,
   title,
-  zIndex,
 }: {
   userInfo: ShareableUserInfo[];
   title: string;
-  zIndex?: number;
 }) => {
-  const [selectedUser, setSelectedUser] = useState<ShareableUserInfo | null>(
-    null
-  );
-
-  const options: Option[] = userInfo?.length
-    ? [{ optionName: "None", onClick: () => setSelectedUser(null) }].concat(
-        userInfo.map((user: ShareableUserInfo) => {
-          return {
-            optionName: user.name,
-            onClick: () => setSelectedUser(user),
-          };
-        })
-      )
-    : [];
-
-  if (userInfo.length === 0) return <div>{`No ${title} found`}</div>;
+  if (userInfo.length === 0) {
+    return (
+      <UserInfoCardWrapper>
+        <InfoSubtitle>{title}</InfoSubtitle>
+        <EmptyState>{`No ${title.toLowerCase()} found`}</EmptyState>
+      </UserInfoCardWrapper>
+    );
+  }
 
   return (
     <UserInfoCardWrapper>
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          justifyContent: "space-between",
-        }}
-      >
+      <SectionHeader>
         <InfoSubtitle>{title}</InfoSubtitle>
-        <ModuleOptions
-          options={options}
-        />
-      </div>
-      {selectedUser && <UserInfoCard userInfo={selectedUser} />}
+        <PersonCount>{userInfo.length}</PersonCount>
+      </SectionHeader>
+
+      <PeopleGrid>
+        {userInfo.map((user, index) => (
+          // Names are the only identifier the shareable projection returns, so
+          // the index guards against two people sharing one.
+          <li key={`${user.name}-${index}`}>
+            <Modal
+              modalTrigger={
+                <PersonCard type="button">
+                  <Avatar name={user.name} url={user.avatarUrl} size={72} />
+                  <PersonName>{user.name}</PersonName>
+                </PersonCard>
+              }
+              modalContent={<UserInfoCard userInfo={user} />}
+            />
+          </li>
+        ))}
+      </PeopleGrid>
     </UserInfoCardWrapper>
   );
 };

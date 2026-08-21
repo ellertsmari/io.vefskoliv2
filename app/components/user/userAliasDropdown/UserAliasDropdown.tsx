@@ -105,7 +105,7 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
           <DropdownButton
             onClick={handleClearAlias}
             disabled={loading}
-            style={{ background: 'var(--primary-red-100)', marginBottom: '8px' }}
+            style={{ background: 'var(--error-failure-100)', marginBottom: '8px' }}
           >
             Exit Student View
           </DropdownButton>
@@ -140,7 +140,7 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
               >
                 <div>
                   <strong>{user.name}</strong>
-                  <div style={{ fontSize: "12px", color: "#666" }}>
+                  <div style={{ fontSize: "12px", color: "var(--primary-black-60)" }}>
                     {user.email} ({user.role})
                   </div>
                 </div>

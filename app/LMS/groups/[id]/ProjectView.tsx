@@ -42,8 +42,8 @@ const TitleRow = styled.div`
 
 const Description = styled.div`
   background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-lg);
   padding: 1rem 1.5rem;
 `;
 

@@ -18,7 +18,7 @@ export const FullScreenWrapper = styled(Wrapper)`
 
 export const Border = styled(Wrapper)`
   border: 1px solid var(--theme-module3-100);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
 `;
 
 export const MaterialButton = styled(Button)`
@@ -50,7 +50,7 @@ const Toast = styled.div`
   padding: 16px;
   top: 100px;
   position: absolute;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   z-index: 1000;
 `;
 

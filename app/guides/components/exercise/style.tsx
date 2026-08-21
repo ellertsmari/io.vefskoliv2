@@ -16,16 +16,16 @@ export const TaskPrompt = styled.legend`
 `;
 
 export const TaskMeta = styled.span`
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #666;
+  color: var(--primary-black-60);
 `;
 
 export const ExerciseMeta = styled.p`
   margin: 0 0 1rem 0;
-  font-size: 0.9rem;
-  color: #555;
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
 `;
 
 export const SubmitRow = styled.div`
@@ -35,8 +35,8 @@ export const SubmitRow = styled.div`
 `;
 
 export const AnsweredCount = styled.span`
-  font-size: 0.9rem;
-  color: #555;
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
 `;
 
 export const Option = styled.label`
@@ -63,7 +63,7 @@ const editorBox = css`
   padding: 0.75rem 1rem;
   border: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   line-height: 1.5;
   tab-size: 2;
   white-space: pre-wrap;
@@ -74,7 +74,7 @@ const editorBox = css`
 export const EditorWrap = styled.div`
   position: relative;
   width: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: #1e1e2a;
   overflow: hidden;
 `;
@@ -117,7 +117,7 @@ export const EditorTextArea = styled.textarea`
   /* The text itself is invisible: the layer behind supplies the colours. The
      caret and the selection must stay visible or the box is unusable. */
   color: transparent;
-  caret-color: #ffffff;
+  caret-color: var(--primary-white);
   outline: none;
 
   &::selection {
@@ -133,7 +133,7 @@ export const TestList = styled.ul`
   list-style: none;
   margin: 0.5rem 0 0 0;
   padding: 0;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 `;
 
 export const TestRow = styled.li<{ $passed?: boolean }>`
@@ -142,7 +142,7 @@ export const TestRow = styled.li<{ $passed?: boolean }>`
   gap: 0.5rem;
   padding: 0.25rem 0;
   color: ${({ $passed }) =>
-    $passed === undefined ? "inherit" : $passed ? "#0f5132" : "#842029"};
+    $passed === undefined ? "inherit" : $passed ? "var(--primary-black-100)" : "var(--primary-black-100)"};
 `;
 
 export const TestName = styled.span`
@@ -158,10 +158,10 @@ export const TestDetail = styled.code`
 export const ErrorBox = styled.div`
   margin-top: 0.5rem;
   padding: 0.6rem 0.9rem;
-  border-radius: 8px;
-  background: #fff3cd;
-  color: #664d03;
-  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+  background: var(--error-warning-30);
+  color: var(--primary-black-100);
+  font-size: var(--text-sm);
 `;
 
 export const ErrorSummary = styled.p`
@@ -184,7 +184,7 @@ export const ShortAnswerInput = styled.input`
   width: 100%;
   padding: 0.6rem 1rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font: inherit;
   background: transparent;
 
@@ -195,11 +195,11 @@ export const ShortAnswerInput = styled.input`
 
 export const ResultBanner = styled.div<{ $passed: boolean }>`
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin-bottom: 1rem;
   font-weight: 600;
-  color: ${({ $passed }) => ($passed ? "#0f5132" : "#842029")};
-  background-color: ${({ $passed }) => ($passed ? "#d1e7dd" : "#f8d7da")};
+  color: ${({ $passed }) => ($passed ? "var(--primary-black-100)" : "var(--primary-black-100)")};
+  background-color: ${({ $passed }) => ($passed ? "var(--error-success-30)" : "var(--error-failure-30)")};
 `;
 
 export const TaskResultNote = styled.p<{
@@ -207,23 +207,23 @@ export const TaskResultNote = styled.p<{
   $partial?: boolean;
 }>`
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: ${({ $correct, $partial }) =>
-    $correct ? "#0f5132" : $partial ? "#664d03" : "#842029"};
+    $correct ? "var(--primary-black-100)" : $partial ? "var(--primary-black-100)" : "var(--primary-black-100)"};
 `;
 
 export const GoalBreakdownList = styled.ul`
   list-style: none;
   margin: 0 0 1rem 0;
   padding: 0.75rem 1rem;
-  border: 1px solid #e3e3e3;
-  border-radius: 8px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 `;
 
 export const GoalItem = styled.li<{ $mastered: boolean }>`
-  font-size: 0.9rem;
-  color: ${({ $mastered }) => ($mastered ? "#0f5132" : "#664d03")};
+  font-size: var(--text-sm);
+  color: ${({ $mastered }) => ($mastered ? "var(--primary-black-100)" : "var(--primary-black-100)")};
 `;

@@ -47,16 +47,16 @@ const DropZone = styled.div<{ $over: boolean }>`
   flex-direction: column;
   gap: 0.5rem;
   min-height: 60px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.25rem;
   background: ${({ $over }) => ($over ? "var(--primary-black-10)" : "transparent")};
   transition: background 0.15s ease;
 `;
 
 const StudentCard = styled.div<{ $dragging: boolean }>`
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  background: var(--primary-black-5);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 0.5rem 0.75rem;
   display: flex;
   flex-direction: column;
@@ -69,7 +69,7 @@ const StudentName = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 `;
 
@@ -80,10 +80,10 @@ const BadgeRow = styled.div`
 `;
 
 const MoveSelect = styled.select`
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 0.25rem;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   background: white;
 `;
 

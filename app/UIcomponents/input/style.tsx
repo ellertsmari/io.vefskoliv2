@@ -10,7 +10,7 @@ export const ReusableInput = styled.input`
   height: 32px;
   padding: 10px;
   border: 1px solid var(--primary-black-30);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: 0.15s ease-in-out;
 
   &:hover {
@@ -32,7 +32,7 @@ export const ReusableTextarea = styled.textarea`
   height: 200px;
   padding: 10px;
   border: 1px solid var(--primary-black-30);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 
   &:hover {
     border: 1px solid var(--theme-module3-60);
@@ -49,7 +49,7 @@ export const ReusableTextarea = styled.textarea`
 `;
 
 export const Label = styled.label`
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
   width: ${mobileWidth};
 
@@ -66,5 +66,5 @@ export const Wrapper = styled.div`
 
 export const ErrorMessage = styled(Paragraph)`
   color: var(--error-failure-100);
-  font-size: 14px;
+  font-size: var(--text-sm);
 `;

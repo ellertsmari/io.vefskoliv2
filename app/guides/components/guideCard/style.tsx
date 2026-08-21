@@ -21,7 +21,7 @@ export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`
   gap: 16px;
   width: 190px;
   height: 200px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 
   position: relative;
 
@@ -56,13 +56,13 @@ export const VoteContainer = styled.button`
   &:focus-visible {
     outline: 2px solid var(--primary-black-100);
     outline-offset: 4px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 `;
 
 export const VoteDescription = styled.span`
-  font-size: 0.75rem;
-  color: #555;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
   text-align: center;
   line-height: 1.3;
   margin-top: 0.25rem;
@@ -72,7 +72,7 @@ export const VoteIcon = styled.div`
   display: flex;
   border-width: 1px;
   border-style: solid;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   width: 100px;
   height: 100px;
   justify-content: center;

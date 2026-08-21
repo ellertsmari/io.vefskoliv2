@@ -250,23 +250,23 @@ const slides: SlideDef[] = [
     body: (
       <SlideBody>
         <GradeScale as="div" style={{ gridTemplateColumns: "auto 1fr" }}>
-          <StatusBadge $color="#6c757d">Not Returned</StatusBadge>
+          <StatusBadge $color="var(--primary-black-60)">Not Returned</StatusBadge>
           <GradeDescription>You haven&apos;t submitted yet.</GradeDescription>
 
-          <StatusBadge $color="#28a745">Awaiting Reviews</StatusBadge>
+          <StatusBadge $color="var(--error-success-100)">Awaiting Reviews</StatusBadge>
           <GradeDescription>
             Submitted, waiting for {REQUIRED_REVIEWS_COUNT} peer reviews.
           </GradeDescription>
 
-          <StatusBadge $color="#28a745">Passed</StatusBadge>
+          <StatusBadge $color="var(--error-success-100)">Passed</StatusBadge>
           <GradeDescription>Enough reviews, and it passed. 🎉</GradeDescription>
 
-          <StatusBadge $color="#6f42c1">Hall of Fame</StatusBadge>
+          <StatusBadge $color="var(--theme-module3-100)">Hall of Fame</StatusBadge>
           <GradeDescription>
             A reviewer recommended it to the gallery.
           </GradeDescription>
 
-          <StatusBadge $color="#dc3545">Failed</StatusBadge>
+          <StatusBadge $color="var(--error-failure-100)">Failed</StatusBadge>
           <GradeDescription>
             Got {FAIL_THRESHOLD}+ &quot;no pass&quot; votes — fix it and
             resubmit.

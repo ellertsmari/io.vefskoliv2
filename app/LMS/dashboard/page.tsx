@@ -1,5 +1,3 @@
-"use server";
-
 import { auth } from "../../../auth";
 import { StudentHomePage } from "../../components/studentHome/StudentHomePage";
 import { TeacherHomePage } from "../../components/teacherHome/TeacherHomePage";

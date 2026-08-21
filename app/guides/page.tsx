@@ -1,5 +1,3 @@
-"use server";
-
 import { auth } from "../../auth";
 import { Guides } from "./components/guides/Guides";
 import { Module, ReturnStatus, ReviewStatus, GradesReceivedStatus, GradesGivenStatus } from "types/guideTypes";

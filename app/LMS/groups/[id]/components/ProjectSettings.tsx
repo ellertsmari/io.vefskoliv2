@@ -42,7 +42,7 @@ const ToggleRow = styled.label`
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
 
@@ -68,21 +68,21 @@ const SlotGrid = styled.div`
 `;
 
 const SlotTeamName = styled.span`
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 `;
 
 const SlotEnd = styled.span`
-  font-size: 0.85rem;
-  color: #868e96;
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
   font-variant-numeric: tabular-nums;
 `;
 
 const TimeSelect = styled.select`
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
   padding: 0.35rem 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   background: white;
   font-variant-numeric: tabular-nums;
 `;
@@ -91,7 +91,7 @@ const LengthRow = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 `;
 
@@ -244,7 +244,7 @@ export const ProjectSettings = ({
               />
             </Label>
           </DateRow>
-          <SectionTitle as="h3" style={{ fontSize: "0.95rem" }}>
+          <SectionTitle as="h3" style={{ fontSize: "var(--text-base)" }}>
             Module
           </SectionTitle>
           <ChipRow>

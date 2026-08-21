@@ -1,9 +1,15 @@
 "use client";
 import styled from "styled-components";
 
-export const Container = styled.div`
+export {
+  PageContainer as Container,
+  PageTitle,
+  PageSubtitle as Intro,
+} from "globalStyles/pageStyles";
+
+export const Sections = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 32px;
-  gap: 32px;
+  width: 100%;
+  gap: 2.5rem;
 `;

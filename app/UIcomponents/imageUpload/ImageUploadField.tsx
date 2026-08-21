@@ -17,25 +17,25 @@ const Preview = styled.div`
 const PreviewImage = styled.img`
   max-width: 100%;
   max-height: 180px;
-  border-radius: 8px;
-  border: 1px solid var(--primary-black-10, #e9ecef);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary-black-10);
   object-fit: cover;
 `;
 
 const RemoveButton = styled.button`
-  border: 1px solid var(--primary-black-10, #e9ecef);
+  border: 1px solid var(--primary-black-10);
   background: white;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--error-failure-100, #c92a2a);
+  color: var(--error-failure-100);
   cursor: pointer;
 `;
 
 const Hint = styled.span`
-  font-size: 0.75rem;
-  color: var(--primary-black-60, #6c757d);
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
 `;
 
 type Props = {

@@ -20,7 +20,7 @@ const Nav = styled.nav`
   align-items: center;
   width: 100%;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 8px;
 `;
 
@@ -40,8 +40,8 @@ export const DesktopNavbarButton = styled(NavbarButton)`
   justify-content: flex-start;
   gap: 8px;
   width: 138px;
-  font-size: 15px;
-  border-radius: 8px;
+  font-size: var(--text-base);
+  border-radius: var(--radius-md);
   cursor: pointer;
 
   &:hover{
@@ -68,6 +68,6 @@ export const MobileNavbarButton = styled(NavbarButton)`
     width: 40px;
     height: 40px;
     display: flex;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     cursor: pointer;
 `;

@@ -8,6 +8,7 @@ import { getUngradedReviews, UngradedReviewWithDetails } from "serverActions/get
 import { returnGrade } from "serverActions/returnGrade";
 import {
   ActionGrid,
+  PageContainer,
   ActionCard,
   ActionIcon,
   ActionTitle,
@@ -110,7 +111,7 @@ const GradingReviewItem = ({
         </SubmitGradeButton>
       </GradeInputContainer>
       {state && !state.success && (
-        <p style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+        <p style={{ color: 'var(--error-failure-100)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
           Error: {state.message}
         </p>
       )}
@@ -208,8 +209,10 @@ export const TeacherHomePage = ({ extendedGuides, modules }: TeacherHomePageProp
   };
 
   return (
-    <ActionGrid>
+    <PageContainer>
+      <ActionGrid>
       <Modal
+        size="lg"
         modalTrigger={
           <ActionCard>
             <ActionIcon>
@@ -274,6 +277,7 @@ export const TeacherHomePage = ({ extendedGuides, modules }: TeacherHomePageProp
         </ActionIcon>
         <ActionTitle>EDIT GUIDES</ActionTitle>
       </ActionCard>
-    </ActionGrid>
+      </ActionGrid>
+    </PageContainer>
   );
 };

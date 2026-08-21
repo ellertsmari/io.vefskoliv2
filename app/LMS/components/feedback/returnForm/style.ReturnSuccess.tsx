@@ -10,7 +10,7 @@ export const SuccessPanel = styled.div`
 
 export const SuccessHeading = styled.h2`
   margin: 0;
-  font-size: 1.3rem;
+  font-size: var(--text-xl);
 `;
 
 export const SuccessText = styled.p`

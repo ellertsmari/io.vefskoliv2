@@ -1,4 +1,3 @@
-"use server";
 import { PeopleOverview } from "./components/peopleOverview/PeopleOverview";
 import { getUsers } from "serverActions/getUsers";
 

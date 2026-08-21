@@ -30,7 +30,7 @@ const CategoryBlock = styled.div<{ $color: string }>`
   gap: 0.5rem;
   padding: 0 0 1rem 0.75rem;
   border-left: 4px solid ${({ $color }) => $color};
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--primary-black-10);
 
   &:last-of-type {
     border-bottom: none;
@@ -176,7 +176,7 @@ export const TeamEvalForm = ({
         return (
           <CategoryBlock key={item.key} $color={meta.color}>
             <CategoryHeader>
-              <SectionTitle as="h3" style={{ fontSize: "0.95rem", margin: 0 }}>
+              <SectionTitle as="h3" style={{ fontSize: "var(--text-base)", margin: 0 }}>
                 {item.title}
               </SectionTitle>
               <ScorePill $color={meta.color} $background={meta.background}>
@@ -238,7 +238,7 @@ export const TeamEvalForm = ({
         );
       })}
 
-      <SectionTitle as="h3" style={{ fontSize: "0.95rem" }}>
+      <SectionTitle as="h3" style={{ fontSize: "var(--text-base)" }}>
         Overall comment
       </SectionTitle>
       <TextArea

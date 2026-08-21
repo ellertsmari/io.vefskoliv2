@@ -48,10 +48,10 @@ export const HelpPanel = styled.aside`
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.9rem 1rem;
-  border-radius: 10px;
-  background: #f6f6fb;
-  border: 1px solid #e6e6f2;
-  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+  background: var(--theme-module3-10);
+  border: 1px solid var(--theme-module3-30);
+  font-size: var(--text-sm);
   align-self: start;
   position: sticky;
   top: 0;
@@ -59,10 +59,10 @@ export const HelpPanel = styled.aside`
 
 export const HelpHeading = styled.h4`
   margin: 0.35rem 0 0 0;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #555;
+  color: var(--primary-black-60);
 
   &:first-child {
     margin-top: 0;
@@ -72,7 +72,7 @@ export const HelpHeading = styled.h4`
 export const HelpBody = styled.p`
   margin: 0;
   line-height: 1.5;
-  color: #333;
+  color: var(--primary-black-60);
 `;
 
 export const HelpLinkList = styled.ul`
@@ -86,7 +86,7 @@ export const HelpLinkList = styled.ul`
 
 export const HelpLinkItem = styled.li`
   a {
-    color: #4a48c4;
+    color: var(--theme-module3-hover);
     text-decoration: underline;
     overflow-wrap: anywhere;
   }
@@ -116,22 +116,22 @@ export const Segment = styled.button<{
   height: 10px;
   padding: 0;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: transform 120ms ease;
   background: ${({ $state }) =>
-    $state === "correct" ? "#1a7f4b" : $state === "wrong" ? "#c0392b" : "#dcdce4"};
+    $state === "correct" ? "var(--error-success-100)" : $state === "wrong" ? "var(--error-failure-100)" : "var(--theme-module3-30)"};
   /* A ring drawn with box-shadow rather than outline: it follows the border
      radius and stays within the padding above, so nothing is clipped. */
   box-shadow: ${({ $current }) =>
-    $current ? "0 0 0 2px #fff, 0 0 0 4px #6563eb" : "none"};
+    $current ? "0 0 0 2px var(--primary-white), 0 0 0 4px var(--theme-module3-100)" : "none"};
 
   &:hover {
     transform: scaleY(1.4);
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6563eb;
+    box-shadow: 0 0 0 2px var(--primary-white), 0 0 0 4px var(--theme-module3-100);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -161,8 +161,8 @@ export const RunnerFooter = styled.footer`
   flex-wrap: wrap;
   gap: 0.75rem;
   padding: 0.75rem 0 0 0;
-  border-top: 1px solid #eee;
-  background: var(--primary-white, #fff);
+  border-top: 1px solid var(--primary-black-10);
+  background: var(--primary-white);
 `;
 
 export const Spacer = styled.div`
@@ -171,7 +171,7 @@ export const Spacer = styled.div`
 
 export const Prompt = styled.h3`
   margin: 0;
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   line-height: 1.4;
 
   /* Focused on each new question so a keyboard user lands on the question
@@ -180,7 +180,7 @@ export const Prompt = styled.h3`
     outline: none;
   }
   &:focus-visible {
-    outline: 2px solid #6563eb;
+    outline: 2px solid var(--theme-module3-100);
     outline-offset: 4px;
   }
 `;
@@ -188,15 +188,15 @@ export const Prompt = styled.h3`
 export const Feedback = styled.p<{ $tone: "right" | "wrong" }>`
   margin: 0.25rem 0 0 0;
   padding: 0.6rem 0.9rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  color: ${({ $tone }) => ($tone === "right" ? "#0f5132" : "#842029")};
-  background: ${({ $tone }) => ($tone === "right" ? "#d1e7dd" : "#f8d7da")};
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: ${({ $tone }) => ($tone === "right" ? "var(--primary-black-100)" : "var(--primary-black-100)")};
+  background: ${({ $tone }) => ($tone === "right" ? "var(--error-success-30)" : "var(--error-failure-30)")};
 `;
 
 export const ScoreBig = styled.p`
   margin: 0;
-  font-size: 2.5rem;
+  font-size: var(--text-4xl);
   font-weight: 700;
   line-height: 1;
 `;
@@ -208,20 +208,20 @@ export const GoalList = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 `;
 
 export const GoalRow = styled.li<{ $mastered: boolean }>`
-  color: ${({ $mastered }) => ($mastered ? "#0f5132" : "#664d03")};
+  color: ${({ $mastered }) => ($mastered ? "var(--primary-black-100)" : "var(--primary-black-100)")};
 `;
 
 export const ConfirmNotice = styled.p`
   margin: 0;
   padding: 0.9rem 1.1rem;
-  border-radius: 10px;
-  background: #fff3cd;
-  border: 1px solid #ffe08a;
-  color: #664d03;
+  border-radius: var(--radius-md);
+  background: var(--error-warning-30);
+  border: 1px solid var(--error-warning-60);
+  color: var(--primary-black-100);
   line-height: 1.55;
 `;
 
@@ -230,8 +230,8 @@ export const ReviewRow = styled.div`
   grid-template-columns: 8.5rem minmax(0, 1fr);
   gap: 0.75rem;
   padding: 0.6rem 0;
-  border-top: 1px solid #eee;
-  font-size: 0.9rem;
+  border-top: 1px solid var(--primary-black-10);
+  font-size: var(--text-sm);
   align-items: start;
 
   @media (max-width: 36rem) {
@@ -247,21 +247,21 @@ export const ReviewOutcome = styled.span<{
   white-space: nowrap;
   color: ${({ $tone }) =>
     $tone === "good"
-      ? "#0f5132"
+      ? "var(--primary-black-100)"
       : $tone === "ok"
-      ? "#664d03"
+      ? "var(--primary-black-100)"
       : $tone === "bad"
-      ? "#842029"
-      : "#777"};
+      ? "var(--primary-black-100)"
+      : "var(--primary-black-60)"};
 `;
 
 export const ReviewAnswer = styled.p`
   margin: 0.15rem 0 0 0;
-  color: #555;
+  color: var(--primary-black-60);
   overflow-wrap: anywhere;
 `;
 
 export const ReviewNote = styled.p`
   margin: 0.25rem 0 0 0;
-  color: #0f5132;
+  color: var(--primary-black-100);
 `;

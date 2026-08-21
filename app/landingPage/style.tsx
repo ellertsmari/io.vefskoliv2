@@ -12,7 +12,7 @@ export const NavBar = styled.nav<{ $isScrolled?: boolean }>`
     position: fixed;
     top: 16px;
     left: 16px;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     border: 1px solid ${props => props.$isScrolled ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)'};
     z-index: 4;
     box-shadow: ${props => props.$isScrolled ? '0 8px 32px rgba(0, 0, 0, 0.3)' : '0 8px 32px rgba(0, 0, 0, 0.1)'};
@@ -41,7 +41,7 @@ export const MobileMenuButton = styled.button`
     background: none;
     border: none;
     color: white;
-    font-size: 24px;
+    font-size: var(--text-2xl);
     cursor: pointer;
     padding: 8px;
     z-index: 8;
@@ -81,7 +81,7 @@ export const MobileMenuCloseButton = styled.button`
     background: none;
     border: none;
     color: white;
-    font-size: 32px;
+    font-size: var(--text-3xl);
     cursor: pointer;
     padding: 8px;
     z-index: 8;
@@ -116,41 +116,41 @@ export const TitleContainer = styled.div`
 `
 export const Title = styled.h1`
     font-family: "Sunflower", sans-serif;
-    font-size: 32px;
+    font-size: var(--text-3xl);
     font-weight: 700;
     color: var(--primary-white);
     line-height: 1.2;
 
     @media (min-width: 480px) {
-        font-size: 48px;
+        font-size: var(--text-5xl);
     }
 
     @media (min-width: 768px) {
-        font-size: 64px;
+        font-size: var(--text-display);
     }
 `
 export const Subtitle = styled.h2`
     font-family: "Sunflower", sans-serif;
-    font-size: 16px;
+    font-size: var(--text-base);
     font-weight: 300;
     color: var(--primary-white);
     margin-left: 0;
     line-height: 1.4;
 
     @media (min-width: 480px) {
-        font-size: 20px;
+        font-size: var(--text-xl);
         margin-left: 4px;
     }
 
     @media (min-width: 768px) {
-        font-size: 24px;
+        font-size: var(--text-2xl);
         margin-left: 8px;
     }
 `
 
 export const SectionTitle = styled.h2`
     font-family: "Sunflower", sans-serif;
-    font-size: 32px;
+    font-size: var(--text-3xl);
     font-weight: 700;
     color: var(--primary-black-100);
     text-align: center;
@@ -158,15 +158,15 @@ export const SectionTitle = styled.h2`
     line-height: 1.2;
 
     @media (min-width: 480px) {
-        font-size: 40px;
+        font-size: var(--text-4xl);
     }
 
     @media (min-width: 768px) {
-        font-size: 48px;
+        font-size: var(--text-5xl);
     }
 
     @media (min-width: 1024px) {
-        font-size: 64px;
+        font-size: var(--text-display);
     }
 `
 
@@ -180,7 +180,7 @@ export const VideoControlButton = styled.button`
     background-color: rgba(0, 0, 0, 0.6);
     border: 2px solid rgba(255, 255, 255, 0.3);
     color: white;
-    font-size: 20px;
+    font-size: var(--text-xl);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -194,7 +194,7 @@ export const VideoControlButton = styled.button`
         right: 32px;
         width: 60px;
         height: 60px;
-        font-size: 24px;
+        font-size: var(--text-2xl);
     }
 
     &:hover {
@@ -256,7 +256,7 @@ export const AboutUsText = styled.div`
     padding: 0 16px;
 
     p {
-        font-size: 16px;
+        font-size: var(--text-base);
         line-height: 1.6;
     }
 
@@ -265,7 +265,7 @@ export const AboutUsText = styled.div`
         text-align: left;
 
         p {
-            font-size: 18px;
+            font-size: var(--text-lg);
         }
     }
 `
@@ -335,18 +335,18 @@ export const FooterText = styled.div`
     }
 
     strong {
-        font-size: 18px;
+        font-size: var(--text-lg);
 
         @media (min-width: 768px) {
-            font-size: 24px;
+            font-size: var(--text-2xl);
         }
     }
 
     p {
-        font-size: 14px;
+        font-size: var(--text-sm);
 
         @media (min-width: 768px) {
-            font-size: 16px;
+            font-size: var(--text-base);
         }
     }
 `
@@ -372,7 +372,7 @@ export const FooterSocialIcon = styled(Image)`
 `
 
 export const FooterCopyright = styled.div`
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 400;
     color: var(--primary-black-100);
     display: flex;
@@ -385,7 +385,7 @@ export const FooterCopyright = styled.div`
     @media (min-width: 768px) {
         flex-direction: row;
         justify-content: space-between;
-        font-size: 16px;
+        font-size: var(--text-base);
         gap: 0;
     }
 `

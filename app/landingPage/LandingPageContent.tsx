@@ -195,18 +195,18 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
       <Footer>
         <FooterContent>
           <FooterText>
-            <strong style={{ fontSize: '24px' }}>LOCATION</strong>
+            <strong style={{ fontSize: 'var(--text-2xl)' }}>LOCATION</strong>
             <p>TÆKNISKÓLINN IN HAFNARFJÖRDUR</p>
             <p>FLATARHRAUN 12</p>
             <p>220, HAFNARFJÖRDUR</p>
           </FooterText>
           <FooterText>
-            <strong style={{ fontSize: '24px' }}>CONTACT US</strong>
+            <strong style={{ fontSize: 'var(--text-2xl)' }}>CONTACT US</strong>
             <p>esm@tskoli.is</p>
             <p>jmi@tskoli.is</p>
           </FooterText>
           <FooterText>
-            <strong style={{ fontSize: '24px' }}>FOLLOW US</strong>
+            <strong style={{ fontSize: 'var(--text-2xl)' }}>FOLLOW US</strong>
             <FooterSocials>
               <Link href="https://www.instagram.com/vefskolinn/" target="_blank">
                 <FooterSocialIcon src={instagram} alt="Instagram" />

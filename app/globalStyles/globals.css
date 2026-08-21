@@ -19,18 +19,18 @@ body {
 div,
 p,
 li {
-  font-size: 14px;
+  font-size: var(--text-sm);
 
   @media screen and (min-width: 480px) {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 }
 
 h1 {
-  font-size: 18px;
+  font-size: var(--text-lg);
 
   @media screen and (min-width: 480px) {
-    font-size: 24px;
+    font-size: var(--text-2xl);
   }
 }
 
@@ -42,6 +42,7 @@ h1 {
   --primary-black-60: #666666; /* 60% */
   --primary-black-30: #b3b3b3; /* 30% */
   --primary-black-10: #e6e6e6; /* 10% */
+  --primary-black-5: #f2f2f2; /* 5% - subtle surface tint, sits under -10 borders */
 
   /* Theme Colors */
   --theme-module3-100: #6563eb; /* 100% */
@@ -65,4 +66,25 @@ h1 {
   --error-warning-60: #feca9d; /* 60% */
   --error-warning-30: #ffe5ce; /* 30% */
   --error-warning-10: #fff7ef; /* 10% */
+
+  /* Corner radius scale */
+  --radius-sm: 4px; /* inputs, chips, small tags */
+  --radius-md: 8px; /* default: buttons, cards, panels */
+  --radius-lg: 12px; /* large cards, modals */
+  --radius-xl: 20px; /* feature/marketing surfaces */
+  --radius-pill: 999px; /* fully rounded pills */
+  /* 50% stays literal for circles - it is geometry, not a scale step */
+
+  /* Type scale. rem-based so it respects the user's browser font size.
+     Anchored on the existing sizes in globalStyles/text.tsx (14/16/24/40px). */
+  --text-xs: 0.75rem; /* 12px - metadata, badges */
+  --text-sm: 0.875rem; /* 14px - body, matches Paragraph */
+  --text-base: 1rem; /* 16px - matches SubHeading2 */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px - matches SubHeading1 and the h1 default */
+  --text-3xl: 2rem; /* 32px */
+  --text-4xl: 2.5rem; /* 40px - matches Heading1 */
+  --text-5xl: 3rem; /* 48px */
+  --text-display: 4rem; /* 64px - landing page hero only */
 }

@@ -5,15 +5,12 @@ import { getDiscipline, getIsSpecialty } from "utils/guideTaxonomy";
 import GuideCard from "../../guides/components/guideCard/GuideCard";
 import {
   HomeContainer,
-  WelcomeHeader,
   MainContent,
-  LeftColumn,
-  RightColumn,
   Section,
   SectionTitle,
   SectionSubtitle,
+  WidgetHeader,
   GuidesList,
-  ProgressSection,
   ProgressBar,
   ProgressLabel,
   ProgressValue,
@@ -21,7 +18,6 @@ import {
   ModuleProgressBar,
   ModuleProgressLabel,
   ModuleProgressValue,
-  GradeSection,
   GradesList,
   GradeCard,
   GradeTitle,
@@ -31,6 +27,7 @@ import {
   GradeValue,
   EmptyState
 } from "./style";
+import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
 import { useMemo } from "react";
 import { extractModuleNumber } from "utils/moduleUtils";
 
@@ -38,6 +35,9 @@ interface StudentHomePageProps {
   extendedGuides: ExtendedGuideInfo[];
   modules: Module[];
 }
+
+/** How many upcoming guides the "Continue Learning" widget shows. */
+const NEXT_GUIDES_SHOWN = 3;
 
 export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProps) => {
   // Organize guides by priority
@@ -63,13 +63,16 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       guide.reviewStatus === ReviewStatus.AWAITING_PROJECTS && isReturned(guide)
     );
 
-    // 3. Next guide in sequence that hasn't been returned
-    const nextGuideToReturn = getNextGuideToReturn(extendedGuides);
+    // 3. The next few guides in sequence that haven't been returned
+    const nextGuidesToReturn = getNextGuidesToReturn(
+      extendedGuides,
+      NEXT_GUIDES_SHOWN,
+    );
 
     return {
       guidesNeedingReview,
       guidesAwaitingProjects,
-      nextGuideToReturn
+      nextGuidesToReturn
     };
   }, [extendedGuides]);
 
@@ -149,127 +152,151 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       });
   }, [extendedGuides, modules]);
 
+  const hasNothingToDo =
+    organizedGuides.guidesNeedingReview.length === 0 &&
+    organizedGuides.guidesAwaitingProjects.length === 0 &&
+    organizedGuides.nextGuidesToReturn.length === 0;
+
   return (
     <HomeContainer>
-      <WelcomeHeader>
-        <SectionTitle>Welcome back!</SectionTitle>
-        <SectionSubtitle>Here&apos;s what you need to focus on today</SectionSubtitle>
-      </WelcomeHeader>
+      <TitleBlock>
+        <PageTitle>Welcome back</PageTitle>
+        <PageSubtitle>Here&apos;s what you need to focus on today</PageSubtitle>
+      </TitleBlock>
 
+      {/*
+        Widgets are placed by span on a 12-column grid. To add one, drop in a
+        <Section $span={n}> — the row packing takes care of itself.
+        Order: what needs doing, then where you stand, then passive info.
+      */}
       <MainContent>
-        <LeftColumn>
-          {/* Priority 1: Guides needing review */}
-          {organizedGuides.guidesNeedingReview.length > 0 && (
-            <Section>
+        {/* Priority 1: peer reviews owed — time-sensitive, needs room for cards */}
+        {organizedGuides.guidesNeedingReview.length > 0 && (
+          <Section $span={12}>
+            <WidgetHeader>
               <SectionTitle>Give Reviews</SectionTitle>
               <SectionSubtitle>Help peers by providing reviews</SectionSubtitle>
-              <GuidesList>
-                {organizedGuides.guidesNeedingReview.map((guide, index) => (
-                  <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
-                ))}
-              </GuidesList>
-            </Section>
-          )}
+            </WidgetHeader>
+            <GuidesList>
+              {organizedGuides.guidesNeedingReview.map((guide, index) => (
+                <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
+              ))}
+            </GuidesList>
+          </Section>
+        )}
 
-          {/* Priority 2: Next guide to return */}
-          {organizedGuides.nextGuideToReturn && (
-            <Section>
+        {/* Priority 2: what to work on next, best first */}
+        {organizedGuides.nextGuidesToReturn.length > 0 && (
+          <Section $span={8}>
+            <WidgetHeader>
               <SectionTitle>Continue Learning</SectionTitle>
-              <SectionSubtitle>Next guide in your learning sequence</SectionSubtitle>
-              <GuideCard
-                key={organizedGuides.nextGuideToReturn._id.toString()}
-                guide={organizedGuides.nextGuideToReturn}
-                order={getGuideDisplayOrder(organizedGuides.nextGuideToReturn, extendedGuides)}
-              />
-            </Section>
-          )}
+              <SectionSubtitle>
+                {organizedGuides.nextGuidesToReturn.length === 1
+                  ? "Next guide in your sequence"
+                  : "Next guides in your sequence"}
+              </SectionSubtitle>
+            </WidgetHeader>
+            <GuidesList>
+              {organizedGuides.nextGuidesToReturn.map((guide, index) => (
+                <GuideCard
+                  key={guide._id.toString()}
+                  guide={guide}
+                  order={getGuideDisplayOrder(extendedGuides, index)}
+                />
+              ))}
+            </GuidesList>
+          </Section>
+        )}
 
-          {/* Priority 3: Guides waiting for peers' projects to review */}
-          {organizedGuides.guidesAwaitingProjects.length > 0 && (
-            <Section>
+        {/* Progress */}
+        <Section $span={4}>
+          <WidgetHeader>
+            <SectionTitle>Progress</SectionTitle>
+          </WidgetHeader>
+
+          <div style={{ marginBottom: "0.75rem" }}>
+            <ProgressLabel>Overall</ProgressLabel>
+            <ProgressBar>
+              <ProgressValue style={{ width: `${Math.max(overallProgress, 5)}%` }}>
+                {overallProgress}%
+              </ProgressValue>
+            </ProgressBar>
+          </div>
+
+          <ProgressLabel style={{ marginBottom: "0.35rem" }}>By Module</ProgressLabel>
+          {moduleProgress.map((module) => (
+            <ModuleProgress key={module.number}>
+              <ModuleProgressLabel>
+                M{module.number} ({module.completedGuides}/{module.totalGuides})
+              </ModuleProgressLabel>
+              <ModuleProgressBar>
+                <ModuleProgressValue style={{ width: `${Math.max(module.progress, 5)}%` }}>
+                  {module.progress}%
+                </ModuleProgressValue>
+              </ModuleProgressBar>
+            </ModuleProgress>
+          ))}
+        </Section>
+
+        {/* Grades — full width so the module cards tile instead of leaving
+            two thirds of the row empty next to Continue Learning + Progress */}
+        <Section $span={12}>
+          <WidgetHeader>
+            <SectionTitle>Grades</SectionTitle>
+          </WidgetHeader>
+
+          <GradesList>
+            {moduleGrades.map((moduleGrade) => (
+              <GradeCard key={moduleGrade.module.number}>
+                <GradeTitle>Module {moduleGrade.module.number}</GradeTitle>
+                <GradeValues>
+                  <GradeItem>
+                    <GradeLabel>Code:</GradeLabel>
+                    <GradeValue>
+                      {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : "-"}
+                    </GradeValue>
+                  </GradeItem>
+                  <GradeItem>
+                    <GradeLabel>Design:</GradeLabel>
+                    <GradeValue>
+                      {moduleGrade.designAverage !== null ? moduleGrade.designAverage : "-"}
+                    </GradeValue>
+                  </GradeItem>
+                </GradeValues>
+              </GradeCard>
+            ))}
+          </GradesList>
+        </Section>
+
+        {/* Passive: nothing to act on here, so it sits last */}
+        {organizedGuides.guidesAwaitingProjects.length > 0 && (
+          <Section $span={12}>
+            <WidgetHeader>
               <SectionTitle>Waiting for Projects to Review</SectionTitle>
               <SectionSubtitle>
                 You still owe reviews on these guides, but no peer projects are
                 available yet. There&apos;s nothing to do right now &mdash; we&apos;ll
                 surface them under &ldquo;Give Reviews&rdquo; as soon as a project shows up.
               </SectionSubtitle>
-              <GuidesList>
-                {organizedGuides.guidesAwaitingProjects.map((guide, index) => (
-                  <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
-                ))}
-              </GuidesList>
-            </Section>
-          )}
+            </WidgetHeader>
+            <GuidesList>
+              {organizedGuides.guidesAwaitingProjects.map((guide, index) => (
+                <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
+              ))}
+            </GuidesList>
+          </Section>
+        )}
 
-          {/* Empty State */}
-          {organizedGuides.guidesNeedingReview.length === 0 &&
-           organizedGuides.guidesAwaitingProjects.length === 0 &&
-           !organizedGuides.nextGuideToReturn && (
-            <EmptyState>
-              <SectionTitle>All caught up!</SectionTitle>
+        {hasNothingToDo && (
+          <EmptyState $span={12}>
+            <WidgetHeader>
+              <SectionTitle>All caught up</SectionTitle>
               <SectionSubtitle>
                 You&apos;ve completed all your current tasks. Great job!
               </SectionSubtitle>
-            </EmptyState>
-          )}
-        </LeftColumn>
-
-        <RightColumn>
-          {/* Progress Section */}
-          <ProgressSection>
-            <SectionTitle>Progress</SectionTitle>
-
-            <div style={{ marginBottom: '0.75rem' }}>
-              <ProgressLabel>Overall</ProgressLabel>
-              <ProgressBar>
-                <ProgressValue style={{ width: `${Math.max(overallProgress, 5)}%` }}>
-                  {overallProgress}%
-                </ProgressValue>
-              </ProgressBar>
-            </div>
-
-            <ProgressLabel style={{ marginBottom: '0.35rem' }}>By Module</ProgressLabel>
-            {moduleProgress.map((module) => (
-              <ModuleProgress key={module.number}>
-                <ModuleProgressLabel>
-                  M{module.number} ({module.completedGuides}/{module.totalGuides})
-                </ModuleProgressLabel>
-                <ModuleProgressBar>
-                  <ModuleProgressValue style={{ width: `${Math.max(module.progress, 5)}%` }}>
-                    {module.progress}%
-                  </ModuleProgressValue>
-                </ModuleProgressBar>
-              </ModuleProgress>
-            ))}
-          </ProgressSection>
-
-          {/* Grades Section */}
-          <GradeSection>
-            <SectionTitle>Grades</SectionTitle>
-
-            <GradesList>
-              {moduleGrades.map((moduleGrade) => (
-                <GradeCard key={moduleGrade.module.number}>
-                  <GradeTitle>Module {moduleGrade.module.number}</GradeTitle>
-                  <GradeValues>
-                    <GradeItem>
-                      <GradeLabel>Code:</GradeLabel>
-                      <GradeValue>
-                        {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : '-'}
-                      </GradeValue>
-                    </GradeItem>
-                    <GradeItem>
-                      <GradeLabel>Design:</GradeLabel>
-                      <GradeValue>
-                        {moduleGrade.designAverage !== null ? moduleGrade.designAverage : '-'}
-                      </GradeValue>
-                    </GradeItem>
-                  </GradeValues>
-                </GradeCard>
-              ))}
-            </GradesList>
-          </GradeSection>
-        </RightColumn>
+            </WidgetHeader>
+          </EmptyState>
+        )}
       </MainContent>
     </HomeContainer>
   );
@@ -303,99 +330,89 @@ function calculateFinalGrades(regularGuides: ExtendedGuideInfo[], specialtyGuide
   return finalGrades;
 }
 
-// Helper function to get the most recently returned module
-function getMostRecentModule(guides: ExtendedGuideInfo[]): Module | null {
-  const guidesWithReturns = guides.filter(guide => 
-    guide.returnsSubmitted && guide.returnsSubmitted.length > 0
+/**
+ * The next few guides to work on, best first.
+ *
+ * Builds one prioritised queue instead of returning on the first match, so the
+ * widget can show several. The head of the queue is unchanged from when this
+ * returned a single guide — the same Figma/early-stage heuristics run first —
+ * and the remainder is filled in by sequence order.
+ */
+function getNextGuidesToReturn(
+  guides: ExtendedGuideInfo[],
+  limit: number,
+): ExtendedGuideInfo[] {
+  const completedGuides = guides.filter(
+    (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED,
   );
-  
-  if (guidesWithReturns.length === 0) return null;
-  
-  // Find the guide with the most recent return
-  const mostRecentGuide = guidesWithReturns.reduce((latest, current) => {
-    const latestReturn = latest.returnsSubmitted.reduce((a, b) => 
-      a.createdAt > b.createdAt ? a : b
-    );
-    const currentReturn = current.returnsSubmitted.reduce((a, b) => 
-      a.createdAt > b.createdAt ? a : b
-    );
-    
-    return latestReturn.createdAt > currentReturn.createdAt ? latest : current;
+  const unreturnedGuides = guides.filter(
+    (guide) => guide.returnStatus === ReturnStatus.NOT_RETURNED,
+  );
+  if (unreturnedGuides.length === 0) return [];
+
+  // Guides without an order sort last rather than jumping to the front.
+  const bySequence = (a: ExtendedGuideInfo, b: ExtendedGuideInfo) =>
+    (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER) ||
+    a.title.localeCompare(b.title);
+
+  const queue: ExtendedGuideInfo[] = [];
+  const seen = new Set<string>();
+  const enqueue = (guide: ExtendedGuideInfo) => {
+    const id = guide._id.toString();
+    if (!seen.has(id)) {
+      seen.add(id);
+      queue.push(guide);
+    }
+  };
+
+  const hasCompletedHTMLCSS = completedGuides.some((guide) => {
+    const title = guide.title.toLowerCase();
+    return title.includes("html") && title.includes("css");
   });
-  
-  return mostRecentGuide.module;
-}
 
-// Helper function to get the next guide in sequence that needs to be returned
-function getNextGuideToReturn(guides: ExtendedGuideInfo[]): ExtendedGuideInfo | null {
-  // Since module data is missing, let's use a smarter approach
-  // Find completed guides and try to infer what should come next
-  const completedGuides = guides.filter(guide => 
-    guide.returnStatus !== ReturnStatus.NOT_RETURNED
-  );
-  
-  const unreturnedGuides = guides.filter(guide => 
-    guide.returnStatus === ReturnStatus.NOT_RETURNED
-  );
-  
-  // If the user has completed HTML & CSS guides, look for the next logical guide
-  const hasCompletedHTMLCSS = completedGuides.some(guide => 
-    guide.title.toLowerCase().includes('html') && guide.title.toLowerCase().includes('css')
-  );
-  
   if (hasCompletedHTMLCSS) {
-    // Look for Figma or other beginner-level guides that should come after HTML/CSS
-    const figmaGuide = unreturnedGuides.find(guide => 
-      guide.title.toLowerCase().includes('figma') && 
-      guide.title.toLowerCase().includes('introduction')
-    );
-    
-    if (figmaGuide) {
-      return figmaGuide;
-    }
-    
-    // If no Figma guide, look for other early-stage guides
-    const earlyGuides = unreturnedGuides.filter(guide => {
+    const figmaGuide = unreturnedGuides.find((guide) => {
       const title = guide.title.toLowerCase();
-      return title.includes('introduction') || 
-             title.includes('basic') || 
-             title.includes('getting started') ||
-             (guide.order !== undefined && guide.order <= 2);
+      return title.includes("figma") && title.includes("introduction");
     });
-    
-    if (earlyGuides.length > 0) {
-      // Sort by order if available, otherwise alphabetically
-      earlyGuides.sort((a, b) => {
-        if (a.order !== undefined && b.order !== undefined) {
-          return a.order - b.order;
-        }
-        return a.title.localeCompare(b.title);
-      });
-      return earlyGuides[0];
-    }
+    if (figmaGuide) enqueue(figmaGuide);
+
+    unreturnedGuides
+      .filter((guide) => {
+        const title = guide.title.toLowerCase();
+        return (
+          title.includes("introduction") ||
+          title.includes("basic") ||
+          title.includes("getting started") ||
+          (guide.order !== undefined && guide.order <= 2)
+        );
+      })
+      .sort(bySequence)
+      .forEach(enqueue);
   }
-  
-  // Fallback: just return the first unreturned guide with the lowest order
-  const guidesWithOrder = unreturnedGuides.filter(guide => guide.order !== undefined);
-  if (guidesWithOrder.length > 0) {
-    guidesWithOrder.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-    return guidesWithOrder[0];
-  }
-  
-  // Last resort: return any unreturned guide
-  return unreturnedGuides[0] || null;
+
+  // Everything else, in sequence, to top the queue up.
+  [...unreturnedGuides].sort(bySequence).forEach(enqueue);
+
+  return queue.slice(0, limit);
 }
 
-// Helper function to calculate a meaningful display order for the guide
-function getGuideDisplayOrder(guide: ExtendedGuideInfo, allGuides: ExtendedGuideInfo[]): number {
-  // Count how many guides have been completed + 1 for the next guide
-  const completedGuides = allGuides.filter(g =>
-    g.returnStatus === ReturnStatus.PASSED ||
-    g.returnStatus === ReturnStatus.HALL_OF_FAME ||
-    g.returnStatus === ReturnStatus.FAILED ||
-    g.returnStatus === ReturnStatus.AWAITING_REVIEWS
+/**
+ * Display position for an upcoming guide: how many are already done, plus its
+ * place in the queue. The first card keeps the number it had when this widget
+ * showed a single guide.
+ */
+function getGuideDisplayOrder(
+  allGuides: ExtendedGuideInfo[],
+  queueIndex: number,
+): number {
+  const completedGuides = allGuides.filter(
+    (g) =>
+      g.returnStatus === ReturnStatus.PASSED ||
+      g.returnStatus === ReturnStatus.HALL_OF_FAME ||
+      g.returnStatus === ReturnStatus.FAILED ||
+      g.returnStatus === ReturnStatus.AWAITING_REVIEWS,
   );
-  
-  // This should be the next guide in sequence
-  return completedGuides.length + 1;
+
+  return completedGuides.length + 1 + queueIndex;
 }

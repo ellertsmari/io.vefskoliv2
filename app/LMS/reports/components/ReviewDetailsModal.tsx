@@ -179,7 +179,7 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
       <ModalHeader>
         <ModuleBadge>Module {extractModuleNumber(guide.module.title)}</ModuleBadge>
         <ModalTitle>{guide.title}</ModalTitle>
-        <p style={{ margin: 0, color: '#6c757d' }}>
+        <p style={{ margin: 0, color: 'var(--primary-black-60)' }}>
           Review details for {studentName}
         </p>
       </ModalHeader>
@@ -231,7 +231,7 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
                       <VoteBadge vote={review.vote}>{review.vote}</VoteBadge>
                       <div>
                         {gradeGiven && <GradeBadge>Grade Given: {gradeGiven.grade}</GradeBadge>}
-                        {gradeReceived && <GradeBadge style={{ backgroundColor: '#28a745' }}>Grade Received: {gradeReceived.grade}</GradeBadge>}
+                        {gradeReceived && <GradeBadge style={{ backgroundColor: 'var(--error-success-100)' }}>Grade Received: {gradeReceived.grade}</GradeBadge>}
                       </div>
                     </ReviewHeader>
                     <ReviewComment>

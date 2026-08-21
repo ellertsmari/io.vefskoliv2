@@ -1,11 +1,22 @@
 "use client";
 
 import styled from "styled-components";
+import { PageContainer } from "globalStyles/pageStyles";
 
-export const CalendarContainer = styled.div`
-  padding: 2rem;
-  max-width: 1100px;
-  margin: 0 auto;
+/**
+ * Dense grid, so the wide page width. Also fills the scroll area's height so
+ * the month grid absorbs the leftover space rather than overflowing it by a
+ * few pixels and forcing a scroll.
+ */
+export const CalendarContainer = styled(PageContainer).attrs({
+  $width: "wide" as const,
+})`
+  /* Centred, unlike the other pages: the month grid is a fixed-proportion block
+     rather than a column of content, so it reads better balanced than pinned left. */
+  margin-inline: auto;
+  height: 100%;
+  min-height: 0;
+  gap: 1.25rem;
 `;
 
 export const Header = styled.header`
@@ -14,27 +25,13 @@ export const Header = styled.header`
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
 `;
 
-export const TitleBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-`;
-
-export const PageTitle = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--primary-black-100);
-  margin: 0;
-`;
-
-export const PageSubtitle = styled.p`
-  font-size: 1rem;
-  color: var(--primary-black-60);
-  margin: 0;
-`;
+export {
+  TitleBlock,
+  PageTitle,
+  PageSubtitle,
+} from "globalStyles/pageStyles";
 
 export const MonthNav = styled.div`
   display: flex;
@@ -48,11 +45,11 @@ export const NavButton = styled.button`
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--primary-black-10);
   background: var(--primary-white);
   color: var(--primary-black-100);
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 
@@ -70,7 +67,7 @@ export const NavButton = styled.button`
 export const MonthLabel = styled.span`
   min-width: 9.5rem;
   text-align: center;
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--primary-black-100);
 `;
@@ -80,7 +77,7 @@ export const Legend = styled.ul`
   flex-wrap: wrap;
   gap: 0.5rem 1.25rem;
   list-style: none;
-  margin: 0 0 1.25rem 0;
+  margin: 0;
   padding: 0;
 `;
 
@@ -88,14 +85,14 @@ export const LegendItem = styled.li<{ $color: string }>`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
 
   &::before {
     content: "";
     width: 0.7rem;
     height: 0.7rem;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     background: ${(props) => props.$color};
   }
 `;
@@ -104,36 +101,44 @@ export const Layout = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.25rem;
-  align-items: start;
+  /* Takes the height the header and legend don't use. */
+  flex: 1;
+  min-height: 0;
 
   @media (min-width: 900px) {
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: minmax(0, 1fr) 320px;
   }
 `;
 
 export const Grid = styled.div`
   display: grid;
   grid-template-columns: 2.25rem repeat(7, minmax(0, 1fr));
+  /* Weekday header sizes to content; week rows share whatever is left, down to
+     a floor below which the calendar scrolls rather than crushing the cells. */
+  grid-template-rows: auto;
+  grid-auto-rows: minmax(5.5rem, 1fr);
+  height: 100%;
+  min-height: 0;
   border: 1px solid var(--primary-black-10);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--primary-white);
 `;
 
 export const Corner = styled.div`
-  background: var(--primary-black-5, #f7f7f7);
+  background: var(--primary-black-5);
   border-bottom: 1px solid var(--primary-black-10);
 `;
 
 export const WeekdayHead = styled.div`
   padding: 0.6rem 0.5rem;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--primary-black-60);
-  background: var(--primary-black-5, #f7f7f7);
+  background: var(--primary-black-5);
   border-bottom: 1px solid var(--primary-black-10);
 `;
 
@@ -141,10 +146,10 @@ export const WeekNumCell = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--primary-black-30);
-  background: var(--primary-black-5, #f7f7f7);
+  background: var(--primary-black-5);
   border-top: 1px solid var(--primary-black-10);
 `;
 
@@ -159,17 +164,24 @@ export const DayCell = styled.button<{
   flex-direction: column;
   align-items: stretch;
   gap: 0.25rem;
-  min-height: 6.5rem;
+  /* Height comes from the grid row, which stretches to fill the page. */
+  min-height: 0;
+  overflow: hidden;
   padding: 0.4rem;
   text-align: left;
   border: none;
   border-top: 1px solid var(--primary-black-10);
   border-left: 1px solid var(--primary-black-10);
+  /*
+   * A neutral three-step ramp: the days you act on are brightest, weekends
+   * recede, days outside the month sink into the frame. Purple is reserved
+   * for today and the selected day, so the accent means "here", not "Saturday".
+   */
   background: ${(props) =>
     props.$muted
-      ? "var(--primary-black-5, #fafafa)"
+      ? "var(--primary-black-10)"
       : props.$weekend
-        ? "#fcfcfd"
+        ? "var(--primary-black-5)"
         : "var(--primary-white)"};
   cursor: ${(props) => (props.$muted ? "default" : "pointer")};
   font: inherit;
@@ -194,7 +206,7 @@ export const DayNumber = styled.span<{ $muted: boolean; $today: boolean }>`
   min-width: 1.5rem;
   height: 1.5rem;
   padding: 0 0.25rem;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: ${(props) => (props.$today ? 700 : 500)};
   color: ${(props) =>
     props.$today
@@ -204,7 +216,7 @@ export const DayNumber = styled.span<{ $muted: boolean; $today: boolean }>`
         : "var(--primary-black-100)"};
   background: ${(props) =>
     props.$today ? "var(--theme-module3-100)" : "transparent"};
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 `;
 
 export const EventPill = styled.span<{ $color: string }>`
@@ -213,16 +225,19 @@ export const EventPill = styled.span<{ $color: string }>`
   text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0.12rem 0.35rem 0.12rem 0.45rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   border-left: 3px solid ${(props) => props.$color};
-  background: ${(props) => props.$color}1a;
-  font-size: 0.72rem;
+  /* The category colours are CSS variables, so an appended hex alpha
+     ("var(--x)1a") is invalid and silently rendered no background at all. */
+  background: ${(props) =>
+    `color-mix(in srgb, ${props.$color} 10%, transparent)`};
+  font-size: var(--text-xs);
   line-height: 1.35;
   color: var(--primary-black-100);
 `;
 
 export const MorePill = styled.span`
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--primary-black-60);
   padding: 0 0.35rem;
@@ -245,24 +260,24 @@ export const SpanBar = styled.span<{
   height: 1.15rem;
   line-height: 1.15rem;
   flex-shrink: 0;
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--primary-white, #fff);
+  color: var(--primary-white);
   background: ${(props) => props.$color};
   padding: 0 ${(props) => (props.$start ? "0.35rem" : "0")};
   margin-left: ${(props) => (props.$start ? "0" : "calc(-0.4rem - 1px)")};
   margin-right: ${(props) => (props.$end ? "0" : "-0.4rem")};
   border-radius: ${(props) =>
-    `${props.$start ? "4px" : "0"} ${props.$end ? "4px" : "0"} ${
-      props.$end ? "4px" : "0"
-    } ${props.$start ? "4px" : "0"}`};
+    `${props.$start ? "var(--radius-sm)" : "0"} ${props.$end ? "var(--radius-sm)" : "0"} ${
+      props.$end ? "var(--radius-sm)" : "0"
+    } ${props.$start ? "var(--radius-sm)" : "0"}`};
 `;
 
 // ── Detail panel ──────────────────────────────────────────────────────────
 
 export const Panel = styled.aside`
   border: 1px solid var(--primary-black-10);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--primary-white);
   padding: 1.25rem;
   position: sticky;
@@ -270,14 +285,14 @@ export const Panel = styled.aside`
 `;
 
 export const PanelDate = styled.h2`
-  font-size: 1.05rem;
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--primary-black-100);
   margin: 0 0 0.25rem 0;
 `;
 
 export const PanelHint = styled.p`
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
   margin: 0;
 `;
@@ -297,7 +312,7 @@ export const EventItem = styled.li<{ $color: string }>`
 `;
 
 export const EventTitle = styled.p`
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--primary-black-100);
   margin: 0;
@@ -314,21 +329,22 @@ export const EventMeta = styled.div`
 export const CategoryBadge = styled.span<{ $color: string }>`
   display: inline-block;
   padding: 0.1rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
   font-weight: 600;
-  background: ${(props) => props.$color}26;
+  background: ${(props) =>
+    `color-mix(in srgb, ${props.$color} 15%, transparent)`};
   color: ${(props) => props.$color};
 `;
 
 export const EventTime = styled.span`
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--primary-black-60);
 `;
 
 export const EventDescription = styled.p`
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
   margin: 0.15rem 0 0 0;
 `;

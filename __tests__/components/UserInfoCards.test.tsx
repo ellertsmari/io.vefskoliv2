@@ -1,6 +1,7 @@
 import { render, fireEvent } from "@testing-library/react";
 import { UserInfoCards } from "../../app/LMS/people/components/userInfoCards/UserInfoCards";
 import { ShareableUserInfo } from "types/types";
+import { exitIconLabel } from "../../app/assets/iconLabels";
 
 describe("UserInfoCards", () => {
   const background = "background info";
@@ -28,7 +29,7 @@ describe("UserInfoCards", () => {
       <UserInfoCards userInfo={mockUsers} title="Test Title" />
     );
 
-    // Click on the user name in the dropdown options
+    // Click the person's card in the roster grid
     fireEvent.click(getByText("John Doe"));
 
     expect(getByText(background)).toBeDefined();
@@ -37,20 +38,31 @@ describe("UserInfoCards", () => {
     expect(getByText(favoriteArtists)).toBeDefined();
   });
 
-  it("no longer displays user info when 'None' is selected", () => {
-    const { getByText, queryByText } = render(
+  it("no longer displays user info once the card is dismissed", () => {
+    const { getByText, getByLabelText, queryByText } = render(
       <UserInfoCards userInfo={mockUsers} title="Test Title" />
     );
 
     // First select a user
     fireEvent.click(getByText("John Doe"));
 
-    // Then click None to deselect
-    fireEvent.click(getByText("None"));
+    // Then close the dialog
+    fireEvent.click(getByLabelText(exitIconLabel));
 
     expect(queryByText(background)).toBeNull();
     expect(queryByText(careerGoals)).toBeNull();
     expect(queryByText(interests)).toBeNull();
     expect(queryByText(favoriteArtists)).toBeNull();
+  });
+
+  it("shows the person's initials when they have no picture", () => {
+    const { getByText } = render(
+      <UserInfoCards
+        userInfo={[{ name: "Ada Lovelace" }]}
+        title="Test Title"
+      />
+    );
+
+    expect(getByText("AL")).toBeDefined();
   });
 });

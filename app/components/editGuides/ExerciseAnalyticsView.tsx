@@ -6,38 +6,38 @@ import type { ExerciseAnalytics } from "utils/exerciseUtils";
 const Panel = styled.section`
   margin-top: 2rem;
   padding: 1.25rem 1.5rem;
-  border: 1px solid #e3e3e3;
-  border-radius: 12px;
-  background: #fff;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-lg);
+  background: var(--primary-white);
 `;
 
 const Title = styled.h2`
   margin: 0 0 0.25rem 0;
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
 `;
 
 const Summary = styled.p`
   margin: 0 0 1rem 0;
-  color: #555;
-  font-size: 0.9rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-sm);
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 
   th,
   td {
     text-align: left;
     padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--primary-black-10);
     vertical-align: top;
   }
 
   th {
     font-weight: 600;
-    color: #555;
+    color: var(--primary-black-60);
   }
 `;
 
@@ -45,20 +45,20 @@ const Rate = styled.span<{ $level: "easy" | "medium" | "hard" | "none" }>`
   font-weight: 600;
   color: ${({ $level }) =>
     $level === "easy"
-      ? "#0f5132"
+      ? "var(--primary-black-100)"
       : $level === "medium"
-      ? "#664d03"
+      ? "var(--primary-black-100)"
       : $level === "hard"
-      ? "#842029"
-      : "#777"};
+      ? "var(--primary-black-100)"
+      : "var(--primary-black-60)"};
 `;
 
 const GoalTag = styled.span`
   display: inline-block;
-  font-size: 0.75rem;
-  color: #555;
-  border: 1px solid #ddd;
-  border-radius: 999px;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-pill);
   padding: 0 0.5rem;
   margin-top: 0.25rem;
 `;

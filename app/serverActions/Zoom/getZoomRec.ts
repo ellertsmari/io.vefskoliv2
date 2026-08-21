@@ -5,10 +5,53 @@ import { getZoomToken } from "./zoomToken";
 
 // Fetch recordings for the current school year with pagination support
 // Note: Zoom API limits date range to max 1 month, so we query month by month
-export async function getUserRecordings() {
-  const session = await auth();
-  if (!session?.user) return { total_records: 0, meetings: [] };
+export type RecordingsResult = {
+  total_records: number;
+  meetings: any[];
+  /** Zoom could not be reached, as opposed to there being no recordings. */
+  unavailable: boolean;
+};
 
+/**
+ * Next signals control flow by throwing: `redirect()`, `notFound()`, and the
+ * dynamic-rendering bail-out all surface as errors carrying a `digest`. Those
+ * must reach the framework, so a catch-all around render code has to re-throw
+ * them rather than treat them as a failed request.
+ */
+function isFrameworkSignal(error: unknown): boolean {
+  const digest = (error as { digest?: unknown } | null)?.digest;
+  return (
+    typeof digest === "string" &&
+    (digest === "DYNAMIC_SERVER_USAGE" ||
+      digest === "NEXT_NOT_FOUND" ||
+      digest.startsWith("NEXT_REDIRECT"))
+  );
+}
+
+/**
+ * Only fails by returning `unavailable`. This is awaited during the render of
+ * the resources page, and an unhandled Zoom outage there took the whole page
+ * down — including the Google Drive link, which does not depend on Zoom.
+ */
+export async function getUserRecordings(): Promise<RecordingsResult> {
+  // Deliberately outside the try: auth() reads headers, and Next marks the
+  // route dynamic by throwing. Swallowing that would bake a stale "unavailable"
+  // page into the static output.
+  const session = await auth();
+  if (!session?.user) {
+    return { total_records: 0, meetings: [], unavailable: false };
+  }
+
+  try {
+    return await fetchUserRecordings();
+  } catch (error) {
+    if (isFrameworkSignal(error)) throw error;
+    console.error("Zoom recordings unavailable:", error);
+    return { total_records: 0, meetings: [], unavailable: true };
+  }
+}
+
+async function fetchUserRecordings(): Promise<RecordingsResult> {
   let token = await getZoomToken();
 
   // Current school year: Aug 18, 2025 to Aug 31, 2026
@@ -49,9 +92,10 @@ export async function getUserRecordings() {
         cache: "no-store",
       });
 
-      // Handle token expiration
+      // Handle token expiration. Force a refresh — the cached token is the one
+      // that just got rejected, so reusing it would fail identically.
       if (res.status === 401) {
-        token = await getZoomToken();
+        token = await getZoomToken({ forceRefresh: true });
         res = await fetch(url.toString(), {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
@@ -85,5 +129,6 @@ export async function getUserRecordings() {
   return {
     total_records: allMeetings.length,
     meetings: allMeetings,
+    unavailable: false,
   };
 }

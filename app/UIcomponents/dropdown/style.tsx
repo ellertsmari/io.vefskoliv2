@@ -64,8 +64,8 @@ export const CapsuleButton = styled.button<{$active: boolean}>`
   padding: 4px 18px;
   white-space: nowrap;
   flex: 0 0 auto;
-  font-size: 0.85rem;
-  border-radius: 999px;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-pill);
   border: 1px solid var(--primary-black-100);
   background-color: ${({$active}) => ($active ? "black" : "white")};
   color: ${({$active}) => ($active ? "white" : "black")};

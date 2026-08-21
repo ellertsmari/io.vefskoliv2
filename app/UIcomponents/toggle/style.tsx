@@ -11,12 +11,12 @@ export const Option = styled.div<{ selected: boolean }>`
   min-width: 80px;
   position: relative;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--text-xs);
 
   @media (min-width: ${BREAKPOINT}) {
     padding: 8px 12px;
     min-width: 110px;
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
 `;
 
@@ -35,5 +35,5 @@ export const ToggleContainer = styled.div`
   width: fit-content;
   height: fit-content;
   border: 1px solid var(--theme-module3-100);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 `;

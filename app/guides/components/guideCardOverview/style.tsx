@@ -10,7 +10,7 @@ export const GuideCardContainer = styled.div`
   align-items: flex-start;
   width: 100%;
   height: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   &:hover {
     background-color: var(--primary-black-10);
   }
@@ -24,7 +24,7 @@ export const StyledLink = styled(Link)`
   align-items: flex-start;
   width: 100%;
   height: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 
   &:hover {
     background-color: var(--primary-black-10);
@@ -40,13 +40,13 @@ export const Info = styled(Wrapper)`
 `;
 
 export const GuideNr = styled.h2`
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 400;
   align-self: center;
 `;
 
 export const Name = styled.p`
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   width: 155px;
   font-weight: 400;
   text-align: center;
@@ -61,8 +61,8 @@ export const GuideDescription = styled(Wrapper)`
 `;
 
 export const ActionHint = styled.span`
-  font-size: 0.7rem;
-  color: #777;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
   align-self: center;
   white-space: nowrap;
 `;

@@ -35,7 +35,7 @@ const MemberHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 600;
 `;
 
@@ -46,12 +46,12 @@ const ScoreButtons = styled.div`
 `;
 
 const ScoreButton = styled.button<{ $selected: boolean }>`
-  border: 1px solid ${({ $selected }) => ($selected ? "#000" : "#e9ecef")};
-  background: ${({ $selected }) => ($selected ? "#000" : "white")};
-  color: ${({ $selected }) => ($selected ? "white" : "#495057")};
-  border-radius: 8px;
+  border: 1px solid ${({ $selected }) => ($selected ? "var(--primary-black-100)" : "var(--primary-black-10)")};
+  background: ${({ $selected }) => ($selected ? "var(--primary-black-100)" : "white")};
+  color: ${({ $selected }) => ($selected ? "white" : "var(--primary-black-60)")};
+  border-radius: var(--radius-md);
   padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -59,15 +59,15 @@ const ScoreButton = styled.button<{ $selected: boolean }>`
   gap: 0.3rem;
 
   &:hover {
-    border-color: #000;
+    border-color: var(--primary-black-100);
   }
 `;
 
 const AxisLabel = styled.p`
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   margin: 0;
-  color: #495057;
+  color: var(--primary-black-60);
 `;
 
 const Footer = styled.div`

@@ -38,10 +38,10 @@ const TeamHeader = styled.div`
 `;
 
 const CompletenessBadge = styled.span<{ $ratio: number }>`
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   padding: 0.2rem 0.6rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: white;
   background: ${({ $ratio }) =>
     $ratio >= 0.7

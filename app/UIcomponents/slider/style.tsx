@@ -36,7 +36,7 @@ export const SliderTrack = styled.input<{
       var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
     );
     height: 3px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     width: 100%;
   }
 
@@ -49,7 +49,7 @@ export const SliderTrack = styled.input<{
       var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
     );
     height: 3px;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
   }
 
   &::-ms-track {
@@ -61,7 +61,7 @@ export const SliderTrack = styled.input<{
         ${(props) => props.$sliderPercentage + "%"},
       var(--theme-module3-30) ${(props) => props.$sliderPercentage}%
     );
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     height: 3px;
   }
 
@@ -109,7 +109,7 @@ export const OptionValue = styled.li<{ $selected?: boolean }>`
   list-style: none;
   color: ${({ $selected }) =>
     $selected ? "var(--theme-module3-100)" : undefined};
-  font-size: ${({ $selected }) => ($selected ? "1.25rem" : "1rem")};
+  font-size: ${({ $selected }) => ($selected ? "var(--text-xl)" : "var(--text-base)")};
   font-weight: ${({ $selected }) => ($selected ? "bold" : "normal")};
   flex: 1;
 `;

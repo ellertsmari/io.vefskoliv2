@@ -118,11 +118,11 @@ export default function DeepLinkingPage() {
           <div 
             key={guide._id} 
             style={{ 
-              border: '1px solid #ddd', 
+              border: '1px solid var(--primary-black-30)', 
               padding: '15px', 
               margin: '10px 0',
               borderRadius: '5px',
-              backgroundColor: selectedGuides.includes(guide._id) ? '#e7f3ff' : 'white'
+              backgroundColor: selectedGuides.includes(guide._id) ? 'var(--theme-module3-10)' : 'white'
             }}
           >
             <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer' }}>
@@ -133,15 +133,15 @@ export default function DeepLinkingPage() {
                 style={{ marginRight: '10px', marginTop: '5px' }}
               />
               <div>
-                <h3 style={{ margin: '0 0 5px 0', color: '#333' }}>
+                <h3 style={{ margin: '0 0 5px 0', color: 'var(--primary-black-60)' }}>
                   {guide.title}
                 </h3>
-                <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '14px' }}>
+                <p style={{ margin: '0 0 5px 0', color: 'var(--primary-black-60)', fontSize: '14px' }}>
                   {guide.description}
                 </p>
-                <div style={{ fontSize: '12px', color: '#888' }}>
+                <div style={{ fontSize: '12px', color: 'var(--primary-black-60)' }}>
                   <span style={{ 
-                    background: '#f0f0f0', 
+                    background: 'var(--primary-black-5)', 
                     padding: '2px 6px', 
                     borderRadius: '3px',
                     marginRight: '5px'
@@ -165,8 +165,8 @@ export default function DeepLinkingPage() {
           disabled={submitting || selectedGuides.length === 0}
           style={{
             padding: '12px 24px',
-            fontSize: '16px',
-            backgroundColor: selectedGuides.length > 0 ? '#007bff' : '#ccc',
+            fontSize: 'var(--text-base)',
+            backgroundColor: selectedGuides.length > 0 ? 'var(--theme-module3-100)' : 'var(--primary-black-30)',
             color: 'white',
             border: 'none',
             borderRadius: '5px',

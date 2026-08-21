@@ -1,4 +1,3 @@
-"use server";
 import { auth } from "../../../auth";
 import { getGuide } from "serverActions/getGuide";
 import { GuideOverview } from "../components/guideOverview/GuideOverview";

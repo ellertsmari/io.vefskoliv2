@@ -7,8 +7,8 @@ const LegendRow = styled.div`
   gap: 0.5rem 1.25rem;
   align-items: center;
   padding: 0.25rem 0 0.75rem 0;
-  font-size: 0.8rem;
-  color: #444;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
 `;
 
 const LegendItem = styled.span`
@@ -21,7 +21,7 @@ const Swatch = styled.span<{ $color: string }>`
   width: 0.8rem;
   height: 0.8rem;
   flex: 0 0 auto;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   border: 2px solid ${({ $color }) => $color};
   background: transparent;
 `;

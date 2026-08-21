@@ -23,8 +23,8 @@ export const GradeMeaningDisplay = styled.div`
   margin-bottom: 8px;
   padding: 8px 12px;
   background-color: var(--primary-black-10);
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   color: var(--primary-black-60);
   border: 1px solid var(--primary-black-30);
   line-height: 1.4;

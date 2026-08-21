@@ -36,13 +36,13 @@ const ProjectCardHeader = styled.div`
 `;
 
 const ProjectTitle = styled.h3`
-  font-size: 1.05rem;
+  font-size: var(--text-base);
   font-weight: 600;
   margin: 0;
 `;
 
 const CallToAction = styled.span`
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--theme-module3-100);
 `;

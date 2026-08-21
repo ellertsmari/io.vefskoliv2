@@ -33,7 +33,7 @@ const JudgeRow = styled.div`
   gap: 0.75rem;
   flex-wrap: wrap;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--primary-black-10);
 
   &:last-child {
     border-bottom: none;
@@ -42,7 +42,7 @@ const JudgeRow = styled.div`
 
 const JudgeName = styled.span`
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 `;
 
 const Actions = styled.span`

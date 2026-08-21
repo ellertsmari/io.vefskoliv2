@@ -1,5 +1,6 @@
 import { UserInfoCards } from "../userInfoCards/UserInfoCards";
-import { Container } from "./style";
+import { Container, Intro, PageTitle, Sections } from "./style";
+import { TitleBlock } from "globalStyles/pageStyles";
 import { ShareableUserInfo } from "types/types";
 
 interface PeopleOverviewProps {
@@ -10,21 +11,14 @@ interface PeopleOverviewProps {
 export const PeopleOverview = ({ teachers, students }: PeopleOverviewProps) => {
   return (
     <Container>
-      <div
-        style={{
-          alignSelf: "flex-start",
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          gap: "2rem",
-        }}
-      >
-        <p>Select someone to learn more about them</p>
-
-        <UserInfoCards userInfo={teachers} title="Teachers" zIndex={4} />
-
+      <TitleBlock>
+        <PageTitle>People</PageTitle>
+        <Intro>Select someone to learn more about them</Intro>
+      </TitleBlock>
+      <Sections>
+        <UserInfoCards userInfo={teachers} title="Teachers" />
         <UserInfoCards userInfo={students} title="Students" />
-      </div>
+      </Sections>
     </Container>
   );
 };

@@ -1,5 +1,3 @@
-export const runtime = "nodejs";
-
 type TokenRecord = { accessToken: string; expiresAt: number };
 
 let cached: TokenRecord | null = null;
@@ -7,25 +5,33 @@ let inFlightRefresh: Promise<TokenRecord> | null = null;
 
 const REFRESH_BUFFER_MS = 300 * 1000; // 5 minutes
 
-export async function getZoomToken(): Promise<string> {
-  const now = Date.now();
+/**
+ * `forceRefresh` discards the cached token. Zoom can invalidate a
+ * server-to-server token before its stated expiry, and without this a retry
+ * after a 401 just handed back the same dead token and failed again.
+ */
+export async function getZoomToken({ forceRefresh = false } = {}): Promise<string> {
+  if (forceRefresh) cached = null;
 
+  const now = Date.now();
   if (cached && now < cached.expiresAt - REFRESH_BUFFER_MS) {
     return cached.accessToken;
   }
 
+  // Join a refresh already in flight rather than starting a second one.
   if (inFlightRefresh) {
-    const record = await inFlightRefresh;
-    return record.accessToken;
+    return (await inFlightRefresh).accessToken;
   }
 
-  inFlightRefresh = refreshToken();
+  const refresh = refreshToken();
+  inFlightRefresh = refresh;
   try {
-    const record = await inFlightRefresh;
+    const record = await refresh;
     cached = record;
     return record.accessToken;
   } finally {
-    inFlightRefresh = null;
+    // Only clear if a newer refresh hasn't already replaced this one.
+    if (inFlightRefresh === refresh) inFlightRefresh = null;
   }
 }
 

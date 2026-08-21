@@ -82,6 +82,7 @@ export const ExerciseLauncher = ({
           </PerfectText>
         </PerfectBanner>
         <Modal
+          size="xl"
           state={[isOpen, setIsOpen]}
           modalTrigger={
             <Button $styletype="outlined" type="button">
@@ -99,6 +100,7 @@ export const ExerciseLauncher = ({
 
       {current.attemptCount > 0 && (
         <Modal
+          size="lg"
           state={[isReviewOpen, setIsReviewOpen]}
           modalTrigger={
             <Button $styletype="outlined" type="button">
@@ -149,6 +151,7 @@ export const ExerciseLauncher = ({
       )}
 
       <Modal
+        size="xl"
         state={[isOpen, setIsOpen]}
         modalTrigger={
           <Button $styletype="default" type="button">
@@ -166,6 +169,7 @@ export const ExerciseLauncher = ({
 
       {current.attemptCount > 0 && (
         <Modal
+          size="lg"
           state={[isReviewOpen, setIsReviewOpen]}
           modalTrigger={
             <Button $styletype="outlined" type="button">
