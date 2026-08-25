@@ -18,7 +18,9 @@ export const LayoutGrid = styled.div`
   grid-auto-rows: min-content;
 
   @media (min-width: ${breakpoint}) {
-    grid-template-columns: minmax(0,150px) auto;
+    /* Only the collapsed rail is reserved — the nav expands over the content
+       on hover rather than pushing it sideways. */
+    grid-template-columns: var(--nav-collapsed) minmax(0, 1fr);
     grid-template-rows: auto 15fr;
     grid-template-areas:
       "topbar topbar"
@@ -40,8 +42,9 @@ export const NavigationContainer = styled.div`
   grid-area: navbar;
 
   @media (min-width: ${breakpoint}) {
-    display: block;
-    
+    /* Anchors the expanding nav panel, which is taken out of flow so that
+       sliding it open overlays the page instead of resizing the grid track. */
+    position: relative;
   }
 `;
 export const TopbarContainer = styled.div`

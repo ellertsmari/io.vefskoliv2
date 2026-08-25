@@ -8,8 +8,14 @@ export const MobileNavbar = ({ links }: NavBarProps) => {
   const buttons = links.map((link) => {
     const currentPage = pathname === link.page
     return (
-      <MobileNavbarButton $active={currentPage} key={link.page} href={link.page}>
-        <Icon $active={currentPage} width={40} height={40} src={link.icon} alt="Navigation icon"/>
+      <MobileNavbarButton
+        $active={currentPage}
+        key={link.page}
+        href={link.page}
+        aria-current={currentPage ? "page" : undefined}
+      >
+        {/* No visible label here, so the icon has to carry the name. */}
+        <Icon $active={currentPage} width={40} height={40} src={link.icon} alt={link.title} />
       </MobileNavbarButton>
     );
   });

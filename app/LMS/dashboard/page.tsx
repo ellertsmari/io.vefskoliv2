@@ -23,6 +23,12 @@ const Dashboard = async () => {
     );
   }
 
+  // The teacher dashboard is a set of shortcuts and a grading queue — it reads
+  // none of the guide data, so don't pay to fetch, extend and serialize it.
+  if (session.user.role === "teacher") {
+    return <TeacherHomePage />;
+  }
+
   // Authenticated user - show personalized home page based on role
   try {
     const fetchedGuides = (await getGuides(session.user.id)) || [];
@@ -43,12 +49,7 @@ const Dashboard = async () => {
     const serializedGuides = safeSerialize(extendedGuides);
     const serializedModules = safeSerialize(modules);
 
-    // Check user role and return appropriate home page
-    if (session.user.role === "teacher") {
-      return <TeacherHomePage extendedGuides={serializedGuides} modules={serializedModules} />;
-    } else {
-      return <StudentHomePage extendedGuides={serializedGuides} modules={serializedModules} />;
-    }
+    return <StudentHomePage extendedGuides={serializedGuides} modules={serializedModules} />;
   } catch (error) {
     console.error("Error in home page:", error);
     return (

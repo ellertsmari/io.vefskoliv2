@@ -6,6 +6,7 @@ import GuideCard from "../../guides/components/guideCard/GuideCard";
 import {
   HomeContainer,
   MainContent,
+  Column,
   Section,
   SectionTitle,
   SectionSubtitle,
@@ -14,6 +15,8 @@ import {
   ProgressBar,
   ProgressLabel,
   ProgressValue,
+  OverallProgress,
+  ProgressGroupLabel,
   ModuleProgress,
   ModuleProgressBar,
   ModuleProgressLabel,
@@ -165,138 +168,143 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       </TitleBlock>
 
       {/*
-        Widgets are placed by span on a 12-column grid. To add one, drop in a
-        <Section $span={n}> — the row packing takes care of itself.
-        Order: what needs doing, then where you stand, then passive info.
+        Two bands rather than free auto-flow packing: everything the student can
+        act on stacks in the work column at one shared width, and the read-only
+        widgets sit in a rail that keeps its top edge no matter how many guide
+        cards are alongside it.
+
+        To add a widget, drop a <Section> into the column it belongs to — work
+        items on the left, status/reference on the right.
       */}
       <MainContent>
-        {/* Priority 1: peer reviews owed — time-sensitive, needs room for cards */}
-        {organizedGuides.guidesNeedingReview.length > 0 && (
-          <Section $span={12}>
+        <Column>
+          {/* Priority 1: peer reviews owed — time-sensitive */}
+          {organizedGuides.guidesNeedingReview.length > 0 && (
+            <Section>
+              <WidgetHeader>
+                <SectionTitle>Give Reviews</SectionTitle>
+                <SectionSubtitle>Help peers by providing reviews</SectionSubtitle>
+              </WidgetHeader>
+              <GuidesList>
+                {organizedGuides.guidesNeedingReview.map((guide, index) => (
+                  <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
+                ))}
+              </GuidesList>
+            </Section>
+          )}
+
+          {/* Priority 2: what to work on next, best first */}
+          {organizedGuides.nextGuidesToReturn.length > 0 && (
+            <Section>
+              <WidgetHeader>
+                <SectionTitle>Continue Learning</SectionTitle>
+                <SectionSubtitle>
+                  {organizedGuides.nextGuidesToReturn.length === 1
+                    ? "Next guide in your sequence"
+                    : "Next guides in your sequence"}
+                </SectionSubtitle>
+              </WidgetHeader>
+              <GuidesList>
+                {organizedGuides.nextGuidesToReturn.map((guide, index) => (
+                  <GuideCard
+                    key={guide._id.toString()}
+                    guide={guide}
+                    order={getGuideDisplayOrder(extendedGuides, index)}
+                  />
+                ))}
+              </GuidesList>
+            </Section>
+          )}
+
+          {/* Passive: nothing to act on here, so it sits last */}
+          {organizedGuides.guidesAwaitingProjects.length > 0 && (
+            <Section>
+              <WidgetHeader>
+                <SectionTitle>Waiting for Projects to Review</SectionTitle>
+                <SectionSubtitle>
+                  You still owe reviews on these guides, but no peer projects are
+                  available yet. There&apos;s nothing to do right now &mdash; we&apos;ll
+                  surface them under &ldquo;Give Reviews&rdquo; as soon as a project shows up.
+                </SectionSubtitle>
+              </WidgetHeader>
+              <GuidesList>
+                {organizedGuides.guidesAwaitingProjects.map((guide, index) => (
+                  <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
+                ))}
+              </GuidesList>
+            </Section>
+          )}
+
+          {hasNothingToDo && (
+            <EmptyState>
+              <WidgetHeader>
+                <SectionTitle>All caught up</SectionTitle>
+                <SectionSubtitle>
+                  You&apos;ve completed all your current tasks. Great job!
+                </SectionSubtitle>
+              </WidgetHeader>
+            </EmptyState>
+          )}
+        </Column>
+
+        <Column>
+          <Section>
             <WidgetHeader>
-              <SectionTitle>Give Reviews</SectionTitle>
-              <SectionSubtitle>Help peers by providing reviews</SectionSubtitle>
+              <SectionTitle>Progress</SectionTitle>
             </WidgetHeader>
-            <GuidesList>
-              {organizedGuides.guidesNeedingReview.map((guide, index) => (
-                <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
-              ))}
-            </GuidesList>
-          </Section>
-        )}
 
-        {/* Priority 2: what to work on next, best first */}
-        {organizedGuides.nextGuidesToReturn.length > 0 && (
-          <Section $span={8}>
-            <WidgetHeader>
-              <SectionTitle>Continue Learning</SectionTitle>
-              <SectionSubtitle>
-                {organizedGuides.nextGuidesToReturn.length === 1
-                  ? "Next guide in your sequence"
-                  : "Next guides in your sequence"}
-              </SectionSubtitle>
-            </WidgetHeader>
-            <GuidesList>
-              {organizedGuides.nextGuidesToReturn.map((guide, index) => (
-                <GuideCard
-                  key={guide._id.toString()}
-                  guide={guide}
-                  order={getGuideDisplayOrder(extendedGuides, index)}
-                />
-              ))}
-            </GuidesList>
-          </Section>
-        )}
+            <OverallProgress>
+              <ProgressLabel>Overall</ProgressLabel>
+              <ProgressBar>
+                <ProgressValue style={{ width: `${Math.max(overallProgress, 5)}%` }}>
+                  {overallProgress}%
+                </ProgressValue>
+              </ProgressBar>
+            </OverallProgress>
 
-        {/* Progress */}
-        <Section $span={4}>
-          <WidgetHeader>
-            <SectionTitle>Progress</SectionTitle>
-          </WidgetHeader>
-
-          <div style={{ marginBottom: "0.75rem" }}>
-            <ProgressLabel>Overall</ProgressLabel>
-            <ProgressBar>
-              <ProgressValue style={{ width: `${Math.max(overallProgress, 5)}%` }}>
-                {overallProgress}%
-              </ProgressValue>
-            </ProgressBar>
-          </div>
-
-          <ProgressLabel style={{ marginBottom: "0.35rem" }}>By Module</ProgressLabel>
-          {moduleProgress.map((module) => (
-            <ModuleProgress key={module.number}>
-              <ModuleProgressLabel>
-                M{module.number} ({module.completedGuides}/{module.totalGuides})
-              </ModuleProgressLabel>
-              <ModuleProgressBar>
-                <ModuleProgressValue style={{ width: `${Math.max(module.progress, 5)}%` }}>
-                  {module.progress}%
-                </ModuleProgressValue>
-              </ModuleProgressBar>
-            </ModuleProgress>
-          ))}
-        </Section>
-
-        {/* Grades — full width so the module cards tile instead of leaving
-            two thirds of the row empty next to Continue Learning + Progress */}
-        <Section $span={12}>
-          <WidgetHeader>
-            <SectionTitle>Grades</SectionTitle>
-          </WidgetHeader>
-
-          <GradesList>
-            {moduleGrades.map((moduleGrade) => (
-              <GradeCard key={moduleGrade.module.number}>
-                <GradeTitle>Module {moduleGrade.module.number}</GradeTitle>
-                <GradeValues>
-                  <GradeItem>
-                    <GradeLabel>Code:</GradeLabel>
-                    <GradeValue>
-                      {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : "-"}
-                    </GradeValue>
-                  </GradeItem>
-                  <GradeItem>
-                    <GradeLabel>Design:</GradeLabel>
-                    <GradeValue>
-                      {moduleGrade.designAverage !== null ? moduleGrade.designAverage : "-"}
-                    </GradeValue>
-                  </GradeItem>
-                </GradeValues>
-              </GradeCard>
+            <ProgressGroupLabel>By Module</ProgressGroupLabel>
+            {moduleProgress.map((module) => (
+              <ModuleProgress key={module.number}>
+                <ModuleProgressLabel>
+                  M{module.number} ({module.completedGuides}/{module.totalGuides})
+                </ModuleProgressLabel>
+                <ModuleProgressBar>
+                  <ModuleProgressValue style={{ width: `${Math.max(module.progress, 5)}%` }}>
+                    {module.progress}%
+                  </ModuleProgressValue>
+                </ModuleProgressBar>
+              </ModuleProgress>
             ))}
-          </GradesList>
-        </Section>
-
-        {/* Passive: nothing to act on here, so it sits last */}
-        {organizedGuides.guidesAwaitingProjects.length > 0 && (
-          <Section $span={12}>
-            <WidgetHeader>
-              <SectionTitle>Waiting for Projects to Review</SectionTitle>
-              <SectionSubtitle>
-                You still owe reviews on these guides, but no peer projects are
-                available yet. There&apos;s nothing to do right now &mdash; we&apos;ll
-                surface them under &ldquo;Give Reviews&rdquo; as soon as a project shows up.
-              </SectionSubtitle>
-            </WidgetHeader>
-            <GuidesList>
-              {organizedGuides.guidesAwaitingProjects.map((guide, index) => (
-                <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
-              ))}
-            </GuidesList>
           </Section>
-        )}
 
-        {hasNothingToDo && (
-          <EmptyState $span={12}>
+          <Section>
             <WidgetHeader>
-              <SectionTitle>All caught up</SectionTitle>
-              <SectionSubtitle>
-                You&apos;ve completed all your current tasks. Great job!
-              </SectionSubtitle>
+              <SectionTitle>Grades</SectionTitle>
             </WidgetHeader>
-          </EmptyState>
-        )}
+
+            <GradesList>
+              {moduleGrades.map((moduleGrade) => (
+                <GradeCard key={moduleGrade.module.number}>
+                  <GradeTitle>Module {moduleGrade.module.number}</GradeTitle>
+                  <GradeValues>
+                    <GradeItem>
+                      <GradeLabel>Code:</GradeLabel>
+                      <GradeValue>
+                        {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : "-"}
+                      </GradeValue>
+                    </GradeItem>
+                    <GradeItem>
+                      <GradeLabel>Design:</GradeLabel>
+                      <GradeValue>
+                        {moduleGrade.designAverage !== null ? moduleGrade.designAverage : "-"}
+                      </GradeValue>
+                    </GradeItem>
+                  </GradeValues>
+                </GradeCard>
+              ))}
+            </GradesList>
+          </Section>
+        </Column>
       </MainContent>
     </HomeContainer>
   );

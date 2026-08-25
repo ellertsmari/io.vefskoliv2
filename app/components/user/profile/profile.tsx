@@ -8,6 +8,7 @@ import {
   UserEmail,
   ButtonWrapper,
   ProfileInfo,
+  ProfileBar,
 } from "./style";
 import ProfilePicture from "./profilePicture";
 import Modal from "UIcomponents/modal/modal";
@@ -28,13 +29,13 @@ export const Profile = ({ session }: { session: Session | null }) => {
   return (
     <Wrapper>
       {user ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <ProfileBar>
           <UserAliasDropdown session={session} />
           <Modal
             modalTrigger={<ProfilePicture name={user.name} url={user.avatarUrl} />}
             modalContent={<EditProfileScreen user={user} />}
           />
-        </div>
+        </ProfileBar>
       ) : (
         <div>loading…</div>
       )}

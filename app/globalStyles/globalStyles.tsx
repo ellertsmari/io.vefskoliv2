@@ -51,7 +51,7 @@ const Toast = styled.div`
   top: 100px;
   position: absolute;
   border-radius: var(--radius-md);
-  z-index: 1000;
+  z-index: var(--z-toast);
 `;
 
 export const ErrorToast = styled(Toast)`

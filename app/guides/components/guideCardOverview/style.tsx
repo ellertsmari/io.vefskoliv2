@@ -1,62 +1,57 @@
 import { Wrapper } from "globalStyles/globalStyles";
 import Link from "next/link";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
-export const GuideCardContainer = styled.div`
+/** Both card shells behave identically; only the element differs. */
+const cardSurface = css`
   text-decoration: none;
   color: inherit;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
   width: 100%;
   height: 100%;
   border-radius: var(--radius-md);
+
   &:hover {
     background-color: var(--primary-black-10);
   }
+`;
+
+export const GuideCardContainer = styled.div`
+  ${cardSurface}
 `;
 
 export const StyledLink = styled(Link)`
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  width: 100%;
-  height: 100%;
-  border-radius: var(--radius-md);
-
-  &:hover {
-    background-color: var(--primary-black-10);
-  }
+  ${cardSurface}
 `;
 
+/**
+ * Padding on all four sides. This used to be `1.25rem 0`, with the horizontal
+ * inset faked by fixed 155px widths on the title and the status list — which
+ * stopped working the moment the card was allowed to grow.
+ */
 export const Info = styled(Wrapper)`
-  justify-content: space-between;
+  width: 100%;
   height: 100%;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1.25rem 0;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem;
 `;
 
 export const GuideNr = styled.h2`
   font-size: var(--text-base);
   font-weight: 400;
-  align-self: center;
 `;
 
 export const Name = styled.p`
   font-size: var(--text-xs);
-  width: 155px;
   font-weight: 400;
-  text-align: center;
 `;
 
 export const GuideDescription = styled(Wrapper)`
   flex: 1;
   justify-content: center;
-  text-align: center;
-  align-items: flex-start;
+  align-items: stretch;
+  gap: 0.25rem;
   text-align: center;
 `;
 

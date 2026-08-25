@@ -1,10 +1,19 @@
 import styled from "styled-components";
 import { Widget, WidgetTitle } from "UIcomponents/widgetGrid/style";
+import { PageContainer } from "globalStyles/pageStyles";
 
-export { PageContainer as HomeContainer } from "globalStyles/pageStyles";
+/**
+ * Fluid rather than capped at 1200px: the dashboard is a tiling card layout, so
+ * a wide screen should buy more guide cards per row instead of a band of empty
+ * space down the right-hand side.
+ */
+export const HomeContainer = styled(PageContainer).attrs({
+  $width: "full" as const,
+})``;
 
 export {
   WidgetGrid as MainContent,
+  WidgetColumn as Column,
   Widget as Section,
   WidgetTitle as SectionTitle,
   WidgetSubtitle as SectionSubtitle,
@@ -57,6 +66,17 @@ export const ModuleProgress = styled.div`
   }
 `;
 
+/* Overall bar, set off from the per-module list under it. */
+export const OverallProgress = styled.div`
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--primary-black-10);
+`;
+
+export const ProgressGroupLabel = styled(ProgressLabel)`
+  margin-bottom: 0.35rem;
+`;
+
 export const ModuleProgressBar = styled(ProgressBar)`
   height: 16px;
   margin-top: 0.2rem;
@@ -73,21 +93,23 @@ export const ModuleProgressValue = styled(ProgressValue)`
   min-width: 28px;
 `;
 
-/* Tiles across the full-width widget; falls back to a single column when the
-   widget is narrow (mobile, or if Grades is ever given a smaller span). */
+/* One module per row in the status rail; tiles into columns if Grades is ever
+   given a wider slot. */
 export const GradesList = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.5rem;
 `;
 
 export const GradeCard = styled.div`
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.75rem;
   background: var(--primary-black-5);
   border-radius: var(--radius-md);
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 0.25rem 0.75rem;
 `;
 
 export const GradeTitle = styled.h3`

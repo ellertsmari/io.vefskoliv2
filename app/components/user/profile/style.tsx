@@ -8,6 +8,13 @@ export const ProfileWrapper = styled(Wrapper)`
   gap: 1.5rem;
 `;
 
+/** The right-hand cluster of the top bar: alias control, then the avatar. */
+export const ProfileBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
 /**
  * Row in the top bar (name beside the avatar); stacked inside the profile
  * modal, where the avatar reads as the header and the name sits under it.

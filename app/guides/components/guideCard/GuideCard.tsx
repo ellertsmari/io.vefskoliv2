@@ -106,7 +106,10 @@ const calculateBorderStyle = (
     return "border-color: var(--error-failure-100); background-color: var(--error-failure-10)";
   }
   if (returnStatus === ReturnStatus.HALL_OF_FAME) {
-    return "border-color: var(--theme-module3-100); background-color: var(--theme-module3-10); border-width: 3px;";
+    // Thickened with an inset shadow rather than border-width: with border-box
+    // a 3px border eats 4px of content width, so these cards laid out their
+    // text 2px narrower than the cards beside them.
+    return "border-color: var(--theme-module3-100); background-color: var(--theme-module3-10); box-shadow: inset 0 0 0 2px var(--theme-module3-100);";
   }
   if (returnStatus === ReturnStatus.AWAITING_REVIEWS) {
     return "border-color: var(--error-success-100); background-color: var(--error-success-10)";

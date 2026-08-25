@@ -26,7 +26,7 @@ export const ModalWrapper = styled.div`
   height: 100dvh;
   background-color: rgba(0, 0, 0, 0.5);
   position: fixed;
-  z-index: 10;
+  z-index: var(--z-modal);
 
   @media (min-width: ${breakPoint}) {
     align-items: center;
@@ -43,7 +43,8 @@ export const ContentWrapper = styled.div<{ $size: ModalSize }>`
   gap: 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--theme-module3-100);
-  z-index: 11;
+  /* Local to the overlay's stacking context, so a plain step above it. */
+  z-index: 1;
   max-height: 90dvh;
   /* Extra top padding keeps content clear of the pinned close button. */
   padding: 2.25rem 1.5rem 1.5rem;

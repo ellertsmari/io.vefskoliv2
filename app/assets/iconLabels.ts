@@ -10,3 +10,5 @@ export const redCrossLabel = "Red cross icon";
 export const bellIconLabel = "Bell icon";
 export const exitIconLabel = "Exit icon";
 export const logOutIconLabel = "Log out icon";
+export const eyeIconLabel = "Eye icon";
+export const chevronIconLabel = "Chevron icon";

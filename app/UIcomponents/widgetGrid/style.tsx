@@ -2,14 +2,18 @@
 import styled from "styled-components";
 
 /**
- * Dashboard layout as a 12-column grid rather than fixed left/right columns.
- * Adding a widget means dropping in one more <Widget $span={n}> — no reshuffling
- * of column containers, and the row packing sorts itself out.
+ * Dashboard layout: a fluid work column beside a fixed-width status rail.
  *
- * Below the breakpoint everything stacks, so spans only apply once there is
- * genuinely room to sit side by side.
+ * The rail is a fixed size rather than a fraction, so extra screen width all
+ * goes to the work column, where the card grids turn it into more columns.
+ * A proportional rail would just stretch progress bars over empty space.
+ *
+ * Below the breakpoint the two bands stack, work first.
  */
 export const WIDGET_GRID_BREAKPOINT = "1000px";
+
+/** Wide enough for a module label and a progress bar, narrow enough to scan. */
+export const WIDGET_RAIL_WIDTH = "21rem";
 
 export const WidgetGrid = styled.div`
   display: grid;
@@ -19,11 +23,11 @@ export const WidgetGrid = styled.div`
   width: 100%;
 
   @media (min-width: ${WIDGET_GRID_BREAKPOINT}) {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) ${WIDGET_RAIL_WIDTH};
   }
 `;
 
-export const Widget = styled.section<{ $span?: number }>`
+export const Widget = styled.section`
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -31,10 +35,25 @@ export const Widget = styled.section<{ $span?: number }>`
   background: var(--primary-white);
   border: 1px solid var(--primary-black-10);
   border-radius: var(--radius-lg);
+`;
 
+/** A widget that ignores the bands and runs the full width of the grid. */
+export const WidgetFullWidth = styled(Widget)`
   @media (min-width: ${WIDGET_GRID_BREAKPOINT}) {
-    grid-column: span ${({ $span = 4 }) => $span};
+    grid-column: 1 / -1;
   }
+`;
+
+/**
+ * A stack of widgets filling one band of the grid. Keeps a group at a shared
+ * width with a stable top edge, instead of each widget being pushed around by
+ * whatever happens to sit above it.
+ */
+export const WidgetColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
 `;
 
 /** Title + optional subtitle, with the spacing a widget header needs. */

@@ -87,4 +87,19 @@ h1 {
   --text-4xl: 2.5rem; /* 40px - matches Heading1 */
   --text-5xl: 3rem; /* 48px */
   --text-display: 4rem; /* 64px - landing page hero only */
+
+  /* Side navigation. The rail reserves only the collapsed width in the page
+     grid; the expanded panel slides out over the content, so widening it never
+     reflows the page. Both are read by layoutStyles and the NavBar. */
+  --nav-collapsed: 4.5rem; /* 72px - a 40px icon plus its padding */
+  --nav-expanded: 13rem; /* 208px - fits the longest label, "RESOURCES" */
+
+  /* Stacking order. Layers were picking their own numbers, so whether one
+     covered another came down to DOM order — the side nav and the modal
+     overlay both used 10, and the nav won because the top bar renders first.
+     Anything that overlays the page takes a step from this scale. */
+  --z-nav: 20; /* side rail, floats over page content when expanded */
+  --z-dropdown: 40; /* menus anchored to the top bar */
+  --z-modal: 60; /* dialog overlay - must cover the nav */
+  --z-toast: 80; /* transient messages, above everything */
 }

@@ -8,6 +8,8 @@ import {
   bellIconLabel,
   exitIconLabel,
   logOutIconLabel,
+  eyeIconLabel,
+  chevronIconLabel,
 } from "./iconLabels";
 
 /**
@@ -158,6 +160,60 @@ export const LogoutIcon = ({ size = "100%" }: IconProps = {}) => (
     />
   </svg>
 );
+
+export const EyeIcon = ({ size = "100%", color }: IconProps = {}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-label={eyeIconLabel}
+  >
+    <path
+      d="M2.036 12.322a1 1 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178a1 1 0 0 1 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"
+      stroke={color ?? "currentColor"}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+      stroke={color ?? "currentColor"}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const ChevronIcon = ({
+  size = "100%",
+  color,
+  direction = "down",
+}: IconProps & { direction?: "up" | "down" | "left" | "right" } = {}) => {
+  const rotations = { down: 0, up: 180, left: 90, right: -90 } as const;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label={chevronIconLabel}
+      style={{ transform: `rotate(${rotations[direction]}deg)` }}
+    >
+      <path
+        d="m6 9 6 6 6-6"
+        stroke={color ?? "currentColor"}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
 
 export const Arrow = ({
   color = "var(--theme-module3-100)",

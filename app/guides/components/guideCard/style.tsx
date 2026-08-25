@@ -1,26 +1,23 @@
 "use client";
 import styled from "styled-components";
-import { Wrapper } from "UIcomponents/input/style";
-import { Button } from "globalStyles/buttons/default/style";
-
-const BREAKPOINT = "680px";
-const BREAKPOINT_DESKTOP = "1024px";
 
 export const CardWrapper = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  width: 100%;
+  height: 100%;
 `;
 
+/**
+ * Fills the cell it is given rather than being a fixed 190x200 block. The old
+ * fixed size left ~80px of dead space on either side of every card once these
+ * were placed in the dashboard's wider grid tracks.
+ */
 export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-height: 190px;
   border: 1px solid var(--primary-black-100);
-  align-items: center;
-  gap: 16px;
-  width: 190px;
-  height: 200px;
   border-radius: var(--radius-md);
 
   position: relative;
