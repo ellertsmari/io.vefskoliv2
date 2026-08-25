@@ -225,6 +225,9 @@ describe("Feedback", () => {
   it("does not show grade if feedback given but not received a grade", () => {
     const mockFeedbackGiven = createMockFeedbacksWithReturn(1);
     const mockFeedbackReceived = createMockFeedbacksWithReturn(1, "received");
+    // The factory numbers grades from 0, and 0 is a real grade — say
+    // "ungraded" explicitly rather than leaning on it being falsy.
+    mockFeedbackGiven[0].grade = undefined as unknown as number;
 
     (useGuide as jest.Mock).mockReturnValue({
       guide: createMockGuide({
@@ -233,11 +236,14 @@ describe("Feedback", () => {
       }),
     });
 
-    const { queryByText } = render(<FeedbackOverview />);
+    const { queryByText, getByText } = render(<FeedbackOverview />);
 
-    const receivedToggle = screen.getByRole("button", { name: /given/i });
-    fireEvent.click(receivedToggle);
+    const givenToggle = screen.getByRole("button", { name: /given/i });
+    fireEvent.click(givenToggle);
 
     expect(queryByText("GRADE")).toBeNull();
+    // ...and the student is told why there is no grade, rather than being
+    // shown an empty panel.
+    expect(getByText("NOT GRADED YET")).toBeDefined();
   });
 });

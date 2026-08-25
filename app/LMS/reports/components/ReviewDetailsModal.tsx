@@ -2,6 +2,7 @@ import React, { useState, useActionState, startTransition } from "react";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { FeedbackDocument, GradedFeedbackDocument } from "models/review";
 import { returnGrade } from "serverActions/returnGrade";
+import { reviewGradeMeaning } from "constants/peerReview";
 import { extractModuleNumber } from "utils/moduleUtils";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import {
@@ -42,19 +43,6 @@ import {
   SaveGradeButton,
   EditButton,
 } from "./styles.ReviewDetailsModal";
-
-const gradeMeanings = [
-  '1 - The feedback was not helpfull at all (could be something like just "good" or "bad")',
-  '2- The feedback was not very helpfull (could be something like "good job" or "I liked it")',
-  "3 - The feedback was not helpfull (maybe just one line of text or something like that)",
-  "4 - The feedback was hardly helpfull (was maybe less than a paragraph long)",
-  "5 - The feedback pointed out some specific things that could be improved or that they liked (maybe a few sentences)",
-  "6 - The feedback was helpfull (it was clear that the reviewer had looked at the project and thought about it)",
-  "7 - The feedback was very helpfull (it was clear that the reviewer had looked at the project and thought about it and they gave some specific advice)",
-  "8 - The feedback was very helpfull (it was a thoughtful and a very thorough review with specific advice)",
-  "9 - The feedback was very helpfull (it was a thoughtful and thorough review with specific advice and suggestions for improvement OR praise for the good parts)",
-  "10 - The feedback was very helpfull (it was a thoughtful and thorough review with specific advice and suggestions for improvement AND praise for the good parts)",
-];
 
 interface GradeAdjustmentProps {
   review: FeedbackDocument;
@@ -118,7 +106,7 @@ const GradeAdjustment = ({ review, currentGrade, onGradeUpdated }: GradeAdjustme
           <GradeValue>Grade: {displayGrade}/10</GradeValue>
         </GradeDisplay>
         <GradeTooltip>
-          {gradeMeanings[displayGrade - 1]}
+          {reviewGradeMeaning(displayGrade)}
         </GradeTooltip>
       </GradeAdjustmentContainer>
     );
@@ -140,7 +128,7 @@ const GradeAdjustment = ({ review, currentGrade, onGradeUpdated }: GradeAdjustme
         onChange={handleGradeChange}
       />
       <GradeTooltip>
-        {gradeMeanings[tempGrade - 1]}
+        {reviewGradeMeaning(tempGrade)}
       </GradeTooltip>
       <div>
         <SaveGradeButton

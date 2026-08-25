@@ -28,11 +28,24 @@ import {
   GradeItem,
   GradeLabel,
   GradeValue,
-  EmptyState
+  EmptyState,
+  HowGradingWorksSlot,
+  HowGradingWorksButton
 } from "./style";
 import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
-import { useMemo } from "react";
+import { Suspense, lazy, useMemo } from "react";
 import { extractModuleNumber } from "utils/moduleUtils";
+import Modal from "UIcomponents/modal/modal";
+import { LoadingSpinner } from "UIcomponents/states/States";
+
+// The walkthrough is a sizeable client component and most visits never open
+// it, so it stays out of the dashboard bundle until asked for — the same
+// pattern the guide modal uses.
+const GradingSlideshow = lazy(() =>
+  import("../../LMS/docs/GradingSlideshow").then((mod) => ({
+    default: mod.GradingSlideshow,
+  }))
+);
 
 interface StudentHomePageProps {
   extendedGuides: ExtendedGuideInfo[];
@@ -280,6 +293,30 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
           <Section>
             <WidgetHeader>
               <SectionTitle>Grades</SectionTitle>
+              {/* A low number here alarms students every term. The framing
+                  that explains it away used to live only under DOCS; it
+                  belongs beside the number it explains. */}
+              <SectionSubtitle>
+                Progress, not a report card — guides you haven&apos;t returned
+                count as 0, so this climbs as you go.
+              </SectionSubtitle>
+              <HowGradingWorksSlot>
+                <Modal
+                  size="lg"
+                  modalTrigger={
+                    <HowGradingWorksButton type="button" aria-haspopup="dialog">
+                      How is this calculated?
+                    </HowGradingWorksButton>
+                  }
+                  modalContent={
+                    <Suspense
+                      fallback={<LoadingSpinner label="Opening walkthrough…" />}
+                    >
+                      <GradingSlideshow />
+                    </Suspense>
+                  }
+                />
+              </HowGradingWorksSlot>
             </WidgetHeader>
 
             <GradesList>

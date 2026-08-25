@@ -1,5 +1,9 @@
 import { render } from "@testing-library/react";
-import { ReviewStatus, ReturnStatus } from "../../types/guideTypes";
+import {
+  ReviewStatus,
+  ReturnStatus,
+  GradesReceivedStatus,
+} from "../../types/guideTypes";
 import { GuideCardStatuses } from "../../app/guides/components/guideCardStatuses/GuideCardStatuses";
 import {
   greenTickLabel,
@@ -95,5 +99,48 @@ describe("Statuses", () => {
     );
 
     expect(getByText(grade)).toBeInTheDocument();
+  });
+
+  it("renders a grade of 0 instead of hiding it", () => {
+    // Auto-graded guides can legitimately score 0; a truthiness check used to
+    // swallow that and show no grade at all.
+    const { getByText } = render(
+      <GuideCardStatuses
+        returnStatus={ReturnStatus.PASSED}
+        reviewStatus={ReviewStatus.NOT_APPLICABLE}
+        grade={0}
+        gradesReceivedStatus={GradesReceivedStatus.NOT_APPLICABLE}
+      />
+    );
+
+    expect(getByText(0)).toBeInTheDocument();
+  });
+
+  it("marks the grade as not final while review grades are outstanding", () => {
+    // The 5 points for returning show as a grade long before the review
+    // grades land, which reads as an earned 5/10 without this note.
+    const { getByText } = render(
+      <GuideCardStatuses
+        returnStatus={ReturnStatus.PASSED}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
+        grade={5}
+        gradesReceivedStatus={GradesReceivedStatus.AWAITING_GRADES}
+      />
+    );
+
+    expect(getByText(/not final/i)).toBeInTheDocument();
+  });
+
+  it("does not mark the grade as not final once grades are received", () => {
+    const { queryByText } = render(
+      <GuideCardStatuses
+        returnStatus={ReturnStatus.PASSED}
+        reviewStatus={ReviewStatus.REVIEWS_GIVEN}
+        grade={8.5}
+        gradesReceivedStatus={GradesReceivedStatus.GRADES_RECEIVED}
+      />
+    );
+
+    expect(queryByText(/not final/i)).toBeNull();
   });
 });

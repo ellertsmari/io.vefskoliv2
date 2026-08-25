@@ -1,22 +1,26 @@
 import { Slider } from "UIcomponents/slider/Slider";
 import { SubHeadingLabel} from "globalStyles/text";
 import { startTransition, useActionState, useEffect, useState } from "react";
-import { ButtonContainer, GradeContainer, SubmitButton, GradeMeaningDisplay } from "./style";
+import {
+  ButtonContainer,
+  GradeContainer,
+  SubmitButton,
+  GradeMeaningDisplay,
+  PendingPanel,
+  PendingTitle,
+  PendingText,
+} from "./style";
+import {
+  MAX_GRADE,
+  REVIEW_GRADE_MEANINGS,
+  reviewGradeMeaning,
+} from "constants/peerReview";
 
 import { returnGrade } from "serverActions/returnGrade";
 
-const gradeMeanings = [
-  '1 - The feedback was not helpfull at all (could be something like just "good" or "bad")',
-  '2- The feedback was not very helpfull (could be something like "good job" or "I liked it")',
-  "3 - The feedback was not helpfull (maybe just one line of text or something like that)",
-  "4 - The feedback was hardly helpfull (was maybe less than a paragraph long)",
-  "5 - The feedback pointed out some specific things that could be improved or that they liked (maybe a few sentences)",
-  "6 - The feedback was helpfull (it was clear that the reviewer had looked at the project and thought about it)",
-  "7 - The feedback was very helpfull (it was clear that the reviewer had looked at the project and thought about it and they gave some specific advice)",
-  "8 - The feedback was very helpfull (it was a thoughtful and a very thorough review with specific advice)",
-  "9 - The feedback was very helpfull (it was a thoughtful and thorough review with specific advice and suggestions for improvement OR praise for the good parts)",
-  "10 - The feedback was very helpfull (it was a thoughtful and thorough review with specific advice and suggestions for improvement AND praise for the good parts)",
-];
+/** The rubric doc teachers grade against, linked from the slider. */
+const RUBRIC_DOC_URL =
+  "https://docs.google.com/document/d/1MbGhamGJQmKHkVQHTCZP91Szmca0T7NQOG8ZNrTCp_U/edit?tab=t.0#heading=h.a3sfbxwldt9";
 
 export const Grade = ({
   grade,
@@ -48,7 +52,27 @@ export const Grade = ({
     });
   };
 
-  if (!grade && !gradeable) return null;
+  // A review nobody has graded yet. Previously this rendered nothing at all,
+  // which left the student staring at an empty panel with no way to tell
+  // "not graded yet" apart from "something is broken".
+  if (grade == null && !gradeable) {
+    return (
+      <PendingPanel>
+        <PendingTitle>NOT GRADED YET</PendingTitle>
+        <PendingText>
+          A teacher will score this review from 1 to {MAX_GRADE}. Review scores
+          are worth up to half of your grade for this guide, so it&apos;s worth
+          writing a good one.
+        </PendingText>
+        <PendingText>
+          <a href={RUBRIC_DOC_URL} target="_blank" rel="noopener noreferrer">
+            What earns a high score?
+          </a>
+        </PendingText>
+      </PendingPanel>
+    );
+  }
+
   if (gradeable && !reviewId)
     throw new Error(
       "Grade component requires a reviewId when gradeable is true"
@@ -58,20 +82,18 @@ export const Grade = ({
     <GradeContainer>
       {/* Display current grade meaning above the label */}
       <GradeMeaningDisplay>
-        {gradeMeanings[tempGrade - 1]}
+        {reviewGradeMeaning(tempGrade)}
       </GradeMeaningDisplay>
       
       <SubHeadingLabel htmlFor="grade-slider">GRADE</SubHeadingLabel>
       <Slider
-        options={Array.from({ length: 10 }, (_, i) => i + 1)}
+        options={Array.from({ length: MAX_GRADE }, (_, i) => i + 1)}
         value={tempGrade}
         selectable={canGrade && !isPending}
-        helpLink={
-          "https://docs.google.com/document/d/1MbGhamGJQmKHkVQHTCZP91Szmca0T7NQOG8ZNrTCp_U/edit?tab=t.0#heading=h.a3sfbxwldt9"
-        }
+        helpLink={RUBRIC_DOC_URL}
         handleOnChange={handleOnGradeChange}
         id="grade-slider"
-        titles={gradeMeanings}
+        titles={REVIEW_GRADE_MEANINGS}
       />
       {canGrade && (
         <ButtonContainer>

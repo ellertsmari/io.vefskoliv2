@@ -33,3 +33,14 @@ export const IconContainer = styled.div`
   height: 18px;
   width: 18px;
 `;
+
+/**
+ * Sits under the grade to mark it provisional. Small and muted: it qualifies
+ * the number without competing with it.
+ */
+export const GradeNote = styled.span`
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  color: var(--primary-black-60);
+  max-width: 100%;
+`;

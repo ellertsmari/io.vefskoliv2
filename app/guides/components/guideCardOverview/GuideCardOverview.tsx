@@ -1,6 +1,7 @@
 import {
   ReviewStatus,
   ReturnStatus,
+  GradesReceivedStatus,
 } from "types/guideTypes";
 import { GuideCardStatuses } from "../guideCardStatuses/GuideCardStatuses";
 import {
@@ -21,6 +22,7 @@ export const GuideCardOverview = ({
   returnStatus,
   reviewStatus,
   grade,
+  gradesReceivedStatus,
 }: {
   guideTitle: string;
   moduleTitle: string;
@@ -29,6 +31,7 @@ export const GuideCardOverview = ({
   returnStatus: ReturnStatus;
   reviewStatus: ReviewStatus;
   grade?: number;
+  gradesReceivedStatus?: GradesReceivedStatus;
 }) => {
   const content = (
     <Info>
@@ -42,6 +45,7 @@ export const GuideCardOverview = ({
         returnStatus={returnStatus}
         reviewStatus={reviewStatus}
         grade={grade}
+        gradesReceivedStatus={gradesReceivedStatus}
       />
       {/* same-looking cards behave differently (open guide vs. status modal);
           a small hint removes the guesswork */}

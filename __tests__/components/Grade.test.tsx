@@ -29,10 +29,25 @@ describe("Grade Component", () => {
     expect(getByText("SUBMIT GRADE")).toBeDefined();
   });
 
-  test("displays null if grade and gradeable are falsy", () => {
-    const { container } = render(<Grade grade={null} gradeable={false} />);
+  test("tells the student it is not graded yet when there is no grade", () => {
+    // This used to render nothing at all, leaving an empty panel that a
+    // student could not tell apart from a broken page.
+    const { getByText, queryByRole } = render(
+      <Grade grade={null} gradeable={false} />
+    );
 
-    expect(container.firstChild).toBeNull();
+    expect(getByText("NOT GRADED YET")).toBeDefined();
+    expect(queryByRole("slider")).toBeNull();
+  });
+
+  test("shows a grade of 0 rather than treating it as ungraded", () => {
+    const { getByText, getByRole, queryByText } = render(
+      <Grade grade={0} gradeable={false} />
+    );
+
+    expect(getByText("GRADE")).toBeDefined();
+    expect(getByRole("slider")).toBeDefined();
+    expect(queryByText("NOT GRADED YET")).toBeNull();
   });
 
   test("throws error if reviewId is not provided when gradeable is true", () => {

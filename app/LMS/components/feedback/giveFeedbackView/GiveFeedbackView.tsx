@@ -26,6 +26,7 @@ import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
 import { FeedbackInfoContainer } from "./style";
 import { useLocalState } from "utils/hooks/useStorage";
+import { REVIEW_QUALITY_BANDS } from "constants/peerReview";
 import { LoadingSpinner } from "UIcomponents/states/States";
 import styled from "styled-components";
 
@@ -57,6 +58,28 @@ const TipsPanel = styled.div`
   li {
     margin-bottom: 0.25rem;
   }
+`;
+
+/**
+ * The rubric block inside the tips panel. Students used to meet the grading
+ * scale only after they had been graded against it; showing it here is the
+ * point where it can still change what they write.
+ */
+const RubricSection = styled.div`
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--primary-black-30);
+`;
+
+const RubricIntro = styled.p`
+  margin: 0.35rem 0 0 0;
+  color: var(--primary-black-60);
+`;
+
+const BandLabel = styled.span`
+  font-weight: 700;
+  display: inline-block;
+  min-width: 3.2rem;
 `;
 
 const SuccessPanel = styled.div`
@@ -233,6 +256,21 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
                 <li key={tip}>{tip}</li>
               ))}
             </ul>
+            <RubricSection>
+              <strong>How your review will be graded</strong>
+              <RubricIntro>
+                A teacher scores every review from 1 to 10, and that score is
+                worth up to half of your grade for this guide.
+              </RubricIntro>
+              <ul>
+                {REVIEW_QUALITY_BANDS.map((band) => (
+                  <li key={band.label}>
+                    <BandLabel>{band.label}</BandLabel>
+                    {band.summary}
+                  </li>
+                ))}
+              </ul>
+            </RubricSection>
           </TipsPanel>
         )}
         <div
@@ -250,7 +288,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
             aria-controls="review-tips"
             disabled={isPending}
           >
-            {showTips ? "HIDE TIPS" : "WHAT SHOULD I LOOK FOR?"}
+            {showTips ? "HIDE TIPS" : "WHAT MAKES A GOOD REVIEW?"}
           </Button>
           <div>
             <Button

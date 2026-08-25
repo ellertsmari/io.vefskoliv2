@@ -29,3 +29,37 @@ export const GradeMeaningDisplay = styled.div`
   border: 1px solid var(--primary-black-30);
   line-height: 1.4;
 `;
+
+/**
+ * Shown in place of the slider when a review has no grade yet. Deliberately
+ * looks like an informational note rather than a disabled control — there is
+ * nothing here for the student to act on, they are waiting on a teacher.
+ */
+export const PendingPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-black-5);
+  border: 1px dashed var(--primary-black-30);
+  border-radius: var(--radius-md);
+`;
+
+export const PendingTitle = styled.span`
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--primary-black-60);
+`;
+
+export const PendingText = styled.p`
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--primary-black-60);
+
+  a {
+    color: inherit;
+  }
+`;

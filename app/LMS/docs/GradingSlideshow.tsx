@@ -7,6 +7,7 @@ import {
   REQUIRED_REVIEWS_COUNT,
   FAIL_THRESHOLD,
   GRADES_TO_AVERAGE,
+  REVIEW_QUALITY_BANDS,
 } from "constants/peerReview";
 import {
   FormulaBox,
@@ -100,36 +101,13 @@ const GradeCalculator = () => {
   );
 };
 
-const qualityBands = [
-  {
-    label: "1–2",
-    text: 'Not helpful — just "good" or "bad" with no explanation.',
-  },
-  {
-    label: "3–4",
-    text: "Barely helpful — very short, less than a paragraph.",
-  },
-  {
-    label: "5–6",
-    text: "Helpful — points out specific things to improve or that were done well.",
-  },
-  {
-    label: "7–8",
-    text: "Very helpful — a thoughtful review with specific advice and suggestions.",
-  },
-  {
-    label: "9–10",
-    text: "Exceptional — thorough, with specific advice, suggestions to improve, AND praise for the good parts.",
-  },
-];
-
 const QualityPicker = () => {
   const [selected, setSelected] = useState(3); // default highlights the 7–8 band
 
   return (
     <>
       <PillRow role="tablist" aria-label="Review quality levels">
-        {qualityBands.map((band, i) => (
+        {REVIEW_QUALITY_BANDS.map((band, i) => (
           <Pill
             key={band.label}
             role="tab"
@@ -141,7 +119,7 @@ const QualityPicker = () => {
           </Pill>
         ))}
       </PillRow>
-      <PillDesc>{qualityBands[selected].text}</PillDesc>
+      <PillDesc>{REVIEW_QUALITY_BANDS[selected].summary}</PillDesc>
     </>
   );
 };

@@ -149,3 +149,31 @@ export const EmptyState = styled(Widget)`
     color: var(--primary-black-100);
   }
 `;
+
+/**
+ * Holds the "How is this calculated?" trigger. Modal's own trigger wrapper is
+ * width/height 100%, so without a fit-content box around it a click anywhere
+ * along the header row would open the walkthrough.
+ */
+export const HowGradingWorksSlot = styled.div`
+  width: fit-content;
+  max-width: 100%;
+  align-self: flex-start;
+  margin-top: 0.4rem;
+`;
+
+export const HowGradingWorksButton = styled.button`
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--primary-black-60);
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    color: var(--primary-black-100);
+  }
+`;

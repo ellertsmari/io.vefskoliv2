@@ -26,7 +26,7 @@ const GuideCard = ({
   guide: ExtendedGuideInfo;
   order?: number;
 }) => {
-  const { returnStatus, reviewStatus, grade } = guide;
+  const { returnStatus, reviewStatus, grade, gradesReceivedStatus } = guide;
 
   const link =
     guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
@@ -48,6 +48,7 @@ const GuideCard = ({
               returnStatus={returnStatus}
               reviewStatus={reviewStatus}
               grade={grade}
+              gradesReceivedStatus={gradesReceivedStatus}
             />
           ) : (
             <>
@@ -64,6 +65,7 @@ const GuideCard = ({
                     returnStatus={returnStatus}
                     reviewStatus={reviewStatus}
                     grade={grade}
+                    gradesReceivedStatus={gradesReceivedStatus}
                   />
                 }
                 modalContent={
