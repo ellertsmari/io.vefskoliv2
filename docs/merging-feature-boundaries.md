@@ -4,6 +4,21 @@ This branch moves files. Git handles that better than you would expect, but
 there is one case where it reports success and leaves you with a broken build.
 This page is what to check.
 
+## The plan: rebase onto main once the other work lands
+
+```sh
+git checkout main && git pull
+git checkout refactor/feature-boundaries
+git rebase main
+find app/LMS/components -type f 2>/dev/null   # must print nothing — see below
+npm run verify
+git push -u origin refactor/feature-boundaries
+```
+
+Rebasing this direction is deliberate: the moves replay *last*, on top of
+whatever landed on main. Everything below was tested both ways (merging this
+branch in, and rebasing it onto main) and behaves identically.
+
 ## What moved
 
 | Before | After |
@@ -43,7 +58,9 @@ between the two now points into an empty tree, and `next build` fails.
 Git cannot help here: it has no way to know a file added to a directory was
 meant to follow that directory somewhere else.
 
-**Check for it immediately after merging:**
+**`npm test` now catches this** — `featureBoundaries.test.ts` fails with
+"Files reappeared in a directory that was moved away" and names the files. To
+check by hand before running the suite:
 
 ```sh
 # Should print nothing. If it prints anything, that file needs to move.
@@ -98,11 +115,12 @@ Two failures are specific to this branch and worth recognising:
 - **`known violations are actually still there` fails.** Someone fixed a listed
   violation. Delete that line from `KNOWN_VIOLATIONS`. This is a good failure.
 
-## If the merge goes badly
+## If it goes badly
 
 ```sh
-git merge --abort
+git rebase --abort     # or: git merge --abort
 ```
 
-Then merge the other direction instead — take their branch into this one, where
-the moves are already history and only their changes need replaying.
+Nothing is lost. Re-run and resolve again, or merge instead of rebasing — the
+outcomes were identical in testing, so pick whichever conflict presentation you
+find easier to read.

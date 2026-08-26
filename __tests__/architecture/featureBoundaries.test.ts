@@ -176,6 +176,36 @@ describe("feature boundaries", () => {
     expect(fixed).toEqual([]);
   });
 
+  /**
+   * Moving a directory is the one refactor git cannot fully merge for you. It
+   * replays edits to moved files at the new path, but a file someone *added*
+   * to the old directory on another branch merges cleanly and silently stays
+   * behind — orphaned next to code that has moved away, with its relative
+   * imports pointing into an empty tree. Nothing else catches this: an
+   * unclassified path looks like shared code to the rule above.
+   */
+  it("directories this refactor emptied are still empty", () => {
+    const EMPTIED = ["app/LMS/components"];
+
+    const survivors = EMPTIED.filter((dir) =>
+      fs.existsSync(path.join(ROOT, dir))
+    ).flatMap((dir) =>
+      walk(path.join(ROOT, dir)).map((f) => toPosix(path.relative(ROOT, f)))
+    );
+
+    if (survivors.length > 0) {
+      throw new Error(
+        "Files reappeared in a directory that was moved away:\n\n" +
+          survivors.map((f) => "  " + f).join("\n") +
+          "\n\nThis is almost always a merge or rebase that brought in a file" +
+          "\nadded to the old location on another branch. git reports success" +
+          "\nfor this and leaves the build broken. Move them to the matching" +
+          "\npath under app/guides/components/ and fix their imports." +
+          "\n\nSee docs/merging-feature-boundaries.md."
+      );
+    }
+  });
+
   it("actually inspects files, so a broken matcher cannot pass silently", () => {
     const scanned = SCANNED_DIRS.flatMap((d) => walk(path.join(ROOT, d)))
       .map((f) => toPosix(path.relative(ROOT, f)))
