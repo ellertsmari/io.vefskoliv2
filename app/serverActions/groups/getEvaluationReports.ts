@@ -37,7 +37,7 @@ export async function getEvaluationReports(
         .lean(),
     ]);
 
-    const serializedTeams = teams.map(serializeTeam);
+    const serializedTeams = teams.map((team) => serializeTeam(team));
 
     // Peer evaluation report: one row per assigned student.
     const peerReports = new Map<string, PeerEvalStudentReport>();

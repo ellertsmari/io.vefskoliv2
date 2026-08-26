@@ -12,6 +12,8 @@ import {
 } from "constants/groupWork";
 import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
+import { setShowcaseConsent } from "serverActions/groups/setShowcaseConsent";
+import { removeTeamImage } from "serverActions/groups/removeTeamImage";
 import {
   Card,
   SectionTitle,
@@ -128,6 +130,28 @@ const BannerLink = styled.a`
   }
 `;
 
+const ConsentRow = styled.label`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: 0.35rem 0;
+
+  input {
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+`;
+
+const ConsentNote = styled.p`
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
+`;
+
 const initials = (name: string) =>
   name
     .split(" ")
@@ -148,6 +172,72 @@ export const MemberAvatar = ({
   ) : (
     <AvatarFallback aria-hidden>{initials(name || "?")}</AvatarFallback>
   );
+
+/**
+ * Each member's own answer to whether their NAME appears on the public
+ * showcase.
+ *
+ * Kept out of the team-hub form on purpose. That form is read-only once a
+ * project is archived, but archived projects stay on the showcase forever, so
+ * consent has to remain changeable long after the course ends. It also saves on
+ * its own — nobody should have to press "Save team hub" to withdraw.
+ *
+ * Only names are asked about here. Consent for the team photo is given by
+ * choosing to be in the picture when it is taken, and undone by removing it —
+ * an earlier version gated the photo on unanimous agreement here, which held
+ * whole teams hostage to one person who had simply never seen this card.
+ */
+const ShowcaseConsentCard = ({
+  teamId,
+  consent,
+}: {
+  teamId: string;
+  consent: SerializedTeam["showcaseConsent"];
+}) => {
+  const router = useRouter();
+  const [name, setName] = useState(consent.myName);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  const save = async (next: boolean) => {
+    setName(next);
+    setSaving(true);
+    const result = await setShowcaseConsent({ teamId, name: next });
+    setSaving(false);
+    setFeedback(result.success ? "Saved" : result.message);
+    if (result.success) router.refresh();
+  };
+
+  return (
+    <Card>
+      <SectionTitle>Your name on the public showcase</SectionTitle>
+      <MutedText>
+        Your project page is public — anyone can open it without logging in. You
+        choose whether your name appears on it, and you can change your mind at
+        any time, including after the course has ended.
+      </MutedText>
+
+      <ConsentRow>
+        <input
+          type="checkbox"
+          checked={name}
+          disabled={saving}
+          onChange={(e) => save(e.target.checked)}
+        />
+        <span>Show my name on our public project page</span>
+      </ConsentRow>
+
+      <ConsentNote>
+        This is yours alone — it never affects your teammates, and leaving it
+        unticked holds nothing up. {consent.nameAgreed} of{" "}
+        {consent.memberCount} in your team have chosen to be named so far. You
+        do not need to give a reason either way, and nobody is told who answered
+        what.
+      </ConsentNote>
+      {feedback && <ConsentNote>{feedback}</ConsentNote>}
+    </Card>
+  );
+};
 
 export const TeamHubTab = ({
   details,
@@ -209,6 +299,27 @@ export const TeamHubTab = ({
     );
   }
 
+  // Clearing an image persists immediately rather than waiting for "Save team
+  // hub": removal has to work on archived projects too, where the form itself
+  // is read-only. Picking a NEW image still goes through the normal save.
+  const imageSetters = {
+    coverImage: setCoverImage,
+    teamPhoto: setTeamPhoto,
+    logo: setLogo,
+  } as const;
+
+  const handleImageChange =
+    (field: keyof typeof imageSetters) => async (value: string) => {
+      imageSetters[field](value);
+      if (value !== "") return;
+      const result = await removeTeamImage({ teamId: team._id, field });
+      setFeedback({
+        text: result.success ? "Image removed" : result.message,
+        error: !result.success,
+      });
+      if (result.success) router.refresh();
+    };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -249,6 +360,10 @@ export const TeamHubTab = ({
           ))}
         </Members>
       </Card>
+
+      {!isTeacher && (
+        <ShowcaseConsentCard teamId={team._id} consent={team.showcaseConsent} />
+      )}
 
       <form onSubmit={handleSubmit}>
         <Layout>
@@ -324,29 +439,40 @@ export const TeamHubTab = ({
               >
                 public showcase page ↗
               </ShowcaseLink>{" "}
-              — a link you can put in your portfolio or CV.
+              — a link you can put in your portfolio or CV. Anyone can open it
+              without logging in, so choose images you are happy for the world
+              to see.
             </MutedText>
             <TwoColumns>
               <ImageUploadField
                 id="cover-image"
-                label="Cover screenshot — a crisp shot of your product (the hero image)"
+                prefix="cover-image"
+                label="Cover screenshot"
+                description="A crisp shot of your product actually working — this is the big image people see first, both on the showcase grid and at the top of your page."
                 value={coverImage}
-                onChange={setCoverImage}
+                onChange={handleImageChange("coverImage")}
                 disabled={readOnly}
+                canRemove
               />
               <ImageUploadField
                 id="team-photo"
-                label="Team photo — the humans behind the project"
+                prefix="team-photo"
+                label="Team photo — or a second project image"
+                description="Take the picture with whoever wants to be in it. Nobody has to be, no reason is needed, and anyone can leave themselves out without saying so. Any team member can remove this photo later, at any time, including after the course ends. Would you rather not put a picture of people on a public page? Upload another image of your project instead — a second screenshot, a mockup, a detail you are proud of."
                 value={teamPhoto}
-                onChange={setTeamPhoto}
+                onChange={handleImageChange("teamPhoto")}
                 disabled={readOnly}
+                canRemove
               />
               <ImageUploadField
                 id="team-logo"
-                label="Logo — square works best (optional)"
+                prefix="team-logo"
+                label="Logo (optional)"
+                description="Your project's mark, shown next to the title. Square works best."
                 value={logo}
-                onChange={setLogo}
+                onChange={handleImageChange("logo")}
                 disabled={readOnly}
+                canRemove
               />
             </TwoColumns>
           </Card>

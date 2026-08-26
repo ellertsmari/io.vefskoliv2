@@ -27,10 +27,24 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/guides/**": ["./node_modules/typescript/lib/**"],
   },
+  // Uploaded images live in Vercel Blob and are referenced by URL, so
+  // next/image can finally optimize them (resize, modern formats) instead of
+  // being handed an un-sized data URL and forced to pass it through.
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/**",
+      },
+    ],
+  },
   experimental: {
     serverActions: {
-      // Uploaded images are submitted inline as data URLs (up to 3 × ~650 KB
-      // per submission, see app/utils/imageUpload.ts).
+      // Images no longer travel through server actions — the browser uploads
+      // them straight to Blob and submits only the URL. The raised limit stays
+      // for records still holding a legacy inline data URL, which are re-sent
+      // as-is whenever such a record is saved without re-uploading its image.
       bodySizeLimit: "5mb",
     },
   },

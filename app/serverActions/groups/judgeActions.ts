@@ -63,7 +63,7 @@ export async function getJudgeView(token: string): Promise<JudgeView | null> {
 
     return {
       project: serializeProject(project),
-      teams: teams.map(serializeTeam),
+      teams: teams.map((team) => serializeTeam(team)),
       judge: { name: invitation.name, focus: invitation.focus },
       myEvaluations: groupEvaluationEntriesByTeam(myEvals),
     };

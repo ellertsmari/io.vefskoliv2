@@ -1,5 +1,5 @@
 "use client";
-import { ShowcaseProject } from "types/groupTypes";
+import { ShowcaseIndex } from "types/groupTypes";
 import {
   Page,
   Hero,
@@ -25,6 +25,9 @@ import {
   CardMeta,
   CardCta,
   EmptyNote,
+  YearNav,
+  YearNavLabel,
+  YearLink,
   Footer,
 } from "./styles";
 
@@ -41,75 +44,91 @@ const memberSummary = (names: string[]) => {
   return `${firstNames.slice(0, 3).join(", ")} +${firstNames.length - 3}`;
 };
 
-export const ShowcaseView = ({
-  projects,
-}: {
-  projects: ShowcaseProject[];
-}) => (
-  <Page>
-    <Hero>
-      <HeroKicker>Vefskólinn</HeroKicker>
-      <HeroTitle>Student Showcase</HeroTitle>
-      <HeroSubtitle>
-        Real web applications — designed, built and shipped by student teams,
-        from their first website to full-stack products.
-      </HeroSubtitle>
-    </Hero>
+export const ShowcaseView = ({ index }: { index: ShowcaseIndex }) => {
+  const { projects, years, year } = index;
 
-    <Content>
-      {projects.length === 0 && (
-        <EmptyNote>
-          Nothing here yet — the first projects are on their way.
-        </EmptyNote>
-      )}
+  return (
+    <Page>
+      <Hero>
+        <HeroKicker>Vefskólinn</HeroKicker>
+        <HeroTitle>Student Showcase</HeroTitle>
+        <HeroSubtitle>
+          Real web applications — designed, built and shipped by student teams,
+          from their first website to full-stack products.
+        </HeroSubtitle>
+      </Hero>
 
-      {projects.map((project) => (
-        <ProjectSection key={project._id}>
-          <ProjectHeader>
-            {project.module != null && (
-              <ModuleBadge>Module {project.module}</ModuleBadge>
-            )}
-            <ProjectTitle>{project.title}</ProjectTitle>
-            <ProjectDates>
-              {formatMonthYear(project.startDate)} –{" "}
-              {formatMonthYear(project.endDate)}
-            </ProjectDates>
-          </ProjectHeader>
-
-          <TeamGrid>
-            {project.teams.map((team) => (
-              <TeamCard key={team._id} href={`/showcase/${team._id}`}>
-                <CardCover>
-                  {team.coverImage ? (
-                    <CardCoverImage src={team.coverImage} alt="" />
-                  ) : (
-                    <CoverFallbackLetter aria-hidden>
-                      {(team.projectName || team.name).charAt(0).toUpperCase()}
-                    </CoverFallbackLetter>
-                  )}
-                </CardCover>
-                <CardBody>
-                  <CardTitleRow>
-                    {team.logo && <CardLogo src={team.logo} alt="" />}
-                    <CardTitle>{team.projectName}</CardTitle>
-                  </CardTitleRow>
-                  {team.tagline && <CardTagline>{team.tagline}</CardTagline>}
-                  <CardMeta>
-                    {memberSummary(team.memberNames)}
-                    {team.memberNames.length > 0 && " · "}
-                    <CardCta>View project →</CardCta>
-                  </CardMeta>
-                </CardBody>
-              </TeamCard>
+      <Content>
+        {years.length > 1 && (
+          <YearNav aria-label="Filter projects by year">
+            <YearNavLabel>Year</YearNavLabel>
+            {years.map((option) => (
+              <YearLink
+                key={option}
+                href={`/showcase?year=${option}`}
+                $active={option === year}
+                aria-current={option === year ? "page" : undefined}
+              >
+                {option}
+              </YearLink>
             ))}
-          </TeamGrid>
-        </ProjectSection>
-      ))}
-    </Content>
+          </YearNav>
+        )}
 
-    <Footer>
-      Built by the students of <a href="https://vefskolinn.is">Vefskólinn</a>,
-      the Icelandic web development school.
-    </Footer>
-  </Page>
-);
+        {projects.length === 0 && (
+          <EmptyNote>
+            Nothing here yet — the first projects are on their way.
+          </EmptyNote>
+        )}
+
+        {projects.map((project) => (
+          <ProjectSection key={project._id}>
+            <ProjectHeader>
+              {project.module != null && (
+                <ModuleBadge>Module {project.module}</ModuleBadge>
+              )}
+              <ProjectTitle>{project.title}</ProjectTitle>
+              <ProjectDates>
+                {formatMonthYear(project.startDate)} –{" "}
+                {formatMonthYear(project.endDate)}
+              </ProjectDates>
+            </ProjectHeader>
+
+            <TeamGrid>
+              {project.teams.map((team) => (
+                <TeamCard key={team._id} href={`/showcase/${team._id}`}>
+                  <CardCover>
+                    {team.coverImage ? (
+                      <CardCoverImage src={team.coverImage} alt="" />
+                    ) : (
+                      <CoverFallbackLetter aria-hidden>
+                        {(team.projectName || team.name).charAt(0).toUpperCase()}
+                      </CoverFallbackLetter>
+                    )}
+                  </CardCover>
+                  <CardBody>
+                    <CardTitleRow>
+                      {team.logo && <CardLogo src={team.logo} alt="" />}
+                      <CardTitle>{team.projectName}</CardTitle>
+                    </CardTitleRow>
+                    {team.tagline && <CardTagline>{team.tagline}</CardTagline>}
+                    <CardMeta>
+                      {memberSummary(team.memberNames)}
+                      {team.memberNames.length > 0 && " · "}
+                      <CardCta>View project →</CardCta>
+                    </CardMeta>
+                  </CardBody>
+                </TeamCard>
+              ))}
+            </TeamGrid>
+          </ProjectSection>
+        ))}
+      </Content>
+
+      <Footer>
+        Built by the students of <a href="https://vefskolinn.is">Vefskólinn</a>,
+        the Icelandic web development school.
+      </Footer>
+    </Page>
+  );
+};

@@ -15,6 +15,18 @@ export type GroupMemberInfo = {
 
 export type TeamLinks = Record<TeamLinkKey, string>;
 
+/**
+ * What the signed-in viewer sees of their team's showcase consent: their own
+ * answer, which is theirs alone to change, plus an anonymous tally. Nobody is
+ * ever told who declined — and because a name is individual, nobody needs to
+ * know: one person's answer never holds up anybody else's.
+ */
+export type ShowcaseConsentSummary = {
+  myName: boolean;
+  nameAgreed: number;
+  memberCount: number;
+};
+
 export type SerializedTeam = {
   _id: string;
   project: string;
@@ -27,9 +39,28 @@ export type SerializedTeam = {
   coverImage: string;
   teamPhoto: string;
   logo: string;
+  showcaseConsent: ShowcaseConsentSummary;
 };
 
 // Public showcase (no auth — students link these pages from portfolios/CVs)
+
+/**
+ * One card in the `/showcase` grid. Deliberately NOT the same shape as the
+ * detail page: the grid renders only the cover and the logo, so carrying
+ * `teamPhoto` here would ship every team's photo to every visitor without ever
+ * painting it — a third of the payload, wasted, on the page that grows every
+ * semester.
+ */
+export type ShowcaseCard = {
+  _id: string;
+  name: string;
+  projectName: string;
+  tagline: string;
+  coverImage: string;
+  logo: string;
+  memberNames: string[];
+};
+
 export type ShowcaseTeam = {
   _id: string;
   name: string;
@@ -49,7 +80,19 @@ export type ShowcaseProject = {
   module: number | null;
   startDate: string;
   endDate: string;
-  teams: ShowcaseTeam[];
+  teams: ShowcaseCard[];
+};
+
+/**
+ * The showcase is scoped to one graduating year at a time. Without this the
+ * grid queried every non-formation project ever run and rendered all of them
+ * on one page, so its weight grew by a full cohort every year.
+ */
+export type ShowcaseIndex = {
+  projects: ShowcaseProject[];
+  /** Every year that has something to show, newest first. */
+  years: number[];
+  year: number | null;
 };
 
 export type ShowcaseTeamDetail = {

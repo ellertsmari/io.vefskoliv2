@@ -13,6 +13,7 @@ import {
   successNoData,
 } from "utils/errors";
 import { objectIdSchema, isTeacher, requireSession } from "./helpers";
+import { deleteReplacedImages } from "../blobCleanup";
 
 const optionalUrl = z
   .string()
@@ -75,8 +76,19 @@ export async function updateTeamHub(
       }
     }
 
+    const previousImages = [team.coverImage, team.teamPhoto, team.logo];
+
     team.set(updates);
     await team.save();
+
+    // Whatever the save just superseded is now unreachable — drop it from the
+    // store rather than paying to keep every version a team ever uploaded.
+    await deleteReplacedImages(previousImages, [
+      updates.coverImage,
+      updates.teamPhoto,
+      updates.logo,
+    ]);
+
     return successNoData("Team hub saved");
   } catch (error) {
     return handleActionError(

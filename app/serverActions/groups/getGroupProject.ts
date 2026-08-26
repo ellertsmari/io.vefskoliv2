@@ -57,8 +57,10 @@ export async function getGroupProject(
       .populate("members", "name avatarUrl")
       .lean();
 
-    const serializedTeams = teams.map(serializeTeam);
     const userId = session.user.id;
+    // The viewer id resolves "my" showcase consent — each member sees and
+    // changes only their own answer.
+    const serializedTeams = teams.map((team) => serializeTeam(team, userId));
 
     const myTeam = serializedTeams.find((team) =>
       team.members.some((member) => member._id === userId)

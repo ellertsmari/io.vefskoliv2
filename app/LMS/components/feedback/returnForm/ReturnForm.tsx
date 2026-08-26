@@ -100,7 +100,7 @@ const FormContent = ({
       ...formData,
       projectUrl: normalizeUrl(formData?.projectUrl),
       liveVersion: normalizeUrl(formData?.liveVersion),
-      // uploaded as a data URL by ImageUploadField — no normalization
+      // a blob URL from ImageUploadField — already absolute, no normalization
       pictureUrl: formData?.pictureUrl,
     };
     setFormData(normalized);
@@ -150,6 +150,7 @@ const FormContent = ({
         />
         <ImageUploadField
           id={"pictureUrl"}
+          prefix="return-picture"
           label={"Image that suits your project (optional)"}
           value={formData?.pictureUrl || ""}
           onChange={(value) =>

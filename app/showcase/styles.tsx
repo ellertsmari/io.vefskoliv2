@@ -217,6 +217,43 @@ export const EmptyNote = styled.p`
   padding: 4rem 0;
 `;
 
+// ── Year filter ──────────────────────────────────────────────────────────
+
+export const YearNav = styled.nav`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 2rem;
+`;
+
+export const YearNavLabel = styled.span`
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--primary-black-60);
+  margin-right: 0.25rem;
+`;
+
+export const YearLink = styled.a<{ $active: boolean }>`
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid
+    ${({ $active }) =>
+      $active ? "var(--theme-module3-100)" : "var(--primary-black-10)"};
+  background: ${({ $active }) =>
+    $active ? "var(--theme-module3-100)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "white" : "var(--primary-black-60)"};
+
+  &:hover {
+    border-color: var(--theme-module3-100);
+    color: ${({ $active }) => ($active ? "white" : "var(--theme-module3-100)")};
+  }
+`;
+
 export const Footer = styled.footer`
   text-align: center;
   padding: 2.5rem 1.5rem 3.5rem;

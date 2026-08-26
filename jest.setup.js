@@ -11,5 +11,14 @@ for (const name of nodeGlobals) {
   }
 }
 
+// Same story for the web streams globals: undici (pulled in by @vercel/blob,
+// which the image upload field imports) touches ReadableStream at import time.
+const webStreams = require("node:stream/web");
+for (const name of ["ReadableStream", "WritableStream", "TransformStream"]) {
+  if (typeof global[name] === "undefined" && webStreams[name]) {
+    global[name] = webStreams[name];
+  }
+}
+
 require("dotenv").config({ path: ".env.local" });
 import "@testing-library/jest-dom";

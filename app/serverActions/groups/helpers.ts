@@ -107,11 +107,46 @@ export function serializeProject(
   };
 }
 
-export function serializeTeam(team: any): SerializedTeam {
+/** The id of a team member, whether or not `members` was populated. */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+const memberId = (member: any): string =>
+  typeof member === "object" && member?._id
+    ? member._id.toString()
+    : String(member);
+
+/**
+ * Who on this team has agreed to have their name shown on the public showcase.
+ *
+ * Consent is opt-in, so a member with no stored entry counts as "no". Entries
+ * belonging to people who have since left the team are ignored — a departed
+ * member's old answer says nothing about who is on the team now.
+ */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+export function teamShowcaseConsent(team: any) {
+  const members: string[] = (team.members || []).map(memberId);
+  const byUser = new Map<string, boolean>();
+  for (const entry of team.showcaseConsents || []) {
+    byUser.set(String(entry.user), !!entry.name);
+  }
+
+  return {
+    memberCount: members.length,
+    nameAgreed: members.filter((id) => byUser.get(id) === true).length,
+    /** Individual — a member who declines drops out, the others stay. */
+    nameAllowed: (id: string) => byUser.get(id) === true,
+    forViewer: (viewerId?: string) => ({
+      myName: viewerId ? byUser.get(viewerId) === true : false,
+    }),
+  };
+}
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+export function serializeTeam(team: any, viewerId?: string): SerializedTeam {
   const links = {} as TeamLinks;
   for (const key of TEAM_LINK_KEYS) {
     links[key] = team.links?.[key] || "";
   }
+  const consent = teamShowcaseConsent(team);
   return {
     _id: team._id.toString(),
     project: team.project.toString(),
@@ -132,6 +167,11 @@ export function serializeTeam(team: any): SerializedTeam {
     coverImage: team.coverImage || "",
     teamPhoto: team.teamPhoto || "",
     logo: team.logo || "",
+    showcaseConsent: {
+      ...consent.forViewer(viewerId),
+      nameAgreed: consent.nameAgreed,
+      memberCount: consent.memberCount,
+    },
   };
 }
 

@@ -89,8 +89,14 @@ export const ShowcaseTeamView = ({
 
         <DetailSection>
           <SectionHeading>The team — {team.name}</SectionHeading>
+          {/* May be a photo of the team or another project image — teams who
+              would rather not publish faces upload something else — so the alt
+              text must not assert that there are people in it. */}
           {team.teamPhoto && (
-            <TeamPhotoImage src={team.teamPhoto} alt={`${team.name} team photo`} />
+            <TeamPhotoImage
+              src={team.teamPhoto}
+              alt={`Image chosen by ${team.name}`}
+            />
           )}
           <MemberChips>
             {team.memberNames.map((name) => (

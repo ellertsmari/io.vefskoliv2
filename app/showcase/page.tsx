@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function ShowcasePage() {
-  const projects = await getShowcase();
-  return <ShowcaseView projects={projects} />;
+type Props = { searchParams: Promise<{ year?: string }> };
+
+export default async function ShowcasePage({ searchParams }: Props) {
+  const { year } = await searchParams;
+  const parsed = Number(year);
+  const index = await getShowcase(Number.isInteger(parsed) ? parsed : undefined);
+  return <ShowcaseView index={index} />;
 }
