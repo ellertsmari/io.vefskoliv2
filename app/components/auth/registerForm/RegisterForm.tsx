@@ -9,7 +9,7 @@ import {
   ErrorToast,
   FullScreenWrapper,
   SuccessToast,
-  Form
+  AuthForm,
 } from "globalStyles/globalStyles";
 import { Heading1 } from "globalStyles/text";
 
@@ -50,7 +50,7 @@ export function RegisterForm({
 
   return (
     <FullScreenWrapper>
-      <Form ref={formRef}>
+      <AuthForm ref={formRef}>
         <Heading1>SIGN UP</Heading1>
         {state?.success === false && typeof state.message === "string" && (
           <>
@@ -131,7 +131,7 @@ export function RegisterForm({
             REGISTER
           </DefaultButton>
         </ButtonWrapper>
-      </Form>
+      </AuthForm>
     </FullScreenWrapper>
   );
 }

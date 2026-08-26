@@ -34,6 +34,15 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
 };
 
 /**
+ * The same form without the modal around it, for surfaces that already give it
+ * a container of its own — the guide canvas, where a tile holding a single
+ * button that opens a dialog was a lot of paper for very little.
+ */
+export const InlineReturnForm = ({ guideId }: { guideId: string }) => (
+  <FormContent guideId={guideId} />
+);
+
+/**
  * Prepend https:// to URL-ish values typed without a scheme ("github.com/me/x").
  * Typo'd or bare URLs otherwise reach a CLASSMATE as a dead link when they're
  * assigned to review the return.
@@ -50,7 +59,8 @@ const FormContent = ({
   closeModal,
 }: {
   guideId: string;
-  closeModal: () => void;
+  /** Absent when the form is rendered inline — there is nothing to close. */
+  closeModal?: () => void;
 }) => {
   const [formData, setFormData, loading] = useSessionState<ReturnFormData>(
     `returnForm-${guideId}`
@@ -85,9 +95,11 @@ const FormContent = ({
           guide&apos;s card when one is ready for you. Once your reviews are in
           and your project has been reviewed, you&apos;ll see your result here.
         </SuccessText>
-        <Button style="default" onClick={closeModal}>
-          GOT IT
-        </Button>
+        {closeModal && (
+          <Button style="default" onClick={closeModal}>
+            GOT IT
+          </Button>
+        )}
       </SuccessPanel>
     );
   }

@@ -94,6 +94,34 @@ h1 {
   --nav-collapsed: 4.5rem; /* 72px - a 40px icon plus its padding */
   --nav-expanded: 13rem; /* 208px - fits the longest label, "RESOURCES" */
 
+  /* Guide section accents. A categorical set — these identify a section, they
+     never mean success or failure, which is why they don't reuse the --error-*
+     ramps. Held at a similar saturation and lightness so six tiles side by side
+     read as one family rather than a set of unrelated stickers.
+
+     Each hue has three steps: -100 fills (icon chips, rules), -10 tints
+     (headers, chips), and -text for label text on top of a -10 tint. The -100
+     step is too light against its own tint for 12px text — amber came out at
+     3.08:1, where AA wants 4.5:1 — so text uses the darker step. */
+  --accent-violet-100: #6563eb; /* the brand hue, so it stays the anchor */
+  --accent-violet-10: #f0f0fd;
+  --accent-violet-text: #2c2b76;
+  --accent-blue-100: #3b7dd8;
+  --accent-blue-10: #ebf2fc;
+  --accent-blue-text: #1f4c8a;
+  --accent-teal-100: #0f9b8e;
+  --accent-teal-10: #e6f6f4;
+  --accent-teal-text: #0a5f58;
+  --accent-amber-100: #c07c22;
+  --accent-amber-10: #fbf2e3;
+  --accent-amber-text: #8a5410;
+  --accent-rose-100: #cf5688;
+  --accent-rose-10: #fbedf3;
+  --accent-rose-text: #96305d;
+  --accent-green-100: #4c9a52;
+  --accent-green-10: #edf6ee;
+  --accent-green-text: #2f6a35;
+
   /* Stacking order. Layers were picking their own numbers, so whether one
      covered another came down to DOM order — the side nav and the modal
      overlay both used 10, and the nav won because the top bar renders first.

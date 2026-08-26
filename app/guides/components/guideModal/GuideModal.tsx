@@ -10,6 +10,7 @@ import {
   Header,
   GuideModalWrapper,
   ReturnStatusContainer,
+  StatusRow,
   TitleContainer,
 } from "./style";
 import { UnstyledLinkNoWrap } from "globalStyles/globalStyles";
@@ -25,7 +26,7 @@ export const GuideModal = () => {
       <Header>
         <TitleContainer>
           <Heading1>{title}</Heading1>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <StatusRow>
             <ReturnStatusContainer>
               <ColouredCircle
                 $backgroundColor={calculateReturnStyle(returnStatus)}
@@ -35,7 +36,7 @@ export const GuideModal = () => {
             <UnstyledLinkNoWrap href={link} target="_blank">
               <Button $styletype="outlined">VIEW THIS GUIDE</Button>
             </UnstyledLinkNoWrap>
-          </div>
+          </StatusRow>
         </TitleContainer>
       </Header>
       {guide.gradingMode === GradingMode.AUTO ? (

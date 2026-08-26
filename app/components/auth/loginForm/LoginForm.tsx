@@ -8,7 +8,7 @@ import {
   ErrorToast,
   FullScreenWrapper,
   ButtonWrapper,
-  Form
+  AuthForm,
 } from "globalStyles/globalStyles";
 import { Heading1 } from "globalStyles/text";
 
@@ -51,7 +51,7 @@ export function LoginForm({
   return (
     <FullScreenWrapper>
       
-      <Form ref={formRef} action={formAction}>
+      <AuthForm ref={formRef} action={formAction}>
       <Heading1>SIGN IN</Heading1>
         <Input id="email" type="email" name="email" label="EMAIL" required />
         <Input
@@ -83,7 +83,7 @@ export function LoginForm({
             <ErrorToast>{errorMessage}</ErrorToast>
           </>
         )}
-      </Form>
+      </AuthForm>
     </FullScreenWrapper>
   );
 }

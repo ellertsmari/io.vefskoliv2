@@ -3,6 +3,7 @@
 import MDEditor from "@uiw/react-md-editor";
 import rehypeSanitize from "rehype-sanitize";
 import React from "react";
+import { MarkdownWrapper } from "./style";
 
 type MarkdownReaderProps = {
   children: string;
@@ -22,13 +23,13 @@ const markdownComponents = {
 
 const MarkdownReader = ({ children }: MarkdownReaderProps) => {
   return (
-    <div data-color-mode="light" style={{ wordBreak: "break-word" }}>
+    <MarkdownWrapper data-color-mode="light">
       <MDEditor.Markdown
         source={children}
         rehypePlugins={[[rehypeSanitize]]}
         components={markdownComponents}
       />
-    </div>
+    </MarkdownWrapper>
   );
 };
 

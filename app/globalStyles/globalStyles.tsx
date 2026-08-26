@@ -29,8 +29,18 @@ export const MaterialButton = styled(Button)`
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
-  align-items: left;
+  /* Was "left", which isn't a valid align-items value and silently did nothing. */
+  align-items: flex-start;
   gap: 2rem;
+  width: 100%;
+`;
+
+/**
+ * Auth screens centre a form on an empty page, so unlike a form in a modal or
+ * a tile there is no container to set the measure — it has to cap itself.
+ */
+export const AuthForm = styled(Form)`
+  max-width: 24rem;
 `;
 
 export const ButtonWrapper = styled.div`
