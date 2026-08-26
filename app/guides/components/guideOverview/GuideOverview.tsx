@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import MarkdownReader from "UIcomponents/markdown/reader";
-import { InlineReturnForm } from "../../../LMS/components/feedback/returnForm/ReturnForm";
+import { InlineReturnForm } from "../feedback/returnForm/ReturnForm";
 import { ExerciseLauncher } from "../exercise/ExerciseLauncher";
 import { ClientGuide, GradingMode } from "types/guideTypes";
 import type { ExerciseSummary } from "serverActions/exerciseSession";

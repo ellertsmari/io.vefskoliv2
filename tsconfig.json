@@ -23,23 +23,11 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "components/*": [
-        "app/LMS/components/*"
-      ],
       "UIcomponents/*": [
         "./app/UIcomponents/*"
       ],
       "globalStyles/*": [
         "./app/globalStyles/*"
-      ],
-      "hooks/*": [
-        "./app/hooks/*"
-      ],
-      "pages/*": [
-        "./app/pages/*"
       ],
       "serverActions/*": [
         "./app/serverActions/*"

@@ -3,7 +3,7 @@ import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { logError } from "utils/errors";
-import type { CalendarEvent } from "../../LMS/calendar/calendarData";
+import type { CalendarEvent } from "types/calendarTypes";
 import { applyLifecycle } from "./lifecycle";
 import { requireSession } from "./helpers";
 

@@ -3,8 +3,8 @@ import { useGuide } from "providers/GuideProvider";
 import { ReviewStatus, GradingMode } from "types/guideTypes";
 import { calculateReturnStyle } from "./calculateReturnStyle";
 import { Button } from "globalStyles/buttons/default/style";
-import { FeedbackOverview } from "../../../LMS/components/feedback/feedbackOverview/FeedbackOverview";
-import { GiveFeedbackView } from "../../../LMS/components/feedback/giveFeedbackView/GiveFeedbackView";
+import { FeedbackOverview } from "../feedback/feedbackOverview/FeedbackOverview";
+import { GiveFeedbackView } from "../feedback/giveFeedbackView/GiveFeedbackView";
 import {
   ColouredCircle,
   Header,

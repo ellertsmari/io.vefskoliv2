@@ -13,36 +13,13 @@
 // so we can iterate on the UI/UX. Only one semester is active at a time, so only
 // August–December 2026 are exposed.
 
-export type EventCategory =
-  | "milestone"
-  | "lecture"
-  | "groupwork"
-  | "deadline"
-  | "holiday";
+import type {
+  EventCategory,
+  CalendarEvent,
+  CategoryMeta,
+} from "types/calendarTypes";
 
-export interface CalendarEvent {
-  id: string;
-  /** ISO date, "YYYY-MM-DD", local (no timezone offset). */
-  date: string;
-  /**
-   * Optional inclusive last day ("YYYY-MM-DD") for events spanning several
-   * days (e.g. group projects, holidays) — rendered as a continuous bar
-   * across the covered days.
-   */
-  endDate?: string;
-  title: string;
-  category: EventCategory;
-  /** Optional start time, e.g. "10:00". */
-  time?: string;
-  /** Optional longer description shown in the day detail panel. */
-  description?: string;
-}
-
-export interface CategoryMeta {
-  label: string;
-  /** CSS custom property used for the accent colour. */
-  color: string;
-}
+export type { EventCategory, CalendarEvent, CategoryMeta };
 
 export const CATEGORY_META: Record<EventCategory, CategoryMeta> = {
   milestone: { label: "Key date", color: "var(--theme-module3-100)" },

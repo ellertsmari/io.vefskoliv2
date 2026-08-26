@@ -6,7 +6,7 @@ import {
   VoteIcon,
   VotingContainer,
   WriteFeedbackContainer,
-} from "../../../../guides/components/guideCard/style";
+} from "../../guideCard/style";
 import { SubHeading1 } from "globalStyles/text";
 import { isCodeCategory } from "utils/guideTaxonomy";
 import RichTextEditor from "UIcomponents/markdown/RichTextEditor";
