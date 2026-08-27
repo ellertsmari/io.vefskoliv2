@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // `next dev` and `next build` both write to .next by default, so running a
+  // build while a dev server is up overwrites the manifests that server is
+  // reading and it starts returning 404s for routes that plainly exist. Set
+  // NEXT_DIST_DIR to build into a scratch directory instead:
+  //   NEXT_DIST_DIR=.next-verify yarn build
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   compiler: {
     styledComponents: true,
   },
