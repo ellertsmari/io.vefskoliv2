@@ -17,7 +17,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const TRACE = ".next/server/app/guides/[id]/page.js.nft.json";
+// Follows next.config.mjs, so verifying a build made into a scratch directory
+// (NEXT_DIST_DIR=.next-verify, to avoid clobbering a running dev server) checks
+// that build rather than whatever is left in .next from another one.
+const DIST_DIR = process.env.NEXT_DIST_DIR || ".next";
+const TRACE = `${DIST_DIR}/server/app/guides/[id]/page.js.nft.json`;
 
 /** What the guides route must carry, and why. */
 const REQUIREMENTS = [
