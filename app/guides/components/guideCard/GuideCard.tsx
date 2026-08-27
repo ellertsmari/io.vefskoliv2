@@ -7,7 +7,7 @@ import {
 import { GuideProvider } from "providers/GuideProvider";
 import { extractModuleNumber } from "utils/moduleUtils";
 import { GuideCardOverview } from "../guideCardOverview/GuideCardOverview";
-import { CardWrapper, InfoWrapper } from "./style";
+import { CardWrapper, InfoWrapper, type CardStatus } from "./style";
 import { NotificationIconContainer } from "UIcomponents/toggle/style";
 import { NotificationIcon } from "assets/Icons";
 import { Suspense, lazy } from "react";
@@ -33,12 +33,7 @@ const GuideCard = ({
   return (
     <GuideProvider guide={guide}>
       <CardWrapper>
-        <InfoWrapper
-          $borderStyle={calculateBorderStyle(
-            returnStatus,
-            reviewStatus
-          )}
-        >
+        <InfoWrapper $status={cardStatusOf(returnStatus, reviewStatus)}>
           {link ? (
             <GuideCardOverview
               moduleTitle={extractModuleNumber(guide.module.title).toString()}
@@ -90,32 +85,22 @@ const Notification = () => {
   );
 };
 
-const calculateBorderStyle = (
+/**
+ * Which surface the card wears. Returns a status rather than a CSS string so
+ * the styled component can compose it — the old string set box-shadow itself,
+ * which would now silently wipe out the card's resting shadow.
+ */
+const cardStatusOf = (
   returnStatus: ReturnStatus,
   reviewStatus: ReviewStatus
-) => {
-  if (returnStatus === ReturnStatus.NOT_RETURNED) {
-    return undefined;
-  }
-
-  if (reviewStatus === ReviewStatus.NEED_TO_REVIEW) {
-    return "border-color: var(--error-warning-100);";
-  }
-  if (returnStatus === ReturnStatus.PASSED) {
-    return "border-color: var(--error-success-100); background-color: var(--error-success-10)";
-  }
-  if (returnStatus === ReturnStatus.FAILED) {
-    return "border-color: var(--error-failure-100); background-color: var(--error-failure-10)";
-  }
-  if (returnStatus === ReturnStatus.HALL_OF_FAME) {
-    // Thickened with an inset shadow rather than border-width: with border-box
-    // a 3px border eats 4px of content width, so these cards laid out their
-    // text 2px narrower than the cards beside them.
-    return "border-color: var(--theme-module3-100); background-color: var(--theme-module3-10); box-shadow: inset 0 0 0 2px var(--theme-module3-100);";
-  }
-  if (returnStatus === ReturnStatus.AWAITING_REVIEWS) {
-    return "border-color: var(--error-success-100); background-color: var(--error-success-10)";
-  }
+): CardStatus => {
+  if (returnStatus === ReturnStatus.NOT_RETURNED) return "default";
+  if (reviewStatus === ReviewStatus.NEED_TO_REVIEW) return "needsReview";
+  if (returnStatus === ReturnStatus.PASSED) return "passed";
+  if (returnStatus === ReturnStatus.FAILED) return "failed";
+  if (returnStatus === ReturnStatus.HALL_OF_FAME) return "hallOfFame";
+  if (returnStatus === ReturnStatus.AWAITING_REVIEWS) return "awaitingReviews";
+  return "default";
 };
 
 export default GuideCard;

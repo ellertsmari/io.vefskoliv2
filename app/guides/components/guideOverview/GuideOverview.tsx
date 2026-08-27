@@ -7,6 +7,7 @@ import { ExerciseLauncher } from "../exercise/ExerciseLauncher";
 import { ClientGuide, GradingMode } from "types/guideTypes";
 import type { ExerciseSummary } from "serverActions/exerciseSession";
 import { useLocalState } from "utils/hooks/useStorage";
+import { collectMaterials } from "./materials";
 import {
   defaultLayout,
   clamp,
@@ -582,15 +583,11 @@ function buildSections(
     references,
   } = guide;
 
-  const materials = resources
-    .map((material) => ({ title: material.description, link: material.link }))
-    .concat(cMaterials)
-    .concat(
-      (references ?? []).map((ref) => ({ title: ref.name, link: ref.link }))
-    )
-    // Entries with no title can't be rendered, and shouldn't count towards
-    // whether the tile exists at all.
-    .filter((material) => material.title);
+  const materials = collectMaterials({
+    resources,
+    classes: cMaterials,
+    references,
+  });
 
   const isAutoGraded = guide.gradingMode === GradingMode.AUTO && !!guide.exercise;
   const sections: GuideSection[] = [];
@@ -626,8 +623,10 @@ function buildSections(
           {knowledge.length > 0 && (
             <>
               <SubSectionHeading>Knowledge</SubSectionHeading>
-              {knowledge.map((entry) => (
-                <MarkdownReader key={String(entry.knowledge)}>
+              {/* Keyed by position, not by text: two goals can legitimately
+                  read the same, and the list never reorders within a render. */}
+              {knowledge.map((entry, index) => (
+                <MarkdownReader key={`knowledge-${index}`}>
                   {String(entry.knowledge)}
                 </MarkdownReader>
               ))}
@@ -636,8 +635,8 @@ function buildSections(
           {skills.length > 0 && (
             <>
               <SubSectionHeading>Skills</SubSectionHeading>
-              {skills.map((entry) => (
-                <MarkdownReader key={String(entry.skill)}>
+              {skills.map((entry, index) => (
+                <MarkdownReader key={`skill-${index}`}>
                   {String(entry.skill)}
                 </MarkdownReader>
               ))}

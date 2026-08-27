@@ -53,10 +53,10 @@ describe("Guides", () => {
       expect(queryByText(extendedGuides[2].module.title)).toBeDefined();
     });
 
-    // Capsules render the modules' real titles, with an "All modules" option first
+    // Capsules are labelled by module number, with an "All modules" option first
     expect(getByText("All modules")).toBeDefined();
     const moduleNumber = parseInt(extendedGuides[1].module.title[0]);
-    fireEvent.click(getByText(modules[moduleNumber].title));
+    fireEvent.click(getByText(`Module ${modules[moduleNumber].number}`));
 
     // Check that the filtered guide is shown
     await waitFor(() => {
@@ -195,7 +195,7 @@ describe("filterGuides", () => {
 });
 
 describe("createOptions", () => {
-  it("creates an All option followed by one option per module, labeled by title", () => {
+  it("creates an All option followed by one option per module, labeled by number", () => {
     const setSelectedModule = jest.fn();
     const modules = [
       { title: "1 - Fundamentals", number: 1 },
@@ -209,19 +209,35 @@ describe("createOptions", () => {
     expect(setSelectedModule).toHaveBeenCalledWith(null);
 
     for (let i = 0; i < modules.length; i++) {
-      expect(options[i + 1].optionName).toEqual(modules[i].title);
+      expect(options[i + 1].optionName).toEqual(`Module ${modules[i].number}`);
       options[i + 1].onClick();
       expect(setSelectedModule).toHaveBeenCalledWith(modules[i].number);
     }
   });
 
-  it("falls back to 'Module N' when a module title is missing", () => {
+  it("keeps the module's real name as the pill's tooltip", () => {
+    // The label is abbreviated to a number, so the name has to survive
+    // somewhere the student can still reach it.
+    const options = createOptions(
+      [{ title: "3 - The fundamentals", number: 3 }],
+      jest.fn()
+    );
+    expect(options[1].description).toEqual("The fundamentals");
+  });
+
+  it("uses the whole title as the tooltip when it has no number prefix", () => {
+    const options = createOptions([{ title: "Fundamentals", number: 3 }], jest.fn());
+    expect(options[1].description).toEqual("Fundamentals");
+  });
+
+  it("labels by number even when a module title is missing", () => {
     const setSelectedModule = jest.fn();
     const options = createOptions(
       [{ title: "", number: 4 }],
       setSelectedModule
     );
     expect(options[1].optionName).toEqual("Module 4");
+    expect(options[1].description).toEqual("Module 4");
   });
 
   it("creates only the All option when modules array is empty", () => {
@@ -236,8 +252,8 @@ describe("createOptions", () => {
 describe("currentOptionName", () => {
   const modules = [{ title: "3 - The fundamentals", number: 3 }];
 
-  it("returns the module title for a selected module", () => {
-    expect(currentOptionName(3, modules)).toEqual("3 - The fundamentals");
+  it("returns the module's pill label for a selected module", () => {
+    expect(currentOptionName(3, modules)).toEqual("Module 3");
   });
 
   it("returns All modules when nothing is selected", () => {

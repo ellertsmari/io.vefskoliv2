@@ -1,7 +1,13 @@
 "use client";
 
-import { Container, GuideDropdownContainer } from "./style";
-import { ModuleOptions } from "UIcomponents/dropdown/Dropdown";
+import {
+  Container,
+  GuideDropdownContainer,
+  TitleBlock,
+  PageTitle,
+  PageSubtitle,
+} from "./style";
+import { ModuleOptions, type Option } from "UIcomponents/dropdown/Dropdown";
 import { ExtendedGuideInfo, Module, ReturnStatus } from "types/guideTypes";
 import { useLocalState } from "utils/hooks/useStorage";
 import { extractModuleNumber } from "utils/moduleUtils";
@@ -36,11 +42,27 @@ export const Guides = ({
     (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED
   );
 
+  const selected = modules.find((module) => module.number === selectedModule);
+
   return (
     <Container>
+      <TitleBlock>
+        <PageTitle>Guides</PageTitle>
+        {/* The module's real name lives here now that the pill is just a
+            number, so choosing a module still tells you what it covers.
+            With no module chosen it would only repeat the "All modules" pill
+            directly below, so it carries the count instead. */}
+        <PageSubtitle>
+          {selected
+            ? moduleName(selected)
+            : `${extendedGuides.length} guides`}
+        </PageSubtitle>
+      </TitleBlock>
+
       <GuideDropdownContainer>
         <ModuleOptions
           key={selectedModule ?? "all"}
+          label="Filter guides by module"
           options={options}
           currentOption={options.find(
             (option) =>
@@ -56,10 +78,25 @@ export const Guides = ({
 
 const ALL_MODULES = "All modules";
 
-/** The capsule label for a module — its real title ("3 - The fundamentals"),
- *  falling back to "Module N" if a title is ever missing. */
-const moduleLabel = (module: Module) =>
-  module.title?.trim() || "Module " + module.number;
+/**
+ * The capsule label. Just "Module 3", not the stored title ("3 - The
+ * fundamentals"): eight full titles made the filter row wrap over two lines of
+ * uneven pills, and the number is what students actually filter by. The full
+ * name is not lost — it is the tooltip on the pill, and the page subtitle once
+ * a module is chosen.
+ */
+const moduleLabel = (module: Module) => `Module ${module.number}`;
+
+/**
+ * The descriptive half of a module's title, with the leading number stripped:
+ * "3 - The fundamentals" becomes "The fundamentals". Falls back to the whole
+ * title if it isn't in that shape.
+ */
+const moduleName = (module: Module) => {
+  const title = module.title?.trim() ?? "";
+  const withoutNumber = title.replace(/^\d+\s*[-–—:.]?\s*/, "").trim();
+  return withoutNumber || title || moduleLabel(module);
+};
 
 const currentOptionName = (
   selectedModule: number | null,
@@ -73,11 +110,12 @@ const currentOptionName = (
 const createOptions = (
   modules: Module[],
   setSelectedModule: (value: number | null) => void
-) => {
+): Option[] => {
   return [
     { optionName: ALL_MODULES, onClick: () => setSelectedModule(null) },
     ...modules.map((module) => ({
       optionName: moduleLabel(module),
+      description: moduleName(module),
       onClick: () => setSelectedModule(module.number),
     })),
   ];

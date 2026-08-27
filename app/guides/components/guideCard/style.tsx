@@ -7,22 +7,90 @@ export const CardWrapper = styled.div`
   height: 100%;
 `;
 
+export type CardStatus =
+  | "default"
+  | "needsReview"
+  | "awaitingReviews"
+  | "passed"
+  | "failed"
+  | "hallOfFame";
+
+/**
+ * Border colours are the ones the StatusLegend explains, so they stay exactly
+ * as they were. What is new is the tint behind them: a bare coloured outline
+ * read as an alert next to the app's other cards, which are all a filled
+ * surface. Hall of fame gets an extra inner ring instead of a thicker border,
+ * because under border-box a 3px border eats 4px of the content width and
+ * those cards laid their text out narrower than the ones beside them.
+ */
+const STATUS_SURFACE: Record<
+  CardStatus,
+  { border: string; background: string; ring?: string }
+> = {
+  default: {
+    border: "var(--primary-black-10)",
+    background: "var(--primary-white)",
+  },
+  needsReview: {
+    border: "var(--error-warning-100)",
+    background: "var(--error-warning-10)",
+  },
+  awaitingReviews: {
+    border: "var(--error-success-100)",
+    background: "var(--error-success-10)",
+  },
+  passed: {
+    border: "var(--error-success-100)",
+    background: "var(--error-success-10)",
+  },
+  failed: {
+    border: "var(--error-failure-100)",
+    background: "var(--error-failure-10)",
+  },
+  hallOfFame: {
+    border: "var(--theme-module3-100)",
+    background: "var(--theme-module3-10)",
+    ring: "var(--theme-module3-100)",
+  },
+};
+
+const RESTING_SHADOW = "0 1px 3px rgba(0, 0, 0, 0.06)";
+const LIFTED_SHADOW = "0 6px 18px rgba(0, 0, 0, 0.1)";
+
+const shadowFor = (status: CardStatus, shadow: string) => {
+  const ring = STATUS_SURFACE[status].ring;
+  return ring ? `inset 0 0 0 2px ${ring}, ${shadow}` : shadow;
+};
+
 /**
  * Fills the cell it is given rather than being a fixed 190x200 block. The old
  * fixed size left ~80px of dead space on either side of every card once these
  * were placed in the dashboard's wider grid tracks.
  */
-export const InfoWrapper = styled.div<{ $borderStyle: string | undefined }>`
+export const InfoWrapper = styled.div<{ $status: CardStatus }>`
   display: flex;
   flex-direction: column;
   width: 100%;
   min-height: 190px;
-  border: 1px solid var(--primary-black-100);
-  border-radius: var(--radius-md);
-
   position: relative;
+  border-radius: var(--radius-lg);
+  border: 1px solid ${({ $status }) => STATUS_SURFACE[$status].border};
+  background: ${({ $status }) => STATUS_SURFACE[$status].background};
+  box-shadow: ${({ $status }) => shadowFor($status, RESTING_SHADOW)};
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 
-  ${(props) => props.$borderStyle}
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${({ $status }) => shadowFor($status, LIFTED_SHADOW)};
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
 `;
 
 export const WriteFeedbackContainer = styled.form`

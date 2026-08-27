@@ -2,17 +2,22 @@ import { Wrapper } from "globalStyles/globalStyles";
 import Link from "next/link";
 import styled, { css } from "styled-components";
 
-/** Both card shells behave identically; only the element differs. */
+/**
+ * Both card shells behave identically; only the element differs. There is no
+ * hover background here any more — the card itself lifts, and a grey wash on
+ * top of a tinted status surface muddied the colour it was trying to show.
+ */
 const cardSurface = css`
   text-decoration: none;
   color: inherit;
   display: flex;
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
 
-  &:hover {
-    background-color: var(--primary-black-10);
+  &:focus-visible {
+    outline: 2px solid var(--theme-module3-100);
+    outline-offset: 2px;
   }
 `;
 
@@ -37,14 +42,23 @@ export const Info = styled(Wrapper)`
   padding: 1.25rem 1rem;
 `;
 
+/**
+ * The guide number is context; the title is the thing. These were the other way
+ * round — a 16px "GUIDE 5" over a 12px title — so the least useful line on the
+ * card was the loudest.
+ */
 export const GuideNr = styled.h2`
-  font-size: var(--text-base);
-  font-weight: 400;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--primary-black-60);
 `;
 
 export const Name = styled.p`
-  font-size: var(--text-xs);
-  font-weight: 400;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--primary-black-100);
 `;
 
 export const GuideDescription = styled(Wrapper)`

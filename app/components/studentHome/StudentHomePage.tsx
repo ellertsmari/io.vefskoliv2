@@ -6,21 +6,23 @@ import GuideCard from "../../guides/components/guideCard/GuideCard";
 import {
   HomeContainer,
   MainContent,
-  Column,
+  StatusRow,
+  WorkRow,
   Section,
-  SectionTitle,
   SectionSubtitle,
-  WidgetHeader,
+  WidgetHeading,
   GuidesList,
   ProgressBar,
+  ProgressFill,
+  ProgressRow,
   ProgressLabel,
-  ProgressValue,
+  ProgressAmount,
   OverallProgress,
   ProgressGroupLabel,
   ModuleProgress,
+  ModuleProgressList,
   ModuleProgressBar,
   ModuleProgressLabel,
-  ModuleProgressValue,
   GradesList,
   GradeCard,
   GradeTitle,
@@ -28,10 +30,25 @@ import {
   GradeItem,
   GradeLabel,
   GradeValue,
+  ScoreStats,
+  StatTile,
+  StatValue,
+  StatLabel,
+  LeaderboardSlot,
+  LeaderboardNote,
   EmptyState,
   HowGradingWorksSlot,
   HowGradingWorksButton
 } from "./style";
+import {
+  ProgressIcon,
+  GradesIcon,
+  ScoreIcon,
+  ReviewsIcon,
+  ContinueIcon,
+  WaitingIcon,
+  CaughtUpIcon,
+} from "./icons";
 import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
 import { Suspense, lazy, useMemo } from "react";
 import { extractModuleNumber } from "utils/moduleUtils";
@@ -168,6 +185,25 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       });
   }, [extendedGuides, modules]);
 
+  // Only what the returned guides actually tell us. No derived "points" — the
+  // scoring rules aren't decided, and a placeholder number that changed once
+  // they were would read as the student having lost score.
+  const achievements = useMemo(() => {
+    const passed = extendedGuides.filter(
+      (guide) =>
+        guide.returnStatus === ReturnStatus.PASSED ||
+        guide.returnStatus === ReturnStatus.HALL_OF_FAME
+    ).length;
+    const hallOfFame = extendedGuides.filter(
+      (guide) => guide.returnStatus === ReturnStatus.HALL_OF_FAME
+    ).length;
+    const returned = extendedGuides.filter(
+      (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED
+    ).length;
+
+    return { passed, hallOfFame, returned };
+  }, [extendedGuides]);
+
   const hasNothingToDo =
     organizedGuides.guidesNeedingReview.length === 0 &&
     organizedGuides.guidesAwaitingProjects.length === 0 &&
@@ -181,23 +217,176 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
       </TitleBlock>
 
       {/*
-        Two bands rather than free auto-flow packing: everything the student can
-        act on stacks in the work column at one shared width, and the read-only
-        widgets sit in a rail that keeps its top edge no matter how many guide
-        cards are alongside it.
+        Where you stand first, then what to do about it. Progress and grades sit
+        in a row directly under the greeting so they are readable without
+        hunting; the actionable widgets stack full-width underneath.
 
-        To add a widget, drop a <Section> into the column it belongs to — work
-        items on the left, status/reference on the right.
+        To add a widget, drop a <Section> into the status row or the stack below.
       */}
       <MainContent>
-        <Column>
+        <StatusRow>
+          <Section>
+            <WidgetHeading
+              title="Progress"
+              accent="blue"
+              icon={<ProgressIcon />}
+              help={
+                <>
+                  How far through each module you are. A bar fills as you return guides and they pass review.
+                </>
+              }
+            />
+            <OverallProgress>
+              <ProgressRow>
+                <ProgressLabel>Overall</ProgressLabel>
+                <ProgressAmount>{overallProgress}%</ProgressAmount>
+              </ProgressRow>
+              {/* No Math.max floor on the width any more: padding an empty bar
+                  out to 5% showed progress the student hasn't made. */}
+              <ProgressBar
+                role="progressbar"
+                aria-valuenow={overallProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Overall course progress"
+              >
+                <ProgressFill style={{ width: `${overallProgress}%` }} />
+              </ProgressBar>
+            </OverallProgress>
+
+            <ProgressGroupLabel>By module</ProgressGroupLabel>
+            <ModuleProgressList>
+              {moduleProgress.map((module) => (
+              <ModuleProgress key={module.number}>
+                <ProgressRow>
+                  <ModuleProgressLabel>Module {module.number}</ModuleProgressLabel>
+                  <ProgressAmount>
+                    {module.completedGuides}/{module.totalGuides}
+                  </ProgressAmount>
+                </ProgressRow>
+                <ModuleProgressBar
+                  role="progressbar"
+                  aria-valuenow={module.progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Module ${module.number} progress`}
+                >
+                  <ProgressFill style={{ width: `${module.progress}%` }} />
+                </ModuleProgressBar>
+                </ModuleProgress>
+              ))}
+            </ModuleProgressList>
+          </Section>
+
+          <Section>
+            <WidgetHeading
+              title="Grades"
+              accent="violet"
+              icon={<GradesIcon />}
+              help={
+                <>
+                  Progress, not a report card — guides you haven&apos;t returned
+                  count as 0, so this climbs as you go.
+                </>
+              }
+              /* Sits beside the question mark rather than behind it. A low
+                 number here alarms students every term, and the walkthrough
+                 that explains it away is no use hidden too. */
+              actions={
+                <HowGradingWorksSlot>
+                  <Modal
+                    size="lg"
+                    modalTrigger={
+                      <HowGradingWorksButton type="button" aria-haspopup="dialog">
+                        How is this calculated?
+                      </HowGradingWorksButton>
+                    }
+                    modalContent={
+                      <Suspense
+                        fallback={<LoadingSpinner label="Opening walkthrough…" />}
+                      >
+                        <GradingSlideshow />
+                      </Suspense>
+                    }
+                  />
+                </HowGradingWorksSlot>
+              }
+            />
+
+            <GradesList>
+              {moduleGrades.map((moduleGrade) => (
+                <GradeCard key={moduleGrade.module.number}>
+                  <GradeTitle>Module {moduleGrade.module.number}</GradeTitle>
+                  <GradeValues>
+                    <GradeItem>
+                      <GradeLabel>Code</GradeLabel>
+                      <GradeValue>
+                        {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : "-"}
+                      </GradeValue>
+                    </GradeItem>
+                    <GradeItem>
+                      <GradeLabel>Design</GradeLabel>
+                      <GradeValue>
+                        {moduleGrade.designAverage !== null ? moduleGrade.designAverage : "-"}
+                      </GradeValue>
+                    </GradeItem>
+                  </GradeValues>
+                </GradeCard>
+              ))}
+            </GradesList>
+          </Section>
+
+          <Section>
+            <WidgetHeading
+              title="Score"
+              accent="amber"
+              icon={<ScoreIcon />}
+              help={
+                <>
+                  What you&apos;ve earned so far. Points and ranking are on the way.
+                </>
+              }
+            />
+
+            <ScoreStats>
+              <StatTile>
+                <StatValue>{achievements.passed}</StatValue>
+                <StatLabel>Passed</StatLabel>
+              </StatTile>
+              <StatTile>
+                <StatValue>{achievements.hallOfFame}</StatValue>
+                <StatLabel>Hall of fame</StatLabel>
+              </StatTile>
+              <StatTile>
+                <StatValue>{achievements.returned}</StatValue>
+                <StatLabel>Returned</StatLabel>
+              </StatTile>
+            </ScoreStats>
+
+            <LeaderboardSlot>
+              <ProgressGroupLabel>Leaderboard</ProgressGroupLabel>
+              {/* Deliberately empty rather than seeded with example names: a
+                  fake ranking is indistinguishable from a real one. */}
+              <LeaderboardNote>
+                Once scoring goes live you&apos;ll see how you&apos;re doing
+                against the rest of the class here.
+              </LeaderboardNote>
+            </LeaderboardSlot>
+          </Section>
+        </StatusRow>
+
+        {/* Side by side, so what to work on next is on screen rather than
+            below a long list of reviews owed. */}
+        <WorkRow>
           {/* Priority 1: peer reviews owed — time-sensitive */}
           {organizedGuides.guidesNeedingReview.length > 0 && (
             <Section>
-              <WidgetHeader>
-                <SectionTitle>Give Reviews</SectionTitle>
-                <SectionSubtitle>Help peers by providing reviews</SectionSubtitle>
-              </WidgetHeader>
+              <WidgetHeading
+                title="Give Reviews"
+                accent="rose"
+                icon={<ReviewsIcon />}
+                help="Guides you have returned that are waiting on a review from you. Reviewing a classmate is part of completing the guide."
+              />
               <GuidesList>
                 {organizedGuides.guidesNeedingReview.map((guide, index) => (
                   <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
@@ -209,14 +398,16 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
           {/* Priority 2: what to work on next, best first */}
           {organizedGuides.nextGuidesToReturn.length > 0 && (
             <Section>
-              <WidgetHeader>
-                <SectionTitle>Continue Learning</SectionTitle>
-                <SectionSubtitle>
-                  {organizedGuides.nextGuidesToReturn.length === 1
-                    ? "Next guide in your sequence"
-                    : "Next guides in your sequence"}
-                </SectionSubtitle>
-              </WidgetHeader>
+              <WidgetHeading
+                title="Continue Learning"
+                accent="teal"
+                icon={<ContinueIcon />}
+                help={
+                  organizedGuides.nextGuidesToReturn.length === 1
+                    ? "The next guide in your sequence."
+                    : "The next guides in your sequence, in the order we suggest taking them."
+                }
+              />
               <GuidesList>
                 {organizedGuides.nextGuidesToReturn.map((guide, index) => (
                   <GuideCard
@@ -228,18 +419,23 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
               </GuidesList>
             </Section>
           )}
+        </WorkRow>
 
-          {/* Passive: nothing to act on here, so it sits last */}
+        {/* Passive: nothing to act on here, so it sits last */}
           {organizedGuides.guidesAwaitingProjects.length > 0 && (
             <Section>
-              <WidgetHeader>
-                <SectionTitle>Waiting for Projects to Review</SectionTitle>
-                <SectionSubtitle>
-                  You still owe reviews on these guides, but no peer projects are
-                  available yet. There&apos;s nothing to do right now &mdash; we&apos;ll
-                  surface them under &ldquo;Give Reviews&rdquo; as soon as a project shows up.
-                </SectionSubtitle>
-              </WidgetHeader>
+              <WidgetHeading
+                title="Waiting for Projects to Review"
+                accent="blue"
+                icon={<WaitingIcon />}
+                help={
+                  <>
+                    You still owe reviews on these guides, but no peer projects are
+                    available yet. There&apos;s nothing to do right now &mdash; we&apos;ll
+                    surface them under &ldquo;Give Reviews&rdquo; as soon as a project shows up.
+                  </>
+                }
+              />
               <GuidesList>
                 {organizedGuides.guidesAwaitingProjects.map((guide, index) => (
                   <GuideCard key={guide._id.toString()} guide={guide} order={index + 1} />
@@ -250,98 +446,19 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
 
           {hasNothingToDo && (
             <EmptyState>
-              <WidgetHeader>
-                <SectionTitle>All caught up</SectionTitle>
+              {/* No question mark here: the sentence IS the widget, so hiding
+                  it would leave an empty card. */}
+              <WidgetHeading
+                title="All caught up"
+                accent="green"
+                icon={<CaughtUpIcon />}
+              >
                 <SectionSubtitle>
                   You&apos;ve completed all your current tasks. Great job!
                 </SectionSubtitle>
-              </WidgetHeader>
+              </WidgetHeading>
             </EmptyState>
           )}
-        </Column>
-
-        <Column>
-          <Section>
-            <WidgetHeader>
-              <SectionTitle>Progress</SectionTitle>
-            </WidgetHeader>
-
-            <OverallProgress>
-              <ProgressLabel>Overall</ProgressLabel>
-              <ProgressBar>
-                <ProgressValue style={{ width: `${Math.max(overallProgress, 5)}%` }}>
-                  {overallProgress}%
-                </ProgressValue>
-              </ProgressBar>
-            </OverallProgress>
-
-            <ProgressGroupLabel>By Module</ProgressGroupLabel>
-            {moduleProgress.map((module) => (
-              <ModuleProgress key={module.number}>
-                <ModuleProgressLabel>
-                  M{module.number} ({module.completedGuides}/{module.totalGuides})
-                </ModuleProgressLabel>
-                <ModuleProgressBar>
-                  <ModuleProgressValue style={{ width: `${Math.max(module.progress, 5)}%` }}>
-                    {module.progress}%
-                  </ModuleProgressValue>
-                </ModuleProgressBar>
-              </ModuleProgress>
-            ))}
-          </Section>
-
-          <Section>
-            <WidgetHeader>
-              <SectionTitle>Grades</SectionTitle>
-              {/* A low number here alarms students every term. The framing
-                  that explains it away used to live only under DOCS; it
-                  belongs beside the number it explains. */}
-              <SectionSubtitle>
-                Progress, not a report card — guides you haven&apos;t returned
-                count as 0, so this climbs as you go.
-              </SectionSubtitle>
-              <HowGradingWorksSlot>
-                <Modal
-                  size="lg"
-                  modalTrigger={
-                    <HowGradingWorksButton type="button" aria-haspopup="dialog">
-                      How is this calculated?
-                    </HowGradingWorksButton>
-                  }
-                  modalContent={
-                    <Suspense
-                      fallback={<LoadingSpinner label="Opening walkthrough…" />}
-                    >
-                      <GradingSlideshow />
-                    </Suspense>
-                  }
-                />
-              </HowGradingWorksSlot>
-            </WidgetHeader>
-
-            <GradesList>
-              {moduleGrades.map((moduleGrade) => (
-                <GradeCard key={moduleGrade.module.number}>
-                  <GradeTitle>Module {moduleGrade.module.number}</GradeTitle>
-                  <GradeValues>
-                    <GradeItem>
-                      <GradeLabel>Code:</GradeLabel>
-                      <GradeValue>
-                        {moduleGrade.codingAverage !== null ? moduleGrade.codingAverage : "-"}
-                      </GradeValue>
-                    </GradeItem>
-                    <GradeItem>
-                      <GradeLabel>Design:</GradeLabel>
-                      <GradeValue>
-                        {moduleGrade.designAverage !== null ? moduleGrade.designAverage : "-"}
-                      </GradeValue>
-                    </GradeItem>
-                  </GradeValues>
-                </GradeCard>
-              ))}
-            </GradesList>
-          </Section>
-        </Column>
       </MainContent>
     </HomeContainer>
   );

@@ -1,23 +1,24 @@
 "use client";
 
 import styled from "styled-components";
+import { PageContainer } from "globalStyles/pageStyles";
 
-const BREAKPOINT = "1191px";
+export { TitleBlock, PageTitle, PageSubtitle } from "globalStyles/pageStyles";
 
-export const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1.5rem;
-  padding: 1.5rem 1.5rem;
-`;
+/**
+ * The shared page frame, which this page had been opting out of with its own
+ * padding and no heading at all. Full width because the guide grid tiles —
+ * capping it would leave the right-hand side of a wide screen empty.
+ */
+export const Container = styled(PageContainer).attrs({
+  $width: "full" as const,
+})``;
 
 export const GuideDropdownContainer = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
-  justify-content: center;
-  @media (min-width: ${BREAKPOINT}) {
-    justify-content: flex-start;
-  }
+  /* Left-aligned like the rest of the app; this used to centre itself below
+     1191px, which put the filter row out of step with everything under it. */
+  justify-content: flex-start;
 `;
