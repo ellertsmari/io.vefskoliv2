@@ -11,6 +11,16 @@ jest.mock("../../auth", () => ({
   signIn: jest.fn(),
 }));
 
+// signUp opens a database connection before it does anything else, and this
+// suite mocks every query it makes (User.create) — so the connection is pure
+// overhead. Unmocked it dials MONGODB_CONNECTION for real: fine locally where
+// .env.local points at a live database, but in CI there is nothing listening
+// and the connector's 30s serverSelectionTimeoutMS blows straight through
+// Jest's 5s limit. That is what made these three tests fail on CI only.
+jest.mock("serverActions/mongoose-connector", () => ({
+  connectToDatabase: jest.fn().mockResolvedValue(undefined),
+}));
+
 describe("signUp", () => {
   afterEach(() => {
     jest.clearAllMocks();
