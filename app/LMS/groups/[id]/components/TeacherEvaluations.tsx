@@ -174,8 +174,10 @@ const PeerEvalReport = ({
     <Card>
       <SectionTitle>Peer evaluation report</SectionTitle>
       <MutedText>
-        Averages of the scores each student received from their teammates
-        (−2 to +2). Click a row to read the individual evaluations.
+        Averages of the scores each student received from their team, their own
+        self-evaluation included (−2 to +2). These are advice for setting the
+        individual grade, not a grade in themselves. Click a row to read the
+        individual evaluations.
       </MutedText>
       <ScatterPlot reports={reports} />
       <Table>
@@ -218,7 +220,10 @@ const PeerEvalReport = ({
                     )}
                     {report.received.map((evaluation, index) => (
                       <ReceivedEval key={index}>
-                        <strong>{evaluation.evaluatorName}</strong>
+                        <strong>
+                          {evaluation.evaluatorName}
+                          {evaluation.isSelf && " (self)"}
+                        </strong>
                         <span>
                           Contribution:{" "}
                           {CONTRIBUTION_SCORES[evaluation.contributionScore]

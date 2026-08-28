@@ -77,14 +77,16 @@ export async function submitPeerEvaluations(
       return failure("You are not assigned to a team in this project");
     }
 
-    const teammateIds = new Set(
+    // Everyone on the team is a valid target, the evaluator included: the form
+    // asks how the group work went and the student is part of the group, so a
+    // self-evaluation is just another row on the same two axes. It counts in
+    // the averages like any other, because those averages advise the teacher's
+    // grade rather than being one.
+    const memberIds = new Set(
       myTeam.members.map((member: ObjectId) => member.toString())
     );
     for (const evaluation of evaluations) {
-      if (evaluation.targetId === session.user.id) {
-        return failure("You cannot evaluate yourself");
-      }
-      if (!teammateIds.has(evaluation.targetId)) {
+      if (!memberIds.has(evaluation.targetId)) {
         return failure("You can only evaluate members of your own team");
       }
     }

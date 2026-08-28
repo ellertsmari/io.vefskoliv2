@@ -20,6 +20,7 @@ import {
   PrimaryButton,
   Message,
   ChipRow,
+  Pill,
   SelectableChip,
 } from "../../styles";
 import { MemberAvatar } from "./TeamHubTab";
@@ -127,12 +128,19 @@ const PeerEvaluationSection = ({
 }) => {
   const router = useRouter();
   const myTeam = details.teams.find((team) => team._id === details.myTeamId);
-  const teammates =
-    myTeam?.members.filter((member) => member._id !== userId) || [];
+  // Yourself first, then the rest of the team. Rating yourself is part of the
+  // same form on the same two axes — the question is how the group work went,
+  // and the student is part of the group.
+  const members = myTeam
+    ? [
+        ...myTeam.members.filter((member) => member._id === userId),
+        ...myTeam.members.filter((member) => member._id !== userId),
+      ]
+    : [];
 
   const [evals, setEvals] = useState<Record<string, MemberEval>>(() =>
     Object.fromEntries(
-      teammates.map((member) => {
+      members.map((member) => {
         const existing = details.myPeerEvaluations.find(
           (entry: PeerEvaluationEntry) => entry.target === member._id
         );
@@ -156,10 +164,10 @@ const PeerEvaluationSection = ({
     error: boolean;
   } | null>(null);
 
-  if (!myTeam || teammates.length === 0) {
+  if (!myTeam || members.length === 0) {
     return (
       <MutedText>
-        Peer evaluation is open, but you have no teammates to evaluate.
+        Peer evaluation is open, but you are not on a team in this project.
       </MutedText>
     );
   }
@@ -171,7 +179,7 @@ const PeerEvaluationSection = ({
     }));
   };
 
-  const incomplete = teammates.some((member) => {
+  const incomplete = members.some((member) => {
     const entry = evals[member._id];
     return (
       entry.contributionScore === null ||
@@ -187,7 +195,7 @@ const PeerEvaluationSection = ({
     setFeedback(null);
     const result = await submitPeerEvaluations({
       projectId: details.project._id,
-      evaluations: teammates.map((member) => {
+      evaluations: members.map((member) => {
         const entry = evals[member._id];
         return {
           targetId: member._id,
@@ -210,24 +218,35 @@ const PeerEvaluationSection = ({
     <form onSubmit={handleSubmit}>
       <Layout>
         <MutedText>
-          Rate each teammate honestly — your answers go to your teachers only,
-          never to other students. A short justification is required for every
-          score.
+          Rate yourself and each teammate honestly — this is about how the
+          group work went as a whole, and you are part of the group. Your
+          answers go to your teachers only, never to other students, and a
+          short justification is required for every score. Teachers read all of
+          it as advice when they decide each student’s individual grade;
+          nothing here becomes a grade on its own.
         </MutedText>
-        {teammates.map((member) => {
+        {members.map((member) => {
           const entry = evals[member._id];
+          const isSelf = member._id === userId;
           return (
             <Card key={member._id}>
               <MemberHeader>
                 <MemberAvatar name={member.name} avatarUrl={member.avatarUrl} />
                 {member.name}
+                {isSelf && <Pill>You</Pill>}
               </MemberHeader>
 
-              <AxisLabel>Contribution to the project</AxisLabel>
+              <AxisLabel>
+                {isSelf
+                  ? "Your contribution to the project"
+                  : "Contribution to the project"}
+              </AxisLabel>
               <ScorePicker
                 scores={CONTRIBUTION_SCORES}
                 value={entry.contributionScore}
-                labelPrefix={`Contribution of ${member.name}`}
+                labelPrefix={
+                  isSelf ? "Your own contribution" : `Contribution of ${member.name}`
+                }
                 onChange={(score) =>
                   update(member._id, { contributionScore: score })
                 }
@@ -244,11 +263,17 @@ const PeerEvaluationSection = ({
                 }
               />
 
-              <AxisLabel>Communication & teamwork</AxisLabel>
+              <AxisLabel>
+                {isSelf
+                  ? "Your communication & teamwork"
+                  : "Communication & teamwork"}
+              </AxisLabel>
               <ScorePicker
                 scores={TEAMBUILDING_SCORES}
                 value={entry.teambuildingScore}
-                labelPrefix={`Teamwork of ${member.name}`}
+                labelPrefix={
+                  isSelf ? "Your own teamwork" : `Teamwork of ${member.name}`
+                }
                 onChange={(score) =>
                   update(member._id, { teambuildingScore: score })
                 }
@@ -273,7 +298,8 @@ const PeerEvaluationSection = ({
           </PrimaryButton>
           {incomplete && (
             <MutedText>
-              Pick both scores and write both justifications for every teammate.
+              Pick both scores and write both justifications for yourself and
+              every teammate.
             </MutedText>
           )}
           {feedback && (
@@ -354,7 +380,7 @@ export const EvaluateTab = ({
       {details.project.peerEvalOpen && details.myTeamId && (
         <section>
           <Layout>
-            <SectionTitle>Peer evaluation — your teammates</SectionTitle>
+            <SectionTitle>Peer evaluation — you and your teammates</SectionTitle>
             <PeerEvaluationSection details={details} userId={userId} />
           </Layout>
         </section>

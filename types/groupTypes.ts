@@ -216,6 +216,8 @@ export type PeerEvalReceived = {
   contributionComment: string;
   teambuildingScore: number;
   teambuildingComment: string;
+  /** True when the student wrote this about themselves. */
+  isSelf: boolean;
 };
 
 export type PeerEvalStudentReport = {
@@ -223,6 +225,13 @@ export type PeerEvalStudentReport = {
   name: string;
   teamId: string;
   teamName: string;
+  /**
+   * Averages over every evaluation the student received, their own included —
+   * the team is assessing how the group work went, and the student is part of
+   * the group. These numbers are advice for the teacher setting the individual
+   * grade, never a grade in themselves, so nothing here needs to be defended
+   * against a student rating themselves generously.
+   */
   contributionAvg: number | null;
   teambuildingAvg: number | null;
   receivedCount: number;

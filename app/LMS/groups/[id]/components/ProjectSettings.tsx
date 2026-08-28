@@ -364,7 +364,7 @@ export const ProjectSettings = ({
               checked={peerEvalOpen}
               onChange={(e) => setPeerEvalOpen(e.target.checked)}
             />
-            Peer evaluation open — students rate their own teammates
+            Peer evaluation open — students rate themselves and their teammates
           </ToggleRow>
           <ToggleRow>
             <input

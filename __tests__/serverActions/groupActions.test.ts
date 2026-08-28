@@ -20,6 +20,7 @@ import { saveAssignments, createTeam, deleteTeam } from "serverActions/groups/ma
 import { savePreferences } from "serverActions/groups/savePreferences";
 import { getGroupProjects } from "serverActions/groups/getGroupProjects";
 import { getGroupProject } from "serverActions/groups/getGroupProject";
+import { getEvaluationReports } from "serverActions/groups/getEvaluationReports";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import { submitPeerEvaluations } from "serverActions/groups/submitPeerEvaluations";
 import { submitTeamEvaluation } from "serverActions/groups/submitTeamEvaluation";
@@ -533,7 +534,7 @@ describe("group work server actions", () => {
       expect(evals[0].contributionScore).toBe(-1);
     });
 
-    it("rejects when the gate is closed, target is self, or target is not a teammate", async () => {
+    it("rejects when the gate is closed or the target is not a teammate", async () => {
       const { studentA, studentB, outsider, project } = await setupTeam(false);
       loginAs(studentA);
 
@@ -548,17 +549,64 @@ describe("group work server actions", () => {
         { peerEvalOpen: true }
       );
 
-      const selfEval = await submitPeerEvaluations({
-        projectId: project._id.toString(),
-        evaluations: [evaluationFor(studentA._id.toString())],
-      });
-      expect(selfEval.success).toBe(false);
-
       const notTeammate = await submitPeerEvaluations({
         projectId: project._id.toString(),
         evaluations: [evaluationFor(outsider._id.toString())],
       });
       expect(notTeammate.success).toBe(false);
+    });
+
+    it("accepts a self-evaluation alongside the teammates", async () => {
+      const { studentA, studentB, project } = await setupTeam();
+      loginAs(studentA);
+
+      const result = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          { ...evaluationFor(studentA._id.toString()), contributionScore: 2 },
+          evaluationFor(studentB._id.toString()),
+        ],
+      });
+      expect(result.success).toBe(true);
+
+      const selfEval = await PeerEvaluation.findOne({
+        project: project._id,
+        evaluator: studentA._id,
+        target: studentA._id,
+      }).lean<{ contributionScore: number } | null>();
+      expect(selfEval?.contributionScore).toBe(2);
+    });
+
+    it("counts the self-evaluation in the teacher report and flags who wrote it", async () => {
+      const { studentA, studentB, project } = await setupTeam();
+      const teacher = await createDummyUser("teacher");
+
+      // A rates themselves +2, B rates A 0 → advisory average of +1.
+      loginAs(studentA);
+      await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          { ...evaluationFor(studentA._id.toString()), contributionScore: 2 },
+        ],
+      });
+      loginAs(studentB);
+      await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          { ...evaluationFor(studentA._id.toString()), contributionScore: 0 },
+        ],
+      });
+
+      loginAs(teacher);
+      const reports = await getEvaluationReports(project._id.toString());
+      const reportForA = reports?.peerEvals.find(
+        (entry) => entry.userId === studentA._id.toString()
+      );
+      expect(reportForA?.receivedCount).toBe(2);
+      expect(reportForA?.contributionAvg).toBe(1);
+      expect(reportForA?.received.filter((entry) => entry.isSelf)).toHaveLength(
+        1
+      );
     });
   });
 

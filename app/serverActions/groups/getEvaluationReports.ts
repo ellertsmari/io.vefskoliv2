@@ -62,6 +62,11 @@ export async function getEvaluationReports(
       const targetId = evaluation.target?._id?.toString();
       const evaluatorId = evaluation.evaluator?._id?.toString();
       const targetReport = targetId ? peerReports.get(targetId) : undefined;
+
+      // Self-evaluations are counted with the rest: the form asks the whole
+      // team, the student included, how the group work went, and the averages
+      // are advice for the teacher rather than a computed grade. The entry is
+      // only flagged so the teacher can see who wrote what.
       if (targetReport) {
         targetReport.receivedCount += 1;
         targetReport.received.push({
@@ -70,6 +75,7 @@ export async function getEvaluationReports(
           contributionComment: evaluation.contributionComment,
           teambuildingScore: evaluation.teambuildingScore,
           teambuildingComment: evaluation.teambuildingComment,
+          isSelf: !!targetId && targetId === evaluatorId,
         });
       }
       const evaluatorReport = evaluatorId
