@@ -8,7 +8,8 @@ import {
   ModalWrapper,
   type ModalSize,
 } from "./style";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export const ModalContent = ({
   content,
@@ -20,6 +21,11 @@ export const ModalContent = ({
   size?: ModalSize;
 }) => {
   const { isModalOpen, setIsModalOpen } = useModal();
+  // document does not exist while rendering on the server, so the portal can
+  // only be created after mount.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -33,23 +39,34 @@ export const ModalContent = ({
     };
   }, [isModalOpen]);
 
-  return (
-    isModalOpen && (
-      <ModalWrapper
-        onClick={() => {
-          setIsModalOpen(false);
-        }}
-        data-testid="modal-wrapper"
-      >
-        <ContentWrapper $size={size} onClick={(e) => e.stopPropagation()}>
-          {!hideExitButton && (
-            <ButtonWrapper>
-              <ExitButton onClick={() => setIsModalOpen(false)} />
-            </ButtonWrapper>
-          )}
-          <Content>{content}</Content>
-        </ContentWrapper>
-      </ModalWrapper>
-    )
+  if (!isModalOpen || !mounted) return null;
+
+  /**
+   * Rendered into <body>, not where it sits in the tree.
+   *
+   * The overlay is position: fixed, and a fixed element is positioned against
+   * the nearest ancestor carrying a transform, filter or perspective — not the
+   * viewport. Guide cards lift on hover, which leaves a transform on the card,
+   * and a modal opened from one was landing hundreds of pixels off-screen with
+   * the page scrolling sideways to reach it. A portal makes the overlay immune
+   * to whatever any ancestor does to its own layout, stacking or overflow.
+   */
+  return createPortal(
+    <ModalWrapper
+      onClick={() => {
+        setIsModalOpen(false);
+      }}
+      data-testid="modal-wrapper"
+    >
+      <ContentWrapper $size={size} onClick={(e) => e.stopPropagation()}>
+        {!hideExitButton && (
+          <ButtonWrapper>
+            <ExitButton onClick={() => setIsModalOpen(false)} />
+          </ButtonWrapper>
+        )}
+        <Content>{content}</Content>
+      </ContentWrapper>
+    </ModalWrapper>,
+    document.body
   );
 };

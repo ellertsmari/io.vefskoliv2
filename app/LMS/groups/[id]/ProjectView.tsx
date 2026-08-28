@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { Icon } from "@iconify/react";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import {
   EvaluationReports,
@@ -13,10 +12,12 @@ import {
   PageContainer,
   PageHeader,
   PageTitle,
+  Card,
   MutedText,
   StatusChip,
   TabBar,
   TabButton,
+  StepPanel,
 } from "../styles";
 import { PreferencesForm } from "./components/PreferencesForm";
 import { TeamHubTab } from "./components/TeamHubTab";
@@ -26,6 +27,7 @@ import { TeacherOverview } from "./components/TeacherOverview";
 import { AssignmentBoard } from "./components/AssignmentBoard";
 import { TeacherEvaluations } from "./components/TeacherEvaluations";
 import { ProjectSettings } from "./components/ProjectSettings";
+import { Stepper, type Step } from "./components/Stepper";
 
 const HeaderInfo = styled.div`
   display: flex;
@@ -40,18 +42,8 @@ const TitleRow = styled.div`
   flex-wrap: wrap;
 `;
 
-const Description = styled.div`
-  background: white;
-  border: 1px solid var(--primary-black-10);
-  border-radius: var(--radius-lg);
+const Description = styled(Card)`
   padding: 1rem 1.5rem;
-`;
-
-const LockedDescription = styled(Description)`
-  border-style: dashed;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 `;
 
 type Props = {
@@ -76,27 +68,99 @@ export const ProjectView = ({
   isTeacher,
   userId,
 }: Props) => {
-  const { project, myTeamId } = details;
+  const { project, myTeamId, teams } = details;
 
-  const tabs = useMemo(() => {
-    if (isTeacher) {
-      return ["Overview", "Assignment", "Evaluations", "Settings"];
-    }
-    const studentTabs: string[] = [];
-    if (project.status === "formation") studentTabs.push("My Preferences");
-    if (myTeamId) studentTabs.push("Team Hub");
-    studentTabs.push("Teams");
-    if ((project.peerEvalOpen && myTeamId) || project.teamEvalOpen) {
-      studentTabs.push("Evaluate");
-    }
-    return studentTabs;
-  }, [isTeacher, project.status, project.peerEvalOpen, project.teamEvalOpen, myTeamId]);
+  const teacherTabs = ["Overview", "Assignment", "Evaluations", "Settings"];
 
-  const [activeTab, setActiveTab] = useState(tabs[0]);
-  const currentTab = tabs.includes(activeTab) ? activeTab : tabs[0];
+  /**
+   * The student's route through the project. Every step is listed whether or
+   * not it is open yet — a locked step with a reason tells you what happens
+   * next, which a hidden one cannot.
+   */
+  const steps = useMemo<Step[]>(() => {
+    // The server withholds the brief until the formation questions are all
+    // answered, so this flag doubles as "step one is finished".
+    const preferencesDone = !project.descriptionLocked;
+    const inFormation = project.status === "formation";
+    const evaluationOpen = (project.peerEvalOpen && !!myTeamId) || project.teamEvalOpen;
+
+    const list: Step[] = [];
+
+    if (inFormation) {
+      list.push({
+        id: "preferences",
+        label: "Your preferences",
+        done: preferencesDone,
+        hint: preferencesDone
+          ? "Answered — you can still change them"
+          : "Tell your teachers how you want to work",
+      });
+    }
+
+    list.push({
+      id: "brief",
+      label: "Project brief",
+      locked: project.descriptionLocked,
+      done: preferencesDone && !inFormation,
+      hint: project.descriptionLocked
+        ? "Unlocks when your preferences are in"
+        : "What you are building",
+    });
+
+    list.push({
+      id: "team",
+      label: "Your team",
+      locked: !myTeamId,
+      hint: myTeamId
+        ? "Your team and its workspace"
+        : "Your teachers are still putting teams together",
+    });
+
+    list.push({
+      id: "teams",
+      label: "All teams",
+      locked: teams.length === 0,
+      hint: teams.length === 0 ? "Nothing to see until teams exist" : "Everyone on the project",
+    });
+
+    if (evaluationOpen) {
+      list.push({
+        id: "evaluate",
+        label: "Evaluate",
+        hint: "Give your feedback",
+      });
+    }
+
+    return list;
+  }, [
+    project.status,
+    project.descriptionLocked,
+    project.peerEvalOpen,
+    project.teamEvalOpen,
+    myTeamId,
+    teams.length,
+  ]);
+
+  const tabs = isTeacher ? teacherTabs : [];
+
+  // Open on the first step that still needs the student, not simply the first.
+  const firstOpenStep =
+    steps.find((step) => !step.locked && !step.done)?.id ??
+    steps.find((step) => !step.locked)?.id ??
+    steps[0]?.id;
+
+  const [activeTab, setActiveTab] = useState(
+    isTeacher ? teacherTabs[0] : firstOpenStep
+  );
+  const available = isTeacher
+    ? teacherTabs
+    : steps.filter((step) => !step.locked).map((step) => step.id);
+  const currentTab = available.includes(activeTab ?? "")
+    ? (activeTab as string)
+    : available[0];
 
   return (
-    <PageContainer>
+    <PageContainer $width="wide">
       <PageHeader>
         <HeaderInfo>
           <TitleRow>
@@ -113,46 +177,52 @@ export const ProjectView = ({
         </HeaderInfo>
       </PageHeader>
 
-      {project.descriptionLocked ? (
-        <LockedDescription>
-          <Icon icon="mdi:lock-outline" aria-hidden />
-          <MutedText>
-            The project brief unlocks once you&apos;ve filled in your
-            preferences — head to <strong>My Preferences</strong> and answer the
-            questions there.
-          </MutedText>
-        </LockedDescription>
+      {/* Teachers manage a project; students walk through one. Tools are not a
+          sequence, so only the student side gets the stepper. */}
+      {isTeacher ? (
+        <TabBar role="tablist">
+          {tabs.map((tab) => (
+            <TabButton
+              key={tab}
+              role="tab"
+              aria-selected={tab === currentTab}
+              $active={tab === currentTab}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </TabButton>
+          ))}
+        </TabBar>
       ) : (
-        project.description && (
-          <Description>
-            <MarkdownReader>{project.description}</MarkdownReader>
-          </Description>
-        )
+        <Stepper steps={steps} activeId={currentTab} onSelect={setActiveTab} />
       )}
 
-      <TabBar role="tablist">
-        {tabs.map((tab) => (
-          <TabButton
-            key={tab}
-            role="tab"
-            aria-selected={tab === currentTab}
-            $active={tab === currentTab}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </TabButton>
-        ))}
-      </TabBar>
-
-      {currentTab === "My Preferences" && <PreferencesForm details={details} />}
-      {currentTab === "Team Hub" && (
-        <TeamHubTab details={details} isTeacher={false} />
-      )}
-      {currentTab === "Teams" && (
-        <TeamsGallery details={details} userId={userId} />
-      )}
-      {currentTab === "Evaluate" && (
-        <EvaluateTab details={details} userId={userId} />
+      {!isTeacher && (
+        <StepPanel>
+          {currentTab === "preferences" && (
+            <PreferencesForm details={details} />
+          )}
+          {currentTab === "brief" &&
+            (project.description ? (
+              <Description>
+                <MarkdownReader>{project.description}</MarkdownReader>
+              </Description>
+            ) : (
+              <MutedText>
+                Your teachers haven&apos;t written the brief yet — it will
+                appear here.
+              </MutedText>
+            ))}
+          {currentTab === "team" && (
+            <TeamHubTab details={details} isTeacher={false} />
+          )}
+          {currentTab === "teams" && (
+            <TeamsGallery details={details} userId={userId} />
+          )}
+          {currentTab === "evaluate" && (
+            <EvaluateTab details={details} userId={userId} />
+          )}
+        </StepPanel>
       )}
 
       {currentTab === "Overview" && <TeacherOverview details={details} />}

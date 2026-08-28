@@ -24,7 +24,7 @@ import { returnReview } from "serverActions/returnFeedback";
 import { Vote } from "models/review";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
-import { FeedbackInfoContainer } from "./style";
+import { FeedbackInfoContainer, ReturnDetailsColumn } from "./style";
 import { useLocalState } from "utils/hooks/useStorage";
 import { REVIEW_QUALITY_BANDS } from "constants/peerReview";
 import { LoadingSpinner } from "UIcomponents/states/States";
@@ -225,7 +225,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
 
   return (
     <FeedbackInfoContainer>
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <ReturnDetailsColumn>
         <VoteSelector selectedVote={vote ?? undefined} setVote={handleSetVote} />
         {hasVoteError && (
           <ErrorMessage>
@@ -233,7 +233,7 @@ export const GiveFeedbackView = ({ guideTitle }: { guideTitle: string }) => {
           </ErrorMessage>
         )}
         <ReturnOverview theReturn={theReturn} />
-      </div>
+      </ReturnDetailsColumn>
       <WriteFeedbackContainer>
         <SubHeading1>WRITE A REVIEW</SubHeading1>
         <RichTextEditor

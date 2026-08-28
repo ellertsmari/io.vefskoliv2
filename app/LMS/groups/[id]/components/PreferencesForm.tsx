@@ -19,8 +19,10 @@ import {
 } from "constants/groupWork";
 import { savePreferences } from "serverActions/groups/savePreferences";
 import {
-  Card,
-  SectionTitle,
+  QuestionGrid,
+  QuestionCard,
+  WideQuestionCard,
+  QuestionTitle,
   MutedText,
   ChipRow,
   SelectableChip,
@@ -141,10 +143,11 @@ export const PreferencesForm = ({
         teams are forming.
       </MutedText>
 
-      <Card>
-        <SectionTitle>How ambitious are you for this project?</SectionTitle>
-        <ChipRow>
-          {AMBITION_OPTIONS.map((option) => (
+      <QuestionGrid>
+        <QuestionCard>
+          <QuestionTitle>How ambitious are you for this project?</QuestionTitle>
+          <ChipRow>
+            {AMBITION_OPTIONS.map((option) => (
             <SelectableChip
               key={option}
               type="button"
@@ -156,13 +159,13 @@ export const PreferencesForm = ({
               </IconChipLabel>
             </SelectableChip>
           ))}
-        </ChipRow>
-      </Card>
+          </ChipRow>
+        </QuestionCard>
 
-      <Card>
-        <SectionTitle>What do you want to focus on?</SectionTitle>
-        <ChipRow>
-          {FOCUS_OPTIONS.map((option) => (
+        <QuestionCard>
+          <QuestionTitle>What do you want to focus on?</QuestionTitle>
+          <ChipRow>
+            {FOCUS_OPTIONS.map((option) => (
             <SelectableChip
               key={option}
               type="button"
@@ -172,13 +175,13 @@ export const PreferencesForm = ({
               <IconChipLabel icon={FOCUS_ICONS[option]}>{option}</IconChipLabel>
             </SelectableChip>
           ))}
-        </ChipRow>
-      </Card>
+          </ChipRow>
+        </QuestionCard>
 
-      <Card>
-        <SectionTitle>Which tech do you want to work with?</SectionTitle>
-        <ChipRow>
-          {techOptions.map((option) => (
+        <QuestionCard>
+          <QuestionTitle>Which tech do you want to work with?</QuestionTitle>
+          <ChipRow>
+            {techOptions.map((option) => (
             <SelectableChip
               key={option}
               type="button"
@@ -190,13 +193,13 @@ export const PreferencesForm = ({
               </IconChipLabel>
             </SelectableChip>
           ))}
-        </ChipRow>
-      </Card>
+          </ChipRow>
+        </QuestionCard>
 
-      <Card>
-        <SectionTitle>When do you want to work?</SectionTitle>
-        <ChipRow>
-          {SCHEDULE_OPTIONS.map((option) => (
+        <QuestionCard>
+          <QuestionTitle>When do you want to work?</QuestionTitle>
+          <ChipRow>
+            {SCHEDULE_OPTIONS.map((option) => (
             <SelectableChip
               key={option}
               type="button"
@@ -208,13 +211,13 @@ export const PreferencesForm = ({
               </IconChipLabel>
             </SelectableChip>
           ))}
-        </ChipRow>
-      </Card>
+          </ChipRow>
+        </QuestionCard>
 
-      <Card>
-        <SectionTitle>Where do you want to work?</SectionTitle>
-        <ChipRow>
-          {LOCATION_OPTIONS.map((option) => (
+        <QuestionCard>
+          <QuestionTitle>Where do you want to work?</QuestionTitle>
+          <ChipRow>
+            {LOCATION_OPTIONS.map((option) => (
             <SelectableChip
               key={option}
               type="button"
@@ -226,20 +229,22 @@ export const PreferencesForm = ({
               </IconChipLabel>
             </SelectableChip>
           ))}
-        </ChipRow>
-      </Card>
+          </ChipRow>
+        </QuestionCard>
 
-      <Card>
-        <Label>
-          <SectionTitle>Anything else your teachers should know?</SectionTitle>
+        <WideQuestionCard>
+          <QuestionTitle as="label" htmlFor="about">
+            Anything else your teachers should know?
+          </QuestionTitle>
           <TextArea
+            id="about"
             value={about}
             onChange={(e) => setAbout(e.target.value)}
             placeholder="Who you'd like to work with, what you want to practice, scheduling constraints…"
             maxLength={2000}
           />
-        </Label>
-      </Card>
+        </WideQuestionCard>
+      </QuestionGrid>
 
       <Footer>
         <PrimaryButton type="submit" disabled={saving || !complete}>

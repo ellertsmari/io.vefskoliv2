@@ -77,27 +77,35 @@ export const InfoWrapper = styled.div<{ $status: CardStatus }>`
   border: 1px solid ${({ $status }) => STATUS_SURFACE[$status].border};
   background: ${({ $status }) => STATUS_SURFACE[$status].background};
   box-shadow: ${({ $status }) => shadowFor($status, RESTING_SHADOW)};
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: box-shadow 0.15s ease;
 
+  /* Shadow only, deliberately no transform. Moving the card on hover shrinks it
+     away from a cursor sitting near its edge, which un-hovers it, drops it back
+     under the cursor and starts again — a flicker loop at the transition's own
+     frequency. The deeper shadow reads as a lift without the card moving. */
   &:hover {
-    transform: translateY(-2px);
     box-shadow: ${({ $status }) => shadowFor($status, LIFTED_SHADOW)};
   }
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;
-
-    &:hover {
-      transform: none;
-    }
   }
 `;
 
+/**
+ * The review editor. flex-basis 0 with min-width 0 so it takes its share of the
+ * row instead of absorbing every pixel the other column refuses to give up —
+ * the vote icons were a rigid 316px, so on a narrower screen the whole squeeze
+ * landed here and the editor collapsed to under 200px.
+ */
 export const WriteFeedbackContainer = styled.form`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: 100%;
+  /* A basis wide enough to write in: below this the row wraps and the editor
+     takes a full-width line of its own instead of being compressed. */
+  flex: 1 1 26rem;
+  min-width: 0;
 `;
 
 export const VotingContainer = styled.div`
@@ -111,7 +119,10 @@ export const VoteContainer = styled.button`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100px;
+  /* Shrinkable rather than a hard 100px, so the vote column can give ground. */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100px;
   background: none;
   border: none;
   padding: 0;
@@ -138,8 +149,9 @@ export const VoteIcon = styled.div`
   border-width: 1px;
   border-style: solid;
   border-radius: var(--radius-md);
-  width: 100px;
-  height: 100px;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 100px;
   justify-content: center;
   align-items: center;
 `;
