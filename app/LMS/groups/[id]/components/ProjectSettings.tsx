@@ -5,12 +5,14 @@ import styled from "styled-components";
 import { GroupProjectDetails } from "types/groupTypes";
 import {
   GROUP_PROJECT_MODULES,
+  RubricItem,
   minutesFromTime,
   presentationLengthForModule,
   presentationStartOptions,
   timeFromMinutes,
 } from "constants/groupWork";
 import { updateGroupProject } from "serverActions/groups/manageGroupProject";
+import { RubricEditor, initialRubric } from "./RubricEditor";
 import {
   Card,
   SectionTitle,
@@ -133,6 +135,9 @@ export const ProjectSettings = ({
       })
     )
   );
+  const [rubric, setRubric] = useState<RubricItem[]>(() =>
+    initialRubric(project.rubric)
+  );
   const [peerEvalOpen, setPeerEvalOpen] = useState(project.peerEvalOpen);
   const [teamEvalOpen, setTeamEvalOpen] = useState(project.teamEvalOpen);
   const [saving, setSaving] = useState(false);
@@ -193,6 +198,7 @@ export const ProjectSettings = ({
       presentationDate: presentationDate || null,
       presentationLength,
       presentationSlots,
+      rubric,
       peerEvalOpen,
       teamEvalOpen,
     });
@@ -336,6 +342,15 @@ export const ProjectSettings = ({
             </MutedText>
           )}
         </Card>
+
+        <RubricEditor
+          projectId={project._id}
+          module={module}
+          rubric={rubric}
+          savedKeys={project.rubric.map((item) => item.key)}
+          locked={details.rubricLocked}
+          onChange={setRubric}
+        />
 
         <Card>
           <SectionTitle>Evaluation gates</SectionTitle>

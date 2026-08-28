@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getLTIConfig } from '../../../lib/lti-config';
-import { importPKCS8, exportJWK } from 'jose';
+import { importPKCS8, importSPKI, exportJWK } from 'jose';
 
 export async function GET() {
   try {
@@ -15,11 +15,20 @@ export async function GET() {
       return NextResponse.json({ error: 'LTI_KEY_ID not configured' }, { status: 500 });
     }
 
-    // Import the private key and extract the public key
-    const privateKey = await importPKCS8(config.toolPrivateKey, 'RS256');
-    
+    // Prefer the public key: this endpoint publishes public material, and there
+    // is no reason for the private key to be in scope on the path that serves it.
+    //
+    // `extractable: true` is required. jose imports keys as non-extractable by
+    // default, and `exportJWK` on a non-extractable key throws — which surfaced
+    // here as a 500 on an endpoint nothing in the app calls, but that CANVAS
+    // fetches while creating the developer key. A broken JWKS fails key creation
+    // with an error the admin sees and we don't.
+    const publicKey = config.toolPublicKey
+      ? await importSPKI(config.toolPublicKey, 'RS256', { extractable: true })
+      : await importPKCS8(config.toolPrivateKey, 'RS256', { extractable: true });
+
     // Export as JWK
-    const jwk = await exportJWK(privateKey);
+    const jwk = await exportJWK(publicKey);
     
     // Remove private key components, keeping only public key parts
     const publicJWK = {

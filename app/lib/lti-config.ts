@@ -118,3 +118,47 @@ export function getUserRoleFromLTI(roles: string[]): 'student' | 'teacher' {
   
   return hasTeacherRole ? 'teacher' : 'student';
 }
+/**
+ * Every OAuth2 scope the tool needs from Canvas, in one place. Requested when
+ * minting a service token and advertised in the developer-key config, so the two
+ * can never drift apart — a scope granted on the key but not requested (or vice
+ * versa) fails at runtime with an opaque 401.
+ *
+ * The NRPS scope is what lets us read a course roster without every student
+ * having launched the tool first. It is the difference between "we can push a
+ * grade for students who happened to click through from Canvas" and "we can push
+ * a grade for everyone enrolled".
+ */
+export const LTI_SCOPES = [
+  'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem',
+  'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly',
+  'https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly',
+  'https://purl.imsglobal.org/spec/lti-ags/scope/score',
+  'https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly',
+] as const;
+
+/**
+ * Absolute public origin of this tool, no trailing slash.
+ *
+ * Canvas fetches the developer-key config and the JWKS from the open internet,
+ * so every URL handed to it must be absolute and reachable — a relative path or
+ * a localhost origin silently produces a key that can never launch.
+ *
+ * Deliberately does NOT go through `getLTIConfig()`: the config endpoint has to
+ * serve correctly *before* a client ID exists, which is the whole point of
+ * handing Canvas admins a URL to paste.
+ */
+export function getToolBaseUrl(): string {
+  const explicit = process.env.LTI_TOOL_URL || process.env.NEXTAUTH_URL;
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+  const raw = explicit || (vercel ? `https://${vercel}` : '');
+  if (!raw) {
+    throw new Error(
+      'Tool base URL not configured. Set LTI_TOOL_URL (or NEXTAUTH_URL) to the ' +
+        'public https origin of this deployment.'
+    );
+  }
+
+  return raw.replace(/\/+$/, '');
+}

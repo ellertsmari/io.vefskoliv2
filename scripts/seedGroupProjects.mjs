@@ -9,7 +9,10 @@
  *   Module 6 — docs/Project 6 - Description.docx
  *
  * Each project carries the presentation rubric from its doc — every rubric row
- * becomes a 0–10 category in the team evaluation. Autumn dates follow the 2026
+ * becomes a 0–10 category in the team evaluation. Those rubrics now live in
+ * app/constants/moduleRubrics.json, which teachers can also load straight into
+ * a project from the rubric editor in the settings tab, so editing that file
+ * is enough; this script only attaches them. Autumn dates follow the 2026
  * calendar (app/LMS/calendar/calendarData.ts); the spring 2027 dates for
  * Modules 5 & 6 are provisional.
  *
@@ -32,75 +35,15 @@ if (!uri) {
   process.exit(1);
 }
 
-// ── Rubric helpers ─────────────────────────────────────────────────────────
-// Each row carries a discipline, mirroring the color coding of the rubric
-// tables in the docs: "code" (blue), "design" (pink) and "general" for the
-// presentation/organization rows everyone grades.
+// ── Rubrics ────────────────────────────────────────────────────────────────
+// The rubrics themselves live in app/constants/moduleRubrics.json, which the
+// app also reads: teachers load these same presets from the rubric editor in
+// the project settings, so the file is the single source of truth and this
+// script only assigns them to projects.
 
-const item = (key, title, description, discipline = "general") => ({
-  key,
-  title,
-  description,
-  discipline,
-});
-const code = (key, title, description) => item(key, title, description, "code");
-const design = (key, title, description) =>
-  item(key, title, description, "design");
-
-// Shared rows that appear on several rubrics
-const LIVE_CODING = [
-  code(
-    "live-coding-quality",
-    "Live coding — quality",
-    "How challenging was the piece of code they recreated live, and how well was it solved?"
-  ),
-  code(
-    "live-coding-clarity",
-    "Live coding — clarity",
-    "Was the live coding clearly explained and easy to follow?"
-  ),
-];
-
-const PRESENTATION_QA = [
-  item(
-    "presentation-overall",
-    "Presentation overall",
-    "The presentation as a whole — clear, complete and engaging?"
-  ),
-  item(
-    "answering-questions",
-    "Answering questions",
-    "How well did the team answer the questions from the audience?"
-  ),
-];
-
-const AGILE_ROWS = [
-  item(
-    "work-organization",
-    "Work Organization",
-    "How did the group organize the work?"
-  ),
-  item(
-    "task-to-feature",
-    "From Task to Feature",
-    "The journey from task to feature — did tasks make sure no one worked on the same thing?"
-  ),
-  code(
-    "tools-tech-stack",
-    "Tools Used / Tech Stack",
-    "Which tools and technologies were chosen, and do the reasons behind them make sense?"
-  ),
-];
-
-const GITHUB_ROWS = [
-  code("gh-branches", "GH — Branches", "How were branches used in the repository?"),
-  code("gh-commits", "GH — Commits", "Was code committed regularly (at least daily)?"),
-  code(
-    "gh-code-review",
-    "GH — Code Review",
-    "How did the team make sure the code quality was up to standards?"
-  ),
-];
+const RUBRICS = JSON.parse(
+  fs.readFileSync(path.join("app", "constants", "moduleRubrics.json"), "utf8")
+);
 
 // ── The five projects ──────────────────────────────────────────────────────
 
@@ -131,35 +74,7 @@ The group must create a website prototype with **Figma, HTML and CSS** (JavaScri
 4. **Q&A (5 min)**
 
 Grades come from the industry professionals and instructors. After the presentation each student fills out the peer evaluation; the individual grade is calculated from peer- and teacher evaluation equally (50/50).`,
-    rubric: [
-      design(
-        "color-typography",
-        "Color palette and Typography",
-        "Do the chosen colors and typography work with the theme of the project?"
-      ),
-      design(
-        "hierarchy-alignment",
-        "Hierarchy and Alignment",
-        "Is the hierarchy clear and the alignment good?"
-      ),
-      design(
-        "ui-design",
-        "UI Design Overall",
-        "Does the UI design make good use of the design principles presented?"
-      ),
-      code(
-        "tech-stack",
-        "Tech stack",
-        "Were the tools mentioned, and why they were chosen?"
-      ),
-      ...LIVE_CODING,
-      item(
-        "product-overall",
-        "Product overall",
-        "Is the site live, usable and finished?"
-      ),
-      ...PRESENTATION_QA,
-    ],
+    rubric: RUBRICS["1"],
   },
   {
     title: "Module 3 — Group Project: The Fundamentals",
@@ -188,77 +103,7 @@ Each group creates an **Interactive Web Application** using fundamental web tech
 4. **Q&A (8 min)**
 
 Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation; the individual grade is calculated from peer- and teacher evaluation equally (50/50). Finish with a retro meeting.`,
-    rubric: [
-      item(
-        "product-demo",
-        "Product Demo",
-        "Was the final product shown, live, and close to the design?"
-      ),
-      ...AGILE_ROWS,
-      design(
-        "ux-design-thinking-tools",
-        "UX/Design Thinking Tools",
-        "Were the design-thinking tools (crazy 8s, personas, empathy map…) well chosen and used to their potential?"
-      ),
-      design(
-        "user-research",
-        "User Research",
-        "Problem statement and user interviews — did the research bring value to the project?"
-      ),
-      design(
-        "discoveries",
-        "Discoveries",
-        "What did the group learn from the user research, and did it shape the project?"
-      ),
-      design(
-        "user-testing",
-        "User Testing",
-        "Was the lo-fi prototype tested on users and the feedback implemented?"
-      ),
-      design(
-        "moodboard",
-        "Moodboard",
-        "Did the moodboard set the mood and guide the project to the final design?"
-      ),
-      design(
-        "wireframe",
-        "Wireframe",
-        "Layout, hierarchy and whitespace — and was it testable?"
-      ),
-      design(
-        "style-guide",
-        "Style Guide",
-        "Organization, color choice, typography and icons."
-      ),
-      design(
-        "hifi-prototype",
-        "Hi-Fi Prototype",
-        "Polished, felt like the finished product, and connected to the style guide?"
-      ),
-      code(
-        "file-structure",
-        "File Structure",
-        "Are the files organized logically, and did they explain why?"
-      ),
-      code(
-        "variable-names",
-        "Variable names",
-        "Do the variable names describe their purpose?"
-      ),
-      code(
-        "documentation",
-        "Documentation",
-        "Comments and/or a readme that make the code clear."
-      ),
-      ...LIVE_CODING,
-      ...GITHUB_ROWS,
-      item(
-        "trying-it-out",
-        "Trying it out",
-        "Could the audience try the live application, and does it match the Figma design?"
-      ),
-      ...PRESENTATION_QA,
-    ],
+    rubric: RUBRICS["3"],
   },
   {
     title: "Module 4 — Group Project: Connecting to the World",
@@ -289,82 +134,7 @@ Each group creates an application which **connects to other applications using A
 4. **Q&A (8 min)**
 
 Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation; the individual grade is calculated from peer- and teacher evaluation equally (50/50). A common retro meeting is held after the presentations.`,
-    rubric: [
-      item(
-        "product-demo",
-        "Product Demo",
-        "Was the final product shown, live, and close to the design?"
-      ),
-      ...AGILE_ROWS,
-      design(
-        "ux-design-sprint-tools",
-        "UX/Design Sprint Tools",
-        "Were the design-sprint tools well chosen and used to their potential?"
-      ),
-      design(
-        "user-research",
-        "User Research",
-        "Problem statement and user interviews — did the research bring value to the project?"
-      ),
-      design(
-        "discoveries",
-        "Discoveries",
-        "What did the group learn from the user research, and did it shape the project?"
-      ),
-      design(
-        "user-testing",
-        "User Testing",
-        "Was the lo-fi prototype tested on users and the feedback implemented?"
-      ),
-      design(
-        "mobile-first",
-        "Mobile first approach",
-        "Did the group design mobile-first for better responsiveness, and how well?"
-      ),
-      design(
-        "accessibility",
-        "Accessibility",
-        "Did the group consider accessibility, and how did they approach it?"
-      ),
-      design(
-        "style-guide",
-        "Style Guide",
-        "Organization, color choice, typography and icons."
-      ),
-      design(
-        "hifi-prototype",
-        "Hi-Fi Prototype",
-        "Polished, felt like the finished product, and connected to the style guide?"
-      ),
-      code(
-        "typescript-api",
-        "TypeScript and API",
-        "Does the project use APIs with typed responses in an organized manner?"
-      ),
-      code(
-        "accessibility-implemented",
-        "Accessibility — implemented",
-        "Can the product be used without a mouse? Walk the whole main flow with the keyboard: is everything reachable, is focus always visible, do icon-only controls have readable names, and did the accessible design actually survive into the code?"
-      ),
-      code(
-        "naming-convention",
-        "Naming convention",
-        "Do file, component and variable names make sense in context?"
-      ),
-      code(
-        "documentation",
-        "Documentation",
-        "Comments and/or a readme that make the code clear."
-      ),
-      ...LIVE_CODING,
-      ...GITHUB_ROWS,
-      item(
-        "trying-it-out",
-        "Trying it out",
-        "Could the audience try the live application, and does it match the Figma design?"
-      ),
-      ...PRESENTATION_QA,
-    ],
+    rubric: RUBRICS["4"],
   },
   {
     title: "Module 5 — Group Project: Back End and Infrastructure",
@@ -399,25 +169,7 @@ The group must **contribute to an open source project** and add features and/or 
 3. **Q&A (10 min)**
 
 Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation; the individual grade is calculated from peer- and teacher evaluation equally (50/50).`,
-    rubric: [
-      code(
-        "scope",
-        "Scope",
-        "Was it clear what the group's contribution was, versus what was already in the original project?"
-      ),
-      ...LIVE_CODING,
-      item(
-        "interactive-demonstration",
-        "Interactive demonstration",
-        "Could the audience try the application/API, and did everything work?"
-      ),
-      item(
-        "product-overall",
-        "Product overall",
-        "Is it a good product — ready for front-end development or even shipping?"
-      ),
-      ...PRESENTATION_QA,
-    ],
+    rubric: RUBRICS["5"],
   },
   {
     title: "Module 6 — Group Project: Growing Complexity",
@@ -456,35 +208,7 @@ First to teachers for feedback and grades, then fine-tuned for industry professi
 4. **Q&A (10 min)**
 
 Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation; the individual grade is calculated from peer- and teacher evaluation equally (50/50).`,
-    rubric: [
-      design(
-        "groundwork",
-        "Moodboard, Sketches, Wireframe, Style guide",
-        "The design groundwork — present, well presented and reflected in the project?"
-      ),
-      design(
-        "final-ui-design",
-        "Final UI design",
-        "Is the prototype in line with UI design principles?"
-      ),
-      design(
-        "ux-design-thinking",
-        "UX Design Thinking approach",
-        "Good use of Design Thinking methodologies, with user tests affecting the product?"
-      ),
-      code(
-        "technology-stack",
-        "Technology stack",
-        "Were the tools presented, and why they were used?"
-      ),
-      ...LIVE_CODING,
-      item(
-        "product-interactive-demo",
-        "Product Interactive demonstration",
-        "Could the audience try the application, and did everything work?"
-      ),
-      ...PRESENTATION_QA,
-    ],
+    rubric: RUBRICS["6"],
   },
 ];
 

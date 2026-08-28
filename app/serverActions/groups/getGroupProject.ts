@@ -93,6 +93,7 @@ export async function getGroupProject(
       myTeamFeedback: [],
       students: null,
       teamEvalSummaries: null,
+      rubricLocked: false,
     };
 
     if (myPreference) details.myPreferences = serializePreference(myPreference);
@@ -160,6 +161,9 @@ export async function getGroupProject(
           preferences: pref ? serializePreference(pref) : null,
         };
       });
+
+      // Rubric rows can only be reworded once scores point at their keys.
+      details.rubricLocked = teamEvals.length > 0;
 
       // Panel = teachers + external judges; their scores outweigh students'.
       details.teamEvalSummaries = summarizeTeamEvaluations(

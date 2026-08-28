@@ -147,6 +147,14 @@ export type GroupProjectListItem = SerializedGroupProject & {
   hasPreferences: boolean;
 };
 
+/** Another project's rubric, offered as a starting point in the rubric editor. */
+export type RubricSource = {
+  _id: string;
+  title: string;
+  module: number | null;
+  rubric: RubricItem[];
+};
+
 // One student row on the teacher assignment board.
 export type BoardStudent = {
   _id: string;
@@ -176,6 +184,12 @@ export type GroupProjectDetails = {
   // teacher-only fields
   students: BoardStudent[] | null;
   teamEvalSummaries: Record<string, TeamEvalSummary> | null; // keyed by teamId
+  /**
+   * True once any team evaluation exists for the project: the rubric editor
+   * then allows wording changes only, because stored scores point at the
+   * rubric keys. Always false for students, who never see the editor.
+   */
+  rubricLocked: boolean;
 };
 
 export type PeerEvaluationEntry = {

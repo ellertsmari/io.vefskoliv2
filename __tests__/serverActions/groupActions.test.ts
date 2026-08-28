@@ -8,11 +8,14 @@ import {
   createDummyUser,
   connect,
 } from "../__mocks__/mongoHandler";
-import { GroupProject } from "models/groupProject";
+import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { GroupPreference } from "models/groupPreference";
 import { PeerEvaluation } from "models/peerEvaluation";
-import { createGroupProject } from "serverActions/groups/manageGroupProject";
+import {
+  createGroupProject,
+  updateGroupProject,
+} from "serverActions/groups/manageGroupProject";
 import { saveAssignments, createTeam, deleteTeam } from "serverActions/groups/manageTeams";
 import { savePreferences } from "serverActions/groups/savePreferences";
 import { getGroupProjects } from "serverActions/groups/getGroupProjects";
@@ -762,6 +765,145 @@ describe("group work server actions", () => {
       });
       expect(overall.comment).toBe("Great energy on stage");
       expect(overall.score).toBeUndefined();
+    });
+  });
+
+  describe("rubric editing", () => {
+    const rows = [
+      { key: "product-demo", title: "Product Demo", description: "", discipline: "general" as const },
+      { key: "live-coding", title: "Live coding", description: "", discipline: "code" as const },
+    ];
+
+    const evaluate = async (
+      projectId: string,
+      teamId: string,
+      entries: { category: string; score: number; comment: string }[]
+    ) =>
+      submitTeamEvaluation({ projectId, teamId, entries, overallComment: "" });
+
+    it("lets a teacher save a rubric and keeps students out", async () => {
+      const teacher = await createDummyUser("teacher");
+      const student = await createDummyUser("user");
+      const project = await createProject({}, teacher);
+
+      loginAs(student);
+      const rejected = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: rows,
+      });
+      expect(rejected.success).toBe(false);
+
+      loginAs(teacher);
+      const saved = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: rows,
+      });
+      expect(saved.success).toBe(true);
+
+      const stored =
+        await GroupProject.findById(project._id).lean<GroupProjectLean | null>();
+      expect(stored?.rubric?.map((item) => item.key)).toEqual([
+        "product-demo",
+        "live-coding",
+      ]);
+      expect(stored?.rubric?.[1].discipline).toBe("code");
+    });
+
+    it("rejects duplicate keys and the reserved overall key", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({}, teacher);
+      loginAs(teacher);
+
+      const duplicate = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: [rows[0], { ...rows[1], key: "product-demo" }],
+      });
+      expect(duplicate.success).toBe(false);
+
+      const reserved = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: [{ ...rows[0], key: "overall" }],
+      });
+      expect(reserved.success).toBe(false);
+    });
+
+    it("freezes the set of keys once a team has been evaluated, but not the wording", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({ rubric: rows }, teacher);
+      const team = await Team.create({ project: project._id, name: "A" });
+      loginAs(teacher);
+
+      await evaluate(project._id.toString(), team._id.toString(), [
+        { category: "product-demo", score: 8, comment: "Nice" },
+        { category: "live-coding", score: 6, comment: "" },
+      ]);
+
+      const added = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: [...rows, { key: "extra", title: "Extra", description: "", discipline: "general" as const }],
+      });
+      expect(added.success).toBe(false);
+      expect(added.message).toContain("extra");
+
+      const removed = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: [rows[0]],
+      });
+      expect(removed.success).toBe(false);
+      expect(removed.message).toContain("live-coding");
+
+      // Same keys, new wording and order — allowed.
+      const reworded = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: [
+          { ...rows[1], title: "Live coding — clarity", description: "Easy to follow?" },
+          { ...rows[0], discipline: "design" as const },
+        ],
+      });
+      expect(reworded.success).toBe(true);
+
+      const stored =
+        await GroupProject.findById(project._id).lean<GroupProjectLean | null>();
+      expect(stored?.rubric?.[0].title).toBe("Live coding — clarity");
+      expect(stored?.rubric?.[1].discipline).toBe("design");
+
+      // The stored score still points at a row that exists.
+      const scored = await TeamEvaluation.findOne({
+        project: project._id,
+        category: "product-demo",
+      }).lean<{ score: number } | null>();
+      expect(scored?.score).toBe(8);
+    });
+
+    it("compares against the default rows when the project has no rubric of its own", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({}, teacher);
+      const team = await Team.create({ project: project._id, name: "A" });
+      loginAs(teacher);
+
+      // Evaluated against the fallback rubric (product/presentation/qa).
+      await evaluate(
+        project._id.toString(),
+        team._id.toString(),
+        defaultRubricEntries()
+      );
+
+      const replaced = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: rows,
+      });
+      expect(replaced.success).toBe(false);
+
+      // Writing the fallback rows down explicitly changes nothing, so it passes.
+      const pinned = await updateGroupProject({
+        projectId: project._id.toString(),
+        rubric: [
+          { key: "product", title: "Product", description: "", discipline: "general" as const },
+          { key: "presentation", title: "Presentation", description: "", discipline: "general" as const },
+          { key: "qa", title: "Q&A", description: "", discipline: "general" as const },
+        ],
+      });
+      expect(pinned.success).toBe(true);
     });
   });
 

@@ -1,0 +1,444 @@
+{
+  "1": [
+    {
+      "key": "color-typography",
+      "title": "Color palette and Typography",
+      "description": "Do the chosen colors and typography work with the theme of the project?",
+      "discipline": "design"
+    },
+    {
+      "key": "hierarchy-alignment",
+      "title": "Hierarchy and Alignment",
+      "description": "Is the hierarchy clear and the alignment good?",
+      "discipline": "design"
+    },
+    {
+      "key": "ui-design",
+      "title": "UI Design Overall",
+      "description": "Does the UI design make good use of the design principles presented?",
+      "discipline": "design"
+    },
+    {
+      "key": "tech-stack",
+      "title": "Tech stack",
+      "description": "Were the tools mentioned, and why they were chosen?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-quality",
+      "title": "Live coding — quality",
+      "description": "How challenging was the piece of code they recreated live, and how well was it solved?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-clarity",
+      "title": "Live coding — clarity",
+      "description": "Was the live coding clearly explained and easy to follow?",
+      "discipline": "code"
+    },
+    {
+      "key": "product-overall",
+      "title": "Product overall",
+      "description": "Is the site live, usable and finished?",
+      "discipline": "general"
+    },
+    {
+      "key": "presentation-overall",
+      "title": "Presentation overall",
+      "description": "The presentation as a whole — clear, complete and engaging?",
+      "discipline": "general"
+    },
+    {
+      "key": "answering-questions",
+      "title": "Answering questions",
+      "description": "How well did the team answer the questions from the audience?",
+      "discipline": "general"
+    }
+  ],
+  "3": [
+    {
+      "key": "product-demo",
+      "title": "Product Demo",
+      "description": "Was the final product shown, live, and close to the design?",
+      "discipline": "general"
+    },
+    {
+      "key": "work-organization",
+      "title": "Work Organization",
+      "description": "How did the group organize the work?",
+      "discipline": "general"
+    },
+    {
+      "key": "task-to-feature",
+      "title": "From Task to Feature",
+      "description": "The journey from task to feature — did tasks make sure no one worked on the same thing?",
+      "discipline": "general"
+    },
+    {
+      "key": "tools-tech-stack",
+      "title": "Tools Used / Tech Stack",
+      "description": "Which tools and technologies were chosen, and do the reasons behind them make sense?",
+      "discipline": "code"
+    },
+    {
+      "key": "ux-design-thinking-tools",
+      "title": "UX/Design Thinking Tools",
+      "description": "Were the design-thinking tools (crazy 8s, personas, empathy map…) well chosen and used to their potential?",
+      "discipline": "design"
+    },
+    {
+      "key": "user-research",
+      "title": "User Research",
+      "description": "Problem statement and user interviews — did the research bring value to the project?",
+      "discipline": "design"
+    },
+    {
+      "key": "discoveries",
+      "title": "Discoveries",
+      "description": "What did the group learn from the user research, and did it shape the project?",
+      "discipline": "design"
+    },
+    {
+      "key": "user-testing",
+      "title": "User Testing",
+      "description": "Was the lo-fi prototype tested on users and the feedback implemented?",
+      "discipline": "design"
+    },
+    {
+      "key": "moodboard",
+      "title": "Moodboard",
+      "description": "Did the moodboard set the mood and guide the project to the final design?",
+      "discipline": "design"
+    },
+    {
+      "key": "wireframe",
+      "title": "Wireframe",
+      "description": "Layout, hierarchy and whitespace — and was it testable?",
+      "discipline": "design"
+    },
+    {
+      "key": "style-guide",
+      "title": "Style Guide",
+      "description": "Organization, color choice, typography and icons.",
+      "discipline": "design"
+    },
+    {
+      "key": "hifi-prototype",
+      "title": "Hi-Fi Prototype",
+      "description": "Polished, felt like the finished product, and connected to the style guide?",
+      "discipline": "design"
+    },
+    {
+      "key": "file-structure",
+      "title": "File Structure",
+      "description": "Are the files organized logically, and did they explain why?",
+      "discipline": "code"
+    },
+    {
+      "key": "variable-names",
+      "title": "Variable names",
+      "description": "Do the variable names describe their purpose?",
+      "discipline": "code"
+    },
+    {
+      "key": "documentation",
+      "title": "Documentation",
+      "description": "Comments and/or a readme that make the code clear.",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-quality",
+      "title": "Live coding — quality",
+      "description": "How challenging was the piece of code they recreated live, and how well was it solved?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-clarity",
+      "title": "Live coding — clarity",
+      "description": "Was the live coding clearly explained and easy to follow?",
+      "discipline": "code"
+    },
+    {
+      "key": "gh-branches",
+      "title": "GH — Branches",
+      "description": "How were branches used in the repository?",
+      "discipline": "code"
+    },
+    {
+      "key": "gh-commits",
+      "title": "GH — Commits",
+      "description": "Was code committed regularly (at least daily)?",
+      "discipline": "code"
+    },
+    {
+      "key": "gh-code-review",
+      "title": "GH — Code Review",
+      "description": "How did the team make sure the code quality was up to standards?",
+      "discipline": "code"
+    },
+    {
+      "key": "trying-it-out",
+      "title": "Trying it out",
+      "description": "Could the audience try the live application, and does it match the Figma design?",
+      "discipline": "general"
+    },
+    {
+      "key": "presentation-overall",
+      "title": "Presentation overall",
+      "description": "The presentation as a whole — clear, complete and engaging?",
+      "discipline": "general"
+    },
+    {
+      "key": "answering-questions",
+      "title": "Answering questions",
+      "description": "How well did the team answer the questions from the audience?",
+      "discipline": "general"
+    }
+  ],
+  "4": [
+    {
+      "key": "product-demo",
+      "title": "Product Demo",
+      "description": "Was the final product shown, live, and close to the design?",
+      "discipline": "general"
+    },
+    {
+      "key": "work-organization",
+      "title": "Work Organization",
+      "description": "How did the group organize the work?",
+      "discipline": "general"
+    },
+    {
+      "key": "task-to-feature",
+      "title": "From Task to Feature",
+      "description": "The journey from task to feature — did tasks make sure no one worked on the same thing?",
+      "discipline": "general"
+    },
+    {
+      "key": "tools-tech-stack",
+      "title": "Tools Used / Tech Stack",
+      "description": "Which tools and technologies were chosen, and do the reasons behind them make sense?",
+      "discipline": "code"
+    },
+    {
+      "key": "ux-design-sprint-tools",
+      "title": "UX/Design Sprint Tools",
+      "description": "Were the design-sprint tools well chosen and used to their potential?",
+      "discipline": "design"
+    },
+    {
+      "key": "user-research",
+      "title": "User Research",
+      "description": "Problem statement and user interviews — did the research bring value to the project?",
+      "discipline": "design"
+    },
+    {
+      "key": "discoveries",
+      "title": "Discoveries",
+      "description": "What did the group learn from the user research, and did it shape the project?",
+      "discipline": "design"
+    },
+    {
+      "key": "user-testing",
+      "title": "User Testing",
+      "description": "Was the lo-fi prototype tested on users and the feedback implemented?",
+      "discipline": "design"
+    },
+    {
+      "key": "mobile-first",
+      "title": "Mobile first approach",
+      "description": "Did the group design mobile-first for better responsiveness, and how well?",
+      "discipline": "design"
+    },
+    {
+      "key": "accessibility",
+      "title": "Accessibility",
+      "description": "Did the group consider accessibility, and how did they approach it?",
+      "discipline": "design"
+    },
+    {
+      "key": "style-guide",
+      "title": "Style Guide",
+      "description": "Organization, color choice, typography and icons.",
+      "discipline": "design"
+    },
+    {
+      "key": "hifi-prototype",
+      "title": "Hi-Fi Prototype",
+      "description": "Polished, felt like the finished product, and connected to the style guide?",
+      "discipline": "design"
+    },
+    {
+      "key": "typescript-api",
+      "title": "TypeScript and API",
+      "description": "Does the project use APIs with typed responses in an organized manner?",
+      "discipline": "code"
+    },
+    {
+      "key": "accessibility-implemented",
+      "title": "Accessibility — implemented",
+      "description": "Can the product be used without a mouse? Walk the whole main flow with the keyboard: is everything reachable, is focus always visible, do icon-only controls have readable names, and did the accessible design actually survive into the code?",
+      "discipline": "code"
+    },
+    {
+      "key": "naming-convention",
+      "title": "Naming convention",
+      "description": "Do file, component and variable names make sense in context?",
+      "discipline": "code"
+    },
+    {
+      "key": "documentation",
+      "title": "Documentation",
+      "description": "Comments and/or a readme that make the code clear.",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-quality",
+      "title": "Live coding — quality",
+      "description": "How challenging was the piece of code they recreated live, and how well was it solved?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-clarity",
+      "title": "Live coding — clarity",
+      "description": "Was the live coding clearly explained and easy to follow?",
+      "discipline": "code"
+    },
+    {
+      "key": "gh-branches",
+      "title": "GH — Branches",
+      "description": "How were branches used in the repository?",
+      "discipline": "code"
+    },
+    {
+      "key": "gh-commits",
+      "title": "GH — Commits",
+      "description": "Was code committed regularly (at least daily)?",
+      "discipline": "code"
+    },
+    {
+      "key": "gh-code-review",
+      "title": "GH — Code Review",
+      "description": "How did the team make sure the code quality was up to standards?",
+      "discipline": "code"
+    },
+    {
+      "key": "trying-it-out",
+      "title": "Trying it out",
+      "description": "Could the audience try the live application, and does it match the Figma design?",
+      "discipline": "general"
+    },
+    {
+      "key": "presentation-overall",
+      "title": "Presentation overall",
+      "description": "The presentation as a whole — clear, complete and engaging?",
+      "discipline": "general"
+    },
+    {
+      "key": "answering-questions",
+      "title": "Answering questions",
+      "description": "How well did the team answer the questions from the audience?",
+      "discipline": "general"
+    }
+  ],
+  "5": [
+    {
+      "key": "scope",
+      "title": "Scope",
+      "description": "Was it clear what the group's contribution was, versus what was already in the original project?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-quality",
+      "title": "Live coding — quality",
+      "description": "How challenging was the piece of code they recreated live, and how well was it solved?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-clarity",
+      "title": "Live coding — clarity",
+      "description": "Was the live coding clearly explained and easy to follow?",
+      "discipline": "code"
+    },
+    {
+      "key": "interactive-demonstration",
+      "title": "Interactive demonstration",
+      "description": "Could the audience try the application/API, and did everything work?",
+      "discipline": "general"
+    },
+    {
+      "key": "product-overall",
+      "title": "Product overall",
+      "description": "Is it a good product — ready for front-end development or even shipping?",
+      "discipline": "general"
+    },
+    {
+      "key": "presentation-overall",
+      "title": "Presentation overall",
+      "description": "The presentation as a whole — clear, complete and engaging?",
+      "discipline": "general"
+    },
+    {
+      "key": "answering-questions",
+      "title": "Answering questions",
+      "description": "How well did the team answer the questions from the audience?",
+      "discipline": "general"
+    }
+  ],
+  "6": [
+    {
+      "key": "groundwork",
+      "title": "Moodboard, Sketches, Wireframe, Style guide",
+      "description": "The design groundwork — present, well presented and reflected in the project?",
+      "discipline": "design"
+    },
+    {
+      "key": "final-ui-design",
+      "title": "Final UI design",
+      "description": "Is the prototype in line with UI design principles?",
+      "discipline": "design"
+    },
+    {
+      "key": "ux-design-thinking",
+      "title": "UX Design Thinking approach",
+      "description": "Good use of Design Thinking methodologies, with user tests affecting the product?",
+      "discipline": "design"
+    },
+    {
+      "key": "technology-stack",
+      "title": "Technology stack",
+      "description": "Were the tools presented, and why they were used?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-quality",
+      "title": "Live coding — quality",
+      "description": "How challenging was the piece of code they recreated live, and how well was it solved?",
+      "discipline": "code"
+    },
+    {
+      "key": "live-coding-clarity",
+      "title": "Live coding — clarity",
+      "description": "Was the live coding clearly explained and easy to follow?",
+      "discipline": "code"
+    },
+    {
+      "key": "product-interactive-demo",
+      "title": "Product Interactive demonstration",
+      "description": "Could the audience try the application, and did everything work?",
+      "discipline": "general"
+    },
+    {
+      "key": "presentation-overall",
+      "title": "Presentation overall",
+      "description": "The presentation as a whole — clear, complete and engaging?",
+      "discipline": "general"
+    },
+    {
+      "key": "answering-questions",
+      "title": "Answering questions",
+      "description": "How well did the team answer the questions from the audience?",
+      "discipline": "general"
+    }
+  ]
+}

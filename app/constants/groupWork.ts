@@ -372,6 +372,33 @@ export function rubricForProject(
   return items.length > 0 ? items : DEFAULT_RUBRIC;
 }
 
+/**
+ * A stable key for a new rubric row, derived from its title.
+ *
+ * Keys are what stored TeamEvaluation documents point at, so once a row has
+ * been scored its key must never change — the editor generates one when the
+ * row is created and freezes it from then on. `taken` keeps a new row from
+ * colliding with an existing one (or with the reserved overall-comment key).
+ */
+export function rubricKeyFromTitle(
+  title: string,
+  taken: Iterable<string> = []
+): string {
+  const base =
+    title
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "row";
+  const used = new Set([...taken, OVERALL_CATEGORY]);
+  if (!used.has(base)) return base;
+  let suffix = 2;
+  while (used.has(`${base}-${suffix}`)) suffix += 1;
+  return `${base}-${suffix}`;
+}
+
 /** Display label for a stored evaluation category key. */
 export function categoryLabel(
   rubric: RubricItem[] | null | undefined,
