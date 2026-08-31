@@ -8,7 +8,10 @@ import {
   TEAM_LINK_LABELS,
   rubricForProject,
 } from "constants/groupWork";
-import { submitJudgeEvaluation } from "serverActions/groups/judgeActions";
+import {
+  setJudgeShowcaseConsent,
+  submitJudgeEvaluation,
+} from "serverActions/groups/judgeActions";
 import {
   PageContainer,
   PageHeader,
@@ -21,8 +24,23 @@ import {
   ExternalLink,
   LinksRow,
   Pill,
+  Message,
 } from "../../LMS/groups/styles";
 import { TeamEvalForm } from "../../LMS/groups/[id]/components/TeamEvalForm";
+
+const ConsentCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const ConsentRow = styled.label`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: var(--text-sm);
+  cursor: pointer;
+`;
 
 const Wrapper = styled.div`
   max-width: 1000px;
@@ -48,6 +66,22 @@ export const JudgeViewPage = ({
     teams[0]?._id ?? null
   );
   const selectedTeam = teams.find((team) => team._id === selectedTeamId);
+  const [nameConsent, setNameConsent] = useState(judge.showcaseNameConsent);
+  const [consentMessage, setConsentMessage] = useState<string | null>(null);
+
+  const toggleNameConsent = async (allow: boolean) => {
+    setNameConsent(allow);
+    setConsentMessage(null);
+    const result = await setJudgeShowcaseConsent({ token, allow });
+    if (result.success) {
+      setConsentMessage(result.message ?? null);
+    } else {
+      // Put the checkbox back where it was rather than showing an answer that
+      // was never stored.
+      setNameConsent(!allow);
+      setConsentMessage(result.message);
+    }
+  };
 
   return (
     <Wrapper>
@@ -62,6 +96,27 @@ export const JudgeViewPage = ({
             </MutedText>
           </div>
         </PageHeader>
+
+        <ConsentCard>
+          <ConsentRow>
+            <input
+              type="checkbox"
+              checked={nameConsent}
+              onChange={(event) => toggleNameConsent(event.target.checked)}
+            />
+            <span>
+              <strong>May we use your name?</strong> Teams can choose a few
+              comments from their feedback to show on their public project
+              page. Tick this and yours will be signed{" "}
+              <em>{judge.name}, industry judge</em> — feedback from a named
+              professional makes the showcase far more trustworthy for the
+              people who read it. Leave it unticked and your comments appear as{" "}
+              <em>An industry judge</em>. Scores are never published, and you
+              can change this at any time.
+            </span>
+          </ConsentRow>
+          {consentMessage && <Message>{consentMessage}</Message>}
+        </ConsentCard>
 
         <SectionTitle>Pick a team</SectionTitle>
         <ChipRow>

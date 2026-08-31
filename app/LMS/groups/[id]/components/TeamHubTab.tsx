@@ -2,17 +2,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
-import { GroupProjectDetails, SerializedTeam } from "types/groupTypes";
 import {
+  GroupProjectDetails,
+  SerializedTeam,
+  StudentFeedbackEntry,
+} from "types/groupTypes";
+import {
+  MAX_SHOWCASE_QUOTES,
   TEAM_LINK_KEYS,
   TEAM_LINK_LABELS,
   TeamLinkKey,
   categoryLabel,
   disciplineMetaForCategory,
+  rubricForProject,
 } from "constants/groupWork";
 import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import { setShowcaseConsent } from "serverActions/groups/setShowcaseConsent";
+import { setShowcaseQuotes } from "serverActions/groups/setShowcaseQuotes";
 import { removeTeamImage } from "serverActions/groups/removeTeamImage";
 import {
   Card,
@@ -62,6 +69,74 @@ const FeedbackEntry = styled.div`
   flex-direction: column;
   gap: 0.35rem;
   font-size: var(--text-sm);
+`;
+
+const LockedCard = styled.div`
+  border: 1px dashed var(--primary-black-40, var(--primary-black-10));
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const Checklist = styled.ul`
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: var(--text-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const ChecklistItem = styled.li<{ $done: boolean }>`
+  color: ${({ $done }) =>
+    $done ? "var(--error-success-100)" : "var(--primary-black-60)"};
+`;
+
+const EvaluatorBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.8rem 0;
+`;
+
+const EvaluatorName = styled.h4`
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+`;
+
+const QuoteToggle = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
+  cursor: pointer;
+`;
+
+const GradeRow = styled.div`
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--primary-black-10);
+  font-size: var(--text-sm);
+`;
+
+const GradeValue = styled.span`
+  font-weight: 700;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+`;
+
+const BigGrade = styled.p`
+  margin: 0;
+  font-size: var(--text-2xl, 2rem);
+  font-weight: 800;
 `;
 
 const ShowcaseLink = styled.a`
@@ -511,26 +586,237 @@ export const TeamHubTab = ({
         </Layout>
       </form>
 
-      {details.myTeamFeedback.length > 0 && (
-        <Card>
-          <SectionTitle>Feedback your team received</SectionTitle>
-          {details.myTeamFeedback.map((entry, index) => {
-            const meta = disciplineMetaForCategory(rubric, entry.category);
-            return (
-              <FeedbackEntry key={index}>
-                <div>
-                  <ScorePill $color={meta.color} $background={meta.background}>
-                    {categoryLabel(rubric, entry.category)}
-                    {entry.score !== null && ` — ${entry.score}/10`}
-                  </ScorePill>
-                </div>
-                {entry.comment && <span>{entry.comment}</span>}
-                <MutedText>by {entry.evaluatorName}</MutedText>
-              </FeedbackEntry>
-            );
-          })}
-        </Card>
+      {team._id === details.myTeamId && (
+        <TeamFeedbackSection details={details} teamId={team._id} />
       )}
     </Layout>
+  );
+};
+
+/**
+ * Feedback is grouped by who wrote it: the people who came to judge are named,
+ * and every classmate arrives in one unnamed block. Teams then choose which
+ * comments go on their public page.
+ */
+type FeedbackGroup = {
+  key: string;
+  label: string;
+  entries: StudentFeedbackEntry[];
+};
+
+const groupFeedback = (entries: StudentFeedbackEntry[]): FeedbackGroup[] => {
+  const named = new Map<string, FeedbackGroup>();
+  const students: StudentFeedbackEntry[] = [];
+
+  for (const entry of entries) {
+    if (entry.evaluatorKind === "student" || !entry.evaluatorName) {
+      students.push(entry);
+      continue;
+    }
+    const key = `${entry.evaluatorKind}:${entry.evaluatorName}`;
+    const group = named.get(key) ?? {
+      key,
+      label:
+        entry.evaluatorKind === "judge"
+          ? `${entry.evaluatorName} — industry judge`
+          : `${entry.evaluatorName} — teacher`,
+      entries: [],
+    };
+    group.entries.push(entry);
+    named.set(key, group);
+  }
+
+  const groups = [...named.values()];
+  if (students.length > 0) {
+    groups.push({
+      key: "students",
+      label: "The other students",
+      entries: students,
+    });
+  }
+  return groups;
+};
+
+const TeamFeedbackSection = ({
+  details,
+  teamId,
+}: {
+  details: GroupProjectDetails;
+  teamId: string;
+}) => {
+  const router = useRouter();
+  const rubric = details.project.rubric;
+  const unlock = details.myFeedbackUnlock;
+  const [quotes, setQuotes] = useState<string[]>(details.myShowcaseQuotes);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{
+    text: string;
+    error: boolean;
+  } | null>(null);
+
+  const evaluationStarted =
+    details.project.teamEvalOpen || details.project.peerEvalOpen;
+
+  // Before anything is open there is nothing to be waiting for, so no card.
+  if (!unlock.unlocked) {
+    if (!evaluationStarted) return null;
+    return (
+      <Card>
+        <SectionTitle>Your team&apos;s feedback is waiting</SectionTitle>
+        <LockedCard>
+          <MutedText>
+            It opens as soon as you have handed in your own evaluations — you
+            do not have to wait for the rest of the class.
+          </MutedText>
+          <Checklist>
+            {details.project.peerEvalOpen && (
+              <ChecklistItem $done={!unlock.peerEvalPending}>
+                {unlock.peerEvalPending
+                  ? "Peer evaluation — not handed in yet"
+                  : "Peer evaluation — handed in ✓"}
+              </ChecklistItem>
+            )}
+            {details.project.teamEvalOpen && (
+              <ChecklistItem $done={unlock.teamsToScore === 0}>
+                {unlock.teamsToScore === 0
+                  ? "Every other team scored ✓"
+                  : `${unlock.teamsToScore} more team${
+                      unlock.teamsToScore === 1 ? "" : "s"
+                    } to score`}
+              </ChecklistItem>
+            )}
+          </Checklist>
+        </LockedCard>
+      </Card>
+    );
+  }
+
+  const groups = groupFeedback(details.myTeamFeedback);
+  const grade = details.myGrade;
+  const gradeRows = grade
+    ? rubricForProject(rubric).filter(
+        (item) => typeof grade.categories[item.key] === "number"
+      )
+    : [];
+
+  if (groups.length === 0 && gradeRows.length === 0) {
+    return (
+      <Card>
+        <SectionTitle>Feedback your team received</SectionTitle>
+        <MutedText>
+          Nothing has been written about your project yet — it appears here as
+          it arrives.
+        </MutedText>
+      </Card>
+    );
+  }
+
+  const toggleQuote = (id: string) => {
+    setMessage(null);
+    setQuotes((previous) =>
+      previous.includes(id)
+        ? previous.filter((quote) => quote !== id)
+        : previous.length >= MAX_SHOWCASE_QUOTES
+          ? previous
+          : [...previous, id]
+    );
+  };
+
+  const saveQuotes = async () => {
+    setSaving(true);
+    setMessage(null);
+    const result = await setShowcaseQuotes({ teamId, evaluationIds: quotes });
+    setSaving(false);
+    setMessage({
+      text: result.message || (result.success ? "Saved" : "Failed"),
+      error: !result.success,
+    });
+    if (result.success) router.refresh();
+  };
+
+  return (
+    <>
+      {grade && gradeRows.length > 0 && (
+        <Card>
+          <SectionTitle>Your grade</SectionTitle>
+          <BigGrade>{grade.grade} / 10</BigGrade>
+          <MutedText>
+            Your own grade, and what each row of the rubric came to for you.
+            It is your team&apos;s presentation result adjusted by the
+            contribution and teamwork figures your teachers confirmed for you:
+            an average team member keeps the team&apos;s result, and from there
+            it runs up to +30% and down to −70%.
+          </MutedText>
+          {gradeRows.map((item) => (
+            <GradeRow key={item.key}>
+              <span>{item.title}</span>
+              <GradeValue>{grade.categories[item.key]} / 10</GradeValue>
+            </GradeRow>
+          ))}
+        </Card>
+      )}
+
+      {!grade && details.project.gradesReleased && (
+        <Card>
+          <SectionTitle>Your grade</SectionTitle>
+          <MutedText>
+            Your teachers have not confirmed your peer evaluation yet, so your
+            grade is not final. It appears here as soon as they have.
+          </MutedText>
+        </Card>
+      )}
+
+      <Card>
+        <SectionTitle>Feedback your team received</SectionTitle>
+        <MutedText>
+          Tick up to {MAX_SHOWCASE_QUOTES} comments to show on your public
+          showcase page. Only the words are published — never a score, and
+          never a classmate&apos;s name.
+        </MutedText>
+
+        {groups.map((group) => (
+          <EvaluatorBlock key={group.key}>
+            <EvaluatorName>{group.label}</EvaluatorName>
+            {group.entries.map((entry) => {
+              const meta = disciplineMetaForCategory(rubric, entry.category);
+              const chosen = quotes.includes(entry._id);
+              return (
+                <FeedbackEntry key={entry._id}>
+                  <div>
+                    <ScorePill
+                      $color={meta.color}
+                      $background={meta.background}
+                    >
+                      {categoryLabel(rubric, entry.category)}
+                    </ScorePill>
+                  </div>
+                  <span>{entry.comment}</span>
+                  <QuoteToggle>
+                    <input
+                      type="checkbox"
+                      checked={chosen}
+                      disabled={
+                        !chosen && quotes.length >= MAX_SHOWCASE_QUOTES
+                      }
+                      onChange={() => toggleQuote(entry._id)}
+                    />
+                    Show on our showcase page
+                  </QuoteToggle>
+                </FeedbackEntry>
+              );
+            })}
+          </EvaluatorBlock>
+        ))}
+
+        <Footer>
+          <PrimaryButton type="button" onClick={saveQuotes} disabled={saving}>
+            {saving
+              ? "Saving…"
+              : `Save showcase selection (${quotes.length}/${MAX_SHOWCASE_QUOTES})`}
+          </PrimaryButton>
+          {message && <Message $error={message.error}>{message.text}</Message>}
+        </Footer>
+      </Card>
+    </>
   );
 };

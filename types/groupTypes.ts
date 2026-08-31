@@ -61,6 +61,16 @@ export type ShowcaseCard = {
   memberNames: string[];
 };
 
+/**
+ * A published quote on the public showcase: the words only, never a score, and
+ * attributed as much as the person who wrote it agreed to. Teachers are named,
+ * judges only if they opted in, classmates never.
+ */
+export type ShowcaseQuote = {
+  comment: string;
+  attribution: string;
+};
+
 export type ShowcaseTeam = {
   _id: string;
   name: string;
@@ -72,6 +82,7 @@ export type ShowcaseTeam = {
   teamPhoto: string;
   logo: string;
   memberNames: string[];
+  quotes: ShowcaseQuote[];
 };
 
 export type ShowcaseProject = {
@@ -130,6 +141,8 @@ export type SerializedGroupProject = {
   rubric: RubricItem[];
   peerEvalOpen: boolean;
   teamEvalOpen: boolean;
+  /** Teachers have published the scores; written feedback does not wait for this. */
+  gradesReleased: boolean;
   /**
    * True when `description` was withheld server-side because the viewer is a
    * student who hasn't completed their formation preferences yet. The brief is
@@ -172,6 +185,39 @@ export type TeamFeedbackEntry = {
   evaluatorName: string;
 };
 
+/**
+ * One piece of feedback as the team it was written about sees it.
+ *
+ * Two things are deliberately missing. There is no score: an individual mark
+ * invites a hunt for who gave it, which is the same problem as a name, so
+ * students get their own grade instead (`myGrade`) and only once the teachers
+ * release it. And classmates are never named — every student evaluator arrives
+ * as `student`, with no name attached anywhere in the payload. Teachers and
+ * judges are named, as the people who came to judge.
+ */
+export type StudentFeedbackEntry = {
+  /** The TeamEvaluation id — what a team points at when publishing a quote. */
+  _id: string;
+  category: string;
+  comment: string;
+  evaluatorKind: "teacher" | "judge" | "student";
+  /** Set for teachers and judges; always null for students. */
+  evaluatorName: string | null;
+};
+
+/**
+ * Why the feedback is or is not showing, so the student can be told what is
+ * left rather than shown an empty panel. Feedback is the reward for handing
+ * in: it opens once you have done everything that is open to you.
+ */
+export type FeedbackUnlock = {
+  unlocked: boolean;
+  /** Other teams still to score. Zero when team evaluation is not open. */
+  teamsToScore: number;
+  /** True when peer evaluation is open, you are on a team, and you have not submitted. */
+  peerEvalPending: boolean;
+};
+
 export type GroupProjectDetails = {
   project: SerializedGroupProject;
   teams: SerializedTeam[];
@@ -180,7 +226,15 @@ export type GroupProjectDetails = {
   myPreferences: SerializedPreference | null;
   myPeerEvaluations: PeerEvaluationEntry[];
   myTeamEvaluations: Record<string, TeamEvaluationEntry[]>; // keyed by teamId, own submissions
-  myTeamFeedback: TeamFeedbackEntry[]; // evaluations received by my team (archived projects)
+  myTeamFeedback: StudentFeedbackEntry[]; // comments my team received, once unlocked
+  myFeedbackUnlock: FeedbackUnlock;
+  /**
+   * My own grade — released by the teachers, and only when they have confirmed
+   * my peer-evaluation figures. Null until both are true.
+   */
+  myGrade: StudentGrade | null;
+  /** Ids of the comments my team publishes on its showcase page. */
+  myShowcaseQuotes: string[];
   // teacher-only fields
   students: BoardStudent[] | null;
   teamEvalSummaries: Record<string, TeamEvalSummary> | null; // keyed by teamId
@@ -218,6 +272,30 @@ export type PeerEvalReceived = {
   teambuildingComment: string;
   /** True when the student wrote this about themselves. */
   isSelf: boolean;
+  /**
+   * True when this evaluator's scores add up to more than zero on an axis —
+   * only possible for evaluations stored before the balance rule existed, and
+   * shown so a teacher can tell which advice predates it.
+   */
+  evaluatorUnbalanced: boolean;
+};
+
+/**
+ * What a teacher made of the peer evaluation for one student: the average the
+ * team gave, accepted or replaced. Still on the −2..+2 scale, because it is
+ * still not a grade — it is what the teacher carries into the grade.
+ */
+export type PeerEvalResult = {
+  contribution: number;
+  teambuilding: number;
+  note: string;
+  confirmedByName: string;
+  /** ISO date string. */
+  confirmedAt: string;
+  /** What the students had said when this was confirmed, and over how many evaluations. */
+  basedOnContribution: number | null;
+  basedOnTeambuilding: number | null;
+  basedOnCount: number | null;
 };
 
 export type PeerEvalStudentReport = {
@@ -234,9 +312,51 @@ export type PeerEvalStudentReport = {
    */
   contributionAvg: number | null;
   teambuildingAvg: number | null;
+  /** The two axes averaged — the figure the teacher confirms or replaces. */
+  combinedAvg: number | null;
   receivedCount: number;
   givenCount: number;
+  /** True when this student's own scores broke the balance rule (pre-rule data). */
+  givenUnbalanced: boolean;
   received: PeerEvalReceived[];
+  result: PeerEvalResult | null;
+  /**
+   * What the confirmed figures come to for this student, once there is a team
+   * grade to apply them to. Shown to the teacher whether or not the grades
+   * have been released — this is what pressing the button would publish.
+   */
+  grade: IndividualGrade | null;
+};
+
+/**
+ * What a student is told about their own grade: the grade, and what each rubric
+ * row came to for them.
+ *
+ * The team's project grade and the factor applied to it are deliberately NOT
+ * here. A group grade is not a student's to see — and since
+ * `grade = projectGrade × factor`, sending either one would hand them the other
+ * by division. The teacher-side `IndividualGrade` carries the full arithmetic.
+ */
+export type StudentGrade = {
+  grade: number;
+  /** Per rubric row: what that row comes to for this student. Uncapped. */
+  categories: Record<string, number>;
+};
+
+/**
+ * One student's grade as a teacher sees it, with the arithmetic that produced
+ * it so nobody has to take it on faith: the team's project grade, the factor
+ * the confirmed peer figures apply to it, and the result.
+ */
+export type IndividualGrade = {
+  /** Mean of the team's rubric rows, each blended 80/20 panel/audience. */
+  projectGrade: number;
+  /** The multiplier from the confirmed contribution and teamwork figures. */
+  factor: number;
+  /** projectGrade × factor, held to the top of the scale. */
+  grade: number;
+  /** Per rubric row: what that row comes to for this student. Uncapped. */
+  categories: Record<string, number>;
 };
 
 export type TeamEvalReport = {
@@ -261,12 +381,14 @@ export type SerializedJudgeInvitation = {
   focus: JudgeFocus;
   token: string;
   hasSubmitted: boolean;
+  /** The judge agreed to be named when a team publishes one of their comments. */
+  showcaseNameConsent: boolean;
 };
 
 export type JudgeView = {
   project: SerializedGroupProject;
   teams: SerializedTeam[];
-  judge: { name: string; focus: JudgeFocus };
+  judge: { name: string; focus: JudgeFocus; showcaseNameConsent: boolean };
   // own submissions keyed by teamId
   myEvaluations: Record<string, TeamEvaluationEntry[]>;
 };

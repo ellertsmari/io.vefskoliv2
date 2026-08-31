@@ -21,6 +21,9 @@ import {
   TeamPhotoImage,
   MemberChips,
   MemberChip,
+  QuoteList,
+  Quote,
+  QuoteAttribution,
   ContextNote,
   Footer,
 } from "../styles";
@@ -84,6 +87,20 @@ export const ShowcaseTeamView = ({
           <DetailSection>
             <SectionHeading>About the project</SectionHeading>
             <Description>{team.projectDescription}</Description>
+          </DetailSection>
+        )}
+
+        {team.quotes.length > 0 && (
+          <DetailSection>
+            <SectionHeading>What people said</SectionHeading>
+            <QuoteList>
+              {team.quotes.map((quote, index) => (
+                <Quote key={index}>
+                  “{quote.comment}”
+                  <QuoteAttribution>— {quote.attribution}</QuoteAttribution>
+                </Quote>
+              ))}
+            </QuoteList>
           </DetailSection>
         )}
 

@@ -150,13 +150,15 @@ export const ProjectSettings = ({
     timeFromMinutes(minutesFromTime(startTime) + presentationLength);
 
   // Formation → active happens automatically on the start date; the only
-  // manual phase change left is archiving (and undoing it).
+  // manual phase change left is completing the project (and undoing it).
+  // Completing does NOT close the evaluation gates — latecomers still hand in,
+  // and everyone else already has their feedback.
   const handleArchiveToggle = async () => {
     const archiving = project.status !== "archived";
     if (
       archiving &&
       !window.confirm(
-        "Archive this project? It becomes read-only and teams can see the feedback they received."
+        "Mark this project completed? The team hubs become read-only and every team can read the feedback it received, including students who never handed in."
       )
     ) {
       return;
@@ -166,6 +168,32 @@ export const ProjectSettings = ({
     const result = await updateGroupProject({
       projectId: project._id,
       status: archiving ? "archived" : "active",
+    });
+    setSaving(false);
+    if (result.success) {
+      router.refresh();
+    } else {
+      setFeedback({ text: result.message, error: true });
+    }
+  };
+
+  // Written feedback reaches a student as soon as they hand in; the scores
+  // wait for this, which is a separate decision from the project being over.
+  const handleGradesToggle = async () => {
+    const releasing = !project.gradesReleased;
+    if (
+      releasing &&
+      !window.confirm(
+        "Release the grades? Every team that has handed in will see its average score for each rubric row."
+      )
+    ) {
+      return;
+    }
+    setSaving(true);
+    setFeedback(null);
+    const result = await updateGroupProject({
+      projectId: project._id,
+      gradesReleased: releasing,
     });
     setSaving(false);
     if (result.success) {
@@ -378,11 +406,39 @@ export const ProjectSettings = ({
         </Card>
 
         <Card>
-          <SectionTitle>Archive</SectionTitle>
+          <SectionTitle>Grades</SectionTitle>
+          <MutedText>
+            {project.gradesReleased
+              ? "The grades are out. Every student who has handed in sees their own grade and nothing else — never the team's. Anyone you have not confirmed sees a note that their grade is not final yet."
+              : "Students who have handed in can already read the written feedback their team received. Releasing adds each student's own grade, worked out from the team's project grade and the peer-evaluation figures you confirmed on the Evaluations tab. Confirm those first — a student without them gets no grade, and never the team's as a stand-in."}
+          </MutedText>
+          <div>
+            {project.gradesReleased ? (
+              <SecondaryButton
+                type="button"
+                onClick={handleGradesToggle}
+                disabled={saving}
+              >
+                Take the grades back
+              </SecondaryButton>
+            ) : (
+              <PrimaryButton
+                type="button"
+                onClick={handleGradesToggle}
+                disabled={saving}
+              >
+                Release grades
+              </PrimaryButton>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <SectionTitle>Completing the project</SectionTitle>
           <MutedText>
             {project.status === "archived"
-              ? "This project is archived — read-only, and teams can see the feedback they received."
-              : "Archiving makes the project read-only history and shows teams the feedback they received. The project activates by itself on its start date."}
+              ? "This project is completed — the team hubs are read-only and every team can read its feedback. Evaluations are still accepted, so anybody who is late can still hand in."
+              : "Completing a project makes the team hubs read-only and opens each team's feedback to everyone on it, including students who never handed in. It does not close the evaluation gates. The project activates by itself on its start date."}
           </MutedText>
           <div>
             {project.status === "archived" ? (
@@ -391,7 +447,7 @@ export const ProjectSettings = ({
                 onClick={handleArchiveToggle}
                 disabled={saving}
               >
-                Unarchive project
+                Reopen project
               </SecondaryButton>
             ) : (
               <DangerButton
@@ -399,7 +455,7 @@ export const ProjectSettings = ({
                 onClick={handleArchiveToggle}
                 disabled={saving}
               >
-                Archive project
+                Mark completed
               </DangerButton>
             )}
           </div>

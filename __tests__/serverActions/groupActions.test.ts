@@ -23,6 +23,13 @@ import { getGroupProject } from "serverActions/groups/getGroupProject";
 import { getEvaluationReports } from "serverActions/groups/getEvaluationReports";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import { submitPeerEvaluations } from "serverActions/groups/submitPeerEvaluations";
+import {
+  clearPeerEvalResult,
+  confirmAllPeerEvalResults,
+  confirmPeerEvalResult,
+} from "serverActions/groups/managePeerEvalResults";
+import { PeerEvaluationResult } from "models/peerEvaluationResult";
+import { setShowcaseQuotes } from "serverActions/groups/setShowcaseQuotes";
 import { submitTeamEvaluation } from "serverActions/groups/submitTeamEvaluation";
 import { dueLifecycleUpdates } from "serverActions/groups/lifecycle";
 import {
@@ -503,44 +510,59 @@ describe("group work server actions", () => {
       return { studentA, studentB, outsider, project, team };
     };
 
-    const evaluationFor = (targetId: string) => ({
+    const evaluationFor = (
+      targetId: string,
+      contributionScore = 0,
+      teambuildingScore = 0
+    ) => ({
       targetId,
-      contributionScore: 1,
+      contributionScore,
       contributionComment: "Did great work",
-      teambuildingScore: 0,
+      teambuildingScore,
       teambuildingComment: "Communicated fine",
     });
+
+    // Every submission has to cover the whole team and stay within budget, so
+    // the everyday case is "both of us were average".
+    const evenTeam = (a: string, b: string) => [
+      evaluationFor(a),
+      evaluationFor(b),
+    ];
 
     it("upserts evaluations for teammates without duplicating", async () => {
       const { studentA, studentB, project } = await setupTeam();
       loginAs(studentA);
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
 
       const first = await submitPeerEvaluations({
         projectId: project._id.toString(),
-        evaluations: [evaluationFor(studentB._id.toString())],
+        evaluations: evenTeam(idA, idB),
       });
       expect(first.success).toBe(true);
 
       const second = await submitPeerEvaluations({
         projectId: project._id.toString(),
         evaluations: [
-          { ...evaluationFor(studentB._id.toString()), contributionScore: -1 },
+          evaluationFor(idA, 1),
+          evaluationFor(idB, -1),
         ],
       });
       expect(second.success).toBe(true);
 
       const evals = await PeerEvaluation.find({ project: project._id });
-      expect(evals).toHaveLength(1);
-      expect(evals[0].contributionScore).toBe(-1);
+      expect(evals).toHaveLength(2);
+      const forB = evals.find((entry) => entry.target.toString() === idB);
+      expect(forB?.contributionScore).toBe(-1);
     });
 
     it("rejects when the gate is closed or the target is not a teammate", async () => {
       const { studentA, studentB, outsider, project } = await setupTeam(false);
       loginAs(studentA);
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
 
       const gateClosed = await submitPeerEvaluations({
         projectId: project._id.toString(),
-        evaluations: [evaluationFor(studentB._id.toString())],
+        evaluations: evenTeam(idA, idB),
       });
       expect(gateClosed.success).toBe(false);
 
@@ -551,9 +573,13 @@ describe("group work server actions", () => {
 
       const notTeammate = await submitPeerEvaluations({
         projectId: project._id.toString(),
-        evaluations: [evaluationFor(outsider._id.toString())],
+        evaluations: [
+          evaluationFor(idA),
+          evaluationFor(outsider._id.toString()),
+        ],
       });
       expect(notTeammate.success).toBe(false);
+      expect(notTeammate.message).toMatch(/members of your own team/i);
     });
 
     it("accepts a self-evaluation alongside the teammates", async () => {
@@ -563,8 +589,8 @@ describe("group work server actions", () => {
       const result = await submitPeerEvaluations({
         projectId: project._id.toString(),
         evaluations: [
-          { ...evaluationFor(studentA._id.toString()), contributionScore: 2 },
-          evaluationFor(studentB._id.toString()),
+          evaluationFor(studentA._id.toString(), 2, 1),
+          evaluationFor(studentB._id.toString(), -2, -1),
         ],
       });
       expect(result.success).toBe(true);
@@ -577,24 +603,97 @@ describe("group work server actions", () => {
       expect(selfEval?.contributionScore).toBe(2);
     });
 
+    it("refuses to rate the team above its own average, on either axis", async () => {
+      const { studentA, studentB, project } = await setupTeam();
+      loginAs(studentA);
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
+
+      const inflated = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [evaluationFor(idA, 2), evaluationFor(idB, 1)],
+      });
+      expect(inflated.success).toBe(false);
+      expect(inflated.message).toMatch(/Contribution scores add up to \+3/);
+
+      const teamworkInflated = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          evaluationFor(idA, 0, 1),
+          evaluationFor(idB, 0, 0),
+        ],
+      });
+      expect(teamworkInflated.success).toBe(false);
+      expect(teamworkInflated.message).toMatch(/Teamwork scores add up to \+1/);
+
+      expect(await PeerEvaluation.countDocuments({})).toBe(0);
+    });
+
+    it("allows a team to be rated below average, and an even team", async () => {
+      const { studentA, studentB, project } = await setupTeam();
+      loginAs(studentA);
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
+
+      const even = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: evenTeam(idA, idB),
+      });
+      expect(even.success).toBe(true);
+
+      const belowAverage = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          evaluationFor(idA, -1, -1),
+          evaluationFor(idB, -2, 0),
+        ],
+      });
+      expect(belowAverage.success).toBe(true);
+    });
+
+    it("requires the whole team, scored once each", async () => {
+      const { studentA, studentB, project } = await setupTeam();
+      loginAs(studentA);
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
+
+      // Only oneself: balanced on its own, but says nothing about the team.
+      const onlySelf = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [evaluationFor(idA, 0)],
+      });
+      expect(onlySelf.success).toBe(false);
+      expect(onlySelf.message).toMatch(/everyone on the team/i);
+
+      // Scoring the same teammate twice would let a phantom row balance the
+      // books while only one of them is stored.
+      const duplicated = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          evaluationFor(idA, 2),
+          evaluationFor(idA, -2),
+          evaluationFor(idB, 0),
+        ],
+      });
+      expect(duplicated.success).toBe(false);
+      expect(duplicated.message).toMatch(/single score/i);
+
+      expect(await PeerEvaluation.countDocuments({})).toBe(0);
+    });
+
     it("counts the self-evaluation in the teacher report and flags who wrote it", async () => {
       const { studentA, studentB, project } = await setupTeam();
       const teacher = await createDummyUser("teacher");
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
 
-      // A rates themselves +2, B rates A 0 → advisory average of +1.
+      // A rates themselves +2 and B -2; B rates both 0 → advisory average of
+      // +1 for A.
       loginAs(studentA);
       await submitPeerEvaluations({
         projectId: project._id.toString(),
-        evaluations: [
-          { ...evaluationFor(studentA._id.toString()), contributionScore: 2 },
-        ],
+        evaluations: [evaluationFor(idA, 2), evaluationFor(idB, -2)],
       });
       loginAs(studentB);
       await submitPeerEvaluations({
         projectId: project._id.toString(),
-        evaluations: [
-          { ...evaluationFor(studentA._id.toString()), contributionScore: 0 },
-        ],
+        evaluations: evenTeam(idA, idB),
       });
 
       loginAs(teacher);
@@ -604,9 +703,657 @@ describe("group work server actions", () => {
       );
       expect(reportForA?.receivedCount).toBe(2);
       expect(reportForA?.contributionAvg).toBe(1);
+      expect(reportForA?.combinedAvg).toBe(0.5);
       expect(reportForA?.received.filter((entry) => entry.isSelf)).toHaveLength(
         1
       );
+      // Both submissions obeyed the rule, so nothing is flagged.
+      expect(reportForA?.givenUnbalanced).toBe(false);
+      expect(
+        reportForA?.received.every((entry) => !entry.evaluatorUnbalanced)
+      ).toBe(true);
+    });
+
+    it("flags evaluations stored before the rule instead of rewriting them", async () => {
+      const { studentA, studentB, project, team } = await setupTeam();
+      const teacher = await createDummyUser("teacher");
+
+      // Written straight to the collection, the way the one pre-rule
+      // submission sits in the live database: everybody above average.
+      await PeerEvaluation.create([
+        {
+          project: project._id,
+          team: team._id,
+          evaluator: studentA._id,
+          target: studentA._id,
+          contributionScore: 2,
+          contributionComment: "me",
+          teambuildingScore: 2,
+          teambuildingComment: "me",
+        },
+        {
+          project: project._id,
+          team: team._id,
+          evaluator: studentA._id,
+          target: studentB._id,
+          contributionScore: 1,
+          contributionComment: "them",
+          teambuildingScore: 1,
+          teambuildingComment: "them",
+        },
+      ]);
+
+      loginAs(teacher);
+      const reports = await getEvaluationReports(project._id.toString());
+      const reportForA = reports?.peerEvals.find(
+        (entry) => entry.userId === studentA._id.toString()
+      );
+      const reportForB = reports?.peerEvals.find(
+        (entry) => entry.userId === studentB._id.toString()
+      );
+
+      // Untouched: the scores still read exactly as they were stored.
+      expect(reportForA?.contributionAvg).toBe(2);
+      expect(reportForB?.contributionAvg).toBe(1);
+      // ...and flagged, on the giver's row and on every entry they wrote.
+      expect(reportForA?.givenUnbalanced).toBe(true);
+      expect(reportForB?.received[0]?.evaluatorUnbalanced).toBe(true);
+    });
+  });
+
+  describe("peer evaluation results", () => {
+    // A team where the advice is unambiguous: both students rate A above B.
+    const setupEvaluatedTeam = async () => {
+      const studentA = await createDummyUser("user");
+      const studentB = await createDummyUser("user");
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({
+        status: "active",
+        peerEvalOpen: true,
+      });
+      await Team.create({
+        project: project._id,
+        name: "Team",
+        members: [studentA._id, studentB._id],
+      });
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
+      const scores = (a: number, b: number) => [
+        {
+          targetId: idA,
+          contributionScore: a,
+          contributionComment: "c",
+          teambuildingScore: a,
+          teambuildingComment: "t",
+        },
+        {
+          targetId: idB,
+          contributionScore: b,
+          contributionComment: "c",
+          teambuildingScore: b,
+          teambuildingComment: "t",
+        },
+      ];
+      loginAs(studentA);
+      await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: scores(1, -1),
+      });
+      loginAs(studentB);
+      await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: scores(1, -1),
+      });
+      return { studentA, studentB, teacher, project, idA, idB };
+    };
+
+    it("confirms the team's average and remembers what it was based on", async () => {
+      const { teacher, project, idA } = await setupEvaluatedTeam();
+      loginAs(teacher);
+
+      const result = await confirmPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idA,
+        contribution: 1,
+        teambuilding: 1,
+        note: "",
+      });
+      expect(result.success).toBe(true);
+
+      const stored = await PeerEvaluationResult.findOne({
+        project: project._id,
+        student: idA,
+      }).lean<{
+        contribution: number;
+        teambuilding: number;
+        basedOnContribution: number;
+        basedOnCount: number;
+      } | null>();
+      expect(stored?.contribution).toBe(1);
+      expect(stored?.basedOnContribution).toBe(1);
+      expect(stored?.basedOnCount).toBe(2);
+
+      const reports = await getEvaluationReports(project._id.toString());
+      const reportForA = reports?.peerEvals.find(
+        (entry) => entry.userId === idA
+      );
+      expect(reportForA?.combinedAvg).toBe(1);
+      expect(reportForA?.result?.contribution).toBe(1);
+      expect(reportForA?.result?.confirmedByName).toBe(teacher.name);
+    });
+
+    it("lets a teacher override the average, with a note, and change it again", async () => {
+      const { teacher, project, idB } = await setupEvaluatedTeam();
+      loginAs(teacher);
+
+      await confirmPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idB,
+        contribution: -0.5,
+        teambuilding: -0.5,
+        note: "Was ill for a week, agreed beforehand",
+      });
+      const changed = await confirmPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idB,
+        contribution: 0,
+        teambuilding: 0,
+        note: "Talked to the team",
+      });
+      expect(changed.success).toBe(true);
+
+      expect(
+        await PeerEvaluationResult.countDocuments({ project: project._id })
+      ).toBe(1);
+      const reports = await getEvaluationReports(project._id.toString());
+      const reportForB = reports?.peerEvals.find(
+        (entry) => entry.userId === idB
+      );
+      expect(reportForB?.combinedAvg).toBe(-1);
+      expect(reportForB?.result?.contribution).toBe(0);
+      expect(reportForB?.result?.note).toBe("Talked to the team");
+    });
+
+    it("keeps students out, and rejects a score off the scale", async () => {
+      const { studentA, teacher, project, idA } = await setupEvaluatedTeam();
+
+      loginAs(studentA);
+      const asStudent = await confirmPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idA,
+        contribution: 2,
+        teambuilding: 2,
+        note: "",
+      });
+      expect(asStudent.success).toBe(false);
+
+      loginAs(teacher);
+      const offScale = await confirmPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idA,
+        contribution: 7,
+        teambuilding: 0,
+        note: "",
+      });
+      expect(offScale.success).toBe(false);
+      expect(await PeerEvaluationResult.countDocuments({})).toBe(0);
+    });
+
+    it("confirms every unconfirmed student at once, leaving decided ones alone", async () => {
+      const { teacher, project, idA, idB } = await setupEvaluatedTeam();
+      loginAs(teacher);
+
+      await confirmPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idB,
+        contribution: 0,
+        teambuilding: 0,
+        note: "already decided",
+      });
+
+      const bulk = await confirmAllPeerEvalResults({
+        projectId: project._id.toString(),
+      });
+      expect(bulk.success).toBe(true);
+
+      const reports = await getEvaluationReports(project._id.toString());
+      const forA = reports?.peerEvals.find((entry) => entry.userId === idA);
+      const forB = reports?.peerEvals.find((entry) => entry.userId === idB);
+      expect(forA?.result?.contribution).toBe(1);
+      // Untouched by the bulk confirm.
+      expect(forB?.result?.contribution).toBe(0);
+      expect(forB?.result?.note).toBe("already decided");
+    });
+
+    it("clears a result back to pending", async () => {
+      const { teacher, project, idA } = await setupEvaluatedTeam();
+      loginAs(teacher);
+
+      await confirmPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idA,
+        contribution: 1,
+        teambuilding: 1,
+        note: "",
+      });
+      const cleared = await clearPeerEvalResult({
+        projectId: project._id.toString(),
+        studentId: idA,
+      });
+      expect(cleared.success).toBe(true);
+
+      const reports = await getEvaluationReports(project._id.toString());
+      const forA = reports?.peerEvals.find((entry) => entry.userId === idA);
+      expect(forA?.result).toBeNull();
+    });
+  });
+
+  describe("feedback visibility", () => {
+    // Two teams, both gates open: A is the team under study, B is there to be
+    // scored (and to score back).
+    const setupTwoTeams = async () => {
+      const studentA = await createDummyUser("user");
+      const studentB = await createDummyUser("user");
+      const studentC = await createDummyUser("user");
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({
+        status: "active",
+        peerEvalOpen: true,
+        teamEvalOpen: true,
+      });
+      const teamA = await Team.create({
+        project: project._id,
+        name: "Team A",
+        members: [studentA._id, studentB._id],
+      });
+      const teamB = await Team.create({
+        project: project._id,
+        name: "Team B",
+        members: [studentC._id],
+      });
+      return { studentA, studentB, studentC, teacher, project, teamA, teamB };
+    };
+
+    const scoreTeam = async (
+      evaluator: UserDocument,
+      projectId: string,
+      teamId: string,
+      comment: string
+    ) => {
+      loginAs(evaluator);
+      return submitTeamEvaluation({
+        projectId,
+        teamId,
+        entries: defaultRubricEntries(comment),
+        overallComment: "",
+      });
+    };
+
+    const handInPeerEval = async (
+      student: UserDocument,
+      projectId: string,
+      memberIds: string[]
+    ) => {
+      loginAs(student);
+      return submitPeerEvaluations({
+        projectId,
+        evaluations: memberIds.map((targetId) => ({
+          targetId,
+          contributionScore: 0,
+          contributionComment: "even",
+          teambuildingScore: 0,
+          teambuildingComment: "even",
+        })),
+      });
+    };
+
+    it("keeps a team's feedback shut until that student has handed in", async () => {
+      const { studentA, studentB, teacher, project, teamA, teamB } =
+        await setupTwoTeams();
+      const projectId = project._id.toString();
+      await scoreTeam(teacher, projectId, teamA._id.toString(), "Nice work");
+
+      loginAs(studentA);
+      const before = await getGroupProject(projectId);
+      expect(before?.myFeedbackUnlock).toEqual({
+        unlocked: false,
+        teamsToScore: 1,
+        peerEvalPending: true,
+      });
+      expect(before?.myTeamFeedback).toEqual([]);
+
+      // Hand in half of it — still shut, and the remaining work is named.
+      await handInPeerEval(studentA, projectId, [
+        studentA._id.toString(),
+        studentB._id.toString(),
+      ]);
+      loginAs(studentA);
+      const halfway = await getGroupProject(projectId);
+      expect(halfway?.myFeedbackUnlock).toEqual({
+        unlocked: false,
+        teamsToScore: 1,
+        peerEvalPending: false,
+      });
+
+      // Hand in the rest: open, without waiting for anybody else.
+      await scoreTeam(studentA, projectId, teamB._id.toString(), "Good demo");
+      loginAs(studentA);
+      const after = await getGroupProject(projectId);
+      expect(after?.myFeedbackUnlock.unlocked).toBe(true);
+      expect(after?.myTeamFeedback).toHaveLength(1);
+
+      // ...and their teammate, who handed in nothing, still sees nothing.
+      loginAs(studentB);
+      const teammate = await getGroupProject(projectId);
+      expect(teammate?.myFeedbackUnlock.unlocked).toBe(false);
+      expect(teammate?.myTeamFeedback).toEqual([]);
+    });
+
+    it("opens to everyone once the project is completed", async () => {
+      const { studentB, teacher, project, teamA } = await setupTwoTeams();
+      const projectId = project._id.toString();
+      await scoreTeam(teacher, projectId, teamA._id.toString(), "Nice work");
+
+      await GroupProject.updateOne(
+        { _id: project._id },
+        { status: "archived" }
+      );
+
+      loginAs(studentB);
+      const details = await getGroupProject(projectId);
+      expect(details?.myFeedbackUnlock.unlocked).toBe(true);
+      expect(details?.myTeamFeedback).toHaveLength(1);
+    });
+
+    it("names teachers and judges, never classmates, and carries no scores", async () => {
+      const { studentA, studentB, studentC, teacher, project, teamA, teamB } =
+        await setupTwoTeams();
+      const projectId = project._id.toString();
+      const teamAId = teamA._id.toString();
+
+      await scoreTeam(teacher, projectId, teamAId, "Teacher says hello");
+      await scoreTeam(studentC, projectId, teamAId, "Classmate says hello");
+
+      loginAs(teacher);
+      const invitation = await createJudgeInvitation({
+        projectId,
+        name: "Judge Judy",
+        focus: "all",
+      });
+      expect(invitation.success).toBe(true);
+      if (!invitation.success) return;
+      await submitJudgeEvaluation({
+        token: invitation.data.token,
+        teamId: teamAId,
+        entries: defaultRubricEntries("Judge says hello"),
+        overallComment: "",
+      });
+
+      await handInPeerEval(studentA, projectId, [
+        studentA._id.toString(),
+        studentB._id.toString(),
+      ]);
+      await scoreTeam(studentA, projectId, teamB._id.toString(), "Good demo");
+
+      loginAs(studentA);
+      const details = await getGroupProject(projectId);
+      const feedback = details?.myTeamFeedback ?? [];
+      expect(feedback).toHaveLength(3);
+
+      const fromTeacher = feedback.find((e) => e.evaluatorKind === "teacher");
+      const fromJudge = feedback.find((e) => e.evaluatorKind === "judge");
+      const fromStudent = feedback.find((e) => e.evaluatorKind === "student");
+      expect(fromTeacher?.evaluatorName).toBe(teacher.name);
+      expect(fromJudge?.evaluatorName).toBe("Judge Judy");
+      // The classmate's name is absent from the payload, not merely unrendered.
+      expect(fromStudent?.evaluatorName).toBeNull();
+      expect(JSON.stringify(feedback)).not.toContain(studentC.name);
+      // No individual scores reach a student, ever.
+      expect(JSON.stringify(feedback)).not.toContain("score");
+    });
+
+    it("holds the scores back until the teachers release them", async () => {
+      const { studentA, studentB, studentC, teacher, project, teamA, teamB } =
+        await setupTwoTeams();
+      const projectId = project._id.toString();
+      const teamAId = teamA._id.toString();
+
+      // Panel 10, audience 4 → 0.8 * 10 + 0.2 * 4 = 8.8 for "product".
+      loginAs(teacher);
+      await submitTeamEvaluation({
+        projectId,
+        teamId: teamAId,
+        entries: [
+          { category: "product", score: 10, comment: "Excellent" },
+          { category: "presentation", score: 10, comment: "" },
+          { category: "qa", score: 10, comment: "" },
+        ],
+        overallComment: "",
+      });
+      loginAs(studentC);
+      await submitTeamEvaluation({
+        projectId,
+        teamId: teamAId,
+        entries: [
+          { category: "product", score: 4, comment: "Rough" },
+          { category: "presentation", score: 4, comment: "" },
+          { category: "qa", score: 4, comment: "" },
+        ],
+        overallComment: "",
+      });
+
+      await handInPeerEval(studentA, projectId, [
+        studentA._id.toString(),
+        studentB._id.toString(),
+      ]);
+      await scoreTeam(studentA, projectId, teamB._id.toString(), "Good demo");
+
+      loginAs(studentA);
+      const beforeRelease = await getGroupProject(projectId);
+      expect(beforeRelease?.myFeedbackUnlock.unlocked).toBe(true);
+      expect(beforeRelease?.myGrade).toBeNull();
+
+      loginAs(teacher);
+      const released = await updateGroupProject({
+        projectId,
+        gradesReleased: true,
+      });
+      expect(released.success).toBe(true);
+
+      loginAs(studentA);
+      const afterRelease = await getGroupProject(projectId);
+      // Released, but nobody confirmed what the peer evaluation came to for
+      // this student: no individual grade, and no falling back to the team's
+      // numbers either.
+      expect(afterRelease?.myGrade).toBeNull();
+      expect(JSON.stringify(afterRelease)).not.toContain("8.8");
+
+      loginAs(teacher);
+      const confirmed = await confirmPeerEvalResult({
+        projectId,
+        studentId: studentA._id.toString(),
+        contribution: 1,
+        teambuilding: 1,
+        note: "",
+      });
+      expect(confirmed.success).toBe(true);
+
+      loginAs(studentA);
+      const withGrade = await getGroupProject(projectId);
+      // P = 3 × 3 − 4 = 5 → factor 1.125 → 8.8 × 1.125 = 9.9
+      expect(withGrade?.myGrade).toEqual({
+        grade: 9.9,
+        categories: { product: 9.9, presentation: 9.9, qa: 9.9 },
+      });
+      // The team's own grade is the student's to infer from nothing: neither
+      // the project grade (8.8) nor the factor (1.125) is in the payload, so
+      // one cannot be divided out of the other.
+      const payload = JSON.stringify(withGrade);
+      expect(payload).not.toContain("8.8");
+      expect(payload).not.toContain("1.125");
+
+      // The teammate who never handed in sees none of it, released or not.
+      loginAs(studentB);
+      const teammate = await getGroupProject(projectId);
+      expect(teammate?.myGrade).toBeNull();
+      expect(JSON.stringify(teammate)).not.toContain("8.8");
+    });
+
+    it("gives the teacher the grade their confirmation would publish", async () => {
+      const { studentA, studentC, teacher, project, teamA } =
+        await setupTwoTeams();
+      const projectId = project._id.toString();
+      const teamAId = teamA._id.toString();
+
+      loginAs(teacher);
+      await submitTeamEvaluation({
+        projectId,
+        teamId: teamAId,
+        entries: [
+          { category: "product", score: 8, comment: "Good" },
+          { category: "presentation", score: 8, comment: "" },
+          { category: "qa", score: 8, comment: "" },
+        ],
+        overallComment: "",
+      });
+      loginAs(studentC);
+      await submitTeamEvaluation({
+        projectId,
+        teamId: teamAId,
+        entries: [
+          { category: "product", score: 8, comment: "Good" },
+          { category: "presentation", score: 8, comment: "" },
+          { category: "qa", score: 8, comment: "" },
+        ],
+        overallComment: "",
+      });
+
+      loginAs(teacher);
+      await confirmPeerEvalResult({
+        projectId,
+        studentId: studentA._id.toString(),
+        // Carried the work, impossible to work with.
+        contribution: 2,
+        teambuilding: -2,
+        note: "Did most of it alone, and that was the problem",
+      });
+
+      const reports = await getEvaluationReports(projectId);
+      const forA = reports?.peerEvals.find(
+        (entry) => entry.userId === studentA._id.toString()
+      );
+      // P = 4 × 0 − 4 = −4 → factor 0.3 → 8 × 0.3 = 2.4
+      expect(forA?.grade?.projectGrade).toBe(8);
+      expect(forA?.grade?.factor).toBe(0.3);
+      expect(forA?.grade?.grade).toBe(2.4);
+
+      // Grades are not released, so the student still sees nothing.
+      loginAs(studentA);
+      const student = await getGroupProject(projectId);
+      expect(student?.myGrade).toBeNull();
+    });
+  });
+
+  describe("showcase quotes", () => {
+    const setupFeedback = async () => {
+      const student = await createDummyUser("user");
+      const outsider = await createDummyUser("user");
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({ status: "active" });
+      const team = await Team.create({
+        project: project._id,
+        name: "Team",
+        members: [student._id],
+      });
+      const other = await Team.create({
+        project: project._id,
+        name: "Other",
+        members: [outsider._id],
+      });
+      loginAs(teacher);
+      await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: team._id.toString(),
+        entries: defaultRubricEntries("Worth quoting"),
+        overallComment: "",
+      });
+      await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: other._id.toString(),
+        entries: defaultRubricEntries("Somebody else's"),
+        overallComment: "",
+      });
+      const mine = await TeamEvaluation.findOne({
+        team: team._id,
+        category: "product",
+      }).lean<{ _id: unknown } | null>();
+      const theirs = await TeamEvaluation.findOne({
+        team: other._id,
+        category: "product",
+      }).lean<{ _id: unknown } | null>();
+      return {
+        student,
+        outsider,
+        team,
+        mineId: String(mine?._id),
+        theirsId: String(theirs?._id),
+        project,
+      };
+    };
+
+    it("publishes what a member chose, and works after the project is completed", async () => {
+      const { student, team, mineId, project } = await setupFeedback();
+      await GroupProject.updateOne(
+        { _id: project._id },
+        { status: "archived" }
+      );
+
+      loginAs(student);
+      const result = await setShowcaseQuotes({
+        teamId: team._id.toString(),
+        evaluationIds: [mineId],
+      });
+      expect(result.success).toBe(true);
+
+      const stored = await Team.findById(team._id).lean<{
+        showcaseQuotes: unknown[];
+      } | null>();
+      expect(stored?.showcaseQuotes.map(String)).toEqual([mineId]);
+    });
+
+    it("refuses another team's feedback, a scoreless row and non-members", async () => {
+      const { student, outsider, team, mineId, theirsId, project } =
+        await setupFeedback();
+
+      loginAs(student);
+      const notMine = await setShowcaseQuotes({
+        teamId: team._id.toString(),
+        evaluationIds: [mineId, theirsId],
+      });
+      expect(notMine.success).toBe(false);
+
+      // A row with no comment has nothing to publish.
+      const commentless = await TeamEvaluation.findOne({
+        team: team._id,
+        category: "presentation",
+      }).lean<{ _id: unknown } | null>();
+      const empty = await setShowcaseQuotes({
+        teamId: team._id.toString(),
+        evaluationIds: [String(commentless?._id)],
+      });
+      expect(empty.success).toBe(false);
+
+      loginAs(outsider);
+      const stranger = await setShowcaseQuotes({
+        teamId: team._id.toString(),
+        evaluationIds: [mineId],
+      });
+      expect(stranger.success).toBe(false);
+
+      expect(project.status).toBe("active");
+      const stored = await Team.findById(team._id).lean<{
+        showcaseQuotes: unknown[];
+      } | null>();
+      expect(stored?.showcaseQuotes).toEqual([]);
     });
   });
 

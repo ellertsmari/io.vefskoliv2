@@ -159,6 +159,11 @@ export const JudgesPanel = ({
               <JudgeName>{judge.name}</JudgeName>
               <Pill>{JUDGE_FOCUS_LABELS[judge.focus]}</Pill>
               {judge.hasSubmitted && <Pill>Has graded ✓</Pill>}
+              {judge.showcaseNameConsent && (
+                <Pill title="This judge agreed to be named when a team publishes one of their comments">
+                  Named on showcase ✓
+                </Pill>
+              )}
               <Actions>
                 <SecondaryButton
                   type="button"

@@ -92,6 +92,7 @@ export async function listJudgeInvitations(
       name: invitation.name,
       focus: invitation.focus,
       token: invitation.token,
+      showcaseNameConsent: !!invitation.showcaseNameConsent,
       hasSubmitted: submittedJudges.has(String(invitation._id)),
     }));
   } catch (error) {

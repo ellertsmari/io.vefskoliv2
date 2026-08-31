@@ -58,6 +58,14 @@ const teamSchema = new Schema({
       updatedAt: { type: Schema.Types.Date, required: true, default: Date.now },
     },
   ],
+  // Which pieces of received feedback the team chose to show on their public
+  // showcase page, as TeamEvaluation ids. The team owns the choice, so it
+  // lives here rather than as a flag on the evaluations themselves — an
+  // evaluation is the evaluator's, the decision to publish it is the team's.
+  // Only comments are ever published, never scores (see getShowcase).
+  showcaseQuotes: [
+    { type: Schema.Types.ObjectId, ref: "TeamEvaluation" },
+  ],
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
 });
 

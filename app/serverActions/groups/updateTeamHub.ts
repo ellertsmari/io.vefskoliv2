@@ -72,7 +72,7 @@ export async function updateTeamHub(
 
       const project = await GroupProject.findById(team.project);
       if (!project || project.status === "archived") {
-        return failure("This project is archived and can no longer be edited");
+        return failure("This project is completed and can no longer be edited");
       }
     }
 

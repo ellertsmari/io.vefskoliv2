@@ -3,10 +3,12 @@ import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
+import { TeamEvaluation } from "models/teamEvaluation";
 import { logError } from "utils/errors";
 import {
   ShowcaseCard,
   ShowcaseIndex,
+  ShowcaseQuote,
   ShowcaseTeam,
   ShowcaseTeamDetail,
 } from "types/groupTypes";
@@ -14,8 +16,12 @@ import { serializeTeam, teamShowcaseConsent } from "./helpers";
 
 // The public showcase: no session required. Students link these pages from
 // portfolios and CVs, so only presentable content is exposed — running or
-// finished projects, teams that have named their project, and never any
-// grades or evaluations.
+// finished projects, and teams that have named their project.
+//
+// Scores never appear here. Comments do, but only the ones a team explicitly
+// chose to publish (`Team.showcaseQuotes`), and attributed only as far as the
+// person who wrote them agreed to: teachers by name, judges by name only if
+// they opted in on their own judging page, classmates never.
 //
 // Because there is no session, member names appear only for members who opted
 // in — see `showcaseConsents` on the Team model. The team photo carries its own
@@ -67,8 +73,57 @@ const toShowcaseCard = (team: any): ShowcaseCard => {
   };
 };
 
+/**
+ * The published comments for one team, in the order the team chose them.
+ *
+ * Anything that no longer qualifies simply drops out: a quote whose evaluation
+ * was deleted, moved to another team, or had its comment emptied. The team's
+ * stored list is never rewritten from here — a read has no business editing.
+ */
+async function showcaseQuotes(
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+  team: any
+): Promise<ShowcaseQuote[]> {
+  const chosen: string[] = (team.showcaseQuotes || []).map(String);
+  if (chosen.length === 0) return [];
+
+  const evaluations = await TeamEvaluation.find({
+    _id: { $in: chosen },
+    team: team._id,
+  })
+    .populate("evaluator", "name role")
+    .populate("judge", "name showcaseNameConsent")
+    .lean();
+
+  /* eslint-disable @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+  const byId = new Map((evaluations as any[]).map((row) => [String(row._id), row]));
+  const quotes: ShowcaseQuote[] = [];
+  for (const id of chosen) {
+    const row = byId.get(id);
+    const comment = (row?.comment || "").trim();
+    if (!comment) continue;
+    quotes.push({ comment, attribution: attributionFor(row) });
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  return quotes;
+}
+
+/** How much of the evaluator's identity the quote may carry. */
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
-const toShowcaseTeam = (team: any): ShowcaseTeam => {
+const attributionFor = (row: any): string => {
+  if (row.judge) {
+    return row.judge.showcaseNameConsent && row.judge.name
+      ? `${row.judge.name}, industry judge`
+      : "An industry judge";
+  }
+  if (row.evaluator?.role === "teacher") {
+    return row.evaluator.name ? `${row.evaluator.name}, teacher` : "A teacher";
+  }
+  return "Another student";
+};
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+const toShowcaseTeam = (team: any, quotes: ShowcaseQuote[]): ShowcaseTeam => {
   const serialized = serializeTeam(team);
   const consent = teamShowcaseConsent(team);
   return {
@@ -82,6 +137,7 @@ const toShowcaseTeam = (team: any): ShowcaseTeam => {
     teamPhoto: serialized.teamPhoto,
     logo: serialized.logo,
     memberNames: publicMemberNames(team, consent),
+    quotes,
   };
 };
 
@@ -156,7 +212,11 @@ export async function getShowcaseTeam(
     await connectToDatabase();
     const team = await Team.findById(teamId)
       .populate("members", "name")
-      .lean<{ projectName?: string; project: ObjectId } | null>();
+      .lean<{
+        projectName?: string;
+        project: ObjectId;
+        showcaseQuotes?: ObjectId[];
+      } | null>();
     if (!team || !team.projectName) return null;
 
     const project = await GroupProject.findById(
@@ -166,7 +226,7 @@ export async function getShowcaseTeam(
     if (!project || project.status === "formation") return null;
 
     return {
-      team: toShowcaseTeam(team),
+      team: toShowcaseTeam(team, await showcaseQuotes(team)),
       project: {
         title: project.title,
         module: project.module ?? null,

@@ -1,8 +1,10 @@
 "use server";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../mongoose-connector";
+import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { PeerEvaluation } from "models/peerEvaluation";
+import { PeerEvaluationResult } from "models/peerEvaluationResult";
 import { TeamEvaluation } from "models/teamEvaluation";
 import { logError } from "utils/errors";
 import {
@@ -10,8 +12,19 @@ import {
   PeerEvalStudentReport,
   TeamEvalReport,
 } from "types/groupTypes";
+import {
+  clampGrade,
+  peerGradeFactor,
+  projectGradeFromScores,
+  round1,
+  rubricForProject,
+} from "constants/groupWork";
 import { isTeacher, requireSession, serializeTeam } from "./helpers";
-import { round1, summarizeTeamEvaluations } from "./teamEvalShared";
+import {
+  aggregatePeerEvaluations,
+  unbalancedEvaluators,
+} from "./peerEvalShared";
+import { summarizeTeamEvaluations } from "./teamEvalShared";
 
 export async function getEvaluationReports(
   projectId: string
@@ -23,7 +36,8 @@ export async function getEvaluationReports(
 
   try {
     await connectToDatabase();
-    const [teams, peerEvals, teamEvals] = await Promise.all([
+    const [project, teams, peerEvals, teamEvals, peerResults] = await Promise.all([
+      GroupProject.findById(projectId).lean<GroupProjectLean | null>(),
       Team.find({ project: projectId })
         .populate("members", "name avatarUrl")
         .lean(),
@@ -34,6 +48,9 @@ export async function getEvaluationReports(
       TeamEvaluation.find({ project: projectId })
         .populate("evaluator", "name role")
         .populate("judge", "name")
+        .lean(),
+      PeerEvaluationResult.find({ project: projectId })
+        .populate("confirmedBy", "name")
         .lean(),
     ]);
 
@@ -50,14 +67,35 @@ export async function getEvaluationReports(
           teamName: team.name,
           contributionAvg: null,
           teambuildingAvg: null,
+          combinedAvg: null,
           receivedCount: 0,
           givenCount: 0,
+          givenUnbalanced: false,
           received: [],
+          result: null,
+          grade: null,
         });
       }
     }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
+    const peerRows = (peerEvals as any[]).map((evaluation) => ({
+      evaluatorId: evaluation.evaluator?._id?.toString() ?? "",
+      targetId: evaluation.target?._id?.toString() ?? "",
+      contributionScore: evaluation.contributionScore,
+      teambuildingScore: evaluation.teambuildingScore,
+    }));
+    const aggregates = aggregatePeerEvaluations(peerRows);
+    // Evaluations stored before the balance rule existed. They are left alone
+    // and flagged, never rewritten.
+    const unbalanced = unbalancedEvaluators(peerRows);
+    const resultByStudent = new Map(
+      (peerResults as any[]).map((result) => [
+        result.student.toString(),
+        result,
+      ])
+    );
+
     for (const evaluation of peerEvals as any[]) {
       const targetId = evaluation.target?._id?.toString();
       const evaluatorId = evaluation.evaluator?._id?.toString();
@@ -76,6 +114,7 @@ export async function getEvaluationReports(
           teambuildingScore: evaluation.teambuildingScore,
           teambuildingComment: evaluation.teambuildingComment,
           isSelf: !!targetId && targetId === evaluatorId,
+          evaluatorUnbalanced: !!evaluatorId && unbalanced.has(evaluatorId),
         });
       }
       const evaluatorReport = evaluatorId
@@ -84,15 +123,26 @@ export async function getEvaluationReports(
       if (evaluatorReport) evaluatorReport.givenCount += 1;
     }
     for (const report of peerReports.values()) {
-      if (report.receivedCount > 0) {
-        report.contributionAvg = round1(
-          report.received.reduce((sum, r) => sum + r.contributionScore, 0) /
-            report.receivedCount
-        );
-        report.teambuildingAvg = round1(
-          report.received.reduce((sum, r) => sum + r.teambuildingScore, 0) /
-            report.receivedCount
-        );
+      const aggregate = aggregates.get(report.userId);
+      if (aggregate) {
+        report.contributionAvg = aggregate.contributionAvg;
+        report.teambuildingAvg = aggregate.teambuildingAvg;
+        report.combinedAvg = aggregate.combinedAvg;
+      }
+      report.givenUnbalanced = unbalanced.has(report.userId);
+
+      const stored = resultByStudent.get(report.userId);
+      if (stored) {
+        report.result = {
+          contribution: stored.contribution,
+          teambuilding: stored.teambuilding,
+          note: stored.note || "",
+          confirmedByName: stored.confirmedBy?.name || "Unknown",
+          confirmedAt: new Date(stored.confirmedAt).toISOString(),
+          basedOnContribution: stored.basedOnContribution ?? null,
+          basedOnTeambuilding: stored.basedOnTeambuilding ?? null,
+          basedOnCount: stored.basedOnCount ?? null,
+        };
       }
     }
 
@@ -116,6 +166,34 @@ export async function getEvaluationReports(
     for (const [teamId, categories] of Object.entries(summaries)) {
       const report = teamReports.get(teamId);
       if (report) report.categories = categories;
+    }
+
+    // What each confirmed student's grade comes to. Teachers see it before
+    // release — this is exactly what pressing the button would publish.
+    for (const report of peerReports.values()) {
+      const confirmed = report.result;
+      if (!confirmed) continue;
+      const teamScores = summaries[report.teamId];
+      const projectGrade = projectGradeFromScores(project?.rubric, teamScores);
+      if (projectGrade === null) continue;
+
+      const factor = peerGradeFactor(
+        confirmed.contribution,
+        confirmed.teambuilding
+      );
+      const categories: Record<string, number> = {};
+      for (const item of rubricForProject(project?.rubric)) {
+        const avg = teamScores?.[item.key]?.avg;
+        if (typeof avg === "number") {
+          categories[item.key] = round1(avg * factor);
+        }
+      }
+      report.grade = {
+        projectGrade: round1(projectGrade),
+        factor: Math.round(factor * 1000) / 1000,
+        grade: clampGrade(projectGrade * factor),
+        categories,
+      };
     }
     for (const evaluation of teamEvals as any[]) {
       const report = teamReports.get(evaluation.team.toString());

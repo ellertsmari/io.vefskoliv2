@@ -136,6 +136,7 @@ const UpdateProjectSchema = z.object({
   rubric: z.array(rubricItemSchema).max(50).optional(),
   peerEvalOpen: z.boolean().optional(),
   teamEvalOpen: z.boolean().optional(),
+  gradesReleased: z.boolean().optional(),
 });
 
 export type UpdateProjectData = Omit<

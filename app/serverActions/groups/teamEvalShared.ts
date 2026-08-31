@@ -7,6 +7,7 @@ import {
   OVERALL_CATEGORY,
   RubricItem,
   requiredRubricKeys,
+  round1,
   rubricForProject,
 } from "constants/groupWork";
 import { TeamEvalSummary, TeamEvaluationEntry } from "types/groupTypes";
@@ -77,8 +78,6 @@ export function validateTeamEvalSubmission({
 // Per the project docs, the "panel" (instructors + invited industry
 // professionals) carries 80% of the grade and the student audience 20%.
 export const PANEL_WEIGHT = 0.8;
-
-export const round1 = (value: number) => Math.round(value * 10) / 10;
 
 /** Shape of a lean TeamEvaluation row as the grouping/summary helpers need it. */
 export type LeanEvaluationRow = {

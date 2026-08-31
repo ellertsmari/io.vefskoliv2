@@ -10,6 +10,8 @@ import {
 } from "../__mocks__/mongoHandler";
 import { GroupProject } from "models/groupProject";
 import { Team } from "models/team";
+import { TeamEvaluation } from "models/teamEvaluation";
+import { JudgeInvitation } from "models/judgeInvitation";
 import { getShowcase, getShowcaseTeam } from "serverActions/groups/getShowcase";
 import { setShowcaseConsent } from "serverActions/groups/setShowcaseConsent";
 import { removeTeamImage } from "serverActions/groups/removeTeamImage";
@@ -331,6 +333,112 @@ describe("public showcase", () => {
 
       expect((await getShowcase()).projects).toHaveLength(0);
       expect(await getShowcaseTeam(team._id.toString())).toBeNull();
+    });
+  });
+
+  describe("published quotes", () => {
+    const quoteSetup = async () => {
+      const member = await createDummyUser("user");
+      const project = await createProject();
+      const team = await createTeamWith(project._id, [member]);
+      const teacher = await createDummyUser("teacher");
+      return { member, project, team, teacher };
+    };
+
+    const publish = async (teamId: unknown, ids: unknown[]) =>
+      Team.updateOne({ _id: teamId }, { showcaseQuotes: ids });
+
+    it("names a teacher, keeps classmates anonymous and never shows a score", async () => {
+      const { member, project, team, teacher } = await quoteSetup();
+      const classmate = await createDummyUser("user");
+
+      const fromTeacher = await TeamEvaluation.create({
+        project: project._id,
+        team: team._id,
+        evaluator: teacher._id,
+        category: "product",
+        score: 9,
+        comment: "Genuinely impressive work",
+      });
+      const fromClassmate = await TeamEvaluation.create({
+        project: project._id,
+        team: team._id,
+        evaluator: classmate._id,
+        category: "presentation",
+        score: 7,
+        comment: "Clear and well rehearsed",
+      });
+      await publish(team._id, [fromTeacher._id, fromClassmate._id]);
+
+      const detail = await getShowcaseTeam(team._id.toString());
+      expect(detail?.team.quotes).toEqual([
+        {
+          comment: "Genuinely impressive work",
+          attribution: `${teacher.name}, teacher`,
+        },
+        {
+          comment: "Clear and well rehearsed",
+          attribution: "Another student",
+        },
+      ]);
+      // No score, and no classmate's name, anywhere in what is served.
+      const payload = JSON.stringify(detail);
+      expect(payload).not.toContain(classmate.name);
+      expect(payload).not.toContain("score");
+      expect(member.name).toBeTruthy();
+    });
+
+    it("names a judge only after they have opted in", async () => {
+      const { project, team, teacher } = await quoteSetup();
+      const judge = await JudgeInvitation.create({
+        project: project._id,
+        name: "Judge Judy",
+        focus: "all",
+        token: "judge-token-for-showcase-test",
+        createdBy: teacher._id,
+      });
+      const fromJudge = await TeamEvaluation.create({
+        project: project._id,
+        team: team._id,
+        judge: judge._id,
+        category: "product",
+        score: 8,
+        comment: "I would hire this team",
+      });
+      await publish(team._id, [fromJudge._id]);
+
+      const anonymous = await getShowcaseTeam(team._id.toString());
+      expect(anonymous?.team.quotes[0].attribution).toBe("An industry judge");
+
+      await JudgeInvitation.updateOne(
+        { _id: judge._id },
+        { showcaseNameConsent: true }
+      );
+      const named = await getShowcaseTeam(team._id.toString());
+      expect(named?.team.quotes[0].attribution).toBe(
+        "Judge Judy, industry judge"
+      );
+    });
+
+    it("drops a quote whose comment is gone, without touching the team's list", async () => {
+      const { project, team, teacher } = await quoteSetup();
+      const evaluation = await TeamEvaluation.create({
+        project: project._id,
+        team: team._id,
+        evaluator: teacher._id,
+        category: "product",
+        score: 9,
+        comment: "Was worth quoting",
+      });
+      await publish(team._id, [evaluation._id]);
+      await TeamEvaluation.updateOne({ _id: evaluation._id }, { comment: "" });
+
+      const detail = await getShowcaseTeam(team._id.toString());
+      expect(detail?.team.quotes).toEqual([]);
+      const stored = await Team.findById(team._id).lean<{
+        showcaseQuotes: unknown[];
+      } | null>();
+      expect(stored?.showcaseQuotes).toHaveLength(1);
     });
   });
 });

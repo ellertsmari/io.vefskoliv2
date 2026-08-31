@@ -61,6 +61,15 @@ const groupProjectSchema = new Schema({
   rubric: { type: [rubricItemSchema], default: [] },
   peerEvalOpen: { type: Schema.Types.Boolean, required: true, default: false },
   teamEvalOpen: { type: Schema.Types.Boolean, required: true, default: false },
+  // Written feedback reaches a student as soon as they have handed in their
+  // own evaluations; the scores wait for a teacher to release them, which is a
+  // separate decision from the project being over (the evaluation gates stay
+  // open after that, for whoever is late).
+  gradesReleased: {
+    type: Schema.Types.Boolean,
+    required: true,
+    default: false,
+  },
   // Which automatic transitions have already fired. Each fires exactly once,
   // so a teacher can override the result (close a gate, revert the status)
   // without the next read re-applying it.
@@ -103,6 +112,7 @@ export type GroupProjectLean = {
   }[];
   peerEvalOpen: boolean;
   teamEvalOpen: boolean;
+  gradesReleased?: boolean;
   autoApplied?: {
     activated?: boolean;
     teamEvalOpened?: boolean;

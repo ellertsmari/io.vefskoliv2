@@ -103,6 +103,7 @@ export function serializeProject(
       discipline: item.discipline || "general",
     })),
     peerEvalOpen: !!project.peerEvalOpen,
+    gradesReleased: !!project.gradesReleased,
     teamEvalOpen: !!project.teamEvalOpen,
   };
 }

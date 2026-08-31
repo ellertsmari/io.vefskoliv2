@@ -73,7 +73,7 @@ The group must create a website prototype with **Figma, HTML and CSS** (JavaScri
 3. **Programming (5 min):** tech stack, live code
 4. **Q&A (5 min)**
 
-Grades come from the industry professionals and instructors. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. That evaluation is **advisory**: your teachers read it when they decide each student's individual grade, but no score in it becomes a grade on its own.`,
+Grades come from the industry professionals and instructors. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. The scores are **relative**: each one says how that person did compared with the rest of the team, so they have to add up to zero or less — marking somebody up means marking somebody else down, and a team cannot be rated above its own average. If everyone pulled their weight equally, everyone is Average. No score you give becomes anybody's grade by itself: your teachers read all of it and confirm one contribution figure and one teamwork figure for each student. Those confirmed figures adjust the team's project grade into each person's own grade — an average team member keeps the project grade, and from there it runs up to +30% and down to -70%. Once you have handed in your own evaluations you can read the written feedback your team received, without waiting for the rest of the class; your grade appears when your teachers release it.`,
     rubric: RUBRICS["1"],
   },
   {
@@ -102,7 +102,7 @@ Each group creates an **Interactive Web Application** using fundamental web tech
 3. **Programming (10 min):** file structure, variable names, documentation, live code, GitHub (branches, commits, code review)
 4. **Q&A (8 min)**
 
-Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. That evaluation is **advisory**: your teachers read it when they decide each student's individual grade, but no score in it becomes a grade on its own. Finish with a retro meeting.`,
+Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. The scores are **relative**: each one says how that person did compared with the rest of the team, so they have to add up to zero or less — marking somebody up means marking somebody else down, and a team cannot be rated above its own average. If everyone pulled their weight equally, everyone is Average. No score you give becomes anybody's grade by itself: your teachers read all of it and confirm one contribution figure and one teamwork figure for each student. Those confirmed figures adjust the team's project grade into each person's own grade — an average team member keeps the project grade, and from there it runs up to +30% and down to -70%. Once you have handed in your own evaluations you can read the written feedback your team received, without waiting for the rest of the class; your grade appears when your teachers release it. Finish with a retro meeting.`,
     rubric: RUBRICS["3"],
   },
   {
@@ -133,7 +133,7 @@ Each group creates an application which **connects to other applications using A
 3. **Programming (10 min):** TypeScript & API, accessibility walkthrough (keyboard only, no mouse), naming convention, documentation, live code, GitHub (branches, commits, code review)
 4. **Q&A (8 min)**
 
-Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. That evaluation is **advisory**: your teachers read it when they decide each student's individual grade, but no score in it becomes a grade on its own. A common retro meeting is held after the presentations.`,
+Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. The scores are **relative**: each one says how that person did compared with the rest of the team, so they have to add up to zero or less — marking somebody up means marking somebody else down, and a team cannot be rated above its own average. If everyone pulled their weight equally, everyone is Average. No score you give becomes anybody's grade by itself: your teachers read all of it and confirm one contribution figure and one teamwork figure for each student. Those confirmed figures adjust the team's project grade into each person's own grade — an average team member keeps the project grade, and from there it runs up to +30% and down to -70%. Once you have handed in your own evaluations you can read the written feedback your team received, without waiting for the rest of the class; your grade appears when your teachers release it. A common retro meeting is held after the presentations.`,
     rubric: RUBRICS["4"],
   },
   {
@@ -168,7 +168,7 @@ The group must **contribute to an open source project** and add features and/or 
 2. **Programming (15 min):** contribution scope, live coding, interactive demonstration (audience tests the API)
 3. **Q&A (10 min)**
 
-Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. That evaluation is **advisory**: your teachers read it when they decide each student's individual grade, but no score in it becomes a grade on its own.`,
+Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. The scores are **relative**: each one says how that person did compared with the rest of the team, so they have to add up to zero or less — marking somebody up means marking somebody else down, and a team cannot be rated above its own average. If everyone pulled their weight equally, everyone is Average. No score you give becomes anybody's grade by itself: your teachers read all of it and confirm one contribution figure and one teamwork figure for each student. Those confirmed figures adjust the team's project grade into each person's own grade — an average team member keeps the project grade, and from there it runs up to +30% and down to -70%. Once you have handed in your own evaluations you can read the written feedback your team received, without waiting for the rest of the class; your grade appears when your teachers release it.`,
     rubric: RUBRICS["5"],
   },
   {
@@ -207,7 +207,7 @@ First to teachers for feedback and grades, then fine-tuned for industry professi
 3. **Programming (10 min):** technology, live coding
 4. **Q&A (10 min)**
 
-Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. That evaluation is **advisory**: your teachers read it when they decide each student's individual grade, but no score in it becomes a grade on its own.`,
+Grade weight: guest industry professionals and instructors **80%**, audience **20%**. After the presentation each student fills out the peer evaluation, rating themselves and every teammate on contribution and teamwork. The scores are **relative**: each one says how that person did compared with the rest of the team, so they have to add up to zero or less — marking somebody up means marking somebody else down, and a team cannot be rated above its own average. If everyone pulled their weight equally, everyone is Average. No score you give becomes anybody's grade by itself: your teachers read all of it and confirm one contribution figure and one teamwork figure for each student. Those confirmed figures adjust the team's project grade into each person's own grade — an average team member keeps the project grade, and from there it runs up to +30% and down to -70%. Once you have handed in your own evaluations you can read the written feedback your team received, without waiting for the rest of the class; your grade appears when your teachers release it.`,
     rubric: RUBRICS["6"],
   },
 ];

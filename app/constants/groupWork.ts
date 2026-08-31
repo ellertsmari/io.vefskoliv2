@@ -126,10 +126,14 @@ export function techStackOptionsForModule(
 
 export type GroupProjectStatus = "formation" | "active" | "archived";
 
+// The stored value stays "archived" — it is the enum on every project document
+// ever written — but nothing user-facing says so any more: the state means the
+// project is over, not that it is shut. Evaluations are still accepted, for
+// whoever is late.
 export const PROJECT_STATUS_LABELS: Record<GroupProjectStatus, string> = {
   formation: "Formation",
   active: "Active",
-  archived: "Archived",
+  archived: "Completed",
 };
 
 export const TEAM_LINK_KEYS = [
@@ -153,6 +157,10 @@ export const TEAM_LINK_LABELS: Record<TeamLinkKey, string> = {
 // Team images are uploaded via utils/imageUpload (browser-compressed data
 // URLs stored inline) — they'll feed the future showcase page.
 export const MAX_TEAM_IMAGES = 3;
+
+// How many pieces of feedback a team may publish on its showcase page. A
+// handful reads as a highlight; the whole pile reads as a transcript.
+export const MAX_SHOWCASE_QUOTES = 6;
 
 // Peer evaluation: students score each teammate on two axes, -2..+2.
 export const PEER_SCORE_VALUES = [-2, -1, 0, 1, 2] as const;
@@ -207,6 +215,155 @@ export const TEAMBUILDING_SCORES: Record<number, PeerScoreInfo> = {
     emoji: "🫂",
   },
 };
+
+// Peer evaluation is a *relative* judgement: every score says how one member
+// did compared with the rest of the team, so a team cannot be rated above its
+// own average. The scores one evaluator gives on one axis must therefore add
+// up to zero or less — marking somebody up is paid for by marking somebody
+// else down. Rating the whole team down stays allowed: the failure mode this
+// guards against is inflation ("everyone was great, me most of all"), and a
+// student who marks everybody but themselves down is what the teacher's
+// review of the result is for.
+export const PEER_BALANCE_MAX = 0;
+
+// The confirmed result a teacher records per student sits on the same scale as
+// the scores it summarizes, in tenths — one figure per axis.
+export const PEER_RESULT_MIN = -2;
+export const PEER_RESULT_MAX = 2;
+export const PEER_RESULT_STEP = 0.1;
+
+/**
+ * How the confirmed peer figures turn a team's project grade into one
+ * student's individual grade — the calculation Vefskólinn already runs in the
+ * SustainableIsland LMS (`API/Controllers/peerEvalController.js`), kept
+ * identical on purpose so the two courses grade the same way:
+ *
+ *     P     = (contribution + 2) * (teambuilding + 2) - 4     // -4 … +12
+ *     scale = P >= 0 ? 0.025 : 0.175                          // +30% / -70%
+ *     grade = (P * scale + 1) * projectGrade
+ *
+ * The two axes multiply rather than average, which is the point: somebody who
+ * carried the code but was impossible to work with (+2 and -2) lands on P = -4
+ * and keeps 30% of the grade, where averaging the axes would have called them
+ * exactly average and changed nothing.
+ *
+ * Only teacher-confirmed figures ever reach this function. What the team wrote
+ * is advice for the teacher setting them.
+ */
+export const PEER_BOOST_SCALE = 0.025;
+export const PEER_PENALTY_SCALE = 0.175;
+
+export function peerGradeFactor(
+  contribution: number,
+  teambuilding: number
+): number {
+  const p = (contribution + 2) * (teambuilding + 2) - 4;
+  return p * (p >= 0 ? PEER_BOOST_SCALE : PEER_PENALTY_SCALE) + 1;
+}
+
+/**
+ * The team's project grade: the mean of its rubric rows, each already blended
+ * 80/20 between the panel and the student audience. Rows nobody scored are
+ * left out rather than counted as zero.
+ */
+export function projectGradeFromScores(
+  rubric: RubricItem[] | null | undefined,
+  scores: Record<string, { avg: number }> | null | undefined
+): number | null {
+  if (!scores) return null;
+  const scored = rubricForProject(rubric)
+    .map((item) => scores[item.key]?.avg)
+    .filter((avg): avg is number => typeof avg === "number");
+  if (scored.length === 0) return null;
+  return scored.reduce((sum, avg) => sum + avg, 0) / scored.length;
+}
+
+/**
+ * A finished grade, on the rubric's own 0–10 scale.
+ *
+ * The clamp happens here and nowhere earlier. Capping each rubric row first
+ * would quietly take the boost away from a team that scored 10 on one row and
+ * middling on the rest — the student would lose the credit on the perfect row
+ * and keep the shortfall everywhere else — so rows stay uncapped and only the
+ * result is held to 10.
+ */
+export function clampGrade(value: number): number {
+  return round1(Math.min(EVALUATION_MAX_SCORE, Math.max(0, value)));
+}
+
+/** One decimal place — the precision every peer/team average is shown at. */
+export const round1 = (value: number) => Math.round(value * 10) / 10;
+
+export const PEER_AXIS_LABELS = {
+  contribution: "Contribution",
+  teambuilding: "Teamwork",
+} as const;
+
+export type PeerAxis = keyof typeof PEER_AXIS_LABELS;
+
+/**
+ * Running total of one axis. Unanswered scores count as zero so the form can
+ * show a live balance while it is still being filled in.
+ */
+export const peerBalance = (scores: (number | null | undefined)[]): number =>
+  scores.reduce<number>((total, score) => total + (score ?? 0), 0);
+
+/** What is wrong with one axis' balance, or null when it is within budget. */
+export function peerBalanceMessage(
+  axis: PeerAxis,
+  balance: number
+): string | null {
+  if (balance <= PEER_BALANCE_MAX) return null;
+  const points = balance === 1 ? "1 point" : `${balance} points`;
+  return `${PEER_AXIS_LABELS[axis]} scores add up to +${balance}. A team cannot be rated above its own average — take ${points} back.`;
+}
+
+export type PeerEvaluationInput = {
+  targetId: string;
+  contributionScore: number;
+  teambuildingScore: number;
+};
+
+/**
+ * Cross-field rules for one student's peer evaluation: every member of the
+ * team is scored exactly once, the evaluator included, and neither axis adds
+ * up to more than zero. Returns an error message, or null when valid.
+ *
+ * Shared by the form and the server action, so both say the same thing and the
+ * rule holds where it counts rather than only where it is displayed.
+ */
+export function validatePeerEvaluationSubmission({
+  entries,
+  memberIds,
+}: {
+  entries: PeerEvaluationInput[];
+  memberIds: string[];
+}): string | null {
+  const members = new Set(memberIds);
+  const scored = new Set<string>();
+  for (const entry of entries) {
+    if (scored.has(entry.targetId)) {
+      return "Give each teammate a single score, not several";
+    }
+    scored.add(entry.targetId);
+    if (!members.has(entry.targetId)) {
+      return "You can only evaluate members of your own team";
+    }
+  }
+  if (memberIds.some((id) => !scored.has(id))) {
+    return "Evaluate everyone on the team, yourself included";
+  }
+  return (
+    peerBalanceMessage(
+      "contribution",
+      peerBalance(entries.map((entry) => entry.contributionScore))
+    ) ??
+    peerBalanceMessage(
+      "teambuilding",
+      peerBalance(entries.map((entry) => entry.teambuildingScore))
+    )
+  );
+}
 
 // Team (presentation) evaluation: 0..10 per category.
 export const EVALUATION_MIN_SCORE = 0;

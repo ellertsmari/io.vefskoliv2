@@ -12,6 +12,7 @@ import {
   handleActionError,
   successNoData,
 } from "utils/errors";
+import { validatePeerEvaluationSubmission } from "constants/groupWork";
 import { applyLifecycle } from "./lifecycle";
 import { objectIdSchema, requireSession } from "./helpers";
 
@@ -82,14 +83,18 @@ export async function submitPeerEvaluations(
     // self-evaluation is just another row on the same two axes. It counts in
     // the averages like any other, because those averages advise the teacher's
     // grade rather than being one.
-    const memberIds = new Set(
-      myTeam.members.map((member: ObjectId) => member.toString())
+    //
+    // The whole team has to be scored in one submission: the balance rule is
+    // meaningless over a subset, and without it an evaluation of nobody but
+    // oneself would pass.
+    const memberIds = myTeam.members.map((member: ObjectId) =>
+      member.toString()
     );
-    for (const evaluation of evaluations) {
-      if (!memberIds.has(evaluation.targetId)) {
-        return failure("You can only evaluate members of your own team");
-      }
-    }
+    const ruleError = validatePeerEvaluationSubmission({
+      entries: evaluations,
+      memberIds,
+    });
+    if (ruleError) return failure(ruleError);
 
     await Promise.all(
       evaluations.map((evaluation) =>

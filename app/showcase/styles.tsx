@@ -429,6 +429,31 @@ export const MemberChip = styled.span`
   font-weight: 600;
 `;
 
+/**
+ * A published quote. Only comments a team chose appear here, never scores, and
+ * the attribution carries only as much of the writer's identity as they agreed
+ * to (see getShowcase).
+ */
+export const QuoteList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+`;
+
+export const Quote = styled.blockquote`
+  margin: 0;
+  padding: 0 0 0 1rem;
+  border-left: 3px solid var(--primary-black-10);
+  font-size: var(--text-base);
+  line-height: 1.6;
+`;
+
+export const QuoteAttribution = styled.footer`
+  margin-top: 0.4rem;
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
+`;
+
 export const ContextNote = styled.p`
   text-align: center;
   color: var(--primary-black-60);

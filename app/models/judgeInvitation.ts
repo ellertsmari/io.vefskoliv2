@@ -26,6 +26,15 @@ const judgeInvitationSchema = new Schema({
     default: "all",
   },
   token: { type: Schema.Types.String, required: true, unique: true },
+  // Opt-in, set by the judge themselves on their own page: may a team name
+  // them when they publish one of their comments on the public showcase? Off
+  // means the quote reads "An industry judge". Nobody can answer this for
+  // them, exactly like the students' own showcase consent.
+  showcaseNameConsent: {
+    type: Schema.Types.Boolean,
+    required: true,
+    default: false,
+  },
   createdBy: { type: Schema.Types.ObjectId, required: true, ref: "User" },
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
 });
