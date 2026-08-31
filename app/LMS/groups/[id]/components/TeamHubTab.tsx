@@ -424,6 +424,13 @@ export const TeamHubTab = ({
 
   return (
     <Layout>
+      {/* Once there is feedback (or a grade), it is the reason a student opens
+          this tab at all — so it goes above the hub form they spent the
+          project filling in, rather than below it where it needs finding. */}
+      {team._id === details.myTeamId && (
+        <TeamFeedbackSection details={details} teamId={team._id} />
+      )}
+
       <Card>
         <SectionTitle>Team members</SectionTitle>
         <Members>
@@ -585,10 +592,6 @@ export const TeamHubTab = ({
           )}
         </Layout>
       </form>
-
-      {team._id === details.myTeamId && (
-        <TeamFeedbackSection details={details} teamId={team._id} />
-      )}
     </Layout>
   );
 };
