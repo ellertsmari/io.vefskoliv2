@@ -365,6 +365,18 @@ export function validatePeerEvaluationSubmission({
   );
 }
 
+/**
+ * How much of a team's score comes from the panel (teachers and invited
+ * industry judges) rather than the student audience. Per project, because it
+ * changes over the course: in Module 1 the students are two weeks in and do
+ * not feel ready to put a number on each other's work — the point of them
+ * scoring at all is the written feedback and getting used to the exercise — so
+ * that project runs at 100/0. By the later modules they are comfortable owning
+ * a fifth of the grade, which is what the project documents describe.
+ */
+export const DEFAULT_PANEL_WEIGHT = 0.8;
+export const PANEL_WEIGHT_PRESETS = [1, 0.8, 0.7] as const;
+
 // Team (presentation) evaluation: 0..10 per category.
 export const EVALUATION_MIN_SCORE = 0;
 export const EVALUATION_MAX_SCORE = 10;

@@ -11,7 +11,7 @@ in two stages, for two different reasons.
 | | When | What appears | Who decides |
 |---|---|---|---|
 | **Written feedback** | The moment *that student* has handed in their own evaluations | Every comment their team received | The student, by finishing |
-| **Grades** | When a teacher presses **Release grades**, and only for students whose peer figures they have confirmed | Their own grade, and what each rubric row came to for them. Never the team's grade | The teachers |
+| **Grades** | When a teacher completes the project, and only for students whose peer figures they have confirmed | Their own grade, and what each rubric row came to for them. Never the team's grade | The teachers |
 
 The first is a reward for finishing: a student who has handed in does not wait
 for the classmate who hasn't. The second is a decision teachers were already
@@ -56,6 +56,26 @@ Marking a project **Completed** still opens the written feedback to everybody
 on a team, including whoever never handed in. Nothing a student can see today
 is taken away, and the incentive still works, because the reward is seeing it
 *earlier*, not exclusively.
+
+## Completing and publishing are one action
+
+"Complete project & publish grades" is a single button, and it closes team
+evaluation at the same moment. The three go together for one reason: **a grade
+that can still move is worse than a grade that has not arrived yet.** While
+team evaluation is open, one late score changes a team's project grade, which
+changes every published individual grade in that team — students would watch
+their own grade drift for no reason they can see.
+
+Peer evaluation stays open. A late peer evaluation changes only the advisory
+averages, never a confirmed figure, so it cannot move a published grade on its
+own — and it still lets a latecomer hand in. Written feedback never waited for
+any of this: pedagogically it is the part that matters most and the part that
+should arrive while the presentation is still fresh, so it opens for each
+student the day they hand in. The grades can wait until everything is in and
+the teachers have decided.
+
+Reopening a project un-publishes the grades and makes the hubs editable again;
+turning team evaluation back on stays a separate, deliberate switch.
 
 ## "Archived" is now "Completed"
 
@@ -120,7 +140,8 @@ reversible at any time, and teachers can see who agreed from the judges panel.
 |---|---|
 | Unlock rule, feedback payload, grades | `app/serverActions/groups/getGroupProject.ts` |
 | The grade arithmetic | `peerGradeFactor` / `projectGradeFromScores` / `clampGrade` in `app/constants/groupWork.ts` |
-| Release switch, completing a project | `app/LMS/groups/[id]/components/ProjectSettings.tsx` |
+| Completing + publishing, grade weighting | `app/LMS/groups/[id]/components/ProjectSettings.tsx` |
+| Judge focus, re-scoped after the fact | `updateJudgeFocus` + `JudgesPanel.tsx` |
 | Locked card, grouped feedback, quote picker | `app/LMS/groups/[id]/components/TeamHubTab.tsx` |
 | Quote choice | `app/serverActions/groups/setShowcaseQuotes.ts` |
 | Judge consent | `setJudgeShowcaseConsent` in `app/serverActions/groups/judgeActions.ts` |

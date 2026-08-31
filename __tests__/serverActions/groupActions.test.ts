@@ -30,6 +30,8 @@ import {
 } from "serverActions/groups/managePeerEvalResults";
 import { PeerEvaluationResult } from "models/peerEvaluationResult";
 import { setShowcaseQuotes } from "serverActions/groups/setShowcaseQuotes";
+import { updateJudgeFocus } from "serverActions/groups/manageJudges";
+import { summarizeTeamEvaluations } from "serverActions/groups/teamEvalShared";
 import { submitTeamEvaluation } from "serverActions/groups/submitTeamEvaluation";
 import { dueLifecycleUpdates } from "serverActions/groups/lifecycle";
 import {
@@ -1354,6 +1356,249 @@ describe("group work server actions", () => {
         showcaseQuotes: unknown[];
       } | null>();
       expect(stored?.showcaseQuotes).toEqual([]);
+    });
+  });
+
+  describe("panel / audience weighting", () => {
+    const rubric = [
+      { key: "product", title: "Product", description: "", discipline: "general" as const },
+      { key: "code-quality", title: "Code", description: "", discipline: "code" as const },
+      { key: "ui", title: "UI", description: "", discipline: "design" as const },
+    ];
+    const team = { toString: () => "team-1" };
+
+    it("blends panel and audience at the project's weighting", () => {
+      const rows = [
+        { team, category: "product", score: 10, isPanel: true },
+        { team, category: "product", score: 5, isPanel: false },
+      ];
+      expect(
+        summarizeTeamEvaluations(rows, { rubric, panelWeight: 0.8 })[
+          "team-1"
+        ].product.avg
+      ).toBe(9);
+      expect(
+        summarizeTeamEvaluations(rows, { rubric, panelWeight: 0.7 })[
+          "team-1"
+        ].product.avg
+      ).toBe(8.5);
+    });
+
+    it("ignores the audience entirely at 100 / 0 — including rows only they scored", () => {
+      const summary = summarizeTeamEvaluations(
+        [
+          { team, category: "product", score: 10, isPanel: true },
+          { team, category: "product", score: 2, isPanel: false },
+          // Nobody on the panel scored this row at all.
+          { team, category: "ui", score: 2, isPanel: false },
+        ],
+        { rubric, panelWeight: 1 }
+      );
+      expect(summary["team-1"].product.avg).toBe(10);
+      // Must not quietly become the team's grade for that row.
+      expect(summary["team-1"].ui).toBeUndefined();
+    });
+
+    it("renormalises onto whichever side scored, when both have a share", () => {
+      const summary = summarizeTeamEvaluations(
+        [{ team, category: "product", score: 6, isPanel: false }],
+        { rubric, panelWeight: 0.8 }
+      );
+      expect(summary["team-1"].product.avg).toBe(6);
+    });
+
+    it("stores a project's own weighting, and rejects one off the scale", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject({ status: "active" }, teacher);
+      loginAs(teacher);
+
+      // Every project starts at the documented 80/20.
+      const before = await getGroupProject(project._id.toString());
+      expect(before?.project.panelWeight).toBe(0.8);
+
+      const set = await updateGroupProject({
+        projectId: project._id.toString(),
+        panelWeight: 1,
+      });
+      expect(set.success).toBe(true);
+      const after = await getGroupProject(project._id.toString());
+      expect(after?.project.panelWeight).toBe(1);
+
+      const silly = await updateGroupProject({
+        projectId: project._id.toString(),
+        panelWeight: 1.5,
+      });
+      expect(silly.success).toBe(false);
+    });
+
+    it("completes and publishes in one action, closing team evaluation", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject(
+        { status: "active", teamEvalOpen: true, peerEvalOpen: true },
+        teacher
+      );
+      loginAs(teacher);
+
+      const result = await updateGroupProject({
+        projectId: project._id.toString(),
+        status: "archived",
+        gradesReleased: true,
+        teamEvalOpen: false,
+      });
+      expect(result.success).toBe(true);
+
+      const stored = await GroupProject.findById(project._id).lean<{
+        status: string;
+        gradesReleased: boolean;
+        teamEvalOpen: boolean;
+        peerEvalOpen: boolean;
+      } | null>();
+      expect(stored?.status).toBe("archived");
+      expect(stored?.gradesReleased).toBe(true);
+      // Nothing arriving late can move a grade a student has already read...
+      expect(stored?.teamEvalOpen).toBe(false);
+      // ...but a latecomer can still hand in their peer evaluation.
+      expect(stored?.peerEvalOpen).toBe(true);
+    });
+  });
+
+  describe("judge focus", () => {
+    const rubric = [
+      { key: "product", title: "Product", description: "", discipline: "general" as const },
+      { key: "code-quality", title: "Code", description: "", discipline: "code" as const },
+      { key: "ui", title: "UI", description: "", discipline: "design" as const },
+    ];
+    const team = { toString: () => "team-1" };
+
+    it("counts a focused judge only on their discipline and the general rows", () => {
+      const rows = [
+        // A design judge who scored everything anyway.
+        { team, category: "product", score: 10, isPanel: true, judgeFocus: "design" as const },
+        { team, category: "ui", score: 10, isPanel: true, judgeFocus: "design" as const },
+        { team, category: "code-quality", score: 10, isPanel: true, judgeFocus: "design" as const },
+        // A teacher, scoring the coding row low.
+        { team, category: "code-quality", score: 4, isPanel: true },
+      ];
+      const focused = summarizeTeamEvaluations(rows, { rubric, panelWeight: 1 });
+      expect(focused["team-1"]["code-quality"].avg).toBe(4);
+      expect(focused["team-1"].ui.avg).toBe(10);
+
+      // Widened to everything, the same stored scores count again.
+      const widened = summarizeTeamEvaluations(
+        rows.map((row) =>
+          "judgeFocus" in row ? { ...row, judgeFocus: "all" as const } : row
+        ),
+        { rubric, panelWeight: 1 }
+      );
+      expect(widened["team-1"]["code-quality"].avg).toBe(7);
+    });
+
+    it("lets a teacher re-scope a judge, and keeps students out", async () => {
+      const teacher = await createDummyUser("teacher");
+      const student = await createDummyUser("user");
+      const project = await createProject({ status: "active" }, teacher);
+
+      loginAs(teacher);
+      const invitation = await createJudgeInvitation({
+        projectId: project._id.toString(),
+        name: "Judge Judy",
+        focus: "design",
+      });
+      expect(invitation.success).toBe(true);
+      if (!invitation.success) return;
+
+      loginAs(student);
+      const asStudent = await updateJudgeFocus({
+        invitationId: invitation.data.id,
+        focus: "all",
+      });
+      expect(asStudent.success).toBe(false);
+
+      loginAs(teacher);
+      const asTeacher = await updateJudgeFocus({
+        invitationId: invitation.data.id,
+        focus: "all",
+      });
+      expect(asTeacher.success).toBe(true);
+
+      const stored = await JudgeInvitation.findById(
+        invitation.data.id
+      ).lean<{ focus: string } | null>();
+      expect(stored?.focus).toBe("all");
+    });
+
+    it("re-scoping a judge moves the grades their scores feed", async () => {
+      const teacher = await createDummyUser("teacher");
+      const student = await createDummyUser("user");
+      const project = await createProject(
+        {
+          status: "active",
+          panelWeight: 1,
+          rubric: [
+            { key: "product", title: "Product", description: "", discipline: "general" },
+            { key: "code-quality", title: "Code", description: "", discipline: "code" },
+          ],
+        },
+        teacher
+      );
+      const team = await Team.create({
+        project: project._id,
+        name: "Team",
+        members: [student._id],
+      });
+      const projectId = project._id.toString();
+      const teamId = team._id.toString();
+
+      loginAs(teacher);
+      const invitation = await createJudgeInvitation({
+        projectId,
+        name: "Judge Judy",
+        focus: "all",
+      });
+      expect(invitation.success).toBe(true);
+      if (!invitation.success) return;
+
+      // The judge marks everything 10; the teacher marks everything 4.
+      await submitJudgeEvaluation({
+        token: invitation.data.token,
+        teamId,
+        entries: [
+          { category: "product", score: 10, comment: "great" },
+          { category: "code-quality", score: 10, comment: "" },
+        ],
+        overallComment: "",
+      });
+      await submitTeamEvaluation({
+        projectId,
+        teamId,
+        entries: [
+          { category: "product", score: 4, comment: "hmm" },
+          { category: "code-quality", score: 4, comment: "" },
+        ],
+        overallComment: "",
+      });
+
+      const both = await getEvaluationReports(projectId);
+      expect(both?.teamEvals[0].categories.product.avg).toBe(7);
+      expect(both?.teamEvals[0].categories["code-quality"].avg).toBe(7);
+
+      // "They said at the presentation they would rather only judge design."
+      await updateJudgeFocus({
+        invitationId: invitation.data.id,
+        focus: "design",
+      });
+      const asDesign = await getEvaluationReports(projectId);
+      // Their coding score stops counting; the general row still does.
+      expect(asDesign?.teamEvals[0].categories["code-quality"].avg).toBe(4);
+      expect(asDesign?.teamEvals[0].categories.product.avg).toBe(7);
+
+      // Nothing was deleted: widening brings the same score back.
+      await updateJudgeFocus({
+        invitationId: invitation.data.id,
+        focus: "all",
+      });
+      const widened = await getEvaluationReports(projectId);
+      expect(widened?.teamEvals[0].categories["code-quality"].avg).toBe(7);
     });
   });
 

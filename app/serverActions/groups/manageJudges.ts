@@ -6,7 +6,7 @@ import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { JudgeInvitation } from "models/judgeInvitation";
 import { TeamEvaluation } from "models/teamEvaluation";
-import { JUDGE_FOCUS_OPTIONS } from "constants/groupWork";
+import { JUDGE_FOCUS_OPTIONS, JudgeFocus } from "constants/groupWork";
 import { SerializedJudgeInvitation } from "types/groupTypes";
 import {
   ActionResult,
@@ -63,6 +63,53 @@ export async function createJudgeInvitation(
       "createJudgeInvitation",
       error,
       ErrorMessages.FAILED_TO_CREATE("judge invitation")
+    );
+  }
+}
+
+const UpdateJudgeFocusSchema = z.object({
+  invitationId: objectIdSchema,
+  focus: z.enum(JUDGE_FOCUS_OPTIONS),
+});
+
+/**
+ * Re-scope a judge after the fact — they often decide at the presentation
+ * itself that they would rather judge only the design, or that they are happy
+ * to judge everything.
+ *
+ * Scores they already gave outside the new focus are kept and simply stop
+ * counting (see `summarizeTeamEvaluations`), so this is reversible: putting
+ * them back on "Everything" brings those scores back into the averages.
+ *
+ * Teachers only. A judge holds a token, not a session, and must never be able
+ * to widen or narrow what their own scores count towards.
+ */
+export async function updateJudgeFocus(data: {
+  invitationId: string;
+  focus: JudgeFocus;
+}): Promise<ActionResult<void>> {
+  const session = await requireSession();
+  if (!session) return failure(ErrorMessages.NOT_LOGGED_IN);
+  if (!isTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+
+  const validated = UpdateJudgeFocusSchema.safeParse(data);
+  if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
+
+  try {
+    await connectToDatabase();
+    const result = await JudgeInvitation.updateOne(
+      { _id: validated.data.invitationId },
+      { $set: { focus: validated.data.focus } }
+    );
+    if (result.matchedCount === 0) {
+      return failure(ErrorMessages.NOT_FOUND("Judge invitation"));
+    }
+    return successNoData("Judge focus updated");
+  } catch (error) {
+    return handleActionError(
+      "updateJudgeFocus",
+      error,
+      ErrorMessages.FAILED_TO_UPDATE("judge invitation")
     );
   }
 }

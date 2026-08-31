@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Session } from "next-auth";
 import { auth } from "../../../auth";
 import { GroupProject } from "models/groupProject";
-import { TEAM_LINK_KEYS } from "constants/groupWork";
+import { DEFAULT_PANEL_WEIGHT, TEAM_LINK_KEYS } from "constants/groupWork";
 import {
   SerializedGroupProject,
   SerializedPreference,
@@ -104,6 +104,10 @@ export function serializeProject(
     })),
     peerEvalOpen: !!project.peerEvalOpen,
     gradesReleased: !!project.gradesReleased,
+    panelWeight:
+      typeof project.panelWeight === "number"
+        ? project.panelWeight
+        : DEFAULT_PANEL_WEIGHT,
     teamEvalOpen: !!project.teamEvalOpen,
   };
 }

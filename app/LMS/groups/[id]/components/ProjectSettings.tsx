@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { GroupProjectDetails } from "types/groupTypes";
 import {
   GROUP_PROJECT_MODULES,
+  PANEL_WEIGHT_PRESETS,
   RubricItem,
   minutesFromTime,
   presentationLengthForModule,
@@ -149,42 +150,53 @@ export const ProjectSettings = ({
   const endTimeFor = (startTime: string) =>
     timeFromMinutes(minutesFromTime(startTime) + presentationLength);
 
-  // Formation → active happens automatically on the start date; the only
-  // manual phase change left is completing the project (and undoing it).
-  // Completing does NOT close the evaluation gates — latecomers still hand in,
-  // and everyone else already has their feedback.
-  const handleArchiveToggle = async () => {
-    const archiving = project.status !== "archived";
-    if (
-      archiving &&
-      !window.confirm(
-        "Mark this project completed? The team hubs become read-only and every team can read the feedback it received, including students who never handed in."
-      )
-    ) {
-      return;
+  // Formation → active happens automatically on the start date. Finishing is
+  // the one manual phase change left, and it publishes the grades in the same
+  // breath: a grade that can still move is worse than one that has not arrived
+  // yet, so team evaluation closes at the same moment. Written feedback never
+  // waited for any of this — it opens for each student the day they hand in.
+  const handleFinishToggle = async () => {
+    const finishing = project.status !== "archived";
+    if (finishing) {
+      const unconfirmed = details.unconfirmedCount ?? 0;
+      const warning =
+        unconfirmed > 0
+          ? `\n\n${unconfirmed} student${unconfirmed === 1 ? " has" : "s have"} no confirmed peer figures yet and will see "not final yet" instead of a grade.`
+          : "";
+      if (
+        !window.confirm(
+          `Complete this project and publish the grades?\n\nTeam hubs become read-only, team evaluation closes so no late score can move a published grade, and every confirmed student sees their own grade.${warning}`
+        )
+      ) {
+        return;
+      }
     }
     setSaving(true);
     setFeedback(null);
     const result = await updateGroupProject({
       projectId: project._id,
-      status: archiving ? "archived" : "active",
+      status: finishing ? "archived" : "active",
+      gradesReleased: finishing,
+      // Reopening leaves the gates alone: turning team evaluation back on is a
+      // separate, deliberate choice with the toggle above.
+      ...(finishing ? { teamEvalOpen: false } : null),
     });
     setSaving(false);
     if (result.success) {
+      setTeamEvalOpen(finishing ? false : teamEvalOpen);
       router.refresh();
     } else {
       setFeedback({ text: result.message, error: true });
     }
   };
 
-  // Written feedback reaches a student as soon as they hand in; the scores
-  // wait for this, which is a separate decision from the project being over.
-  const handleGradesToggle = async () => {
-    const releasing = !project.gradesReleased;
+  // Changing the weighting after publication moves grades students have
+  // already read, so it says so before it does it.
+  const handlePanelWeight = async (weight: number) => {
     if (
-      releasing &&
+      project.gradesReleased &&
       !window.confirm(
-        "Release the grades? Every team that has handed in will see its average score for each rubric row."
+        "The grades are already published. Changing the weighting recalculates every team's score and every student's grade. Continue?"
       )
     ) {
       return;
@@ -193,7 +205,7 @@ export const ProjectSettings = ({
     setFeedback(null);
     const result = await updateGroupProject({
       projectId: project._id,
-      gradesReleased: releasing,
+      panelWeight: weight,
     });
     setSaving(false);
     if (result.success) {
@@ -406,45 +418,67 @@ export const ProjectSettings = ({
         </Card>
 
         <Card>
-          <SectionTitle>Grades</SectionTitle>
+          <SectionTitle>Grade weighting</SectionTitle>
           <MutedText>
-            {project.gradesReleased
-              ? "The grades are out. Every student who has handed in sees their own grade and nothing else — never the team's. Anyone you have not confirmed sees a note that their grade is not final yet."
-              : "Students who have handed in can already read the written feedback their team received. Releasing adds each student's own grade, worked out from the team's project grade and the peer-evaluation figures you confirmed on the Evaluations tab. Confirm those first — a student without them gets no grade, and never the team's as a stand-in."}
+            How much of each score the panel — teachers and invited industry
+            judges — carries, with the student audience carrying the rest. In
+            the first module the students&apos; scores are practice: they are
+            two weeks into the course, the written feedback is the point, and
+            100 / 0 keeps their numbers out of the grade. Later on they are
+            comfortable owning a fifth of it.
           </MutedText>
-          <div>
-            {project.gradesReleased ? (
-              <SecondaryButton
+          <ChipRow>
+            {PANEL_WEIGHT_PRESETS.map((preset) => (
+              <SelectableChip
+                key={preset}
                 type="button"
-                onClick={handleGradesToggle}
+                $selected={Math.abs(project.panelWeight - preset) < 0.001}
                 disabled={saving}
+                onClick={() => handlePanelWeight(preset)}
               >
-                Take the grades back
-              </SecondaryButton>
-            ) : (
-              <PrimaryButton
-                type="button"
-                onClick={handleGradesToggle}
-                disabled={saving}
-              >
-                Release grades
-              </PrimaryButton>
-            )}
-          </div>
+                {Math.round(preset * 100)} / {Math.round((1 - preset) * 100)}
+              </SelectableChip>
+            ))}
+          </ChipRow>
+          <Label>
+            Panel share (%)
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(project.panelWeight * 100)}
+              disabled={saving}
+              onChange={(event) => {
+                const percent = Number(event.target.value);
+                if (Number.isFinite(percent) && percent >= 0 && percent <= 100) {
+                  handlePanelWeight(percent / 100);
+                }
+              }}
+            />
+          </Label>
         </Card>
 
         <Card>
-          <SectionTitle>Completing the project</SectionTitle>
+          <SectionTitle>Finishing the project</SectionTitle>
           <MutedText>
             {project.status === "archived"
-              ? "This project is completed — the team hubs are read-only and every team can read its feedback. Evaluations are still accepted, so anybody who is late can still hand in."
-              : "Completing a project makes the team hubs read-only and opens each team's feedback to everyone on it, including students who never handed in. It does not close the evaluation gates. The project activates by itself on its start date."}
+              ? "This project is finished and the grades are published. Team hubs are read-only, every team can read its feedback, and team evaluation is closed so no late score can move a grade a student has already read. Peer evaluation is still accepted."
+              : "Finishing publishes the grades in the same breath: team hubs become read-only, every confirmed student sees their own grade, and team evaluation closes so nothing arriving late can move a published grade. Written feedback does not wait for this — it has been open to each student since the day they handed in."}
           </MutedText>
+          {project.status !== "archived" && (details.unconfirmedCount ?? 0) > 0 && (
+            <Message $error>
+              {details.unconfirmedCount} student
+              {details.unconfirmedCount === 1 ? "" : "s"} still without
+              confirmed peer figures — confirm them on the Evaluations tab, or
+              they will see &quot;not final yet&quot; instead of a grade.
+            </Message>
+          )}
           <div>
             {project.status === "archived" ? (
               <SecondaryButton
                 type="button"
-                onClick={handleArchiveToggle}
+                onClick={handleFinishToggle}
                 disabled={saving}
               >
                 Reopen project
@@ -452,10 +486,10 @@ export const ProjectSettings = ({
             ) : (
               <DangerButton
                 type="button"
-                onClick={handleArchiveToggle}
+                onClick={handleFinishToggle}
                 disabled={saving}
               >
-                Mark completed
+                Complete project &amp; publish grades
               </DangerButton>
             )}
           </div>

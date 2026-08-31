@@ -108,6 +108,7 @@ export async function getGroupProject(
       myShowcaseQuotes: [],
       students: null,
       teamEvalSummaries: null,
+      unconfirmedCount: null,
       rubricLocked: false,
     };
 
@@ -159,7 +160,7 @@ export async function getGroupProject(
           team: myTeam._id,
         })
           .populate("evaluator", "name role")
-          .populate("judge", "name")
+          .populate("judge", "name focus")
           .lean();
 
         /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -198,7 +199,9 @@ export async function getGroupProject(
               category: entry.category,
               score: entry.score,
               isPanel: !!entry.judge || entry.evaluator?.role === "teacher",
-            }))
+              judgeFocus: entry.judge?.focus ?? null,
+            })),
+            { rubric: project.rubric, panelWeight: details.project.panelWeight }
           );
           const teamScores = summaries[myTeam._id] ?? {};
 
@@ -245,13 +248,16 @@ export async function getGroupProject(
     }
 
     if (teacher) {
-      const [students, preferences, teamEvals] = await Promise.all([
-        User.find({ role: "user" }, { name: 1, avatarUrl: 1 }).lean(),
-        GroupPreference.find({ project: projectId }).lean(),
-        TeamEvaluation.find({ project: projectId })
-          .populate("evaluator", "role")
-          .lean(),
-      ]);
+      const [students, preferences, teamEvals, confirmedResults] =
+        await Promise.all([
+          User.find({ role: "user" }, { name: 1, avatarUrl: 1 }).lean(),
+          GroupPreference.find({ project: projectId }).lean(),
+          TeamEvaluation.find({ project: projectId })
+            .populate("evaluator", "role")
+            .populate("judge", "focus")
+            .lean(),
+          PeerEvaluationResult.countDocuments({ project: projectId }),
+        ]);
 
       const prefByUser = new Map(
         preferences.map((pref) => [pref.user.toString(), pref])
@@ -286,7 +292,20 @@ export async function getGroupProject(
           category: entry.category,
           score: entry.score,
           isPanel: !!entry.judge || entry.evaluator?.role === "teacher",
-        }))
+          judgeFocus: entry.judge?.focus ?? null,
+        })),
+        { rubric: project.rubric, panelWeight: details.project.panelWeight }
+      );
+
+      // How many assigned students would see "not final yet" if the grades
+      // were published right now.
+      const assigned = new Set<string>();
+      for (const team of serializedTeams) {
+        for (const member of team.members) assigned.add(member._id);
+      }
+      details.unconfirmedCount = Math.max(
+        0,
+        assigned.size - confirmedResults
       );
     }
 

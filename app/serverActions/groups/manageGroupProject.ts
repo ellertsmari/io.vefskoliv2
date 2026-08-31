@@ -137,6 +137,7 @@ const UpdateProjectSchema = z.object({
   peerEvalOpen: z.boolean().optional(),
   teamEvalOpen: z.boolean().optional(),
   gradesReleased: z.boolean().optional(),
+  panelWeight: z.number().min(0).max(1).optional(),
 });
 
 export type UpdateProjectData = Omit<

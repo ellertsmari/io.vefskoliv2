@@ -47,7 +47,7 @@ export async function getEvaluationReports(
         .lean(),
       TeamEvaluation.find({ project: projectId })
         .populate("evaluator", "name role")
-        .populate("judge", "name")
+        .populate("judge", "name focus")
         .lean(),
       PeerEvaluationResult.find({ project: projectId })
         .populate("confirmedBy", "name")
@@ -161,7 +161,9 @@ export async function getEvaluationReports(
         score: evaluation.score,
         isPanel:
           !!evaluation.judge || evaluation.evaluator?.role === "teacher",
-      }))
+        judgeFocus: evaluation.judge?.focus ?? null,
+      })),
+      { rubric: project?.rubric, panelWeight: project?.panelWeight }
     );
     for (const [teamId, categories] of Object.entries(summaries)) {
       const report = teamReports.get(teamId);

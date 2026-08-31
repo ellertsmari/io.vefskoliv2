@@ -11,6 +11,7 @@ import {
 import {
   createJudgeInvitation,
   deleteJudgeInvitation,
+  updateJudgeFocus,
 } from "serverActions/groups/manageJudges";
 import {
   Card,
@@ -104,6 +105,18 @@ export const JudgesPanel = ({
     }
   };
 
+  const handleFocus = async (invitationId: string, focus: JudgeFocus) => {
+    setBusy(true);
+    setMessage(null);
+    const result = await updateJudgeFocus({ invitationId, focus });
+    setBusy(false);
+    if (result.success) {
+      router.refresh();
+    } else {
+      setMessage({ text: result.message, error: true });
+    }
+  };
+
   const handleCopy = async (token: string) => {
     await navigator.clipboard.writeText(judgeUrl(token));
     setMessage({ text: "Link copied to clipboard", error: false });
@@ -118,7 +131,9 @@ export const JudgesPanel = ({
         submitted links and grade with the same rubric; their grades count
         like teacher grades. A judge with a Design or Coding focus skips the
         other discipline, but everyone grades the general categories
-        (presentation, Q&amp;A…).
+        (presentation, Q&amp;A…). You can change what a judge counts towards
+        at any time — including after they have graded, and after the grades
+        are out.
       </MutedText>
 
       <form onSubmit={handleCreate}>
@@ -157,7 +172,24 @@ export const JudgesPanel = ({
           {judges.map((judge) => (
             <JudgeRow key={judge._id}>
               <JudgeName>{judge.name}</JudgeName>
-              <Pill>{JUDGE_FOCUS_LABELS[judge.focus]}</Pill>
+              {/* Judges often decide at the presentation itself what they are
+                  willing to judge. Changing it here re-scopes the scores they
+                  already gave: anything outside the new focus stops counting,
+                  and comes back if it is widened again. */}
+              <ChipRow>
+                {JUDGE_FOCUS_OPTIONS.map((option) => (
+                  <SelectableChip
+                    key={option}
+                    type="button"
+                    $selected={judge.focus === option}
+                    disabled={busy}
+                    title={`Count this judge's scores towards ${JUDGE_FOCUS_LABELS[option]}`}
+                    onClick={() => handleFocus(judge._id, option)}
+                  >
+                    {JUDGE_FOCUS_LABELS[option]}
+                  </SelectableChip>
+                ))}
+              </ChipRow>
               {judge.hasSubmitted && <Pill>Has graded ✓</Pill>}
               {judge.showcaseNameConsent && (
                 <Pill title="This judge agreed to be named when a team publishes one of their comments">

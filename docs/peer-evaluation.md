@@ -114,7 +114,7 @@ courses grade the same way.
 
 ```
 project grade = mean of the team's rubric rows
-                (each row already blended 80% panel / 20% student audience)
+                (each row blended by the project's own panel weighting)
 
 P      = (contribution + 2) × (teamwork + 2) − 4        // −4 … +12
 scale  = P >= 0 ? 0.025 : 0.175                         // +30% max, −70% max
@@ -145,7 +145,30 @@ every other one. `clampGrade` in `app/constants/groupWork.ts`, with a test that
 fails if the order is ever swapped.
 
 A student's row on the rubric can therefore read above 10 while their grade
-reads 10. That is the arithmetic being honest about itself, not a bug. That matches the rest of the app, where a student sees their team's
+reads 10. That is the arithmetic being honest about itself, not a bug.
+
+### What feeds the project grade
+
+Two things about the team's own score are set per project, and both can be
+changed afterwards — with a warning when the grades are already out, because
+both move published grades.
+
+**The panel share** (`panelWeight`, default 0.8). Teachers and invited judges
+carry that share of every row; the student audience carries the rest. Module 1
+runs at **100/0**: two weeks into the course students do not feel ready to put
+a number on each other's work, so their scoring is practice and written
+feedback, not part of the grade. By the later modules they are comfortable
+owning a fifth of it, which is what the project documents describe. At 100/0 a
+row only the audience scored has no score at all, rather than quietly becoming
+the team's grade.
+
+**Each judge's focus.** A judge asked to judge only design counts on the design
+and general rows; their coding scores are kept but not counted. Judges often
+decide this at the presentation itself, so teachers can re-scope them
+afterwards from the judges panel (`updateJudgeFocus`, teacher-only — a judge
+holds a token, not a session, and must never be able to change what their own
+scores count towards). It is reversible: widening a judge back to Everything
+brings their stored scores straight back into the averages. That matches the rest of the app, where a student sees their team's
 rubric feedback once the project is archived and nothing else. If it should
 ever be shown, show the confirmed value only, never the individual scores or
 who gave them.

@@ -59,6 +59,16 @@ const groupProjectSchema = new Schema({
   presentationSlots: { type: [presentationSlotSchema], default: [] },
   // Per-project evaluation rubric; empty means the default categories.
   rubric: { type: [rubricItemSchema], default: [] },
+  // Share of each score carried by the panel (teachers + invited judges); the
+  // student audience carries the rest. 0.8 by default, 1 for projects where
+  // the students' scores are practice rather than part of the grade.
+  panelWeight: {
+    type: Schema.Types.Number,
+    required: true,
+    default: 0.8,
+    min: 0,
+    max: 1,
+  },
   peerEvalOpen: { type: Schema.Types.Boolean, required: true, default: false },
   teamEvalOpen: { type: Schema.Types.Boolean, required: true, default: false },
   // Written feedback reaches a student as soon as they have handed in their
@@ -110,6 +120,7 @@ export type GroupProjectLean = {
     description: string;
     discipline?: "design" | "code" | "general";
   }[];
+  panelWeight?: number;
   peerEvalOpen: boolean;
   teamEvalOpen: boolean;
   gradesReleased?: boolean;

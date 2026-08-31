@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TeamEvaluation } from "models/teamEvaluation";
 import {
+  DEFAULT_PANEL_WEIGHT,
   EVALUATION_MAX_SCORE,
   EVALUATION_MIN_SCORE,
   JudgeFocus,
@@ -75,9 +76,6 @@ export function validateTeamEvalSubmission({
   return null;
 }
 
-// Per the project docs, the "panel" (instructors + invited industry
-// professionals) carries 80% of the grade and the student audience 20%.
-export const PANEL_WEIGHT = 0.8;
 
 /** Shape of a lean TeamEvaluation row as the grouping/summary helpers need it. */
 export type LeanEvaluationRow = {
@@ -103,10 +101,20 @@ export function groupEvaluationEntriesByTeam(
 }
 
 /**
- * Per-team, per-category score summaries. Panel entries (teachers and
- * external judges) weigh alike; when both panel and audience scored a
- * category the average blends 80/20, otherwise it is whichever exists.
- * Score-less entries (the "overall" comment) are excluded.
+ * Per-team, per-category score summaries.
+ *
+ * Panel entries (teachers and invited judges) weigh alike and carry
+ * `panelWeight` of each category; the student audience carries the rest. When
+ * only one side scored a category the weighting renormalises onto whichever
+ * side that is — unless that side's share is zero, in which case the category
+ * has no score at all. That last case is the whole point of a 100/0 project:
+ * a row only the audience scored must not quietly become the team's grade.
+ *
+ * A judge who was asked to judge one discipline counts only on that discipline
+ * and the general rows. Their other scores are kept, just not counted, so a
+ * teacher moving a judge between focuses changes the averages back and forth
+ * without anything being lost. Score-less entries (the "overall" comment) are
+ * excluded throughout.
  */
 export function summarizeTeamEvaluations(
   evaluations: {
@@ -114,7 +122,13 @@ export function summarizeTeamEvaluations(
     category: string;
     score?: number | null;
     isPanel: boolean;
-  }[]
+    /** Set for external judges; null/absent for teachers and students. */
+    judgeFocus?: JudgeFocus | null;
+  }[],
+  {
+    rubric,
+    panelWeight = DEFAULT_PANEL_WEIGHT,
+  }: { rubric?: RubricItem[] | null; panelWeight?: number } = {}
 ): Record<string, TeamEvalSummary> {
   type Bucket = {
     panelSum: number;
@@ -124,8 +138,26 @@ export function summarizeTeamEvaluations(
   };
   const buckets = new Map<string, Map<string, Bucket>>();
 
+  // One set per focus rather than one per row.
+  const countableKeys = new Map<JudgeFocus, Set<string>>();
+  const countsFor = (focus: JudgeFocus, category: string) => {
+    let keys = countableKeys.get(focus);
+    if (!keys) {
+      keys = requiredRubricKeys(rubric, focus);
+      countableKeys.set(focus, keys);
+    }
+    return keys.has(category);
+  };
+
   for (const entry of evaluations) {
     if (entry.score == null) continue;
+    if (
+      entry.judgeFocus &&
+      entry.judgeFocus !== "all" &&
+      !countsFor(entry.judgeFocus, entry.category)
+    ) {
+      continue;
+    }
     const teamId = entry.team.toString();
     const byCategory =
       buckets.get(teamId) ?? new Map<string, Bucket>();
@@ -156,10 +188,17 @@ export function summarizeTeamEvaluations(
       const audienceAvg = bucket.audienceCount
         ? bucket.audienceSum / bucket.audienceCount
         : null;
+
+      // A side that scored nothing, or that was given no share, contributes
+      // nothing and its share goes to the other one.
+      const panelShare = panelAvg == null ? 0 : panelWeight;
+      const audienceShare = audienceAvg == null ? 0 : 1 - panelWeight;
+      const totalShare = panelShare + audienceShare;
+      if (totalShare === 0) continue;
+
       const avg =
-        panelAvg != null && audienceAvg != null
-          ? PANEL_WEIGHT * panelAvg + (1 - PANEL_WEIGHT) * audienceAvg
-          : (panelAvg ?? audienceAvg ?? 0);
+        (panelShare * (panelAvg ?? 0) + audienceShare * (audienceAvg ?? 0)) /
+        totalShare;
       summary[category] = {
         avg: round1(avg),
         count: bucket.panelCount + bucket.audienceCount,

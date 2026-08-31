@@ -141,6 +141,8 @@ export type SerializedGroupProject = {
   rubric: RubricItem[];
   peerEvalOpen: boolean;
   teamEvalOpen: boolean;
+  /** Share of each score carried by the panel; the student audience carries the rest. */
+  panelWeight: number;
   /** Teachers have published the scores; written feedback does not wait for this. */
   gradesReleased: boolean;
   /**
@@ -238,6 +240,8 @@ export type GroupProjectDetails = {
   // teacher-only fields
   students: BoardStudent[] | null;
   teamEvalSummaries: Record<string, TeamEvalSummary> | null; // keyed by teamId
+  /** Students on a team with no confirmed peer figures yet. Teacher-only. */
+  unconfirmedCount: number | null;
   /**
    * True once any team evaluation exists for the project: the rubric editor
    * then allows wording changes only, because stored scores point at the
