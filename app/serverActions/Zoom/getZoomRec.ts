@@ -51,30 +51,51 @@ export async function getUserRecordings(): Promise<RecordingsResult> {
   }
 }
 
+/** Zoom wants a plain calendar day, `YYYY-MM-DD`. */
+function formatDay(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+const SCHOOL_YEAR_START_MONTH = 7; // August
+
+/**
+ * The school year starts in August, so before August we are still in the year
+ * that began the previous August. Derived from the clock rather than written
+ * down, so it rolls over on its own instead of needing an edit every summer.
+ */
+function schoolYearStart(now: Date): Date {
+  const year =
+    now.getMonth() >= SCHOOL_YEAR_START_MONTH
+      ? now.getFullYear()
+      : now.getFullYear() - 1;
+  return new Date(year, SCHOOL_YEAR_START_MONTH, 1);
+}
+
 async function fetchUserRecordings(): Promise<RecordingsResult> {
   let token = await getZoomToken();
 
-  // Current school year: Aug 18, 2025 to Aug 31, 2026
-  const schoolYearStart = new Date(2025, 7, 18); // Aug 18, 2025
-  const schoolYearEnd = new Date(2026, 7, 31);   // Aug 31, 2026
   const now = new Date();
-
   const allMeetings: any[] = [];
 
-  // Iterate through each month of the school year
-  let currentDate = new Date(schoolYearStart);
+  // Zoom caps a recordings query at a one-month range, so walk month by month
+  // from the start of the school year up to today. Anything before August is
+  // not fetched: it is not shown, and every extra month is another round trip.
+  //
+  // There is deliberately no fixed end date. A hardcoded one (Aug 31, 2026)
+  // used to cut the loop short, so recordings made after it were never queried
+  // and simply went missing from the page with no error anywhere.
+  let currentDate = schoolYearStart(now);
 
-  while (currentDate <= now && currentDate <= schoolYearEnd) {
+  while (currentDate <= now) {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    // For the first month (Aug 2025), start from the 18th
-    const isFirstMonth = year === 2025 && month === 7;
-    const startDay = isFirstMonth ? 18 : 1;
-
-    const from = `${year}-${String(month + 1).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`;
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    const to = `${year}-${String(month + 1).padStart(2, "0")}-${lastDay}`;
+    const from = formatDay(new Date(year, month, 1));
+    // Never ask past today — the current month is still in progress.
+    const monthEnd = new Date(year, month + 1, 0);
+    const to = formatDay(monthEnd < now ? monthEnd : now);
 
     let nextPageToken: string | undefined;
 
