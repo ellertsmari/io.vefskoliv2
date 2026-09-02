@@ -5,6 +5,7 @@ import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { PipelineStage } from "mongoose";
 import { GuideInfo } from "types/guideTypes";
+import { hasTeacherPermissions } from "utils/userUtils";
 
 // grab user's submitted returns
 const lookupReturnsSubmitted = (userId: ObjectId): PipelineStage => {
@@ -342,18 +343,33 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
   ];
 };
 
+/**
+ * A student's guides, with everything personal attached: their returns, the
+ * reviews and grades they received, the reviews they gave.
+ *
+ * Server actions are public endpoints — any logged-in client can call this
+ * with any id — so the id argument is only honoured for teachers (the reports
+ * page looks students up by id). Everyone else gets their own guides no matter
+ * what they pass. Without this a student could read every classmate's feedback
+ * and grades.
+ */
 export async function getGuides(
-  userIdString: string
+  userIdString?: string
 ): Promise<GuideInfo[] | null> {
   const session = await auth();
-  if (!session?.user) return null;
+  if (!session?.user?.id) return null;
 
-  if (!userIdString) return null;
+  const targetId =
+    hasTeacherPermissions(session) && userIdString
+      ? userIdString
+      : session.user.id;
+
+  if (!ObjectId.isValid(targetId)) return null;
 
   try {
     await connectToDatabase();
 
-    const userId = new ObjectId(userIdString);
+    const userId = new ObjectId(targetId);
     const pipeline = getGuidesPipelines(userId);
 
     const result = await Guide.aggregate(pipeline).exec();
