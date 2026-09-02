@@ -1,7 +1,6 @@
 "use server";
 
 import bcrypt from "bcrypt";
-import { signIn, getUser } from "../../auth";
 import { User } from "../models/user";
 import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
@@ -15,6 +14,20 @@ import {
 
 type SignupFormState = ActionResult<void> | undefined;
 
+// Not exported: a "use server" module may only export async functions.
+const SIGNUP_SUCCESS_MESSAGE =
+  "Your account is created. A teacher needs to approve it before you can sign in — you'll get access once that's done.";
+
+/**
+ * Self-registration creates a PENDING account and nothing more.
+ *
+ * Anyone on the internet can reach this form, and a logged-in account sees
+ * the whole class: names, project links, group work, recorded lessons. So the
+ * account is not usable until a teacher approves it on the people page, and
+ * there is deliberately no automatic sign-in here any more — `authorize`
+ * refuses pending accounts, and it would only have produced a confusing
+ * "login failed" a second after "registered successfully".
+ */
 export async function signUp(
   state: SignupFormState,
   formData: FormData
@@ -53,6 +66,7 @@ export async function signUp(
       email,
       password,
       role: "user",
+      status: "pending",
     });
   } catch (error: unknown) {
     // Check for duplicate email (MongoDB error code 11000)
@@ -69,32 +83,7 @@ export async function signUp(
     return failure(ErrorMessages.FAILED_TO_CREATE("user"));
   }
 
-  try {
-    const user = await getUser(email);
-    if (!user) {
-      return failure(
-        "User created but failed to retrieve. Please try logging in."
-      );
-    }
-
-    // `redirect: false` — the form navigates itself. Letting NextAuth redirect
-    // here would both throw NEXT_REDIRECT into the catch below (reported to the
-    // user as a failed auto-login) and send them to NEXTAUTH_URL's host.
-    await signIn("credentials", {
-      email,
-      password: rawPassword,
-      redirect: false,
-    });
-  } catch (error) {
-    logError("signUp:autoLogin", error, { email });
-    return failure(
-      "Account created successfully, but automatic login failed. Please log in manually."
-    );
-  }
-
-  return successNoData(
-    "Successfully registered. Now logging you in. If it fails you will be redirected to the login page."
-  );
+  return successNoData(SIGNUP_SUCCESS_MESSAGE);
 }
 
 const SignupFormSchema = z.object({

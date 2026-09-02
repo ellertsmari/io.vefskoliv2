@@ -23,7 +23,8 @@ export const getUsers = async (
   const session = await auth();
   if (!session?.user) return [];
 
-  const query: GetUsersFilter = {};
+  // Accounts still waiting for approval are not part of the class yet.
+  const query: Record<string, unknown> = { status: { $ne: "pending" } };
   if (filter.role === "teacher" || filter.role === "user") {
     query.role = filter.role;
   }

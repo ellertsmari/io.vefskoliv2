@@ -11,7 +11,7 @@ import {
   SuccessToast,
   AuthForm,
 } from "globalStyles/globalStyles";
-import { Heading1 } from "globalStyles/text";
+import { Heading1, Paragraph } from "globalStyles/text";
 
 export function RegisterForm({
   setSelectedForm,
@@ -52,6 +52,10 @@ export function RegisterForm({
     <FullScreenWrapper>
       <AuthForm ref={formRef}>
         <Heading1>SIGN UP</Heading1>
+        <Paragraph>
+          A teacher approves every new account before it can sign in, so you
+          may have to wait a little after registering.
+        </Paragraph>
         {state?.success === false && typeof state.message === "string" && (
           <>
             <ErrorToast>{state.message}</ErrorToast>

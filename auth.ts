@@ -7,6 +7,7 @@ import { User } from "models/user";
 import bcrypt from "bcrypt";
 import { connectToDatabase } from "serverActions/mongoose-connector";
 import { cookies } from "next/headers";
+import { PendingApprovalError } from "app/lib/authErrors";
 
 export async function getUser(
   email: string,
@@ -39,7 +40,12 @@ const nextAuth = NextAuth({
           const user = await getUser(email, { withPassword: true });
           if (!user) return null;
           const passwordsMatch = await bcrypt.compare(password, user.password);
-          if (passwordsMatch) return user;
+          if (!passwordsMatch) return null;
+          // Checked AFTER the password so a wrong password still reads as
+          // "invalid credentials" and this message confirms nothing about
+          // whether an address is registered.
+          if (user.status === "pending") throw new PendingApprovalError();
+          return user;
         }
         return null;
       },

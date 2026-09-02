@@ -8,6 +8,16 @@ import {
   Model,
 } from "mongoose";
 
+/**
+ * `pending` accounts were self-registered and are waiting for a teacher to
+ * approve them on the people page. They cannot sign in, which is the only
+ * gate: with no session there is nothing else in the app to protect. Accounts
+ * from before this field existed have no value stored and read as `active`
+ * through the schema default.
+ */
+export const USER_STATUSES = ["pending", "active"] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];
+
 export interface RequiredUserInfo {
   name: string;
   email: string;
@@ -15,6 +25,7 @@ export interface RequiredUserInfo {
   role: string;
   createdAt: Date;
   ltiId?: string;
+  status?: UserStatus;
 }
 
 export enum OptionalUserInfoKeys {
@@ -55,6 +66,13 @@ const userSchema = new Schema(
     role: { type: Schema.Types.String, required: true },
     avatarUrl: { type: Schema.Types.String, required: false },
     ltiId: { type: Schema.Types.String, required: false, index: true },
+    status: {
+      type: Schema.Types.String,
+      required: true,
+      enum: USER_STATUSES,
+      default: "active",
+      index: true,
+    },
   },
   { timestamps: true }
 );

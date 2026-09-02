@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
         password: hashedPassword, // Store hashed password
         role: userRole,
         ltiId: userInfo.id,
+        // Canvas has already vetted this person; no teacher approval needed.
+        status: 'active',
         createdAt: new Date(),
       });
       

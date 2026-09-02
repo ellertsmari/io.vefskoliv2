@@ -2,24 +2,27 @@
  * @jest-environment node
  */
 import { signUp } from "serverActions/signUp";
-import { getUser, signIn } from "../../auth";
 import bcrypt from "bcrypt";
 import { User } from "models/user";
-
-jest.mock("../../auth", () => ({
-  getUser: jest.fn(),
-  signIn: jest.fn(),
-}));
 
 // signUp opens a database connection before it does anything else, and this
 // suite mocks every query it makes (User.create) — so the connection is pure
 // overhead. Unmocked it dials MONGODB_CONNECTION for real: fine locally where
 // .env.local points at a live database, but in CI there is nothing listening
 // and the connector's 30s serverSelectionTimeoutMS blows straight through
-// Jest's 5s limit. That is what made these three tests fail on CI only.
+// Jest's 5s limit. That is what made these tests fail on CI only.
 jest.mock("serverActions/mongoose-connector", () => ({
   connectToDatabase: jest.fn().mockResolvedValue(undefined),
 }));
+
+// Registration must never sign the new account in: it is pending until a
+// teacher approves it. If signUp ever imports these again, this mock makes
+// the call visible instead of letting it silently create a session.
+jest.mock("../../auth", () => ({
+  getUser: jest.fn(),
+  signIn: jest.fn(),
+}));
+import { signIn } from "../../auth";
 
 describe("signUp", () => {
   afterEach(() => {
@@ -30,36 +33,35 @@ describe("signUp", () => {
   const email = "john.doe@example.com";
   const password = "password123";
   const hashedPassword = "hashedPassword123";
-  it("should sign up a new user", async () => {
+
+  const validForm = () => {
     const formData = new FormData();
     formData.append("firstName", firstName);
     formData.append("lastName", lastName);
     formData.append("email", email);
     formData.append("password", password);
+    return formData;
+  };
+
+  it("creates a PENDING account and does not sign the user in", async () => {
     bcrypt.hash = jest.fn().mockResolvedValueOnce(hashedPassword);
     User.create = jest.fn();
-    (getUser as jest.Mock).mockResolvedValueOnce({ email });
-    (signIn as jest.Mock).mockResolvedValueOnce(true);
-    const result = await signUp(undefined, formData);
+
+    const result = await signUp(undefined, validForm());
+
     expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
     expect(User.create).toHaveBeenCalledWith({
       name: firstName + " " + lastName,
       email,
       password: hashedPassword,
       role: "user",
+      status: "pending",
     });
-    expect(signIn).toHaveBeenCalledWith("credentials", {
-      email: "john.doe@example.com",
-      password: "password123",
-      redirect: false,
-    });
-    expect(result).toEqual({
-      success: true,
-      data: undefined,
-      message:
-        "Successfully registered. Now logging you in. If it fails you will be redirected to the login page.",
-    });
+    expect(signIn).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(result.message).toMatch(/teacher needs to approve/i);
   });
+
   it("should return an error if form validation fails", async () => {
     const formData = new FormData();
     formData.append("firstName", "");
@@ -77,28 +79,27 @@ describe("signUp", () => {
       });
     }
   });
-  it("should not call signIn if user cannot be found in the DB", async () => {
-    const formData = new FormData();
-    formData.append("firstName", firstName);
-    formData.append("lastName", lastName);
-    formData.append("email", email);
-    formData.append("password", password);
+
+  it("tells the user when the email is already registered", async () => {
     bcrypt.hash = jest.fn().mockResolvedValue(hashedPassword);
-    (getUser as jest.Mock).mockRejectedValueOnce(new Error("User not found"));
-    const result = await signUp(undefined, formData);
-    expect(signIn).not.toHaveBeenCalled();
+    User.create = jest.fn().mockRejectedValue({ code: 11000 });
+
+    const result = await signUp(undefined, validForm());
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: false,
+        message: "User with this email already exists.",
+      })
+    );
   });
+
   it("should return an error if user creation fails", async () => {
-    const formData = new FormData();
-    formData.append("firstName", firstName);
-    formData.append("lastName", lastName);
-    formData.append("email", email);
-    formData.append("password", password);
     bcrypt.hash = jest.fn().mockResolvedValue(hashedPassword);
     User.create = jest
       .fn()
       .mockRejectedValue(new Error("User creation failed"));
-    const result = await signUp(undefined, formData);
+    const result = await signUp(undefined, validForm());
     expect(result).toEqual(
       expect.objectContaining({
         success: false,

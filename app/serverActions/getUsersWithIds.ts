@@ -26,7 +26,8 @@ export const getUsersWithIds = async (
   const session = await auth();
   if (!hasTeacherPermissions(session)) return [];
 
-  const query: GetUsersFilter = {};
+  // Pending accounts have no work to report on and are not in the class yet.
+  const query: Record<string, unknown> = { status: { $ne: "pending" } };
   if (filter.role === "teacher" || filter.role === "user") {
     query.role = filter.role;
   }
