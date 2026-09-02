@@ -20,8 +20,9 @@ import { auth } from "../../auth";
 
 // `getGuides` is a server action guarded by a session. The real `auth()` reads
 // cookies, which throws outside a request scope, so every test signs in a
-// caller. Which user's guides come back is still decided by the argument, not
-// by the session — see the last test for the logged-out case.
+// caller. The caller is a TEACHER by default: only teachers may ask for another
+// user's guides, and most tests here look up the user they just created. The
+// "authorisation" block at the end covers students and the logged-out case.
 jest.mock("../../auth", () => ({
   auth: jest.fn(),
 }));
@@ -54,7 +55,9 @@ describe("getGuides", () => {
   beforeAll(async () => await connect());
 
   beforeEach(() => {
-    (auth as jest.Mock).mockResolvedValue({ user: { id: "caller" } });
+    (auth as jest.Mock).mockResolvedValue({
+      user: { id: new Types.ObjectId().toString(), role: "teacher" },
+    });
   });
 
   afterEach(async () => await clearDatabase());
@@ -488,5 +491,88 @@ describe("getGuides", () => {
     (auth as jest.Mock).mockResolvedValue(null);
 
     expect(await getGuides(userJ._id.toString())).toBeNull();
+  });
+
+  describe("authorisation", () => {
+    it("gives a student their own guides even when they ask for someone else's", async () => {
+      const student = await createDummyUser();
+      const classmate = await createDummyUser();
+      const guide = await createDummyGuide();
+      const classmateReturn = await createDummyReturn(classmate, guide);
+      const ownReturn = await createDummyReturn(student, guide);
+      (auth as jest.Mock).mockResolvedValue({
+        user: { id: student._id.toString(), role: "user" },
+      });
+
+      const guides = await getGuides(classmate._id.toString());
+      const info = findGuideById(guides, guide._id);
+
+      expect(info?.returnsSubmitted.map((r: any) => r._id)).toEqual([
+        ownReturn._id.toString(),
+      ]);
+      expect(info?.availableForReview.map((r: any) => r._id)).toEqual([
+        classmateReturn._id.toString(),
+      ]);
+    });
+
+    it("gives a student their own guides when they pass no id", async () => {
+      const student = await createDummyUser();
+      const guide = await createDummyGuide();
+      const ownReturn = await createDummyReturn(student, guide);
+      (auth as jest.Mock).mockResolvedValue({
+        user: { id: student._id.toString(), role: "user" },
+      });
+
+      const info = findGuideById(await getGuides(), guide._id);
+
+      expect(info?.returnsSubmitted.map((r: any) => r._id)).toEqual([
+        ownReturn._id.toString(),
+      ]);
+    });
+
+    it("lets a teacher look up any student's guides", async () => {
+      const student = await createDummyUser();
+      const guide = await createDummyGuide();
+      const studentReturn = await createDummyReturn(student, guide);
+      const teacher = await createDummyUser("teacher");
+      (auth as jest.Mock).mockResolvedValue({
+        user: { id: teacher._id.toString(), role: "teacher" },
+      });
+
+      const info = findGuideById(
+        await getGuides(student._id.toString()),
+        guide._id
+      );
+
+      expect(info?.returnsSubmitted.map((r: any) => r._id)).toEqual([
+        studentReturn._id.toString(),
+      ]);
+    });
+
+    it("keeps working for a teacher who is aliased as a student", async () => {
+      const student = await createDummyUser();
+      const guide = await createDummyGuide();
+      const studentReturn = await createDummyReturn(student, guide);
+      const other = await createDummyUser();
+      // While aliased, session.user IS the student; the original role is what
+      // grants the lookup.
+      (auth as jest.Mock).mockResolvedValue({
+        user: {
+          id: other._id.toString(),
+          role: "user",
+          isAliased: true,
+          originalUser: { id: "t", role: "teacher" },
+        },
+      });
+
+      const info = findGuideById(
+        await getGuides(student._id.toString()),
+        guide._id
+      );
+
+      expect(info?.returnsSubmitted.map((r: any) => r._id)).toEqual([
+        studentReturn._id.toString(),
+      ]);
+    });
   });
 });
