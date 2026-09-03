@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { auth } from "../../../auth";
 import { getUserRecordings } from "serverActions/Zoom/getZoomRec";
 import VideoCard from "./components/videoCard/videoCard";
 import GoogleDriveButton from "./components/googleDriveButton/googleDriveButton";
@@ -12,6 +14,11 @@ import {
 import { PageTitle, TitleBlock } from "globalStyles/pageStyles";
 
 const Resources = async () => {
+  // The proxy already redirects anonymous visitors; this is the page's own
+  // check so a matcher change cannot expose the recordings.
+  const session = await auth();
+  if (!session?.user) redirect("/signin");
+
   const { meetings, unavailable } = await getUserRecordings();
 
   return (

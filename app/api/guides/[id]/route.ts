@@ -43,6 +43,15 @@ const exerciseTaskSchema = z
         })
       )
       .optional(),
+    // Code tasks: the harness interpolates this name into the script it
+    // runs, so it may only ever be an identifier.
+    entryPoint: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z_$][\w$]*$/, {
+        message: "The entry point must be a plain function name",
+      })
+      .optional(),
     // Quiz-only; required by the refinement below when type === "quiz".
     options: z.array(z.string()).min(2).optional(),
     correctAnswers: z.array(z.number().int().min(0)).min(1).optional(),

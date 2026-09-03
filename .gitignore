@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 dbBackup/
 /.next-verify/
+
+# local scratch
+.venv/
+pictures_for_claude/
