@@ -46,6 +46,8 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     role?: string;
+    /** When the token last re-read its user from the database (ms epoch). */
+    checkedAt?: number;
     avatarUrl?: string;
     background?: string;
     careerGoals?: string;

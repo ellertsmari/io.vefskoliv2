@@ -1,5 +1,44 @@
+const isProduction = process.env.NODE_ENV === "production";
+
+// Only report for now: styled-components and the markdown editor need inline
+// styles/scripts, the gallery frames student sites, and images come from
+// wherever a student hosted them. Violations show up in the browser console as
+// "[Report Only]" lines. Once a week of teacher and student sessions is clean,
+// this moves into the enforced header below.
+const contentSecurityPolicyReportOnly = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' blob: https:",
+  "connect-src 'self' https://*.blob.vercel-storage.com https://blob.vercel-storage.com",
+  "frame-src https:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
+const securityHeaders = [
+  // Enforced: nothing but this app and Canvas may put these pages in a frame.
+  {
+    key: "Content-Security-Policy",
+    value: "frame-ancestors 'self' https://canvas.instructure.com",
+  },
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value: contentSecurityPolicyReportOnly,
+  },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders }];
+  },
   // `next dev` and `next build` both write to .next by default, so running a
   // build while a dev server is up overwrites the manifests that server is
   // reading and it starts returning 404s for routes that plainly exist. Set

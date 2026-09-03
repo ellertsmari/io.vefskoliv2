@@ -8,8 +8,18 @@ import { connectToDatabase } from "serverActions/mongoose-connector";
 import { cookies } from "next/headers";
 import { verifyCredentials } from "app/lib/credentials";
 import { getClientIp } from "app/lib/clientIp";
+import { refreshToken, snapshotUser } from "app/lib/sessionToken";
 
 export { getUser } from "app/lib/credentials";
+
+/**
+ * How long a signed-in browser stays signed in without visiting, and how
+ * often a visit extends that. A week covers a normal study rhythm; a token
+ * that goes untouched for longer than that is more likely a forgotten
+ * library computer than a student.
+ */
+const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+const SESSION_UPDATE_AGE_SECONDS = 60 * 60;
 
 const nextAuth = NextAuth({
   ...authConfig,
@@ -30,38 +40,31 @@ const nextAuth = NextAuth({
   ],
   session: {
     strategy: "jwt",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    updateAge: SESSION_UPDATE_AGE_SECONDS,
   },
   secret: process.env.AUTH_SECRET,
 
   callbacks: {
     async jwt({ token, user }) {
-      // If this is the first time the JWT callback is called (on sign in)
+      // First call, right after `authorize` succeeded.
       if (user) {
         try {
           await connectToDatabase();
           const dbuser: UserDocument | null = await User.findOne({
             email: user.email,
           });
-          
-          if (dbuser) {
-            // Store all user data in the token to avoid database lookups in session callback
-            token.id = dbuser.id.toString();
-            token.role = dbuser.role;
-            token.avatarUrl = dbuser.avatarUrl;
-            token.background = dbuser.background;
-            token.careerGoals = dbuser.careerGoals;
-            token.email = dbuser.email;
-            token.favoriteArtists = dbuser.favoriteArtists;
-            token.interests = dbuser.interests;
-            token.name = dbuser.name;
-          }
+          if (dbuser) snapshotUser(token, dbuser);
         } catch (error) {
           console.error("Error in JWT callback:", error);
           // Return token as-is if database lookup fails
         }
+        return token;
       }
 
-      return token;
+      // Later calls: every so often re-read the user, and drop the session
+      // if the account is gone or no longer active.
+      return refreshToken(token);
     },
     async session({ session, token }) {
       // Use data from the token instead of making database calls
@@ -69,13 +72,13 @@ const nextAuth = NextAuth({
         // Check for alias cookie
         const cookieStore = await cookies();
         const aliasedUserId = cookieStore.get('aliased-user')?.value;
-        
+
         // If teacher has set an alias, override the session with the aliased user
         if (aliasedUserId && token.role === "teacher") {
           try {
             await connectToDatabase();
             const aliasUser = await User.findById(aliasedUserId);
-            
+
             if (aliasUser) {
               session.user = {
                 ...session.user,
