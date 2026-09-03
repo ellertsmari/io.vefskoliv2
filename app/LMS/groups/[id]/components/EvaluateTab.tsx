@@ -91,7 +91,7 @@ const Footer = styled.div`
 const BalanceCard = styled.div<{ $over: boolean; $sticky?: boolean }>`
   border: 2px solid
     ${({ $over }) =>
-      $over ? "var(--error-failure-100)" : "var(--error-success-100)"};
+      $over ? "var(--error-failure-100)" : "var(--primary-black-10)"};
   background: var(--primary-white);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
@@ -125,7 +125,7 @@ const AxisHead = styled.div`
   font-weight: 600;
 `;
 
-const StatusPill = styled.span<{ $over: boolean }>`
+const StatusPill = styled.span<{ $tone: "ok" | "pending" | "over" }>`
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -133,9 +133,14 @@ const StatusPill = styled.span<{ $over: boolean }>`
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--primary-white);
-  background: ${({ $over }) =>
-    $over ? "var(--error-failure-100)" : "var(--error-success-100)"};
+  color: ${({ $tone }) =>
+    $tone === "pending" ? "var(--primary-black-100)" : "var(--primary-white)"};
+  background: ${({ $tone }) =>
+    $tone === "over"
+      ? "var(--error-failure-100)"
+      : $tone === "pending"
+        ? "var(--primary-black-10)"
+        : "var(--error-success-100)"};
 `;
 
 const Instruction = styled.p`
@@ -230,13 +235,23 @@ const BalanceMeter = ({
     axis === "contribution"
       ? evals[memberId]?.contributionScore
       : evals[memberId]?.teambuildingScore;
-  const over = axes.some((axis) => balances[axis] > PEER_BALANCE_MAX);
+  const scoredCount = (axis: PeerAxis) =>
+    members.filter((member) => scoreOf(axis, member._id) != null).length;
+  // Ups usually get picked before the downs that pay for them, so a high
+  // balance halfway through is the normal state. Only a finished axis that is
+  // still over gets the red treatment.
+  const isOver = (axis: PeerAxis) =>
+    balances[axis] > PEER_BALANCE_MAX && scoredCount(axis) === members.length;
+  const over = axes.some(isOver);
 
   return (
     <BalanceCard $over={over} $sticky={sticky} aria-live="polite">
       {axes.map((axis) => {
         const balance = balances[axis];
-        const axisOver = balance > PEER_BALANCE_MAX;
+        const scored = scoredCount(axis);
+        const complete = scored === members.length;
+        const axisOver = isOver(axis);
+        const pending = !complete && balance > PEER_BALANCE_MAX;
         const aboveAverage = members
           .map((member) => ({ member, score: scoreOf(axis, member._id) ?? 0 }))
           .filter((entry) => entry.score > 0)
@@ -245,12 +260,21 @@ const BalanceMeter = ({
           <AxisBlock key={axis}>
             <AxisHead>
               <span>{PEER_AXIS_LABELS[axis]} balance</span>
-              <StatusPill $over={axisOver}>
+              <StatusPill $tone={axisOver ? "over" : pending ? "pending" : "ok"}>
                 {signed(balance)}
-                {axisOver ? " · too high" : " · OK"}
+                {axisOver
+                  ? " · too high"
+                  : complete
+                    ? " · OK"
+                    : ` so far · ${scored} of ${members.length} scored`}
               </StatusPill>
             </AxisHead>
-            {axisOver ? (
+            {pending ? (
+              <NameChips>
+                Keep going. Every step up needs a step down somewhere before
+                you submit, and it is fine to sort that out at the end.
+              </NameChips>
+            ) : axisOver ? (
               <>
                 <Instruction>
                   You have marked people up {balance} step
@@ -426,6 +450,20 @@ const PeerEvaluationSection = ({
   const overBudget =
     balances.contribution > PEER_BALANCE_MAX ||
     balances.teambuilding > PEER_BALANCE_MAX;
+  // Red only once an axis is fully scored: while it is half done, a high
+  // balance is expected and pointing at it just frightens people off.
+  const axisComplete = (axis: PeerAxis) =>
+    scores.every((entry) =>
+      axis === "contribution"
+        ? entry.contributionScore != null
+        : entry.teambuildingScore != null
+    );
+  const flagged = {
+    contribution:
+      balances.contribution > PEER_BALANCE_MAX && axisComplete("contribution"),
+    teambuilding:
+      balances.teambuilding > PEER_BALANCE_MAX && axisComplete("teambuilding"),
+  };
 
   // Answers saved before the balance rule existed are left exactly as they
   // were — the rule applies to what is submitted from now on. Say so, rather
@@ -508,11 +546,9 @@ const PeerEvaluationSection = ({
           const entry = evals[member._id];
           const isSelf = member._id === userId;
           const contributionPushes =
-            balances.contribution > PEER_BALANCE_MAX &&
-            (entry.contributionScore ?? 0) > 0;
+            flagged.contribution && (entry.contributionScore ?? 0) > 0;
           const teambuildingPushes =
-            balances.teambuilding > PEER_BALANCE_MAX &&
-            (entry.teambuildingScore ?? 0) > 0;
+            flagged.teambuilding && (entry.teambuildingScore ?? 0) > 0;
           return (
             <Card key={member._id}>
               <MemberHeader>
@@ -604,11 +640,11 @@ const PeerEvaluationSection = ({
           >
             {saving ? "Submitting…" : "Submit peer evaluation"}
           </PrimaryButton>
-          {overBudget && (
+          {(flagged.contribution || flagged.teambuilding) && (
             <Message $error>
               Not yet: the{" "}
               {(Object.keys(PEER_AXIS_LABELS) as PeerAxis[])
-                .filter((axis) => balances[axis] > PEER_BALANCE_MAX)
+                .filter((axis) => flagged[axis])
                 .map((axis) => PEER_AXIS_LABELS[axis].toLowerCase())
                 .join(" and ")}{" "}
               balance is too high. See the box above for what to lower.
