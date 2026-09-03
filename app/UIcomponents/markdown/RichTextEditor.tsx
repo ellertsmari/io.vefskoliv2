@@ -179,6 +179,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, []);
 
   const handleInput = useCallback(() => {
+    // Whatever is in the editor now is the user's; stop seeding from `value`.
+    setInitialized(true);
     if (editorRef.current) {
       // Get the plain text content for simple cases
       const plainText = editorRef.current.innerText || '';
@@ -243,18 +245,24 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [setValue]);
 
-  // Initialize content only once
+  // Seed the editor from `value` (a saved draft) once. Never while the
+  // editor has focus: an empty draft used to leave this un-initialized, so
+  // the first keystroke made `value` non-empty, the effect rewrote the
+  // editor's HTML with that one letter, and the caret jumped to the start.
+  // "That" came out as "hatT".
   useEffect(() => {
-    if (!initialized && editorRef.current && value) {
-      // Convert initial markdown to HTML
-      let html = value
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
-        .replace(/\n/g, '<br>');
-      
-      editorRef.current.innerHTML = html;
+    const editor = editorRef.current;
+    if (initialized || !editor || !value) return;
+    if (document.activeElement === editor) {
       setInitialized(true);
+      return;
     }
+    // Convert initial markdown to HTML
+    editor.innerHTML = value
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+      .replace(/\n/g, '<br>');
+    setInitialized(true);
   }, [value, initialized]);
 
   // Close tooltip when clicking outside
