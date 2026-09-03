@@ -109,14 +109,19 @@ export function getLTIConfig(): LTIConfig {
   return config;
 }
 
-export function getUserRoleFromLTI(roles: string[]): 'student' | 'teacher' {
+/**
+ * Map Canvas roles onto this app's two roles. Students are `"user"` here,
+ * the same value sign-up writes and every teacher check compares against;
+ * any other spelling would be an account that is neither.
+ */
+export function getUserRoleFromLTI(roles: string[]): 'user' | 'teacher' {
   const hasTeacherRole = roles.some(role => 
     role.includes('Instructor') || 
     role.includes('Teacher') || 
     role.includes('Administrator')
   );
   
-  return hasTeacherRole ? 'teacher' : 'student';
+  return hasTeacherRole ? 'teacher' : 'user';
 }
 /**
  * Every OAuth2 scope the tool needs from Canvas, in one place. Requested when

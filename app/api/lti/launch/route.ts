@@ -47,8 +47,13 @@ export async function POST(request: NextRequest) {
     const contextInfo = extractContextInfo(claims);
     const gradingInfo = extractGradingInfo(claims);
     
-    // Find or create user
-    let user = await User.findOne({ email: userInfo.email });
+    // Find or create user. The LTI subject id is the stable identity; the
+    // email is a fallback for accounts that registered here before their
+    // first launch. An email match alone would hand an account to whoever
+    // holds that address in Canvas later.
+    let user =
+      (await User.findOne({ ltiId: userInfo.id })) ??
+      (await User.findOne({ email: userInfo.email }));
     
     if (!user) {
       // Create new user from LTI data

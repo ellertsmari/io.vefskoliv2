@@ -15,10 +15,10 @@ describe('LTI Config Utils', () => {
       expect(result).toBe('teacher');
     });
 
-    it('should return student for Learner role', () => {
+    it('should return user for Learner role', () => {
       const roles = [LTI_ROLES.STUDENT];
       const result = getUserRoleFromLTI(roles);
-      expect(result).toBe('student');
+      expect(result).toBe('user');
     });
 
     it('should return teacher when user has both teacher and student roles', () => {
@@ -27,16 +27,16 @@ describe('LTI Config Utils', () => {
       expect(result).toBe('teacher');
     });
 
-    it('should return student when no recognized roles are present', () => {
+    it('should return user when no recognized roles are present', () => {
       const roles = ['http://purl.imsglobal.org/vocab/lis/v2/membership#ContentDeveloper'];
       const result = getUserRoleFromLTI(roles);
-      expect(result).toBe('student');
+      expect(result).toBe('user');
     });
 
-    it('should return student for empty roles array', () => {
+    it('should return user for empty roles array', () => {
       const roles: string[] = [];
       const result = getUserRoleFromLTI(roles);
-      expect(result).toBe('student');
+      expect(result).toBe('user');
     });
 
     it('should handle roles with partial matches containing Instructor', () => {

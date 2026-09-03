@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SignJWT, importPKCS8 } from 'jose';
+import { SignJWT, importPKCS8, jwtVerify } from 'jose';
 import { getLTIConfig } from '../../../../lib/lti-config';
 import { connectToDatabase } from '../../../../serverActions/mongoose-connector';
 import { Guide } from '../../../../models/guide';
@@ -25,10 +25,58 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get LTI session from cookie to access deep linking context
+    // The launch route issued this token after verifying Canvas's id_token;
+    // it is the only proof that whoever posts here came through a launch and
+    // is a teacher there. The cookie's presence alone proves nothing.
     const ltiSession = request.cookies.get('lti-session')?.value;
     if (!ltiSession) {
       return NextResponse.json({ error: 'No LTI session found' }, { status: 401 });
+    }
+    const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+    if (!nextAuthSecret) {
+      throw new Error('NEXTAUTH_SECRET environment variable is required');
+    }
+    let sessionRole: unknown;
+    try {
+      const { payload } = await jwtVerify(
+        ltiSession,
+        new TextEncoder().encode(nextAuthSecret),
+        { algorithms: ['HS256'] }
+      );
+      sessionRole = payload.role;
+    } catch {
+      return NextResponse.json({ error: 'Invalid LTI session' }, { status: 401 });
+    }
+    if (sessionRole !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Only teachers can add content to a course' },
+        { status: 403 }
+      );
+    }
+
+    const config = getLTIConfig();
+
+    // The launch route validated this URL before storing it, but a cookie can
+    // be set by anything on the site, so check it again before posting a
+    // signed response to it.
+    const returnUrl = request.cookies.get('lti-deep-link-return')?.value;
+    if (!returnUrl) {
+      return NextResponse.json(
+        { error: 'Deep linking return URL not found. Session may have expired.' },
+        { status: 400 }
+      );
+    }
+    let returnOrigin: string | null = null;
+    try {
+      returnOrigin = new URL(returnUrl).origin;
+    } catch {
+      returnOrigin = null;
+    }
+    if (!returnOrigin || returnOrigin !== new URL(config.issuer).origin) {
+      return NextResponse.json(
+        { error: 'Deep linking return URL is not trusted' },
+        { status: 400 }
+      );
     }
 
     await connectToDatabase();
@@ -36,7 +84,6 @@ export async function POST(request: NextRequest) {
     // Fetch selected guides
     const guides = await Guide.find({ _id: { $in: selectedGuides } });
     
-    const config = getLTIConfig();
     const baseUrl = process.env.NEXTAUTH_URL;
     if (!baseUrl) {
       throw new Error('NEXTAUTH_URL environment variable is required');
@@ -85,16 +132,6 @@ export async function POST(request: NextRequest) {
       })
       .sign(privateKey);
 
-    // Get the validated deep linking return URL from cookie
-    const returnUrl = request.cookies.get('lti-deep-link-return')?.value;
-    
-    if (!returnUrl) {
-      return NextResponse.json(
-        { error: 'Deep linking return URL not found. Session may have expired.' },
-        { status: 400 }
-      );
-    }
-    
     // Escape HTML entities to prevent XSS
     const escapeHtml = (text: string) => text
       .replace(/&/g, '&amp;')
