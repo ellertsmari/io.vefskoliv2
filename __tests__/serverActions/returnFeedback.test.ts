@@ -50,7 +50,7 @@ describe("returnReview", () => {
     };
   };
 
-  it("stores a review of somebody else's project", async () => {
+  it("stores a review of somebody else's return", async () => {
     const { reviewer, project, guide, input } = await scenario();
 
     const result = await returnReview(undefined, {
@@ -111,7 +111,7 @@ describe("returnReview", () => {
     expect(await Review.countDocuments()).toBe(0);
   });
 
-  it("refuses a project that does not exist", async () => {
+  it("refuses a return that does not exist", async () => {
     const { input } = await scenario();
 
     const result = await returnReview(undefined, {
@@ -120,11 +120,11 @@ describe("returnReview", () => {
     });
 
     expect(result).toEqual(
-      expect.objectContaining({ success: false, message: "Project not found" })
+      expect.objectContaining({ success: false, message: "Return not found" })
     );
   });
 
-  it("refuses a project filed under a different guide", async () => {
+  it("refuses a return filed under a different guide", async () => {
     const { input } = await scenario();
     const otherGuide = await createDummyGuide();
 
@@ -138,18 +138,18 @@ describe("returnReview", () => {
     expect(await Review.countDocuments()).toBe(0);
   });
 
-  it("refuses a review of the reviewer's own project", async () => {
+  it("refuses a review of the reviewer's own return", async () => {
     const { author, input } = await scenario();
     signInAs(author._id);
 
     const result = await returnReview(undefined, input);
 
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.message).toMatch(/your own project/i);
+    if (!result.success) expect(result.message).toMatch(/your own return/i);
     expect(await Review.countDocuments()).toBe(0);
   });
 
-  it("refuses a second review of the same project by the same person", async () => {
+  it("refuses a second review of the same return by the same person", async () => {
     const { input } = await scenario();
     expect((await returnReview(undefined, input)).success).toBe(true);
 

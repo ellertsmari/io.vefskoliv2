@@ -53,26 +53,27 @@ export async function returnReview(
   try {
     await connectToDatabase();
 
-    // The form only offers projects the student is allowed to review, but
+    // The form only offers returns the student is allowed to review, but
     // the ids arrive from the browser and the rules have to hold here too:
-    // the project must exist, belong to the guide it claims, not be their
+    // the return must exist, belong to the guide it claims, not be their
     // own, and not already carry a review from them. Each of these fed the
-    // grading pipeline before.
-    const project = await Return.findById(returnId, { owner: 1, guide: 1 })
+    // grading pipeline before. ("Return" is one submission of a guide; the
+    // guide's project brief is a different thing, so don't say "project".)
+    const submission = await Return.findById(returnId, { owner: 1, guide: 1 })
       .lean<{ owner: ObjectId; guide: ObjectId }>();
-    if (!project) return failure(ErrorMessages.NOT_FOUND("Project"));
-    if (!project.guide.equals(guideId)) {
-      return failure("That project does not belong to this guide.");
+    if (!submission) return failure(ErrorMessages.NOT_FOUND("Return"));
+    if (!submission.guide.equals(guideId)) {
+      return failure("That return does not belong to this guide.");
     }
-    if (project.owner.equals(user.id)) {
-      return failure("You cannot review your own project.");
+    if (submission.owner.equals(user.id)) {
+      return failure("You cannot review your own return.");
     }
     const alreadyReviewed = await Review.exists({
       owner: user.id,
       return: returnId,
     });
     if (alreadyReviewed) {
-      return failure("You have already reviewed this project.");
+      return failure("You have already reviewed this return.");
     }
 
     const reviewData: Omit<ReviewType, "createdAt"> = {
