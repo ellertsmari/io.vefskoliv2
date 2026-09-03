@@ -1,4 +1,4 @@
-// Static calendar data for the autumn semester (Spönn 1 & 2), 2026.
+// The built-in autumn 2026 semester plan (Spönn 1 & 2).
 //
 // Two sources are merged here:
 //  - The official Tækniskólinn school calendar (docs/schoolcal.pdf) provides the
@@ -9,17 +9,15 @@
 //    The plan is keyed by "Vika" (ISO week) numbers, so last year's content maps
 //    cleanly onto this year's dates by week number.
 //
-// CRUD + authorization come later — for now this is a static, read-only dataset
-// so we can iterate on the UI/UX. Only one semester is active at a time, so only
-// August–December 2026 are exposed.
+// Calendar events now live in the database (models/calendarEvent). This file
+// is the seed a teacher can import from the calendar's semester settings, and
+// the fallback semester range shown before any semester has been saved.
 
 import type {
   EventCategory,
   CalendarEvent,
   CategoryMeta,
 } from "types/calendarTypes";
-
-export type { EventCategory, CalendarEvent, CategoryMeta };
 
 export const CATEGORY_META: Record<EventCategory, CategoryMeta> = {
   milestone: { label: "Key date", color: "var(--theme-module3-100)" },
@@ -29,15 +27,18 @@ export const CATEGORY_META: Record<EventCategory, CategoryMeta> = {
   holiday: { label: "Holiday", color: "var(--primary-black-30)" },
 };
 
-/** Months exposed to students/teachers for the active semester (0-indexed). */
-export const SEMESTER = {
-  year: 2026,
+/** Used until a teacher saves a semester in the calendar settings. */
+export const DEFAULT_SEMESTER = {
   label: "Autumn Semester 2026",
-  /** Inclusive range of months shown, August (7) – December (11). */
-  months: [7, 8, 9, 10, 11] as const,
+  startDate: "2026-08-17",
+  endDate: "2026-12-21",
+  spann2Start: "2026-10-19",
 };
 
-export const CALENDAR_EVENTS: CalendarEvent[] = [
+/** Stable key so importing the plan twice never duplicates an event. */
+export const PLAN_IMPORT_PREFIX = "plan-2026-autumn";
+
+export const SEMESTER_PLAN_2026: CalendarEvent[] = [
   // ── Week 34 · Intro / Module 1 ──────────────────────────────────────────
   {
     id: "first-day",

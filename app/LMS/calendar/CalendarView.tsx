@@ -1,21 +1,29 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { CATEGORY_META } from "constants/semesterPlan";
+import { deleteCalendarEvent } from "serverActions/calendarEvents";
 import {
-  CALENDAR_EVENTS,
-  CATEGORY_META,
-  SEMESTER,
-  type CalendarEvent,
-} from "./calendarData";
+  describeSemester,
+  initialMonthIndex,
+  semesterMonths,
+  todayKey,
+} from "utils/calendarUtils";
+import type { CalendarEvent, SemesterInfo } from "types/calendarTypes";
+import { EventForm } from "./EventForm";
 import {
   CalendarContainer,
   Header,
   TitleBlock,
   PageTitle,
   PageSubtitle,
+  HeaderActions,
   MonthNav,
   NavButton,
+  TodayButton,
   MonthLabel,
+  AddEventButton,
   Legend,
   LegendItem,
   Layout,
@@ -29,8 +37,10 @@ import {
   MorePill,
   SpanBar,
   Panel,
+  SheetClose,
   PanelDate,
   PanelHint,
+  PanelAddButton,
   EventList,
   EventItem,
   EventTitle,
@@ -38,6 +48,12 @@ import {
   CategoryBadge,
   EventTime,
   EventDescription,
+  EventLink,
+  OwnerLine,
+  EventActions,
+  SmallActionButton,
+  ConfirmText,
+  FormError,
 } from "./style";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -101,41 +117,69 @@ const formatLongDate = (key: string) => {
   return `${WEEKDAYS[mondayIndex(new Date(y, m - 1, d))]} ${d} ${MONTH_NAMES[m - 1]}`;
 };
 
+const isMine = (event: CalendarEvent) =>
+  !!event.visibility && event.visibility !== "everyone";
+
+type Dialog =
+  | { mode: "create"; date?: string }
+  | { mode: "edit"; event: CalendarEvent }
+  | null;
+
 export default function CalendarView({
-  extraEvents = [],
+  events,
+  semester,
+  isTeacher,
+  teamName = null,
+  settings,
 }: {
-  /** Dynamic events (e.g. group projects) merged into the static schedule. */
-  extraEvents?: CalendarEvent[];
+  events: CalendarEvent[];
+  semester: SemesterInfo;
+  isTeacher: boolean;
+  /** The viewer's team, for "My team" events. */
+  teamName?: string | null;
+  /** Teacher-only settings, rendered under the header. */
+  settings?: React.ReactNode;
 }) {
-  const { year, months } = SEMESTER;
-  const [monthCursor, setMonthCursor] = useState(0); // index into SEMESTER.months
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
-
-  const month = months[monthCursor];
-  const todayKey = toKey(new Date());
-
-  const allEvents = useMemo(
-    () => [...CALENDAR_EVENTS, ...extraEvents],
-    [extraEvents],
+  const router = useRouter();
+  const months = useMemo(
+    () => semesterMonths(semester.startDate, semester.endDate),
+    [semester.startDate, semester.endDate],
   );
+  const today = todayKey();
+  const [monthCursor, setMonthCursor] = useState(() =>
+    initialMonthIndex(months, today),
+  );
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<Dialog>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, startDelete] = useTransition();
+
+  const { year, month } = months[Math.min(monthCursor, months.length - 1)];
 
   // Multi-day events render as continuous bars; the rest as day pills.
   const multiDayEvents = useMemo(
     () =>
-      allEvents
+      events
         .filter((e) => e.endDate && e.endDate > e.date)
         .sort(
           (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id),
         ),
-    [allEvents],
+    [events],
   );
   const singleDayEvents = useMemo(
-    () => allEvents.filter((e) => !(e.endDate && e.endDate > e.date)),
-    [allEvents],
+    () =>
+      events
+        .filter((e) => !(e.endDate && e.endDate > e.date))
+        .sort(
+          (a, b) =>
+            a.date.localeCompare(b.date) ||
+            (a.time ?? "").localeCompare(b.time ?? ""),
+        ),
+    [events],
   );
 
-  // Every day each multi-day event covers, precomputed once (mirrors
-  // eventsByDate below instead of filtering per day cell per render).
+  // Every day each multi-day event covers, precomputed once.
   const spansByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
     for (const event of multiDayEvents) {
@@ -155,7 +199,6 @@ export default function CalendarView({
 
   const spansOnDay = (key: string) => spansByDate.get(key) ?? [];
 
-  // Group single-day events by date once.
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
     for (const event of singleDayEvents) {
@@ -171,11 +214,13 @@ export default function CalendarView({
   const selectedEvents = selectedKey
     ? [...spansOnDay(selectedKey), ...(eventsByDate.get(selectedKey) ?? [])]
     : [];
+
   const monthEventCount = useMemo(() => {
-    const monthStart = `${year}-${pad(month + 1)}-01`;
+    const prefix = `${year}-${pad(month + 1)}`;
+    const monthStart = `${prefix}-01`;
     const monthEnd = toKey(new Date(year, month + 1, 0));
-    const singles = singleDayEvents.filter(
-      (e) => Number(e.date.split("-")[1]) - 1 === month,
+    const singles = singleDayEvents.filter((e) =>
+      e.date.startsWith(prefix),
     ).length;
     const spans = multiDayEvents.filter(
       (e) => e.date <= monthEnd && e.endDate! >= monthStart,
@@ -186,37 +231,75 @@ export default function CalendarView({
   const goToMonth = (next: number) => {
     setMonthCursor(next);
     setSelectedKey(null);
+    setConfirmDelete(null);
   };
+
+  const goToToday = () => {
+    setMonthCursor(initialMonthIndex(months, today));
+    const [y, m] = today.split("-").map(Number);
+    const inTerm = months.some((ym) => ym.year === y && ym.month === m - 1);
+    setSelectedKey(inTerm ? today : null);
+  };
+
+  const removeEvent = (event: CalendarEvent, applyToSeries: boolean) => {
+    setDeleteError(null);
+    startDelete(async () => {
+      const result = await deleteCalendarEvent(event.id, { applyToSeries });
+      if (result.success) {
+        setConfirmDelete(null);
+        router.refresh();
+      } else {
+        setDeleteError(result.message);
+      }
+    });
+  };
+
+  const closeDialog = () => setDialog(null);
 
   return (
     <CalendarContainer>
       <Header>
         <TitleBlock>
           <PageTitle>Calendar</PageTitle>
-          <PageSubtitle>{SEMESTER.label} · Spönn 1 &amp; 2</PageSubtitle>
+          <PageSubtitle>{describeSemester(semester)}</PageSubtitle>
         </TitleBlock>
-        <MonthNav>
-          <NavButton
+        <HeaderActions>
+          <MonthNav>
+            <NavButton
+              type="button"
+              aria-label="Previous month"
+              disabled={monthCursor === 0}
+              onClick={() => goToMonth(monthCursor - 1)}
+            >
+              ‹
+            </NavButton>
+            <MonthLabel>
+              {MONTH_NAMES[month]} {year}
+            </MonthLabel>
+            <NavButton
+              type="button"
+              aria-label="Next month"
+              disabled={monthCursor >= months.length - 1}
+              onClick={() => goToMonth(monthCursor + 1)}
+            >
+              ›
+            </NavButton>
+            <TodayButton type="button" onClick={goToToday}>
+              Today
+            </TodayButton>
+          </MonthNav>
+          <AddEventButton
             type="button"
-            aria-label="Previous month"
-            disabled={monthCursor === 0}
-            onClick={() => goToMonth(monthCursor - 1)}
+            onClick={() =>
+              setDialog({ mode: "create", date: selectedKey ?? undefined })
+            }
           >
-            ‹
-          </NavButton>
-          <MonthLabel>
-            {MONTH_NAMES[month]} {year}
-          </MonthLabel>
-          <NavButton
-            type="button"
-            aria-label="Next month"
-            disabled={monthCursor === months.length - 1}
-            onClick={() => goToMonth(monthCursor + 1)}
-          >
-            ›
-          </NavButton>
-        </MonthNav>
+            + New event
+          </AddEventButton>
+        </HeaderActions>
       </Header>
+
+      {settings}
 
       <Legend>
         {Object.values(CATEGORY_META).map((meta) => (
@@ -224,6 +307,11 @@ export default function CalendarView({
             {meta.label}
           </LegendItem>
         ))}
+        {!isTeacher && (
+          <LegendItem $color="transparent" $hollow>
+            Mine / my team
+          </LegendItem>
+        )}
       </Legend>
 
       <Layout>
@@ -252,11 +340,16 @@ export default function CalendarView({
                     $muted={!inMonth}
                     $weekend={weekendDay}
                     $selected={selectedKey === key && inMonth}
-                    $today={key === todayKey}
+                    $today={key === today}
                     disabled={!inMonth}
-                    onClick={() => inMonth && setSelectedKey(key)}
+                    aria-label={`${formatLongDate(key)}, ${dayEvents.length + daySpans.length} events`}
+                    onClick={() => {
+                      if (!inMonth) return;
+                      setSelectedKey(key);
+                      setConfirmDelete(null);
+                    }}
                   >
-                    <DayNumber $muted={!inMonth} $today={key === todayKey}>
+                    <DayNumber $muted={!inMonth} $today={key === today}>
                       {day.getDate()}
                     </DayNumber>
                     {daySpans.map((event) => {
@@ -272,7 +365,7 @@ export default function CalendarView({
                           $end={isEnd}
                           title={event.title}
                         >
-                          {showLabel ? event.title : " "}
+                          {showLabel ? event.title : " "}
                         </SpanBar>
                       );
                     })}
@@ -280,6 +373,8 @@ export default function CalendarView({
                       <EventPill
                         key={event.id}
                         $color={CATEGORY_META[event.category].color}
+                        $hollow={isMine(event)}
+                        title={event.title}
                       >
                         {event.time ? `${event.time} ` : ""}
                         {event.title}
@@ -293,9 +388,12 @@ export default function CalendarView({
           ))}
         </Grid>
 
-        <Panel>
+        <Panel $sheet={selectedKey !== null} aria-live="polite">
           {selectedKey ? (
             <>
+              <SheetClose type="button" onClick={() => setSelectedKey(null)}>
+                Close
+              </SheetClose>
               <PanelDate>{formatLongDate(selectedKey)}</PanelDate>
               {selectedEvents.length === 0 ? (
                 <PanelHint>No events scheduled.</PanelHint>
@@ -303,6 +401,7 @@ export default function CalendarView({
                 <EventList>
                   {selectedEvents.map((event) => {
                     const meta = CATEGORY_META[event.category];
+                    const confirming = confirmDelete === event.id;
                     return (
                       <EventItem key={event.id} $color={meta.color}>
                         <EventTitle>{event.title}</EventTitle>
@@ -310,24 +409,114 @@ export default function CalendarView({
                           <CategoryBadge $color={meta.color}>
                             {meta.label}
                           </CategoryBadge>
-                          {event.time && <EventTime>{event.time}</EventTime>}
+                          {event.time && (
+                            <EventTime>
+                              {event.time}
+                              {event.endTime ? `–${event.endTime}` : ""}
+                            </EventTime>
+                          )}
                           {event.endDate && (
                             <EventTime>
                               {formatLongDate(event.date)} –{" "}
                               {formatLongDate(event.endDate)}
                             </EventTime>
                           )}
+                          {event.link && (
+                            <EventLink
+                              href={event.link}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Open link
+                            </EventLink>
+                          )}
                         </EventMeta>
                         {event.description && (
-                          <EventDescription>
-                            {event.description}
-                          </EventDescription>
+                          <EventDescription>{event.description}</EventDescription>
+                        )}
+                        {event.source === "generated" ? (
+                          <OwnerLine>From group projects; edit it there.</OwnerLine>
+                        ) : (
+                          event.ownerLabel &&
+                          (isMine(event) || event.source === "user") && (
+                            <OwnerLine>
+                              {event.visibility === "team"
+                                ? `Team: ${event.ownerLabel}`
+                                : event.visibility === "private"
+                                  ? "Only you can see this"
+                                  : `Added by ${event.ownerLabel}`}
+                            </OwnerLine>
+                          )
+                        )}
+                        {event.canEdit && (
+                          <EventActions>
+                            {confirming ? (
+                              <>
+                                <ConfirmText>Delete this event?</ConfirmText>
+                                <SmallActionButton
+                                  type="button"
+                                  $danger
+                                  disabled={deleting}
+                                  onClick={() => removeEvent(event, false)}
+                                >
+                                  {deleting ? "Deleting…" : "Delete"}
+                                </SmallActionButton>
+                                {event.seriesId && (
+                                  <SmallActionButton
+                                    type="button"
+                                    $danger
+                                    disabled={deleting}
+                                    onClick={() => removeEvent(event, true)}
+                                  >
+                                    Delete every week
+                                  </SmallActionButton>
+                                )}
+                                <SmallActionButton
+                                  type="button"
+                                  disabled={deleting}
+                                  onClick={() => setConfirmDelete(null)}
+                                >
+                                  Keep
+                                </SmallActionButton>
+                              </>
+                            ) : (
+                              <>
+                                <SmallActionButton
+                                  type="button"
+                                  onClick={() =>
+                                    setDialog({ mode: "edit", event })
+                                  }
+                                >
+                                  Edit
+                                </SmallActionButton>
+                                <SmallActionButton
+                                  type="button"
+                                  $danger
+                                  onClick={() => {
+                                    setDeleteError(null);
+                                    setConfirmDelete(event.id);
+                                  }}
+                                >
+                                  Delete
+                                </SmallActionButton>
+                              </>
+                            )}
+                          </EventActions>
+                        )}
+                        {confirming && deleteError && (
+                          <FormError role="alert">{deleteError}</FormError>
                         )}
                       </EventItem>
                     );
                   })}
                 </EventList>
               )}
+              <PanelAddButton
+                type="button"
+                onClick={() => setDialog({ mode: "create", date: selectedKey })}
+              >
+                + Add an event on this day
+              </PanelAddButton>
             </>
           ) : (
             <>
@@ -342,6 +531,17 @@ export default function CalendarView({
           )}
         </Panel>
       </Layout>
+
+      {dialog && (
+        <EventForm
+          key={dialog.mode === "edit" ? dialog.event.id : `new-${dialog.date ?? ""}`}
+          initial={dialog.mode === "edit" ? dialog.event : undefined}
+          defaultDate={dialog.mode === "create" ? dialog.date : undefined}
+          isTeacher={isTeacher}
+          teamName={teamName}
+          onClose={closeDialog}
+        />
+      )}
     </CalendarContainer>
   );
 }
