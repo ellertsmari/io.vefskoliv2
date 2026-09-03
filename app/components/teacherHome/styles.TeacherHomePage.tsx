@@ -336,3 +336,99 @@ export const ProjectLink = styled.a`
 export const GradeErrorText = styled(ErrorText)`
   margin-top: 0.5rem;
 `;
+
+/* ── Today's meetings ─────────────────────────────────────────────────── */
+
+export const MeetingsCard = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: var(--primary-white);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-lg);
+`;
+
+export const MeetingsHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+`;
+
+export const MeetingsTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--primary-black-100);
+`;
+
+export const MeetingsLink = styled(Link)`
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--theme-module3-100);
+  text-decoration: underline;
+`;
+
+export const MeetingList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+export const MeetingRow = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--primary-black-10);
+  border-left: 3px solid var(--theme-module3-100);
+  border-radius: var(--radius-md);
+`;
+
+export const MeetingTime = styled.span`
+  display: flex;
+  flex-direction: column;
+  min-width: 6.5rem;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--primary-black-100);
+
+  span {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--primary-black-60);
+  }
+`;
+
+export const MeetingBody = styled.span`
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+`;
+
+export const MeetingWho = styled.span`
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--primary-black-100);
+`;
+
+export const MeetingTopic = styled.span`
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
+  overflow-wrap: anywhere;
+`;
+
+export const MeetingMuted = styled.p`
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--primary-black-60);
+`;

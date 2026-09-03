@@ -23,7 +23,11 @@ import {
   type BookMeetingInput,
   type BookingWindowInput,
 } from "../utils/calendarUtils";
-import type { BookingWindowInfo, MeetingSlot } from "types/calendarTypes";
+import type {
+  BookingWindowInfo,
+  MeetingSlot,
+  UpcomingMeeting,
+} from "types/calendarTypes";
 import {
   failure,
   success,
@@ -308,5 +312,80 @@ export async function bookMeeting(
     );
   } catch (error) {
     return handleActionError("bookMeeting", error, "Failed to book the meeting");
+  }
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────
+
+/** How far ahead the dashboard looks. */
+const UPCOMING_DAYS = 14;
+
+type MeetingRow = {
+  _id: ObjectId;
+  startDate: string;
+  startTime?: string;
+  endTime?: string;
+  description?: string;
+  owner: { _id: ObjectId; name?: string; avatarUrl?: string } | null;
+  sharedWith?: Array<{ _id: ObjectId; name?: string; role?: string }>;
+};
+
+/**
+ * The signed-in teacher's booked meetings from today on, soonest first.
+ * Only meetings they are attending: a booking names the teachers who were
+ * free, and those are the ones who need to turn up.
+ */
+export async function getUpcomingMeetings(): Promise<UpcomingMeeting[]> {
+  const session = await auth();
+  if (!session?.user?.id || !hasTeacherPermissions(session)) return [];
+  const me = session.user.id;
+
+  try {
+    await connectToDatabase();
+    const today = todayKey();
+    const rows = await CalendarEvent.find({
+      category: "meeting",
+      sharedWith: new ObjectId(me),
+      startDate: { $gte: today, $lte: addDays(today, UPCOMING_DAYS) },
+    })
+      .sort({ startDate: 1, startTime: 1 })
+      .populate("owner", "name avatarUrl")
+      .populate("sharedWith", "name role")
+      .lean<MeetingRow[]>();
+
+    const teamNames = new Map<string, string>();
+    const studentIds = rows.map((row) => row.owner?._id).filter(Boolean) as ObjectId[];
+    if (studentIds.length > 0) {
+      const teams = await Team.find(
+        { members: { $in: studentIds } },
+        { name: 1, members: 1 }
+      ).lean<Array<{ name: string; members: ObjectId[] }>>();
+      for (const row of rows) {
+        // "With the team" bookings share with every teammate; spot that by
+        // any non-teacher on the list and name the team they share.
+        const teammates = (row.sharedWith ?? []).filter((p) => p.role !== "teacher");
+        if (teammates.length === 0 || !row.owner) continue;
+        const ownerId = String(row.owner._id);
+        const team = teams.find((t) => t.members.some((m) => String(m) === ownerId));
+        if (team) teamNames.set(String(row._id), team.name);
+      }
+    }
+
+    return rows.map((row) => ({
+      id: String(row._id),
+      date: row.startDate,
+      startTime: row.startTime ?? "",
+      endTime: row.endTime ?? "",
+      topic: row.description ?? "",
+      studentName: row.owner?.name ?? "A student",
+      studentAvatarUrl: row.owner?.avatarUrl ?? undefined,
+      withTeachers: (row.sharedWith ?? [])
+        .filter((p) => p.role === "teacher" && String(p._id) !== me)
+        .map((p) => p.name ?? "A teacher"),
+      teamName: teamNames.get(String(row._id)),
+    }));
+  } catch (error) {
+    handleActionError("getUpcomingMeetings", error);
+    return [];
   }
 }

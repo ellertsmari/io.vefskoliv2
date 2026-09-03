@@ -16,6 +16,7 @@ import {
   deleteBookingWindow,
   getBookingWindows,
   getMeetingSlots,
+  getUpcomingMeetings,
   saveBookingWindow,
 } from "serverActions/meetings";
 import { createCalendarEvent } from "serverActions/calendarEvents";
@@ -243,6 +244,47 @@ describe("meetings", () => {
       });
       expect(taken.success).toBe(false);
       expect(await CalendarEvent.countDocuments({ category: "meeting" })).toBe(1);
+    });
+
+    it("shows up on the attending teachers' dashboards, soonest first", async () => {
+      const bjarni = await createDummyUser("user", { name: "Bjarni" });
+      await Team.create({
+        project: new Types.ObjectId(),
+        name: "Team Rocket",
+        members: [anna._id, bjarni._id],
+      });
+      signInAs(anna);
+      await bookMeeting({ date: nextTuesday, startTime: "13:40", topic: "Later" });
+      await bookMeeting({
+        date: nextTuesday,
+        startTime: "13:00",
+        topic: "Team check-in",
+        withTeam: true,
+      });
+
+      signInAs(smari);
+      const mine = await getUpcomingMeetings();
+
+      expect(mine.map((m) => m.startTime)).toEqual(["13:00", "13:40"]);
+      expect(mine[0]).toEqual(
+        expect.objectContaining({
+          date: nextTuesday,
+          endTime: "13:20",
+          topic: "Team check-in",
+          studentName: "Anna",
+          withTeachers: ["Hanna"],
+          teamName: "Team Rocket",
+        })
+      );
+      expect(mine[1].teamName).toBeUndefined();
+
+      // A teacher who was not free, so not booked, does not see it.
+      const other = await createDummyUser("teacher", { name: "Þórdís" });
+      signInAs(other);
+      expect(await getUpcomingMeetings()).toEqual([]);
+
+      signInAs(anna);
+      expect(await getUpcomingMeetings()).toEqual([]);
     });
 
     it("cannot be done by a teacher, nor by hand as an event", async () => {

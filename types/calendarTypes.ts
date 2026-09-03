@@ -105,3 +105,18 @@ export interface MeetingSlot {
   /** Names of the teachers who would attend. */
   teachers: string[];
 }
+
+/** A booked meeting as the teacher dashboard lists it. */
+export interface UpcomingMeeting {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  topic: string;
+  studentName: string;
+  studentAvatarUrl?: string;
+  /** The other teachers attending, by name. */
+  withTeachers: string[];
+  /** Set when the student put it on their team's calendar too. */
+  teamName?: string;
+}

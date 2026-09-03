@@ -6,6 +6,7 @@ import Modal from "UIcomponents/modal/modal";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import { getUngradedReviews, UngradedReviewWithDetails } from "serverActions/getUngradedReviews";
 import { returnGrade } from "serverActions/returnGrade";
+import { MeetingsPanel } from "./MeetingsPanel";
 import {
   ActionGrid,
   PageContainer,
@@ -290,6 +291,8 @@ export const TeacherHomePage = () => {
         }
         modalContent={<GradingModal />}
       />
+
+      <MeetingsPanel />
 
       <GroupLabel>Manage</GroupLabel>
       <ActionGrid>
