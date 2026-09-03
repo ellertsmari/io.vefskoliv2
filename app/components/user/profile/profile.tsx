@@ -13,6 +13,7 @@ import {
 import ProfilePicture from "./profilePicture";
 import Modal from "UIcomponents/modal/modal";
 import { Input } from "UIcomponents/input/Input";
+import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import DefaultButton from "globalStyles/buttons/default";
 import { LogoutIcon } from "assets/Icons";
 import { signOut } from "serverActions/signOut";
@@ -20,11 +21,13 @@ import { updateUserInfo } from "serverActions/updateUserInfo";
 import { Wrapper } from "globalStyles/globalStyles";
 import { Session } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { UserAliasDropdown } from "../userAliasDropdown/UserAliasDropdown";
 
 export const Profile = ({ session }: { session: Session | null }) => {
   const user = session?.user as AdapterUser;
+  const modalState = useState(false);
 
   return (
     <Wrapper>
@@ -32,8 +35,14 @@ export const Profile = ({ session }: { session: Session | null }) => {
         <ProfileBar>
           <UserAliasDropdown session={session} />
           <Modal
+            state={modalState}
             modalTrigger={<ProfilePicture name={user.name} url={user.avatarUrl} />}
-            modalContent={<EditProfileScreen user={user} />}
+            modalContent={
+              <EditProfileScreen
+                user={user}
+                onSaved={() => modalState[1](false)}
+              />
+            }
           />
         </ProfileBar>
       ) : (
@@ -43,24 +52,45 @@ export const Profile = ({ session }: { session: Session | null }) => {
   );
 };
 
-const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
+const EditProfileScreen = ({
+  user,
+  onSaved,
+}: {
+  user: AdapterUser;
+  onSaved: () => void;
+}) => {
   const [userInfo, setUserInfo] = useState({
+    avatarUrl: user?.avatarUrl || "",
     background: user?.background || "",
     careerGoals: user?.careerGoals || "",
     interests: user?.interests || "",
     favoriteArtists: user?.favoriteArtists || "",
   });
+  const [error, setError] = useState<string | null>(null);
+  const [saving, startSave] = useTransition();
+  const router = useRouter();
 
-  const onSave = async () => {
-    await updateUserInfo(userInfo);
+  const onSave = () => {
+    setError(null);
+    startSave(async () => {
+      const result = await updateUserInfo(userInfo);
+      if (!result.success) {
+        setError(result.message);
+        return;
+      }
+      // The save refreshed the session cookie; re-render the header from it.
+      router.refresh();
+      onSaved();
+    });
   };
 
-  const { background, careerGoals, interests, favoriteArtists } = userInfo;
+  const { avatarUrl, background, careerGoals, interests, favoriteArtists } =
+    userInfo;
 
   return (
     <ProfileWrapper>
       <ProfileDetails>
-        <ProfilePicture name={user.name} url={user.avatarUrl} stacked />
+        <ProfilePicture name={user.name} url={avatarUrl || null} stacked />
         <ProfileInfo>
           <AdditionalInfo>{user.role}</AdditionalInfo>
           <UserEmail>{user.email}</UserEmail>
@@ -74,7 +104,16 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
           <LogoutIcon size={14} />
         </LogoutButton>
       </ProfileDetails>
-      <Form>
+      <Form onSubmit={(e) => e.preventDefault()}>
+        <ImageUploadField
+          id="avatarUrl"
+          prefix="avatar"
+          label="PROFILE PICTURE"
+          description="Shown next to your name across the site."
+          value={avatarUrl}
+          onChange={(value) => setUserInfo({ ...userInfo, avatarUrl: value })}
+          disabled={saving}
+        />
         <Input
           type="text"
           id="background"
@@ -113,15 +152,17 @@ const EditProfileScreen = ({ user }: { user: AdapterUser }) => {
           label="FAVORITE BAND/ARTIST"
         />
       </Form>
+      {error && (
+        <AdditionalInfo role="alert" style={{ color: "var(--error-warning-100)" }}>
+          {error}
+        </AdditionalInfo>
+      )}
       <ButtonWrapper>
-        <DefaultButton style="default" onClick={onSave}>
-          SAVE
+        <DefaultButton style="default" onClick={onSave} disabled={saving}>
+          {saving ? "SAVING…" : "SAVE"}
         </DefaultButton>
         <DefaultButton style="outlined">CHANGE PASSWORD</DefaultButton>
       </ButtonWrapper>
     </ProfileWrapper>
   );
 };
-
-
-

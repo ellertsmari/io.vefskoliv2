@@ -14,7 +14,9 @@ import { auth } from "../../auth";
 
 jest.mock("../../auth", () => ({
   auth: jest.fn(),
+  updateSession: jest.fn().mockResolvedValue(null),
 }));
+import { updateSession } from "../../auth";
 
 describe("updateUserInfo", () => {
   beforeAll(async () => await connect());
@@ -40,6 +42,8 @@ describe("updateUserInfo", () => {
     const result = await updateUserInfo(updatedUserInfo);
 
     expect(result.success).toBe(true);
+    // The header renders from the session token, so a save refreshes it.
+    expect(updateSession).toHaveBeenCalled();
 
     const expectedUser = {
       ...mockUser.toObject(), // Get plain object representation of mockUser

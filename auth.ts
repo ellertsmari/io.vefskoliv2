@@ -46,7 +46,7 @@ const nextAuth = NextAuth({
   secret: process.env.AUTH_SECRET,
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // First call, right after `authorize` succeeded.
       if (user) {
         try {
@@ -61,6 +61,10 @@ const nextAuth = NextAuth({
         }
         return token;
       }
+
+      // `updateSession()` after a profile save: re-read right away so the
+      // header shows the new picture without waiting for the next check.
+      if (trigger === "update") token.checkedAt = 0;
 
       // Later calls: every so often re-read the user, and drop the session
       // if the account is gone or no longer active.
@@ -134,3 +138,10 @@ const nextAuth = NextAuth({
 });
 
 export const { handlers, auth, signIn, signOut } = nextAuth;
+
+/**
+ * Re-issue the session cookie from the database. Only callable where cookies
+ * can be written (server actions, route handlers). The jwt callback treats
+ * the "update" trigger as "read the user again now".
+ */
+export const updateSession = nextAuth.unstable_update;

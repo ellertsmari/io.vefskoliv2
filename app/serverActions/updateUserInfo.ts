@@ -3,12 +3,13 @@ import { z } from "zod";
 import { OptionalUserInfo, User, UserDocument } from "models/user";
 import { optionalStoredImageSchema } from "utils/imageUpload";
 import { ObjectId } from "mongodb";
-import { auth } from "../../auth";
+import { auth, updateSession } from "../../auth";
 import { connectToDatabase } from "./mongoose-connector";
 import {
   failure,
   successNoData,
   handleActionError,
+  logError,
   ErrorMessages,
   type ActionResult,
 } from "../utils/errors";
@@ -45,7 +46,17 @@ export const updateUserInfo = async (
     }
 
     await user.updateUserInfo(validated.data);
-    return successNoData("User info updated successfully");
+
+    // The session token carries a snapshot of the profile (it is what the
+    // header renders). Refresh it now; if that fails the token catches up on
+    // its own within a few minutes, so the save is still a success.
+    try {
+      await updateSession({});
+    } catch (error) {
+      logError("updateUserInfo", error, { step: "updateSession" });
+    }
+
+    return successNoData("Profile saved");
   } catch (error) {
     return handleActionError(
       "updateUserInfo",
