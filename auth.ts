@@ -4,50 +4,27 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import type { UserDocument } from "models/user";
 import { User } from "models/user";
-import bcrypt from "bcrypt";
 import { connectToDatabase } from "serverActions/mongoose-connector";
 import { cookies } from "next/headers";
-import { PendingApprovalError } from "app/lib/authErrors";
+import { verifyCredentials } from "app/lib/credentials";
+import { getClientIp } from "app/lib/clientIp";
 
-export async function getUser(
-  email: string,
-  options: { withPassword?: boolean } = {}
-): Promise<UserDocument | null> {
-  try {
-    await connectToDatabase();
-    // The password hash is `select: false` on the schema; only the credentials
-    // `authorize` flow opts in to it for bcrypt comparison.
-    const query = User.findOne({ email });
-    if (options.withPassword) query.select("+password");
-    const user: UserDocument | null = await query;
-    return user;
-  } catch (error) {
-    throw new Error("Failed to fetch user.");
-  }
-}
+export { getUser } from "app/lib/credentials";
 
 const nextAuth = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
       async authorize(credentials) {
+        // Six, not eight: accounts from before sign-up required eight still
+        // have to be able to log in.
         const parsedCredentials = z
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
+        if (!parsedCredentials.success) return null;
 
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const user = await getUser(email, { withPassword: true });
-          if (!user) return null;
-          const passwordsMatch = await bcrypt.compare(password, user.password);
-          if (!passwordsMatch) return null;
-          // Checked AFTER the password so a wrong password still reads as
-          // "invalid credentials" and this message confirms nothing about
-          // whether an address is registered.
-          if (user.status === "pending") throw new PendingApprovalError();
-          return user;
-        }
-        return null;
+        const { email, password } = parsedCredentials.data;
+        return verifyCredentials({ email, password, ip: await getClientIp() });
       },
     }),
   ],

@@ -24,6 +24,17 @@ jest.mock("../../auth", () => ({
 }));
 import { signIn } from "../../auth";
 
+// Registration is throttled per connection. The real helper needs a
+// database; here it is a switch the "too many" test flips.
+jest.mock("utils/rateLimit", () => ({
+  consume: jest.fn().mockResolvedValue({ allowed: true, retryAfterSeconds: 0 }),
+  rateLimitKey: jest.fn().mockReturnValue("key"),
+}));
+jest.mock("../../app/lib/clientIp", () => ({
+  getClientIp: jest.fn().mockResolvedValue("203.0.113.1"),
+}));
+import { consume } from "utils/rateLimit";
+
 describe("signUp", () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -60,6 +71,20 @@ describe("signUp", () => {
     expect(signIn).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
     expect(result.message).toMatch(/teacher needs to approve/i);
+  });
+
+  it("refuses a connection that has registered too often", async () => {
+    (consume as jest.Mock).mockResolvedValueOnce({
+      allowed: false,
+      retryAfterSeconds: 1800,
+    });
+    User.create = jest.fn();
+
+    const result = await signUp(undefined, validForm());
+
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/too many registrations/i);
+    expect(User.create).not.toHaveBeenCalled();
   });
 
   it("should return an error if form validation fails", async () => {

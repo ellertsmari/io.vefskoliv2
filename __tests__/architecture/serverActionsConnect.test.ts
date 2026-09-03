@@ -31,6 +31,7 @@ const MODEL_NAMES = [
   "PeerEvaluation",
   "TeamEvaluation",
   "JudgeInvitation",
+  "RateLimit",
 ];
 
 const QUERY_METHODS = [

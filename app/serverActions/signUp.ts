@@ -4,6 +4,8 @@ import bcrypt from "bcrypt";
 import { User } from "../models/user";
 import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
+import { consume, rateLimitKey } from "../utils/rateLimit";
+import { getClientIp } from "../lib/clientIp";
 import {
   failure,
   successNoData,
@@ -13,6 +15,9 @@ import {
 } from "../utils/errors";
 
 type SignupFormState = ActionResult<void> | undefined;
+
+/** Registrations one connection may start per hour. */
+const SIGNUP_LIMIT = { limit: 5, windowSeconds: 60 * 60 };
 
 // Not exported: a "use server" module may only export async functions.
 const SIGNUP_SUCCESS_MESSAGE =
@@ -54,6 +59,20 @@ export async function signUp(
     email,
     password: rawPassword,
   } = validatedFields.data;
+
+  // Every account created here lands on a teacher's approval list, so a
+  // script must not be able to fill it faster than a person can read it.
+  const throttle = await consume(
+    rateLimitKey("signup:ip", await getClientIp()),
+    SIGNUP_LIMIT.limit,
+    SIGNUP_LIMIT.windowSeconds
+  );
+  if (!throttle.allowed) {
+    return failure(
+      "Too many registrations from this connection. Try again in an hour."
+    );
+  }
+
   const password = await bcrypt.hash(rawPassword, 10);
 
   try {

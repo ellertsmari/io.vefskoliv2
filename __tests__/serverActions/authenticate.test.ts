@@ -3,7 +3,7 @@
  */
 import { CredentialsSignin } from "next-auth";
 import { authenticate } from "serverActions/authenticate";
-import { PendingApprovalError } from "app/lib/authErrors";
+import { PendingApprovalError, RateLimitedError } from "app/lib/authErrors";
 import { signIn } from "../../auth";
 
 jest.mock("../../auth", () => ({
@@ -48,6 +48,15 @@ describe("authenticate", () => {
 
     expect(message).toMatch(/waiting for a teacher to approve/i);
     expect(message).not.toMatch(/invalid/i);
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("tells a throttled user to wait instead of retyping", async () => {
+    (signIn as jest.Mock).mockRejectedValue(new RateLimitedError());
+
+    const message = await authenticate(undefined, form());
+
+    expect(message).toMatch(/too many attempts/i);
     expect(redirect).not.toHaveBeenCalled();
   });
 });
