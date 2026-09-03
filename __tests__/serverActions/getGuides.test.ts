@@ -216,16 +216,19 @@ describe("getGuides", () => {
         userReturn
       );
 
+      // A person reviews each project at most once, so the second review
+      // has to be of a second project.
+      const secondReturn = await createDummyReturn(undefined, guide);
       const feedbackGiven2 = await createDummyFeedbackWithReturn(
         userE,
         guide,
-        userReturn
+        secondReturn
       );
 
       const feedbackGivenOnOtherGuide = await createDummyFeedbackWithReturn(
         userE,
         undefined,
-        userReturn
+        undefined
       );
       const feedbackGivenByOtherUser = await createDummyFeedbackWithReturn(
         undefined,
@@ -436,7 +439,7 @@ describe("getGuides", () => {
 
       // Graded feedback - should NOT be available (already graded)
       const gradedFeedback = await createDummyGrade(
-        user2,
+        user3,
         guide,
         otherUserReturn
       );

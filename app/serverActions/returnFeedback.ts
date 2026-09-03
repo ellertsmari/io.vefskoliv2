@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import type { ReviewType } from "models/review";
 import { auth } from "../../auth";
 import { Review, Vote } from "models/review";
+import { Return } from "models/return";
 import { connectToDatabase } from "./mongoose-connector";
 import {
   failure,
@@ -49,16 +50,38 @@ export async function returnReview(
   }
   const { user } = session;
 
-  const reviewData: Omit<ReviewType, "createdAt"> = {
-    vote,
-    comment,
-    owner: new ObjectId(user.id),
-    return: new ObjectId(returnId),
-    guide: new ObjectId(guideId),
-  };
-
   try {
     await connectToDatabase();
+
+    // The form only offers projects the student is allowed to review, but
+    // the ids arrive from the browser and the rules have to hold here too:
+    // the project must exist, belong to the guide it claims, not be their
+    // own, and not already carry a review from them. Each of these fed the
+    // grading pipeline before.
+    const project = await Return.findById(returnId, { owner: 1, guide: 1 })
+      .lean<{ owner: ObjectId; guide: ObjectId }>();
+    if (!project) return failure(ErrorMessages.NOT_FOUND("Project"));
+    if (!project.guide.equals(guideId)) {
+      return failure("That project does not belong to this guide.");
+    }
+    if (project.owner.equals(user.id)) {
+      return failure("You cannot review your own project.");
+    }
+    const alreadyReviewed = await Review.exists({
+      owner: user.id,
+      return: returnId,
+    });
+    if (alreadyReviewed) {
+      return failure("You have already reviewed this project.");
+    }
+
+    const reviewData: Omit<ReviewType, "createdAt"> = {
+      vote,
+      comment,
+      owner: new ObjectId(user.id),
+      return: new ObjectId(returnId),
+      guide: new ObjectId(guideId),
+    };
     await Review.create(reviewData);
 
     return successNoData("Review submitted successfully");
@@ -67,12 +90,20 @@ export async function returnReview(
   }
 }
 
+const objectId = (label: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => ObjectId.isValid(value), {
+      message: `Please append a valid ${label}`,
+    });
+
 const ReviewFormSchema = z.object({
   vote: z.nativeEnum(Vote).refine((val) => Object.values(Vote).includes(val), {
     message: "Vote type is invalid",
   }),
-  returnId: z.string().min(2, { message: "Please append a returnId" }).trim(),
-  guideId: z.string().min(2, { message: "Please append a guideId" }).trim(),
+  returnId: objectId("returnId"),
+  guideId: objectId("guideId"),
   comment: z
     .string()
     .min(2, { message: "Please provide a valid review comment" })

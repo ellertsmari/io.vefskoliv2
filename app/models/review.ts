@@ -37,6 +37,9 @@ const reviewSchema = new Schema({
 reviewSchema.index({ guide: 1, owner: 1 });
 reviewSchema.index({ guide: 1, return: 1 });
 reviewSchema.index({ guide: 1, grade: 1 }); // For finding ungraded reviews
+// One review per person per project. `returnReview` checks this before it
+// writes; the index makes it hold under concurrent submissions as well.
+reviewSchema.index({ owner: 1, return: 1 }, { unique: true });
 
 export type ReviewType = InferSchemaType<typeof reviewSchema>;
 
