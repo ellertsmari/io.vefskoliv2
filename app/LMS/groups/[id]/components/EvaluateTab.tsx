@@ -14,7 +14,6 @@ import {
   PeerAxis,
   PeerScoreInfo,
   peerBalance,
-  peerBalanceMessage,
   rubricForProject,
 } from "constants/groupWork";
 import { submitPeerEvaluations } from "serverActions/groups/submitPeerEvaluations";
@@ -47,10 +46,15 @@ const MemberHeader = styled.div`
   font-weight: 600;
 `;
 
-const ScoreButtons = styled.div`
+const ScoreButtons = styled.div<{ $attention?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  padding: ${({ $attention }) => ($attention ? "0.4rem" : "0")};
+  margin: ${({ $attention }) => ($attention ? "0 -0.4rem" : "0")};
+  border-radius: var(--radius-md);
+  outline: ${({ $attention }) =>
+    $attention ? "2px dashed var(--error-failure-100)" : "none"};
 `;
 
 const ScoreButton = styled.button<{ $selected: boolean }>`
@@ -84,35 +88,106 @@ const Footer = styled.div`
   gap: 1rem;
 `;
 
-const BalanceCard = styled.div<{ $over: boolean }>`
-  border: 1px solid
+const BalanceCard = styled.div<{ $over: boolean; $sticky?: boolean }>`
+  border: 2px solid
     ${({ $over }) =>
-      $over ? "var(--error-failure-100)" : "var(--primary-black-10)"};
-  background: var(--primary-black-5);
+      $over ? "var(--error-failure-100)" : "var(--error-success-100)"};
+  background: var(--primary-white);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  /* Stays in view while the list of teammates scrolls past, so the rule is
+     visible at the moment a score pushes the balance over. */
+  ${({ $sticky }) =>
+    $sticky &&
+    `
+    position: sticky;
+    top: 0.5rem;
+    z-index: 5;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  `}
+`;
+
+const AxisBlock = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 `;
 
-const BalanceRow = styled.div`
+const AxisHead = styled.div`
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   font-size: var(--text-sm);
+  font-weight: 600;
 `;
 
-const BalanceValue = styled.span<{ $over: boolean }>`
+const StatusPill = styled.span<{ $over: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
   font-weight: 700;
-  color: ${({ $over }) =>
+  color: var(--primary-white);
+  background: ${({ $over }) =>
     $over ? "var(--error-failure-100)" : "var(--error-success-100)"};
 `;
 
-const BalanceHint = styled.p`
+const Instruction = styled.p`
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--primary-black-100);
+  line-height: 1.45;
+`;
+
+const NameChips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
+`;
+
+const NameChip = styled.span`
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--error-failure-100);
+  color: var(--error-failure-100);
+  font-weight: 600;
+`;
+
+const ResetButton = styled.button`
+  align-self: flex-start;
+  border: 1px solid var(--primary-black-100);
+  background: transparent;
+  color: var(--primary-black-100);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.7rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--primary-black-5);
+  }
+`;
+
+const ScoreSign = styled.span`
+  font-size: var(--text-xs);
+  font-weight: 700;
+  opacity: 0.8;
+`;
+
+const OverNote = styled.p`
   margin: 0;
   font-size: var(--text-xs);
+  font-weight: 600;
   color: var(--error-failure-100);
 `;
 
@@ -124,37 +199,89 @@ const Notice = styled.div`
   font-size: var(--text-sm);
 `;
 
+/** Sign a score the way the balance counts it: "+2", "0", "−1". */
+const signed = (score: number) =>
+  score > 0 ? `+${score}` : score < 0 ? `−${Math.abs(score)}` : "0";
+
 /**
- * The running total of one axis, which has to end at zero or less. Shown twice
- * on purpose — once above the form and once by the submit button — because a
- * team of five makes a long enough page that the rule would otherwise scroll
- * out of sight exactly when it starts mattering.
+ * The running total of one axis, which has to end at zero or less.
+ *
+ * Says what to do, not just what is wrong: how many steps to lower, who is
+ * currently above average, and a one-tap way back to an even team. Shown
+ * sticky above the list and again by the submit button, because a team of
+ * five makes a long enough page that the rule would otherwise scroll out of
+ * sight exactly when it starts mattering.
  */
 const BalanceMeter = ({
   balances,
+  members,
+  evals,
+  onReset,
+  sticky = false,
 }: {
   balances: Record<PeerAxis, number>;
+  members: Array<{ _id: string; name: string }>;
+  evals: Record<string, MemberEval>;
+  onReset: (axis: PeerAxis) => void;
+  sticky?: boolean;
 }) => {
   const axes = Object.keys(PEER_AXIS_LABELS) as PeerAxis[];
+  const scoreOf = (axis: PeerAxis, memberId: string) =>
+    axis === "contribution"
+      ? evals[memberId]?.contributionScore
+      : evals[memberId]?.teambuildingScore;
   const over = axes.some((axis) => balances[axis] > PEER_BALANCE_MAX);
+
   return (
-    <BalanceCard $over={over}>
+    <BalanceCard $over={over} $sticky={sticky} aria-live="polite">
       {axes.map((axis) => {
         const balance = balances[axis];
         const axisOver = balance > PEER_BALANCE_MAX;
+        const aboveAverage = members
+          .map((member) => ({ member, score: scoreOf(axis, member._id) ?? 0 }))
+          .filter((entry) => entry.score > 0)
+          .sort((a, b) => b.score - a.score);
         return (
-          <BalanceRow key={axis}>
-            <span>{PEER_AXIS_LABELS[axis]} balance</span>
-            <BalanceValue $over={axisOver}>
-              {balance > 0 ? `+${balance}` : balance}
-              {axisOver ? "" : " ✓"}
-            </BalanceValue>
-          </BalanceRow>
+          <AxisBlock key={axis}>
+            <AxisHead>
+              <span>{PEER_AXIS_LABELS[axis]} balance</span>
+              <StatusPill $over={axisOver}>
+                {signed(balance)}
+                {axisOver ? " · too high" : " · OK"}
+              </StatusPill>
+            </AxisHead>
+            {axisOver ? (
+              <>
+                <Instruction>
+                  You have marked people up {balance} step
+                  {balance === 1 ? "" : "s"} more than down. Lower {balance}{" "}
+                  step{balance === 1 ? "" : "s"} in total on the{" "}
+                  {PEER_AXIS_LABELS[axis].toLowerCase()} scores below, either
+                  someone marked up or someone else marked down.
+                </Instruction>
+                {aboveAverage.length > 0 && (
+                  <NameChips>
+                    Above average right now:
+                    {aboveAverage.map(({ member, score }) => (
+                      <NameChip key={member._id}>
+                        {member.name} {signed(score)}
+                      </NameChip>
+                    ))}
+                  </NameChips>
+                )}
+                <ResetButton type="button" onClick={() => onReset(axis)}>
+                  Set everyone&apos;s {PEER_AXIS_LABELS[axis].toLowerCase()} to
+                  Average
+                </ResetButton>
+              </>
+            ) : (
+              <NameChips>
+                Ups and downs cancel out. A team cannot be rated above its own
+                average.
+              </NameChips>
+            )}
+          </AxisBlock>
         );
-      })}
-      {axes.map((axis) => {
-        const message = peerBalanceMessage(axis, balances[axis]);
-        return message ? <BalanceHint key={axis}>{message}</BalanceHint> : null;
       })}
     </BalanceCard>
   );
@@ -179,24 +306,28 @@ const ScorePicker = ({
   value,
   onChange,
   labelPrefix,
+  attention = false,
 }: {
   scores: Record<number, PeerScoreInfo>;
   value: number | null;
   onChange: (score: number) => void;
   labelPrefix: string;
+  /** Outline the picker: this score is part of an over-budget balance. */
+  attention?: boolean;
 }) => (
-  <ScoreButtons>
+  <ScoreButtons $attention={attention}>
     {PEER_SCORE_VALUES.map((score) => (
       <ScoreButton
         key={score}
         type="button"
         $selected={value === score}
         title={scores[score].tooltip}
-        aria-label={`${labelPrefix}: ${scores[score].label}`}
+        aria-label={`${labelPrefix}: ${scores[score].label} (${signed(score)})`}
         onClick={() => onChange(score)}
       >
         <span aria-hidden>{scores[score].emoji}</span>
         {scores[score].label}
+        <ScoreSign aria-hidden>{signed(score)}</ScoreSign>
       </ScoreButton>
     ))}
   </ScoreButtons>
@@ -265,6 +396,16 @@ const PeerEvaluationSection = ({
       ...prev,
       [memberId]: { ...prev[memberId], ...patch },
     }));
+  };
+
+  /** Back to an even team on one axis; the justifications stay. */
+  const resetAxis = (axis: PeerAxis) => {
+    const field = axis === "contribution" ? "contributionScore" : "teambuildingScore";
+    setEvals((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([id, entry]) => [id, { ...entry, [field]: 0 }])
+      )
+    );
   };
 
   const incomplete = members.some((member) => {
@@ -356,10 +497,22 @@ const PeerEvaluationSection = ({
             balances have to reach 0 or less before it can be saved again.
           </Notice>
         )}
-        <BalanceMeter balances={balances} />
+        <BalanceMeter
+          balances={balances}
+          members={members}
+          evals={evals}
+          onReset={resetAxis}
+          sticky
+        />
         {members.map((member) => {
           const entry = evals[member._id];
           const isSelf = member._id === userId;
+          const contributionPushes =
+            balances.contribution > PEER_BALANCE_MAX &&
+            (entry.contributionScore ?? 0) > 0;
+          const teambuildingPushes =
+            balances.teambuilding > PEER_BALANCE_MAX &&
+            (entry.teambuildingScore ?? 0) > 0;
           return (
             <Card key={member._id}>
               <MemberHeader>
@@ -382,7 +535,14 @@ const PeerEvaluationSection = ({
                 onChange={(score) =>
                   update(member._id, { contributionScore: score })
                 }
+                attention={contributionPushes}
               />
+              {contributionPushes && (
+                <OverNote>
+                  This {signed(entry.contributionScore!)} is part of what puts
+                  the contribution balance over.
+                </OverNote>
+              )}
               <TextArea
                 value={entry.contributionComment}
                 placeholder="Why did you pick this score?"
@@ -409,7 +569,14 @@ const PeerEvaluationSection = ({
                 onChange={(score) =>
                   update(member._id, { teambuildingScore: score })
                 }
+                attention={teambuildingPushes}
               />
+              {teambuildingPushes && (
+                <OverNote>
+                  This {signed(entry.teambuildingScore!)} is part of what puts
+                  the teamwork balance over.
+                </OverNote>
+              )}
               <TextArea
                 value={entry.teambuildingComment}
                 placeholder="Why did you pick this score?"
@@ -424,7 +591,12 @@ const PeerEvaluationSection = ({
             </Card>
           );
         })}
-        <BalanceMeter balances={balances} />
+        <BalanceMeter
+          balances={balances}
+          members={members}
+          evals={evals}
+          onReset={resetAxis}
+        />
         <Footer>
           <PrimaryButton
             type="submit"
@@ -432,6 +604,16 @@ const PeerEvaluationSection = ({
           >
             {saving ? "Submitting…" : "Submit peer evaluation"}
           </PrimaryButton>
+          {overBudget && (
+            <Message $error>
+              Not yet: the{" "}
+              {(Object.keys(PEER_AXIS_LABELS) as PeerAxis[])
+                .filter((axis) => balances[axis] > PEER_BALANCE_MAX)
+                .map((axis) => PEER_AXIS_LABELS[axis].toLowerCase())
+                .join(" and ")}{" "}
+              balance is too high. See the box above for what to lower.
+            </Message>
+          )}
           {incomplete && (
             <MutedText>
               Pick both scores and write both justifications for yourself and
