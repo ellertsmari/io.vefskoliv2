@@ -43,8 +43,10 @@ import {
  * - Teachers create events for everyone and may edit or delete any event.
  * - Students create events for everyone, their team, people they pick, or
  *   themselves, and may edit or delete only their own.
- * - Students see shared events, their own, their teams', and those shared
- *   with them.
+ * - Everyone, teachers included, sees events for everyone, their own, their
+ *   teams', and those shared with them by name. A student's private or
+ *   picked-people event stays out of a teacher's calendar unless the
+ *   student added the teacher.
  */
 
 type StoredEvent = {
@@ -163,16 +165,14 @@ export async function getCalendarEvents(): Promise<ClientEvent[]> {
 
   try {
     await connectToDatabase();
-    const filter = isTeacher
-      ? {}
-      : {
-          $or: [
-            { visibility: "everyone" },
-            { owner: new ObjectId(viewerId) },
-            { visibility: "team", team: { $in: await teamIdsOf(viewerId) } },
-            { visibility: "shared", sharedWith: new ObjectId(viewerId) },
-          ],
-        };
+    const filter = {
+      $or: [
+        { visibility: "everyone" },
+        { owner: new ObjectId(viewerId) },
+        { visibility: "team", team: { $in: await teamIdsOf(viewerId) } },
+        { visibility: "shared", sharedWith: new ObjectId(viewerId) },
+      ],
+    };
     const rows = await CalendarEvent.find(filter)
       .sort({ startDate: 1, startTime: 1 })
       .populate("owner", "name role avatarUrl")

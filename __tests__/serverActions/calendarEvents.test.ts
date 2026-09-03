@@ -231,18 +231,32 @@ describe("calendar events", () => {
       await createCalendarEvent({ ...lecture, title: "Cecil private" });
     });
 
-    it("shows a teacher everything, all editable", async () => {
+    it("keeps students' own and team events out of a teacher's calendar", async () => {
       signInAs(teacher);
 
       const events = await getCalendarEvents();
 
+      expect(events.map((event) => event.title)).toEqual(["Intro to CSS"]);
+      expect(events[0].canEdit).toBe(true);
+    });
+
+    it("shows a teacher an event a student shared with them", async () => {
+      signInAs(anna);
+      await createCalendarEvent({
+        ...lecture,
+        title: "Ask the teacher",
+        visibility: "shared",
+        sharedWith: [teacher._id.toString()],
+      });
+
+      signInAs(teacher);
+      const events = await getCalendarEvents();
+
       expect(events.map((event) => event.title).sort()).toEqual([
-        "Anna private",
-        "Cecil private",
+        "Ask the teacher",
         "Intro to CSS",
-        "Team meeting",
       ]);
-      expect(events.every((event) => event.canEdit)).toBe(true);
+      expect(events.find((event) => event.title === "Ask the teacher")?.canEdit).toBe(true);
     });
 
     it("shows a student shared events, their own, and their team's", async () => {
