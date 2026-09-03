@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Session } from "next-auth";
 import { getAllUsers, setAlias, clearAlias } from "serverActions/userAlias";
 import { hasTeacherPermissions } from "utils/userUtils";
@@ -46,7 +47,12 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  // Switching runs as a transition so the button can show a pending state
+  // and the page only updates once the new session has rendered.
+  const [switching, startSwitch] = useTransition();
 
   const isTeacher = hasTeacherPermissions(session);
   const isAliased = session?.user?.isAliased;
@@ -96,41 +102,39 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
     }
   };
 
-  const handleUserSelect = async (userId: string) => {
-    try {
-      setLoading(true);
-      const result = await setAlias(userId);
-      if (result.success) {
+  // Setting or clearing the alias cookie makes the server re-render the
+  // current route inside the action response. A full `location.reload()`
+  // here used to cut that stream off mid-flight, which the browser reported
+  // as "Error in input stream" before the reload finished the job anyway.
+  // Refreshing inside the same transition waits for the render instead.
+  const switchTo = (
+    action: () => Promise<{ success: boolean; message?: string }>,
+    failure: string
+  ) => {
+    setError(null);
+    startSwitch(async () => {
+      try {
+        const result = await action();
+        if (!result.success) {
+          setError(result.message ?? failure);
+          setIsOpen(true);
+          return;
+        }
         setIsOpen(false);
-        // Refresh the page to update the session
-        window.location.reload();
-      } else {
-        console.error("Failed to set alias:", result.message);
+        router.refresh();
+      } catch (cause) {
+        console.error(failure, cause);
+        setError(failure);
+        setIsOpen(true);
       }
-    } catch (error) {
-      console.error("Failed to set alias:", error);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
-  const handleClearAlias = async () => {
-    try {
-      setLoading(true);
-      const result = await clearAlias();
-      if (result.success) {
-        setIsOpen(false);
-        // Refresh the page to update the session
-        window.location.reload();
-      } else {
-        console.error("Failed to clear alias:", result.message);
-      }
-    } catch (error) {
-      console.error("Failed to clear alias:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleUserSelect = (userId: string) =>
+    switchTo(() => setAlias(userId), "Could not switch view");
+
+  const handleClearAlias = () =>
+    switchTo(clearAlias, "Could not leave the student view");
 
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -152,14 +156,17 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
         <PillButton
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          disabled={loading}
+          disabled={loading || switching}
           aria-expanded={isOpen}
           aria-haspopup="menu"
+          aria-busy={switching}
         >
           <PillIcon>
             <EyeIcon />
           </PillIcon>
-          {isAliased ? (
+          {switching ? (
+            "Switching view…"
+          ) : isAliased ? (
             <>
               Viewing as <PillName>{currentUser?.name}</PillName>
             </>
@@ -177,7 +184,7 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
             <ExitAliasButton
               type="button"
               onClick={handleClearAlias}
-              disabled={loading}
+              disabled={loading || switching}
               title="Exit student view"
               aria-label="Exit student view"
             >
@@ -192,6 +199,8 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
       {isOpen && (
         <DropdownContent role="menu">
           <DropdownLabel>View as</DropdownLabel>
+
+          {error && <EmptyMessage role="alert">{error}</EmptyMessage>}
 
           {users.length > SEARCH_THRESHOLD && (
             <SearchInput
@@ -217,7 +226,7 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
                     type="button"
                     role="menuitem"
                     $current={isCurrent}
-                    disabled={isCurrent}
+                    disabled={isCurrent || switching}
                     onClick={() => handleUserSelect(user.id)}
                   >
                     <Avatar name={user.name} size={28} />

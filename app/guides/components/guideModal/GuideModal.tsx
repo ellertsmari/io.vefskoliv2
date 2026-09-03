@@ -48,7 +48,13 @@ export const GuideModal = () => {
           review your answers or try again.
         </Paragraph>
       ) : reviewStatus === ReviewStatus.NEED_TO_REVIEW ? (
-        <GiveFeedbackView guideTitle={title} />
+        // Keyed on the return being reviewed: after "CONTINUE" refreshes the
+        // data, the next return must get a fresh form, not the previous
+        // form's "submitted" state.
+        <GiveFeedbackView
+          key={String(guide.availableForReview[0]?._id ?? "none")}
+          guideTitle={title}
+        />
       ) : (
         <FeedbackOverview />
       )}

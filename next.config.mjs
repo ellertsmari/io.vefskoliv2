@@ -12,7 +12,8 @@ const contentSecurityPolicyReportOnly = [
   "font-src 'self' data:",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
-  "connect-src 'self' https://*.blob.vercel-storage.com https://blob.vercel-storage.com",
+  // Client-side uploads talk to vercel.com first, then to the blob store.
+  "connect-src 'self' https://vercel.com https://*.blob.vercel-storage.com https://blob.vercel-storage.com",
   "frame-src https:",
   "object-src 'none'",
   "base-uri 'self'",
