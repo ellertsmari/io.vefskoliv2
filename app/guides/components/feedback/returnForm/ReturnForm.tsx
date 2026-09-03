@@ -8,7 +8,7 @@ import { ReturnFormData, returnGuide } from "serverActions/returnGuide";
 import { Form } from "globalStyles/globalStyles";
 import { Input } from "UIcomponents/input/Input";
 import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
-import { useSessionState } from "utils/hooks/useStorage";
+import { useLocalState } from "utils/hooks/useStorage";
 import { LoadingSpinner } from "UIcomponents/states/States";
 import {
   SuccessPanel,
@@ -62,8 +62,11 @@ const FormContent = ({
   /** Absent when the form is rendered inline — there is nothing to close. */
   closeModal?: () => void;
 }) => {
-  const [formData, setFormData, loading] = useSessionState<ReturnFormData>(
-    `returnForm-${guideId}`
+  // localStorage, not sessionStorage: a closed tab used to take the half
+  // written return with it.
+  const [formData, setFormData, loading] = useLocalState<ReturnFormData>(
+    `returnForm-${guideId}`,
+    null
   );
   const [state, formAction, isPending] = useActionState(returnGuide, undefined);
   const router = useRouter();

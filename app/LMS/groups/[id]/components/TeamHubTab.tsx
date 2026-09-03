@@ -17,6 +17,8 @@ import {
   rubricForProject,
 } from "constants/groupWork";
 import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import { setShowcaseConsent } from "serverActions/groups/setShowcaseConsent";
 import { setShowcaseQuotes } from "serverActions/groups/setShowcaseQuotes";
@@ -345,6 +347,18 @@ export const TeamHubTab = ({
   const [coverImage, setCoverImage] = useState(team?.coverImage || "");
   const [teamPhoto, setTeamPhoto] = useState(team?.teamPhoto || "");
   const [logo, setLogo] = useState(team?.logo || "");
+  // Text lives in the draft; images are already stored the moment they upload.
+  const draft = useFormDraft(
+    team ? `team-hub:${team._id}` : null,
+    { name, projectName, tagline, projectDescription, links },
+    (saved) => {
+      setName(saved.name);
+      setProjectName(saved.projectName);
+      setTagline(saved.tagline);
+      setProjectDescription(saved.projectDescription);
+      setLinks(saved.links);
+    }
+  );
   const [feedback, setFeedback] = useState<{
     text: string;
     error: boolean;
@@ -416,6 +430,7 @@ export const TeamHubTab = ({
       error: !result.success,
     });
     if (result.success) {
+      draft.clear();
       setJustSaved(true);
       setCopied(false);
       router.refresh();
@@ -424,6 +439,7 @@ export const TeamHubTab = ({
 
   return (
     <Layout>
+      <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
       {/* Once there is feedback (or a grade), it is the reason a student opens
           this tab at all — so it goes above the hub form they spent the
           project filling in, rather than below it where it needs finding. */}

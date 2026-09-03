@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { TeamEvaluationEntry } from "types/groupTypes";
@@ -85,6 +87,8 @@ type Props = {
   /** Judges with a design/code focus may skip the other discipline. */
   focus?: JudgeFocus;
   onSubmit: (data: TeamEvalSubmission) => Promise<ActionResult<void>>;
+  /** Where unsaved scores and comments are kept between visits. */
+  draftKey?: string;
 };
 
 /**
@@ -97,6 +101,7 @@ export const TeamEvalForm = ({
   existing,
   focus = "all",
   onSubmit,
+  draftKey,
 }: Props) => {
   const router = useRouter();
   const requiredKeys = requiredRubricKeys(rubric, focus);
@@ -125,6 +130,14 @@ export const TeamEvalForm = ({
     text: string;
     error: boolean;
   } | null>(null);
+  const draft = useFormDraft(
+    draftKey ?? null,
+    { categories, overallComment },
+    (saved) => {
+      setCategories(saved.categories);
+      setOverallComment(saved.overallComment);
+    }
+  );
 
   const updateCategory = (key: string, patch: Partial<CategoryState>) => {
     setCategories((prev) => ({
@@ -158,12 +171,16 @@ export const TeamEvalForm = ({
       text: result.success ? "Evaluation submitted!" : result.message,
       error: !result.success,
     });
-    if (result.success) router.refresh();
+    if (result.success) {
+      draft.clear();
+      router.refresh();
+    }
   };
 
   return (
     <Card as="form" onSubmit={handleSubmit}>
       <SectionTitle>{heading}</SectionTitle>
+      <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
       <MutedText>
         Score each category from {EVALUATION_MIN_SCORE} to{" "}
         {EVALUATION_MAX_SCORE}. You can come back and adjust your scores while

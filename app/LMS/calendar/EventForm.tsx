@@ -25,6 +25,8 @@ import type {
 } from "types/calendarTypes";
 import { Input } from "UIcomponents/input/Input";
 import { Avatar } from "UIcomponents/avatar/Avatar";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { Button } from "globalStyles/buttons/default/style";
 import {
   Overlay,
@@ -118,6 +120,37 @@ export const EventForm = ({
   >({});
   const fieldError = (name: string) => fieldErrors[name]?.[0];
 
+  // Closing the dialog by accident, or a reload, keeps what was typed.
+  const draft = useFormDraft(
+    editing ? `calendar-event:${initial.id}` : "calendar-event:new",
+    {
+      title,
+      category,
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+      link,
+      description,
+      visibility,
+      sharedWith: [...sharedWith],
+      repeatUntil,
+    },
+    (saved) => {
+      setTitle(saved.title);
+      setCategory(saved.category);
+      setStartDate(saved.startDate);
+      setEndDate(saved.endDate);
+      setStartTime(saved.startTime);
+      setEndTime(saved.endTime);
+      setLink(saved.link);
+      setDescription(saved.description);
+      setVisibility(saved.visibility);
+      setSharedWith(new Set(saved.sharedWith));
+      setRepeatUntil(saved.repeatUntil);
+    }
+  );
+
   // Escape closes, like any dialog.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -169,6 +202,7 @@ export const EventForm = ({
         ? await updateCalendarEvent(initial.id, input, { applyToSeries })
         : await createCalendarEvent(input);
       if (result.success) {
+        draft.clear();
         router.refresh();
         onClose();
         return;
@@ -216,6 +250,7 @@ export const EventForm = ({
           {editing ? "Edit event" : "New event"}
         </FormTitle>
         <form onSubmit={handleSubmit}>
+          <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
           <FormGrid>
             <Input
               id="event-title"

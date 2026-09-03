@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { GroupProjectDetails, PeerEvaluationEntry } from "types/groupTypes";
@@ -244,6 +246,11 @@ const PeerEvaluationSection = ({
     text: string;
     error: boolean;
   } | null>(null);
+  const draft = useFormDraft(
+    `peer-eval:${details.project._id}:${userId}`,
+    evals,
+    setEvals
+  );
 
   if (!myTeam || members.length === 0) {
     return (
@@ -314,12 +321,16 @@ const PeerEvaluationSection = ({
       text: result.success ? "Peer evaluation submitted!" : result.message,
       error: !result.success,
     });
-    if (result.success) router.refresh();
+    if (result.success) {
+      draft.clear();
+      router.refresh();
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <Layout>
+        <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
         <MutedText>
           Rate yourself and each teammate honestly — this is about how the
           group work went as a whole, and you are part of the group. Your
@@ -480,6 +491,7 @@ const TeamEvaluationSection = ({
           heading={`Evaluate ${selectedTeam.name}`}
           rubric={rubricForProject(details.project.rubric)}
           existing={details.myTeamEvaluations[selectedTeam._id] || []}
+          draftKey={`team-eval:${details.project._id}:${selectedTeam._id}`}
           onSubmit={(data) =>
             submitTeamEvaluation({
               projectId: details.project._id,

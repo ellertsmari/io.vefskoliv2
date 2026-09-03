@@ -1,5 +1,7 @@
 "use client";
 import { Fragment, useState } from "react";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { GroupProjectDetails } from "types/groupTypes";
@@ -142,6 +144,35 @@ export const ProjectSettings = ({
   const [peerEvalOpen, setPeerEvalOpen] = useState(project.peerEvalOpen);
   const [teamEvalOpen, setTeamEvalOpen] = useState(project.teamEvalOpen);
   const [saving, setSaving] = useState(false);
+  const draft = useFormDraft(
+    `project-settings:${project._id}`,
+    {
+      title,
+      description,
+      module,
+      startDate,
+      endDate,
+      presentationDate,
+      presentationLength,
+      slotStarts,
+      rubric,
+      peerEvalOpen,
+      teamEvalOpen,
+    },
+    (saved) => {
+      setTitle(saved.title);
+      setDescription(saved.description);
+      setModule(saved.module);
+      setStartDate(saved.startDate);
+      setEndDate(saved.endDate);
+      setPresentationDate(saved.presentationDate);
+      setPresentationLength(saved.presentationLength);
+      setSlotStarts(saved.slotStarts);
+      setRubric(saved.rubric);
+      setPeerEvalOpen(saved.peerEvalOpen);
+      setTeamEvalOpen(saved.teamEvalOpen);
+    }
+  );
   const [feedback, setFeedback] = useState<{
     text: string;
     error: boolean;
@@ -247,12 +278,16 @@ export const ProjectSettings = ({
       text: result.success ? "Project saved!" : result.message,
       error: !result.success,
     });
-    if (result.success) router.refresh();
+    if (result.success) {
+      draft.clear();
+      router.refresh();
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <Layout>
+        <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
         <Card>
           <SectionTitle>Project details</SectionTitle>
           <Label>

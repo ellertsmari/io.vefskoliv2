@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import {
   startExercise,
   checkAnswer,
@@ -114,6 +116,13 @@ export const ExerciseRunner = ({
   const [progress, setProgress] = useState<ExerciseProgress>({});
   const [index, setIndex] = useState(0);
   const [drafts, setDrafts] = useState<Record<string, ExerciseAnswerValue>>({});
+  // Unsent answers survive a reload or a closed tab, per attempt: a new
+  // attempt draws different questions, so its drafts start empty.
+  const savedDrafts = useFormDraft(
+    started ? `exercise:${guideId}:${started.attemptNumber}` : null,
+    drafts,
+    setDrafts
+  );
   const [checking, setChecking] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, CheckedAnswer>>({});
   const [result, setResult] = useState<FinishedExercise | null>(null);
@@ -224,6 +233,7 @@ export const ExerciseRunner = ({
       setErrorMessage(res.message);
       return;
     }
+    savedDrafts.clear();
     setResult(res.data);
     setPhase("finished");
     const summary = await getExerciseSummary(guideId);
@@ -392,6 +402,10 @@ export const ExerciseRunner = ({
 
       <RunnerColumns>
         <RunnerBody>
+          <DraftNotice
+            restored={savedDrafts.restored}
+            onDiscard={savedDrafts.discard}
+          />
           <Prompt ref={promptRef} tabIndex={-1}>
             {task.prompt}
           </Prompt>

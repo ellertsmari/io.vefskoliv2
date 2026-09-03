@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { Icon } from "@iconify/react";
@@ -91,6 +93,18 @@ export const PreferencesForm = ({
     error: boolean;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  const draft = useFormDraft(
+    `preferences:${details.project._id}`,
+    { ambition, focus, techStack, schedule, location, about },
+    (saved) => {
+      setAmbition(saved.ambition);
+      setFocus(saved.focus);
+      setTechStack(saved.techStack);
+      setSchedule(saved.schedule);
+      setLocation(saved.location);
+      setAbout(saved.about);
+    }
+  );
 
   // Mirrors `isPreferenceComplete` on the server — the brief only unlocks once
   // every question is answered, so say so before they hit save.
@@ -131,11 +145,15 @@ export const PreferencesForm = ({
       text: result.success ? "Preferences saved!" : result.message,
       error: !result.success,
     });
-    if (result.success) router.refresh();
+    if (result.success) {
+      draft.clear();
+      router.refresh();
+    }
   };
 
   return (
     <Form onSubmit={handleSubmit}>
+      <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
       <MutedText>
         Tell your teachers what you want to get out of this project — they use
         this to put together balanced teams. The project brief unlocks once

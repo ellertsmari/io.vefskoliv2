@@ -181,6 +181,7 @@ export const JudgeViewPage = ({
               rubric={rubricForProject(project.rubric)}
               existing={view.myEvaluations[selectedTeam._id] || []}
               focus={judge.focus}
+              draftKey={`judge:${token}:${selectedTeam._id}`}
               onSubmit={(data) =>
                 submitJudgeEvaluation({
                   token,

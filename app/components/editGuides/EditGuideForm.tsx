@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import dynamic from "next/dynamic";
 import { GuideType } from "../../models/guide";
 import { MODULE_TITLES } from "../../constants/moduleTitles";
@@ -121,6 +123,18 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
   });
 
   const [saving, setSaving] = useState(false);
+  // Everything typed into this form, so a reload mid-edit costs nothing.
+  const draft = useFormDraft(
+    `edit-guide:${guide._id}`,
+    { formData, exercise, gradingMode, discipline, isSpecialty },
+    (saved) => {
+      setFormData(saved.formData);
+      setExercise(saved.exercise);
+      setGradingMode(saved.gradingMode);
+      setDiscipline(saved.discipline);
+      setIsSpecialty(saved.isSpecialty);
+    }
+  );
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -257,6 +271,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
       });
 
       if (response.ok) {
+        draft.clear();
         alert('Guide updated successfully!');
         window.location.href = '/LMS/edit-guides';
       } else {
@@ -273,6 +288,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
   return (
     <FormContainer>
       <BackLink href="/LMS/edit-guides">← Back to Edit Guides</BackLink>
+      <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
       
       <FormHeader>
         <FormTitle>Edit Guide: {guide.title}</FormTitle>

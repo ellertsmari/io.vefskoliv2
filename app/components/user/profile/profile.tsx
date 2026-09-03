@@ -22,6 +22,8 @@ import { Wrapper } from "globalStyles/globalStyles";
 import { Session } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
 import { useState, useTransition } from "react";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { useRouter } from "next/navigation";
 import { UserAliasDropdown } from "../userAliasDropdown/UserAliasDropdown";
 
@@ -69,6 +71,7 @@ const EditProfileScreen = ({
   const [error, setError] = useState<string | null>(null);
   const [saving, startSave] = useTransition();
   const router = useRouter();
+  const draft = useFormDraft(`profile:${user.id}`, userInfo, setUserInfo);
 
   const onSave = () => {
     setError(null);
@@ -78,6 +81,7 @@ const EditProfileScreen = ({
         setError(result.message);
         return;
       }
+      draft.clear();
       // The save refreshed the session cookie; re-render the header from it.
       router.refresh();
       onSaved();
@@ -105,6 +109,7 @@ const EditProfileScreen = ({
         </LogoutButton>
       </ProfileDetails>
       <Form onSubmit={(e) => e.preventDefault()}>
+        <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
         <ImageUploadField
           id="avatarUrl"
           prefix="avatar"

@@ -625,6 +625,7 @@ export const TeacherEvaluations = ({
               heading={`Evaluate ${selectedTeam.name}`}
               rubric={rubricForProject(details.project.rubric)}
               existing={details.myTeamEvaluations[selectedTeam._id] || []}
+              draftKey={`teacher-eval:${details.project._id}:${selectedTeam._id}`}
               onSubmit={(data) =>
                 submitTeamEvaluation({
                   projectId: details.project._id,
