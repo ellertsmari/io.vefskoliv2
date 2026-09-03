@@ -114,6 +114,8 @@ const toClientEvent = (
   }));
   const ownerLabel = !event.owner
     ? "Vefskólinn"
+    : event.category === "unavailable"
+      ? (event.owner.name ?? "A teacher")
     : event.visibility === "team" && event.team?.name
       ? `${event.team.name}`
       : event.visibility === "shared"
@@ -155,6 +157,20 @@ export async function getViewerTeamName(): Promise<string | null> {
     return null;
   }
 }
+
+/** "Not available" is a teacher's own status; meetings come from booking. */
+const refuseCategory = (
+  category: ClientEvent["category"],
+  isTeacher: boolean
+): string | null => {
+  if (category === "meeting") {
+    return "Meetings are booked from the calendar, not added by hand.";
+  }
+  if (category === "unavailable" && !isTeacher) {
+    return "Only teachers can mark themselves as not available.";
+  }
+  return null;
+};
 
 /** Every event the current viewer may see, oldest first. */
 export async function getCalendarEvents(): Promise<ClientEvent[]> {
@@ -279,6 +295,8 @@ export async function createCalendarEvent(
   }
   const input = validated.data;
   const base = normalizeEventInput(input);
+  const refused = refuseCategory(base.category, isTeacher);
+  if (refused) return failure(refused);
 
   try {
     await connectToDatabase();
@@ -317,6 +335,7 @@ const loadEditable = async (eventId: string, session: Session) => {
   const event = await CalendarEvent.findById(eventId).lean<{
     _id: ObjectId;
     owner: ObjectId | null;
+    category: ClientEvent["category"];
     visibility: EventVisibility;
     team?: ObjectId | null;
     sharedWith?: ObjectId[];
@@ -346,13 +365,17 @@ export async function updateCalendarEvent(
   }
   const input = validated.data;
   const base = normalizeEventInput(input);
-
   try {
     await connectToDatabase();
     const event = await loadEditable(eventId, session);
     if (!event) return failure(ErrorMessages.NOT_FOUND("Event"));
     if (event === "forbidden") {
       return failure("You can only edit events you created yourself");
+    }
+    // A booked meeting keeps its category; nothing else may become one.
+    if (base.category !== event.category) {
+      const refused = refuseCategory(base.category, isTeacher);
+      if (refused) return failure(refused);
     }
 
     // A teacher editing a student's event leaves its audience alone.

@@ -34,6 +34,7 @@ const MODEL_NAMES = [
   "RateLimit",
   "CalendarEvent",
   "Semester",
+  "BookingWindow",
 ];
 
 const QUERY_METHODS = [

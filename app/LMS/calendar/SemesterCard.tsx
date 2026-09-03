@@ -8,7 +8,8 @@ import {
   importSemesterPlan,
 } from "serverActions/calendarEvents";
 import { addDays } from "utils/calendarUtils";
-import type { SemesterInfo } from "types/calendarTypes";
+import type { BookingWindowInfo, SemesterInfo } from "types/calendarTypes";
+import { MeetingHoursCard } from "./MeetingHoursCard";
 import { Input } from "UIcomponents/input/Input";
 import { Button } from "globalStyles/buttons/default/style";
 import {
@@ -38,9 +39,11 @@ type Errors = Record<string, string[] | undefined>;
 export const SemesterCard = ({
   semester,
   eventCount,
+  windows,
 }: {
   semester: SemesterInfo;
   eventCount: number;
+  windows: BookingWindowInfo[];
 }) => {
   const router = useRouter();
   const [saving, startSave] = useTransition();
@@ -248,6 +251,9 @@ export const SemesterCard = ({
                 <FormError role="alert">{copyMessage.text}</FormError>
               ))}
           </SettingsSection>
+        </SettingsBody>
+        <SettingsBody>
+          <MeetingHoursCard windows={windows} semester={semester} />
         </SettingsBody>
       </details>
     </SettingsCard>

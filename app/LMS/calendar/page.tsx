@@ -9,6 +9,7 @@ import {
   getViewerTeamName,
 } from "serverActions/calendarEvents";
 import { getSemester } from "serverActions/semester";
+import { getBookingWindows, getMeetingSlots } from "serverActions/meetings";
 import type { CalendarEvent } from "types/calendarTypes";
 import CalendarView from "./CalendarView";
 import { SemesterCard } from "./SemesterCard";
@@ -30,13 +31,17 @@ export default async function CalendarPage() {
   // While a teacher views as a student, the calendar behaves as that student.
   const isTeacher = isActingAsTeacher(session);
 
-  const [events, groupProjectEvents, semester, teamName, people] =
+  const semester = await getSemester();
+  const [events, groupProjectEvents, teamName, people, windows, slots] =
     await Promise.all([
       getCalendarEvents(),
       getGroupCalendarEvents(),
-      getSemester(),
       isTeacher ? Promise.resolve(null) : getViewerTeamName(),
       isTeacher ? Promise.resolve([]) : getShareableUsers(),
+      isTeacher ? getBookingWindows() : Promise.resolve([]),
+      isTeacher
+        ? Promise.resolve([])
+        : getMeetingSlots(semester.startDate, semester.endDate),
     ]);
 
   // Group projects are managed on their own pages; here they are read-only.
@@ -53,12 +58,14 @@ export default async function CalendarPage() {
       isTeacher={isTeacher}
       teamName={teamName}
       people={people}
+      slots={slots}
       settings={
         isTeacher ? (
           <SemesterCard
             key="semester-settings"
             semester={semester}
             eventCount={events.length}
+            windows={windows}
           />
         ) : undefined
       }

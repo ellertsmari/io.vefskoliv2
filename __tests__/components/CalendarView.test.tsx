@@ -5,6 +5,9 @@ import type { CalendarEvent, SemesterInfo } from "types/calendarTypes";
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: jest.fn() }),
 }));
+jest.mock("serverActions/meetings", () => ({
+  bookMeeting: jest.fn(),
+}));
 jest.mock("serverActions/calendarEvents", () => ({
   createCalendarEvent: jest.fn(),
   updateCalendarEvent: jest.fn(),

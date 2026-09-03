@@ -9,8 +9,8 @@ import {
   type ShareableUser,
 } from "serverActions/calendarEvents";
 import {
-  EVENT_CATEGORIES,
   MAX_REPEAT_WEEKS,
+  pickableCategories,
   defaultVisibility,
   describeDate,
   normalizeTime,
@@ -273,15 +273,24 @@ export const EventForm = ({
               <NativeSelect
                 id="event-category"
                 value={category}
-                disabled={isPending}
+                disabled={isPending || category === "meeting"}
                 onChange={(e) => setCategory(e.target.value as EventCategory)}
               >
-                {EVENT_CATEGORIES.map((value) => (
+                {(category === "meeting"
+                  ? (["meeting"] as EventCategory[])
+                  : pickableCategories(isTeacher)
+                ).map((value) => (
                   <option key={value} value={value}>
                     {CATEGORY_META[value].label}
                   </option>
                 ))}
               </NativeSelect>
+              {category === "unavailable" && (
+                <FieldHint>
+                  Shown to everyone as striped time, and no meetings can be
+                  booked with you then.
+                </FieldHint>
+              )}
             </Field>
 
             <FieldRow>

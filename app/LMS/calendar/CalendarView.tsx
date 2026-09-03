@@ -13,8 +13,13 @@ import {
   semesterMonths,
   todayKey,
 } from "utils/calendarUtils";
-import type { CalendarEvent, SemesterInfo } from "types/calendarTypes";
+import type {
+  CalendarEvent,
+  MeetingSlot,
+  SemesterInfo,
+} from "types/calendarTypes";
 import { EventForm } from "./EventForm";
+import { BookMeetingDialog } from "./BookMeetingDialog";
 import { Avatar } from "UIcomponents/avatar/Avatar";
 import {
   CalendarContainer,
@@ -28,6 +33,9 @@ import {
   TodayButton,
   MonthLabel,
   AddEventButton,
+  SecondaryButton,
+  SlotChips,
+  SlotChip,
   Legend,
   LegendItem,
   Layout,
@@ -129,7 +137,10 @@ const isMine = (event: CalendarEvent) =>
 type Dialog =
   | { mode: "create"; date?: string }
   | { mode: "edit"; event: CalendarEvent }
+  | { mode: "book"; date?: string; startTime?: string }
   | null;
+
+const isHatched = (event: CalendarEvent) => event.category === "unavailable";
 
 export default function CalendarView({
   events,
@@ -137,6 +148,7 @@ export default function CalendarView({
   isTeacher,
   teamName = null,
   people = [],
+  slots = [],
   settings,
 }: {
   events: CalendarEvent[];
@@ -146,6 +158,8 @@ export default function CalendarView({
   teamName?: string | null;
   /** Everyone the viewer may share an event with. */
   people?: ShareableUser[];
+  /** Bookable meeting times for the term; students only. */
+  slots?: MeetingSlot[];
   /** Teacher-only settings, rendered under the header. */
   settings?: React.ReactNode;
 }) {
@@ -223,6 +237,10 @@ export default function CalendarView({
   const selectedEvents = selectedKey
     ? [...spansOnDay(selectedKey), ...(eventsByDate.get(selectedKey) ?? [])]
     : [];
+  const selectedSlots = selectedKey
+    ? slots.filter((slot) => slot.date === selectedKey)
+    : [];
+  const canBook = !isTeacher && slots.length > 0;
 
   const monthEventCount = useMemo(() => {
     const prefix = `${year}-${pad(month + 1)}`;
@@ -297,6 +315,16 @@ export default function CalendarView({
               Today
             </TodayButton>
           </MonthNav>
+          {canBook && (
+            <SecondaryButton
+              type="button"
+              onClick={() =>
+                setDialog({ mode: "book", date: selectedKey ?? undefined })
+              }
+            >
+              Book a meeting
+            </SecondaryButton>
+          )}
           <AddEventButton
             type="button"
             onClick={() =>
@@ -372,6 +400,7 @@ export default function CalendarView({
                           $color={CATEGORY_META[event.category].color}
                           $start={isStart}
                           $end={isEnd}
+                          $hatched={isHatched(event)}
                           title={event.title}
                         >
                           {showLabel ? event.title : " "}
@@ -382,7 +411,8 @@ export default function CalendarView({
                       <EventPill
                         key={event.id}
                         $color={CATEGORY_META[event.category].color}
-                        $hollow={isMine(event)}
+                        $hollow={isMine(event) && !isHatched(event)}
+                        $hatched={isHatched(event)}
                         title={event.title}
                       >
                         {event.time ? `${event.time} ` : ""}
@@ -533,6 +563,31 @@ export default function CalendarView({
                   })}
                 </EventList>
               )}
+              {canBook && selectedSlots.length > 0 && (
+                <>
+                  <PanelHint style={{ marginTop: "0.75rem" }}>
+                    Free meeting times with the teachers:
+                  </PanelHint>
+                  <SlotChips style={{ marginTop: "0.4rem" }}>
+                    {selectedSlots.map((slot) => (
+                      <SlotChip
+                        key={slot.startTime}
+                        type="button"
+                        title={`With ${slot.teachers.join(" and ")}`}
+                        onClick={() =>
+                          setDialog({
+                            mode: "book",
+                            date: slot.date,
+                            startTime: slot.startTime,
+                          })
+                        }
+                      >
+                        {slot.startTime}
+                      </SlotChip>
+                    ))}
+                  </SlotChips>
+                </>
+              )}
               <PanelAddButton
                 type="button"
                 onClick={() => setDialog({ mode: "create", date: selectedKey })}
@@ -554,7 +609,16 @@ export default function CalendarView({
         </Panel>
       </Layout>
 
-      {dialog && (
+      {dialog?.mode === "book" && (
+        <BookMeetingDialog
+          slots={slots}
+          date={dialog.date}
+          startTime={dialog.startTime}
+          teamName={teamName}
+          onClose={closeDialog}
+        />
+      )}
+      {dialog && dialog.mode !== "book" && (
         <EventForm
           key={dialog.mode === "edit" ? dialog.event.id : `new-${dialog.date ?? ""}`}
           initial={dialog.mode === "edit" ? dialog.event : undefined}

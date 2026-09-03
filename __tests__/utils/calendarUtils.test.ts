@@ -4,7 +4,11 @@ import {
   MAX_REPEAT_WEEKS,
   SemesterInputSchema,
   addDays,
+  addMinutes,
   allowedVisibilities,
+  slotStarts,
+  timesOverlap,
+  weekdayOf,
   canEditEvent,
   describeDate,
   expandWeekly,
@@ -211,5 +215,29 @@ describe("describeDate", () => {
   it("spells the date out with its weekday", () => {
     expect(describeDate("2026-09-21")).toBe("Mon 21 September 2026");
     expect(describeDate("")).toBe("");
+  });
+});
+
+describe("meeting slots", () => {
+  it("adds minutes to a clock time", () => {
+    expect(addMinutes("13:40", 20)).toBe("14:00");
+    expect(addMinutes("23:50", 20)).toBe("00:10");
+  });
+
+  it("splits a window into slot starts that fit whole meetings", () => {
+    expect(slotStarts("13:00", "14:00")).toEqual(["13:00", "13:20", "13:40"]);
+    expect(slotStarts("13:00", "13:50")).toEqual(["13:00", "13:20"]);
+    expect(slotStarts("13:00", "13:10")).toEqual([]);
+  });
+
+  it("treats touching ranges as not overlapping", () => {
+    expect(timesOverlap("13:00", "13:20", "13:20", "13:40")).toBe(false);
+    expect(timesOverlap("13:00", "13:20", "13:10", "13:40")).toBe(true);
+    expect(timesOverlap("13:00", "13:20", "12:00", "14:00")).toBe(true);
+  });
+
+  it("knows the weekday of a date, Monday first", () => {
+    expect(weekdayOf("2026-09-07")).toBe(0);
+    expect(weekdayOf("2026-09-13")).toBe(6);
   });
 });

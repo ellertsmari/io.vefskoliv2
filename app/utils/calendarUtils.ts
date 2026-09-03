@@ -16,7 +16,22 @@ export const EVENT_CATEGORIES = [
   "groupwork",
   "deadline",
   "holiday",
+  "unavailable",
+  "meeting",
 ] as const satisfies readonly EventCategory[];
+
+/** Categories a person may pick in the event form. */
+export const pickableCategories = (isTeacher: boolean): EventCategory[] =>
+  isTeacher
+    ? ["lecture", "milestone", "deadline", "groupwork", "holiday", "unavailable"]
+    : ["groupwork", "milestone", "deadline"];
+
+/**
+ * Meetings need two adults in the room: a slot is offered only when at least
+ * this many teachers have nothing else on, and all of them are booked.
+ */
+export const MIN_TEACHERS_PRESENT = 2;
+export const MEETING_SLOT_MINUTES = 20;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -311,3 +326,90 @@ export const describeSemester = (semester: SemesterInfo): string =>
   semester.spann2Start
     ? `${semester.label} · Spönn 2 from ${semester.spann2Start.slice(8)}.${semester.spann2Start.slice(5, 7)}.`
     : semester.label;
+
+// ── Meetings ──────────────────────────────────────────────────────────────
+
+/** "HH:MM" plus minutes, as "HH:MM". */
+export const addMinutes = (time: string, minutes: number): string => {
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
+/** Whether two "HH:MM" ranges overlap (touching ends do not). */
+export const timesOverlap = (
+  aStart: string,
+  aEnd: string,
+  bStart: string,
+  bEnd: string
+): boolean => aStart < bEnd && bStart < aEnd;
+
+/** Monday-first weekday of a "YYYY-MM-DD" key (0 = Mon … 6 = Sun). */
+export const weekdayOf = (key: string): number => {
+  const [y, m, d] = key.split("-").map(Number);
+  return (new Date(y, m - 1, d).getDay() + 6) % 7;
+};
+
+export const WEEKDAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+/** Every slot start inside a window, e.g. 13:00, 13:20, 13:40 for 13–14. */
+export const slotStarts = (
+  startTime: string,
+  endTime: string,
+  minutes = MEETING_SLOT_MINUTES
+): string[] => {
+  const starts: string[] = [];
+  for (let t = startTime; addMinutes(t, minutes) <= endTime && starts.length < 100; t = addMinutes(t, minutes)) {
+    starts.push(t);
+  }
+  return starts;
+};
+
+export const BookingWindowInputSchema = z
+  .object({
+    weekday: z.coerce.number().int().min(0).max(6),
+    startTime: z.string().regex(TIME_RE, "Please pick a start time"),
+    endTime: z.string().regex(TIME_RE, "Please pick an end time"),
+    validFrom: z.string().regex(DATE_RE, "Please pick the first day"),
+    validTo: z.string().regex(DATE_RE, "Please pick the last day"),
+  })
+  .superRefine((input, ctx) => {
+    if (addMinutes(input.startTime, MEETING_SLOT_MINUTES) > input.endTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["endTime"],
+        message: `A window needs room for at least one ${MEETING_SLOT_MINUTES}-minute meeting`,
+      });
+    }
+    if (input.validTo < input.validFrom) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["validTo"],
+        message: "The last day can't be before the first day",
+      });
+    }
+  });
+
+export type BookingWindowInput = z.input<typeof BookingWindowInputSchema>;
+
+export const BookMeetingInputSchema = z.object({
+  date: z.string().regex(DATE_RE, "Please pick a day"),
+  startTime: z.string().regex(TIME_RE, "Please pick a time"),
+  topic: z
+    .string()
+    .trim()
+    .min(2, "Say in a few words what the meeting is about")
+    .max(500, "Keep it under 500 characters"),
+  /** Also share the meeting with the student's team. */
+  withTeam: z.boolean().default(false),
+});
+
+export type BookMeetingInput = z.input<typeof BookMeetingInputSchema>;

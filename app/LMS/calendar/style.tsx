@@ -226,7 +226,15 @@ export const DayNumber = styled.span<{ $muted: boolean; $today: boolean }>`
  * an outline instead of a tint, so "mine" reads at a glance next to the
  * shared schedule.
  */
-export const EventPill = styled.span<{ $color: string; $hollow?: boolean }>`
+/** Diagonal stripes for "not available": busy, not an event to attend. */
+const HATCH = (color: string) =>
+  `repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, ${color} 35%, transparent) 4px 6px)`;
+
+export const EventPill = styled.span<{
+  $color: string;
+  $hollow?: boolean;
+  $hatched?: boolean;
+}>`
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -240,9 +248,11 @@ export const EventPill = styled.span<{ $color: string; $hollow?: boolean }>`
   /* The category colours are CSS variables, so an appended hex alpha
      ("var(--x)1a") is invalid and silently rendered no background at all. */
   background: ${(props) =>
-    props.$hollow
-      ? "transparent"
-      : `color-mix(in srgb, ${props.$color} 10%, transparent)`};
+    props.$hatched
+      ? HATCH(props.$color)
+      : props.$hollow
+        ? "transparent"
+        : `color-mix(in srgb, ${props.$color} 10%, transparent)`};
   font-size: var(--text-xs);
   line-height: 1.35;
   color: var(--primary-black-100);
@@ -264,6 +274,7 @@ export const SpanBar = styled.span<{
   $color: string;
   $start: boolean;
   $end: boolean;
+  $hatched?: boolean;
 }>`
   display: block;
   overflow: hidden;
@@ -274,8 +285,8 @@ export const SpanBar = styled.span<{
   flex-shrink: 0;
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--primary-white);
-  background: ${(props) => props.$color};
+  color: ${(props) => (props.$hatched ? "var(--primary-black-100)" : "var(--primary-white)")};
+  background: ${(props) => (props.$hatched ? HATCH(props.$color) : props.$color)};
   padding: 0 ${(props) => (props.$start ? "0.35rem" : "0")};
   margin-left: ${(props) => (props.$start ? "0" : "calc(-0.4rem - 1px)")};
   margin-right: ${(props) => (props.$end ? "0" : "-0.4rem")};
@@ -699,4 +710,68 @@ export const PickedSummary = styled.p`
   margin: 0;
   font-size: var(--text-xs);
   color: var(--primary-black-60);
+`;
+
+export const SecondaryButton = styled(AddEventButton)`
+  background: var(--primary-white);
+  color: var(--primary-black-100);
+`;
+
+export const SlotDay = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`;
+
+export const SlotDayLabel = styled.span`
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--primary-black-60);
+`;
+
+export const SlotChips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+`;
+
+export const SlotChip = styled.button<{ $selected?: boolean }>`
+  border: 1px solid
+    ${({ $selected }) =>
+      $selected ? "var(--theme-module3-100)" : "var(--primary-black-30)"};
+  background: ${({ $selected }) =>
+    $selected ? "var(--theme-module3-100)" : "var(--primary-white)"};
+  color: ${({ $selected }) =>
+    $selected ? "var(--primary-white)" : "var(--primary-black-100)"};
+  border-radius: var(--radius-pill);
+  padding: 0.3rem 0.7rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--theme-module3-100);
+  }
+`;
+
+export const WindowList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+`;
+
+export const WindowRow = styled.li`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: var(--text-sm);
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-sm);
 `;

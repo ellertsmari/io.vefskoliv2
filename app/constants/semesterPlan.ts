@@ -25,6 +25,8 @@ export const CATEGORY_META: Record<EventCategory, CategoryMeta> = {
   groupwork: { label: "Group work", color: "var(--error-warning-100)" },
   deadline: { label: "Deadline", color: "var(--error-failure-100)" },
   holiday: { label: "Holiday", color: "var(--primary-black-30)" },
+  unavailable: { label: "Not available", color: "var(--primary-black-60)" },
+  meeting: { label: "Meeting", color: "var(--theme-module3-100)" },
 };
 
 /** Used until a teacher saves a semester in the calendar settings. */

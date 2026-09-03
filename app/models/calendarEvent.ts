@@ -31,7 +31,15 @@ const calendarEventSchema = new Schema(
     category: {
       type: Schema.Types.String,
       required: true,
-      enum: ["milestone", "lecture", "groupwork", "deadline", "holiday"],
+      enum: [
+        "milestone",
+        "lecture",
+        "groupwork",
+        "deadline",
+        "holiday",
+        "unavailable",
+        "meeting",
+      ],
     },
     startDate: { type: Schema.Types.String, required: true, index: true },
     endDate: { type: Schema.Types.String, required: true },

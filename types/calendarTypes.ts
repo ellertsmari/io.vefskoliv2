@@ -10,7 +10,11 @@ export type EventCategory =
   | "lecture"
   | "groupwork"
   | "deadline"
-  | "holiday";
+  | "holiday"
+  /** A teacher is busy (teaching another group); blocks meeting slots. */
+  | "unavailable"
+  /** A student's booked meeting with the teachers. Made by booking only. */
+  | "meeting";
 
 /**
  * Who may see an event.
@@ -79,4 +83,25 @@ export interface SemesterInfo {
   spann2Start?: string;
   /** False until a teacher has saved one; the built-in default is shown. */
   saved: boolean;
+}
+
+/** A weekly window in which students may book a meeting with the teachers. */
+export interface BookingWindowInfo {
+  id: string;
+  /** 0 = Monday … 6 = Sunday. */
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  /** Inclusive "YYYY-MM-DD" range the window applies to. */
+  validFrom: string;
+  validTo: string;
+}
+
+/** One bookable meeting time, offered only when enough teachers are free. */
+export interface MeetingSlot {
+  date: string;
+  startTime: string;
+  endTime: string;
+  /** Names of the teachers who would attend. */
+  teachers: string[];
 }
