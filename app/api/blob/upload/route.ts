@@ -48,9 +48,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 }
-    );
+    // The message from @vercel/blob can name internals (token scopes, store
+    // ids); the browser only needs to know the upload did not go through.
+    console.error("Blob upload error:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 400 });
   }
 }

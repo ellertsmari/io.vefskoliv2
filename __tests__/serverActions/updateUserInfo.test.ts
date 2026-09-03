@@ -78,6 +78,51 @@ describe("updateUserInfo", () => {
     }
   });
 
+  it("refuses a field that is too long", async () => {
+    const mockUser = await createDummyUser();
+    (auth as jest.Mock).mockResolvedValue({
+      user: { id: mockUser._id.toString() },
+    });
+
+    const result = await updateUserInfo({ background: "x".repeat(2001) });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.errors?.background).toBeDefined();
+    expect((await User.findById(mockUser._id))?.background).toBe(
+      mockUser.background
+    );
+  });
+
+  it("refuses an avatar that is not a stored image", async () => {
+    const mockUser = await createDummyUser();
+    (auth as jest.Mock).mockResolvedValue({
+      user: { id: mockUser._id.toString() },
+    });
+
+    const result = await updateUserInfo({
+      avatarUrl: 'javascript:alert(1)',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.errors?.avatarUrl).toBeDefined();
+  });
+
+  it("accepts an uploaded avatar and trims the text fields", async () => {
+    const mockUser = await createDummyUser();
+    (auth as jest.Mock).mockResolvedValue({
+      user: { id: mockUser._id.toString() },
+    });
+    const avatarUrl =
+      "https://abc123.public.blob.vercel-storage.com/avatars/me-xyz.jpg";
+
+    const result = await updateUserInfo({ avatarUrl, background: "  hi  " });
+
+    expect(result.success).toBe(true);
+    const updated = await User.findById(mockUser._id);
+    expect(updated?.avatarUrl).toBe(avatarUrl);
+    expect(updated?.background).toBe("hi");
+  });
+
   it("should return error if user info is invalid", async () => {
     // Mock user document
     const mockUser = await createDummyUser();
@@ -90,11 +135,10 @@ describe("updateUserInfo", () => {
       careerGoals: "New career goals",
       interests: "New interests",
       favoriteArtists: "New favorite artists",
-      unallowedField: "This field should not be allowed",
+      // Not a profile field. `role` and `status` are the ones that matter;
+      // the schema refuses every unknown key the same way.
+      role: "teacher",
     };
-
-    // Spy on console.warn to avoid printing the warning to the console
-    jest.spyOn(console, "warn").mockImplementationOnce(() => {});
 
     const result = await updateUserInfo(updatedUserInfo);
 

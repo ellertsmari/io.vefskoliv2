@@ -79,7 +79,12 @@ export async function returnGuide(
 // A typo'd URL doesn't just hurt the submitter: a classmate gets assigned to
 // review the return and hits a dead link. So URLs are actually validated as
 // URLs (the client normalizes bare domains to https:// before submitting).
-const urlField = (message: string) => z.string().trim().url({ message });
+const urlField = (message: string) =>
+  z
+    .string()
+    .trim()
+    .max(2000, { message: "Keep the URL under 2000 characters" })
+    .url({ message });
 
 const ReturnFormSchema = z.object({
   projectUrl: urlField(
@@ -90,13 +95,20 @@ const ReturnFormSchema = z.object({
   ),
   projectName: z
     .string()
+    .trim()
     .min(2, { message: "Please enter a valid project name" })
-    .trim(),
+    .max(200, { message: "Keep the project name under 200 characters" }),
   comment: z
     .string()
+    .trim()
     .min(2, { message: "Please enter a valid description" })
-    .trim(),
-  guideId: z.string().trim(),
+    .max(5000, { message: "Keep the description under 5000 characters" }),
+  guideId: z
+    .string()
+    .trim()
+    .refine((value) => ObjectId.isValid(value), {
+      message: "Please append a valid guideId",
+    }),
   // optional: an uploaded image (data URL) or a legacy pasted URL; empty
   // string means absent
   pictureUrl: z.preprocess(

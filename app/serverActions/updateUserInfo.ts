@@ -1,11 +1,7 @@
 "use server";
-import {
-  OptionalUserInfo,
-  OptionalUserInfoKeys,
-  User,
-  UserDocument,
-} from "models/user";
-import { objOnlyHasEnumKeys } from "utils/typeGuards";
+import { z } from "zod";
+import { OptionalUserInfo, User, UserDocument } from "models/user";
+import { optionalStoredImageSchema } from "utils/imageUpload";
 import { ObjectId } from "mongodb";
 import { auth } from "../../auth";
 import { connectToDatabase } from "./mongoose-connector";
@@ -26,12 +22,12 @@ export const updateUserInfo = async (
     return failure(ErrorMessages.NOT_LOGGED_IN);
   }
 
-  const isValid = await objOnlyHasEnumKeys(
-    updatedUserInfo,
-    OptionalUserInfoKeys
-  );
-  if (!isValid) {
-    return failure(ErrorMessages.INVALID_INPUT);
+  const validated = ProfileSchema.safeParse(updatedUserInfo);
+  if (!validated.success) {
+    return failure(
+      ErrorMessages.INVALID_INPUT,
+      validated.error.flatten().fieldErrors
+    );
   }
 
   try {
@@ -48,7 +44,7 @@ export const updateUserInfo = async (
       return failure(ErrorMessages.NOT_FOUND("User"));
     }
 
-    await user.updateUserInfo(updatedUserInfo);
+    await user.updateUserInfo(validated.data);
     return successNoData("User info updated successfully");
   } catch (error) {
     return handleActionError(
@@ -58,3 +54,24 @@ export const updateUserInfo = async (
     );
   }
 };
+
+const PROFILE_TEXT_MAX = 2000;
+const profileText = z
+  .string()
+  .trim()
+  .max(PROFILE_TEXT_MAX, {
+    message: `Keep this under ${PROFILE_TEXT_MAX} characters`,
+  })
+  .optional();
+
+// `.strict()` refuses unknown keys, so this cannot be used to set fields the
+// profile form does not own (role, status, email).
+const ProfileSchema = z
+  .object({
+    background: profileText,
+    careerGoals: profileText,
+    interests: profileText,
+    favoriteArtists: profileText,
+    avatarUrl: optionalStoredImageSchema.optional(),
+  })
+  .strict();

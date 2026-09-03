@@ -77,9 +77,34 @@ describe("returnGuide", () => {
           liveVersion: [expect.any(String)],
           projectName: [expect.any(String)],
           comment: [expect.any(String)],
+          guideId: [expect.any(String)],
         },
         success: false,
       })
     );
+  });
+
+  it("refuses fields that are too long", async () => {
+    (auth as jest.Mock).mockResolvedValueOnce({
+      user: { id: new ObjectId().toString() },
+    });
+
+    const result = await returnGuide(undefined, {
+      projectUrl: "https://github.com/example/project",
+      liveVersion: "https://example.com/" + "a".repeat(2000),
+      projectName: "p".repeat(201),
+      comment: "c".repeat(5001),
+      guideId: new ObjectId().toString(),
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(Object.keys(result.errors ?? {}).sort()).toEqual([
+        "comment",
+        "liveVersion",
+        "projectName",
+      ]);
+    }
+    expect(await Return.countDocuments()).toBe(0);
   });
 });

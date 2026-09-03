@@ -137,7 +137,6 @@ export async function POST(request: NextRequest) {
       console.error('Error submitting grade to Canvas:', gradingError);
       return NextResponse.json({ 
         error: 'Failed to submit grade to Canvas',
-        details: gradingError instanceof Error ? gradingError.message : 'Unknown error'
       }, { status: 500 });
     }
 
@@ -146,7 +145,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Internal Server Error',
-        details: error instanceof Error ? error.message : 'Unknown error'
       }, 
       { status: 500 }
     );

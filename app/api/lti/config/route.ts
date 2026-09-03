@@ -80,7 +80,6 @@ export async function GET() {
     return NextResponse.json(
       {
         error: 'Failed to build LTI configuration',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

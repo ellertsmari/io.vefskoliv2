@@ -106,6 +106,7 @@ const ReviewFormSchema = z.object({
   guideId: objectId("guideId"),
   comment: z
     .string()
+    .trim()
     .min(2, { message: "Please provide a valid review comment" })
-    .trim(),
+    .max(5000, { message: "Keep the review under 5000 characters" }),
 });
