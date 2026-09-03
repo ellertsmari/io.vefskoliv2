@@ -444,6 +444,20 @@ export const PanelAddButton = styled.button`
   }
 `;
 
+export const CreatorRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
+`;
+
+export const CreatorName = styled.span`
+  font-weight: 600;
+  color: var(--primary-black-100);
+`;
+
 export const OwnerLine = styled.p`
   margin: 0.2rem 0 0 0;
   font-size: var(--text-xs);

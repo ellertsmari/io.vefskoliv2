@@ -9,7 +9,7 @@ import { CalendarEvent } from "../models/calendarEvent";
 import { Team } from "../models/team";
 import { GroupProject } from "../models/groupProject";
 import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions } from "../utils/userUtils";
+import { hasTeacherPermissions, isActingAsTeacher } from "../utils/userUtils";
 import {
   CalendarEventInputSchema,
   CopyEventsInputSchema,
@@ -55,7 +55,7 @@ type StoredEvent = {
   startTime?: string;
   endTime?: string;
   link?: string;
-  owner: { _id: ObjectId; name?: string; role?: string } | null;
+  owner: { _id: ObjectId; name?: string; role?: string; avatarUrl?: string } | null;
   visibility: EventVisibility;
   team?: { _id: ObjectId; name?: string } | null;
   seriesId?: string;
@@ -121,6 +121,8 @@ const toClientEvent = (
     source: !event.owner || event.owner.role === "teacher" ? "school" : "user",
     visibility: event.visibility,
     ownerLabel,
+    ownerName: event.owner?.name,
+    ownerAvatarUrl: event.owner?.avatarUrl ?? undefined,
     canEdit: canEditEvent(isTeacher, viewerId, { owner: ownerId }),
     seriesId: event.seriesId,
   };
@@ -145,7 +147,7 @@ export async function getCalendarEvents(): Promise<ClientEvent[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
   const viewerId = session.user.id;
-  const isTeacher = hasTeacherPermissions(session);
+  const isTeacher = isActingAsTeacher(session);
 
   try {
     await connectToDatabase();
@@ -160,7 +162,7 @@ export async function getCalendarEvents(): Promise<ClientEvent[]> {
         };
     const rows = await CalendarEvent.find(filter)
       .sort({ startDate: 1, startTime: 1 })
-      .populate("owner", "name role")
+      .populate("owner", "name role avatarUrl")
       .populate("team", "name")
       .lean<StoredEvent[]>();
     return rows.map((row) => toClientEvent(row, viewerId, isTeacher));
@@ -208,7 +210,7 @@ export async function createCalendarEvent(
 ): Promise<ActionResult<{ count: number }>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  const isTeacher = hasTeacherPermissions(session);
+  const isTeacher = isActingAsTeacher(session);
 
   const validated = CalendarEventInputSchema.safeParse(data);
   if (!validated.success) {
@@ -258,7 +260,7 @@ const loadEditable = async (eventId: string, session: Session) => {
     seriesId?: string;
   }>();
   if (!event) return null;
-  const isTeacher = hasTeacherPermissions(session);
+  const isTeacher = isActingAsTeacher(session);
   if (!canEditEvent(isTeacher, session.user.id, event)) return "forbidden";
   return event;
 };
@@ -270,7 +272,7 @@ export async function updateCalendarEvent(
 ): Promise<ActionResult<void>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  const isTeacher = hasTeacherPermissions(session);
+  const isTeacher = isActingAsTeacher(session);
 
   const validated = CalendarEventInputSchema.safeParse(data);
   if (!validated.success) {

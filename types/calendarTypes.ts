@@ -51,6 +51,9 @@ export interface CalendarEvent {
   visibility?: EventVisibility;
   /** Shown in the panel: "Vefskólinn", a teacher's name, or "Anna's team". */
   ownerLabel?: string;
+  /** Who created it, for the "added by" line; absent for imported events. */
+  ownerName?: string;
+  ownerAvatarUrl?: string;
   /** Computed server-side for the current viewer. */
   canEdit?: boolean;
   /** Set on every occurrence of a repeating event. */

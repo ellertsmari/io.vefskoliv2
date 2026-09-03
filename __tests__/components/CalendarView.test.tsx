@@ -27,6 +27,7 @@ const events: CalendarEvent[] = [
     time: "10:00",
     visibility: "everyone",
     source: "school",
+    ownerName: "Smári",
     canEdit: false,
   },
   {
@@ -75,7 +76,9 @@ describe("CalendarView", () => {
     // Each title once in the grid (with its time) and once in the panel.
     expect(screen.getAllByText(/Intro to CSS/)).toHaveLength(2);
     expect(screen.getAllByText("Study session")).toHaveLength(2);
-    expect(screen.getByText("Only you can see this")).toBeDefined();
+    expect(screen.getByText("Smári")).toBeDefined();
+    expect(screen.getByText("· everyone")).toBeDefined();
+    expect(screen.getByText("· only you")).toBeDefined();
     // One editable event: one Edit button, one Delete button.
     expect(screen.getAllByText("Edit")).toHaveLength(1);
     expect(screen.getAllByText("Delete")).toHaveLength(1);

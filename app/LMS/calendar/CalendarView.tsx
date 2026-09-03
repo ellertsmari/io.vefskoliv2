@@ -12,6 +12,7 @@ import {
 } from "utils/calendarUtils";
 import type { CalendarEvent, SemesterInfo } from "types/calendarTypes";
 import { EventForm } from "./EventForm";
+import { Avatar } from "UIcomponents/avatar/Avatar";
 import {
   CalendarContainer,
   Header,
@@ -50,6 +51,8 @@ import {
   EventDescription,
   EventLink,
   OwnerLine,
+  CreatorRow,
+  CreatorName,
   EventActions,
   SmallActionButton,
   ConfirmText,
@@ -437,16 +440,27 @@ export default function CalendarView({
                         {event.source === "generated" ? (
                           <OwnerLine>From group projects; edit it there.</OwnerLine>
                         ) : (
-                          event.ownerLabel &&
-                          (isMine(event) || event.source === "user") && (
-                            <OwnerLine>
+                          <CreatorRow>
+                            {event.ownerName ? (
+                              <>
+                                <Avatar
+                                  name={event.ownerName}
+                                  url={event.ownerAvatarUrl}
+                                  size={20}
+                                />
+                                <CreatorName>{event.ownerName}</CreatorName>
+                              </>
+                            ) : (
+                              <CreatorName>Vefskólinn</CreatorName>
+                            )}
+                            <span>
                               {event.visibility === "team"
-                                ? `Team: ${event.ownerLabel}`
+                                ? `· ${event.ownerLabel}`
                                 : event.visibility === "private"
-                                  ? "Only you can see this"
-                                  : `Added by ${event.ownerLabel}`}
-                            </OwnerLine>
-                          )
+                                  ? "· only you"
+                                  : "· everyone"}
+                            </span>
+                          </CreatorRow>
                         )}
                         {event.canEdit && (
                           <EventActions>

@@ -214,6 +214,40 @@ describe("calendar events", () => {
       expect(shared.canEdit).toBe(false);
     });
 
+    it("treats a teacher viewing as a student like that student", async () => {
+      (auth as jest.Mock).mockResolvedValue({
+        user: {
+          id: bjarni._id.toString(),
+          role: "user",
+          isAliased: true,
+          originalUser: { id: teacher._id.toString(), role: "teacher" },
+        },
+      });
+
+      const events = await getCalendarEvents();
+
+      expect(events.map((event) => event.title).sort()).toEqual([
+        "Intro to CSS",
+        "Team meeting",
+      ]);
+      expect(events.every((event) => !event.canEdit)).toBe(true);
+
+      await createCalendarEvent({ ...lecture, title: "As Bjarni" });
+      const created = await CalendarEvent.findOne({ title: "As Bjarni" }).lean<CalendarEventType>();
+      expect(created?.owner?.toString()).toBe(bjarni._id.toString());
+      expect(created?.visibility).toBe("private");
+    });
+
+    it("says who created a shared event", async () => {
+      signInAs(bjarni);
+
+      const events = await getCalendarEvents();
+      const shared = events.find((event) => event.title === "Intro to CSS")!;
+
+      expect(shared.ownerName).toBeTruthy();
+      expect(shared.ownerAvatarUrl).toBeTruthy();
+    });
+
     it("marks the viewer's own events editable", async () => {
       signInAs(anna);
 

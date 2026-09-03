@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "../../../auth";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import { getGroupCalendarEvents } from "serverActions/groups/getGroupCalendarEvents";
 import {
   getCalendarEvents,
@@ -26,7 +26,8 @@ export default async function CalendarPage() {
   // check so a matcher change cannot expose the schedule.
   const session = await auth();
   if (!session?.user) redirect("/signin");
-  const isTeacher = hasTeacherPermissions(session);
+  // While a teacher views as a student, the calendar behaves as that student.
+  const isTeacher = isActingAsTeacher(session);
 
   const [events, groupProjectEvents, semester, teamName] = await Promise.all([
     getCalendarEvents(),
@@ -50,7 +51,11 @@ export default async function CalendarPage() {
       teamName={teamName}
       settings={
         isTeacher ? (
-          <SemesterCard semester={semester} eventCount={events.length} />
+          <SemesterCard
+            key="semester-settings"
+            semester={semester}
+            eventCount={events.length}
+          />
         ) : undefined
       }
     />
