@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   createCalendarEvent,
   updateCalendarEvent,
+  type ShareableUser,
 } from "serverActions/calendarEvents";
 import {
   EVENT_CATEGORIES,
   MAX_REPEAT_WEEKS,
   defaultVisibility,
+  describeDate,
+  normalizeTime,
   todayKey,
   type CalendarEventInput,
 } from "utils/calendarUtils";
@@ -21,6 +24,7 @@ import type {
   EventVisibility,
 } from "types/calendarTypes";
 import { Input } from "UIcomponents/input/Input";
+import { Avatar } from "UIcomponents/avatar/Avatar";
 import { Button } from "globalStyles/buttons/default/style";
 import {
   Overlay,
@@ -36,6 +40,10 @@ import {
   RadioLabel,
   FormActions,
   FormError,
+  PeopleSearch,
+  PeoplePicker,
+  PersonOption,
+  PickedSummary,
 } from "./style";
 
 type Props = {
@@ -46,22 +54,34 @@ type Props = {
   isTeacher: boolean;
   /** The viewer's team, when they have one; enables "My team". */
   teamName?: string | null;
+  /** Everyone the viewer may share with; enables "People I pick". */
+  people?: ShareableUser[];
   onClose: () => void;
 };
+
+/** Above this many people, a search box is quicker than scrolling. */
+const SEARCH_THRESHOLD = 8;
 
 /**
  * Create or edit one event, in a dialog over the calendar.
  *
  * Teachers publish to everyone and may repeat an event weekly, which is how
- * a term's lectures get in without typing each one. Students choose between
- * themselves and their team. Editing one occurrence of a repeating event
- * offers to apply the change to the whole series; dates stay per occurrence.
+ * a term's lectures get in without typing each one. Students choose who sees
+ * theirs: everyone, their team, people they pick, or nobody else. Editing
+ * one occurrence of a repeating event offers to apply the change to the
+ * whole series; dates stay per occurrence.
+ *
+ * Times are plain text in 24-hour form rather than native time inputs,
+ * which follow the browser locale and show AM/PM to many students here.
+ * Dates keep the native picker, with the chosen day spelled out underneath
+ * so the picker's own format never has to be read.
  */
 export const EventForm = ({
   initial,
   defaultDate,
   isTeacher,
   teamName,
+  people = [],
   onClose,
 }: Props) => {
   const router = useRouter();
@@ -85,6 +105,10 @@ export const EventForm = ({
   const [visibility, setVisibility] = useState<EventVisibility>(
     initial?.visibility ?? defaultVisibility(isTeacher)
   );
+  const [sharedWith, setSharedWith] = useState<Set<string>>(
+    () => new Set((initial?.sharedWith ?? []).map((person) => person.id))
+  );
+  const [query, setQuery] = useState("");
   const [repeatUntil, setRepeatUntil] = useState("");
   const [applyToSeries, setApplyToSeries] = useState(false);
 
@@ -103,6 +127,24 @@ export const EventForm = ({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const visiblePeople = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return people;
+    return people.filter((person) => person.name.toLowerCase().includes(needle));
+  }, [people, query]);
+
+  const togglePerson = (id: string) =>
+    setSharedWith((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const pickedNames = people
+    .filter((person) => sharedWith.has(person.id))
+    .map((person) => person.name);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(undefined);
@@ -113,11 +155,12 @@ export const EventForm = ({
       category,
       startDate,
       endDate: endDate > startDate ? endDate : "",
-      startTime,
-      endTime,
+      startTime: normalizeTime(startTime),
+      endTime: normalizeTime(endTime),
       link,
       description,
       visibility,
+      sharedWith: visibility === "shared" ? [...sharedWith] : [],
       repeatWeeklyUntil: editing ? "" : repeatUntil,
     };
 
@@ -134,6 +177,32 @@ export const EventForm = ({
       if (result.errors) setFieldErrors(result.errors);
     });
   };
+
+  const timeField = (
+    id: string,
+    label: string,
+    value: string,
+    setValue: (next: string) => void,
+    errorKey: string
+  ) => (
+    <Input
+      id={id}
+      type="text"
+      name={errorKey}
+      label={label}
+      inputMode="numeric"
+      placeholder="10:00"
+      pattern="([01]?[0-9]|2[0-3])[:.h]?[0-5]?[0-9]?"
+      maxLength={5}
+      disabled={isPending}
+      value={value}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+        setValue(e.target.value)
+      }
+      onBlur={() => setValue(normalizeTime(value))}
+      error={fieldError(errorKey)}
+    />
+  );
 
   const dialog = (
     <Overlay onClick={onClose}>
@@ -181,61 +250,48 @@ export const EventForm = ({
             </Field>
 
             <FieldRow>
-              <Input
-                id="event-start-date"
-                type="date"
-                name="startDate"
-                label="First day"
-                required
-                disabled={isPending}
-                value={startDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setStartDate(e.target.value);
-                  if (endDate < e.target.value) setEndDate(e.target.value);
-                }}
-                error={fieldError("startDate")}
-              />
-              <Input
-                id="event-end-date"
-                type="date"
-                name="endDate"
-                label="Last day"
-                disabled={isPending}
-                min={startDate}
-                value={endDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setEndDate(e.target.value)
-                }
-                error={fieldError("endDate")}
-              />
+              <Field>
+                <Input
+                  id="event-start-date"
+                  type="date"
+                  name="startDate"
+                  label="First day"
+                  required
+                  disabled={isPending}
+                  value={startDate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setStartDate(e.target.value);
+                    if (endDate < e.target.value) setEndDate(e.target.value);
+                  }}
+                  error={fieldError("startDate")}
+                />
+                <FieldHint>{describeDate(startDate)}</FieldHint>
+              </Field>
+              <Field>
+                <Input
+                  id="event-end-date"
+                  type="date"
+                  name="endDate"
+                  label="Last day"
+                  disabled={isPending}
+                  min={startDate}
+                  value={endDate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEndDate(e.target.value)
+                  }
+                  error={fieldError("endDate")}
+                />
+                <FieldHint>
+                  {endDate > startDate ? describeDate(endDate) : "Same day"}
+                </FieldHint>
+              </Field>
             </FieldRow>
 
             <FieldRow>
-              <Input
-                id="event-start-time"
-                type="time"
-                name="startTime"
-                label="From (optional)"
-                disabled={isPending}
-                value={startTime}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setStartTime(e.target.value)
-                }
-                error={fieldError("startTime")}
-              />
-              <Input
-                id="event-end-time"
-                type="time"
-                name="endTime"
-                label="To (optional)"
-                disabled={isPending}
-                value={endTime}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setEndTime(e.target.value)
-                }
-                error={fieldError("endTime")}
-              />
+              {timeField("event-start-time", "From (optional)", startTime, setStartTime, "startTime")}
+              {timeField("event-end-time", "To (optional)", endTime, setEndTime, "endTime")}
             </FieldRow>
+            <FieldHint>24-hour clock, e.g. 09:30 or 14:00.</FieldHint>
 
             <Input
               id="event-link"
@@ -276,11 +332,11 @@ export const EventForm = ({
                     <input
                       type="radio"
                       name="visibility"
-                      checked={visibility === "private"}
-                      onChange={() => setVisibility("private")}
+                      checked={visibility === "everyone"}
+                      onChange={() => setVisibility("everyone")}
                       disabled={isPending}
                     />
-                    Only me
+                    Everyone
                   </RadioLabel>
                   <RadioLabel>
                     <input
@@ -292,11 +348,74 @@ export const EventForm = ({
                     />
                     My team{teamName ? ` (${teamName})` : ""}
                   </RadioLabel>
+                  <RadioLabel>
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={visibility === "shared"}
+                      onChange={() => setVisibility("shared")}
+                      disabled={isPending || people.length === 0}
+                    />
+                    People I pick
+                  </RadioLabel>
+                  <RadioLabel>
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={visibility === "private"}
+                      onChange={() => setVisibility("private")}
+                      disabled={isPending}
+                    />
+                    Only me
+                  </RadioLabel>
                 </RadioRow>
                 {!teamName && (
                   <FieldHint>
-                    You are not on a team right now, so this stays private.
+                    You are not on a team right now, so &quot;My team&quot; is
+                    off.
                   </FieldHint>
+                )}
+                {visibility === "shared" && (
+                  <>
+                    {people.length > SEARCH_THRESHOLD && (
+                      <PeopleSearch
+                        type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search by name"
+                        aria-label="Search people"
+                      />
+                    )}
+                    <PeoplePicker aria-label="People to share with">
+                      {visiblePeople.length === 0 && (
+                        <FieldHint>No one matches.</FieldHint>
+                      )}
+                      {visiblePeople.map((person) => (
+                        <PersonOption key={person.id}>
+                          <input
+                            type="checkbox"
+                            checked={sharedWith.has(person.id)}
+                            onChange={() => togglePerson(person.id)}
+                            disabled={isPending}
+                          />
+                          <Avatar
+                            name={person.name}
+                            url={person.avatarUrl}
+                            size={22}
+                          />
+                          {person.name}
+                        </PersonOption>
+                      ))}
+                    </PeoplePicker>
+                    <PickedSummary>
+                      {pickedNames.length === 0
+                        ? "Nobody picked yet."
+                        : `Shared with ${pickedNames.join(", ")}.`}
+                    </PickedSummary>
+                    {fieldError("sharedWith") && (
+                      <FormError role="alert">{fieldError("sharedWith")}</FormError>
+                    )}
+                  </>
                 )}
               </Field>
             )}
@@ -317,6 +436,9 @@ export const EventForm = ({
                   error={fieldError("repeatWeeklyUntil")}
                 />
                 <FieldHint>
+                  {repeatUntil
+                    ? `Every week until ${describeDate(repeatUntil)}. `
+                    : ""}
                   Makes one event per week, up to {MAX_REPEAT_WEEKS} weeks. Each
                   can be edited or removed on its own afterwards.
                 </FieldHint>

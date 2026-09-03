@@ -16,10 +16,11 @@ export type EventCategory =
  * Who may see an event.
  * - everyone: every signed-in user (school and teacher events)
  * - team: the owner and the members of the owner's team
+ * - shared: the owner and the people they picked
  * - private: the owner only
  * Teachers see everything regardless.
  */
-export type EventVisibility = "everyone" | "team" | "private";
+export type EventVisibility = "everyone" | "team" | "shared" | "private";
 
 /** Where an event came from; decides whether it can be edited in place. */
 export type EventSource =
@@ -54,6 +55,8 @@ export interface CalendarEvent {
   /** Who created it, for the "added by" line; absent for imported events. */
   ownerName?: string;
   ownerAvatarUrl?: string;
+  /** For "shared" events: who it was shared with. */
+  sharedWith?: Array<{ id: string; name: string }>;
   /** Computed server-side for the current viewer. */
   canEdit?: boolean;
   /** Set on every occurrence of a repeating event. */

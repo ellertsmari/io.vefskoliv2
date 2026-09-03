@@ -3,7 +3,10 @@
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORY_META } from "constants/semesterPlan";
-import { deleteCalendarEvent } from "serverActions/calendarEvents";
+import {
+  deleteCalendarEvent,
+  type ShareableUser,
+} from "serverActions/calendarEvents";
 import {
   describeSemester,
   initialMonthIndex,
@@ -133,6 +136,7 @@ export default function CalendarView({
   semester,
   isTeacher,
   teamName = null,
+  people = [],
   settings,
 }: {
   events: CalendarEvent[];
@@ -140,6 +144,8 @@ export default function CalendarView({
   isTeacher: boolean;
   /** The viewer's team, for "My team" events. */
   teamName?: string | null;
+  /** Everyone the viewer may share an event with. */
+  people?: ShareableUser[];
   /** Teacher-only settings, rendered under the header. */
   settings?: React.ReactNode;
 }) {
@@ -456,9 +462,11 @@ export default function CalendarView({
                             <span>
                               {event.visibility === "team"
                                 ? `· ${event.ownerLabel}`
-                                : event.visibility === "private"
-                                  ? "· only you"
-                                  : "· everyone"}
+                                : event.visibility === "shared"
+                                  ? `· shared with ${event.ownerLabel}`
+                                  : event.visibility === "private"
+                                    ? "· only you"
+                                    : "· everyone"}
                             </span>
                           </CreatorRow>
                         )}
@@ -553,6 +561,7 @@ export default function CalendarView({
           defaultDate={dialog.mode === "create" ? dialog.date : undefined}
           isTeacher={isTeacher}
           teamName={teamName}
+          people={people}
           onClose={closeDialog}
         />
       )}

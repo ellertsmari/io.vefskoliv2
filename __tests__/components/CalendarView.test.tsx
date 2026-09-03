@@ -121,13 +121,50 @@ describe("CalendarView", () => {
       />
     );
     fireEvent.click(screen.getByText("+ New event"));
-    expect(screen.getByText("Only me")).toBeDefined();
+    expect(screen.getByText("Everyone")).toBeDefined();
     expect(screen.getByText("My team (Team Rocket)")).toBeDefined();
+    expect(screen.getByText("People I pick")).toBeDefined();
+    expect(screen.getByText("Only me")).toBeDefined();
+    // Times are text, not locale-formatted native inputs.
+    expect(
+      (screen.getByLabelText("From (optional)") as HTMLInputElement).type
+    ).toBe("text");
     unmount();
 
     render(<CalendarView events={[]} semester={semester} isTeacher />);
     fireEvent.click(screen.getByText("+ New event"));
     expect(screen.getByText("Visible to everyone.")).toBeDefined();
     expect(screen.queryByText("Only me")).toBeNull();
+  });
+
+  it("lets a student pick people to share with", () => {
+    render(
+      <CalendarView
+        events={[]}
+        semester={semester}
+        isTeacher={false}
+        people={[
+          { id: "1", name: "Bjarni" },
+          { id: "2", name: "Cecil" },
+        ]}
+      />
+    );
+    fireEvent.click(screen.getByText("+ New event"));
+
+    fireEvent.click(screen.getByText("People I pick"));
+    fireEvent.click(screen.getByLabelText(/Cecil/));
+
+    expect(screen.getByText("Shared with Cecil.")).toBeDefined();
+  });
+
+  it("tidies a typed time into 24-hour form", () => {
+    render(<CalendarView events={[]} semester={semester} isTeacher />);
+    fireEvent.click(screen.getByText("+ New event"));
+    const from = screen.getByLabelText("From (optional)") as HTMLInputElement;
+
+    fireEvent.change(from, { target: { value: "930" } });
+    fireEvent.blur(from);
+
+    expect(from.value).toBe("09:30");
   });
 });

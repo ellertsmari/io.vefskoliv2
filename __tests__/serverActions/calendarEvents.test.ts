@@ -16,6 +16,7 @@ import {
   createCalendarEvent,
   deleteCalendarEvent,
   getCalendarEvents,
+  getShareableUsers,
   getViewerTeamName,
   importSemesterPlan,
   updateCalendarEvent,
@@ -97,7 +98,7 @@ describe("calendar events", () => {
       expect((await CalendarEvent.findOne().lean<CalendarEventType>())?.visibility).toBe("private");
     });
 
-    it("refuses a student's event for everyone", async () => {
+    it("lets a student publish to everyone", async () => {
       signInAs(anna);
 
       const result = await createCalendarEvent({
@@ -105,8 +106,56 @@ describe("calendar events", () => {
         visibility: "everyone",
       });
 
+      expect(result.success).toBe(true);
+      expect((await CalendarEvent.findOne().lean<CalendarEventType>())?.visibility).toBe("everyone");
+    });
+
+    it("shares an event with the people picked, never with the picker", async () => {
+      signInAs(anna);
+
+      const result = await createCalendarEvent({
+        ...lecture,
+        title: "Study group",
+        visibility: "shared",
+        sharedWith: [cecil._id.toString(), anna._id.toString(), "not-an-id"],
+      });
+
+      expect(result.success).toBe(true);
+      const stored = await CalendarEvent.findOne().lean<CalendarEventType>();
+      expect(stored?.sharedWith.map(String)).toEqual([cecil._id.toString()]);
+
+      signInAs(cecil);
+      const forCecil = await getCalendarEvents();
+      expect(forCecil.map((event) => event.title)).toEqual(["Study group"]);
+      expect(forCecil[0].sharedWith).toEqual([
+        { id: cecil._id.toString(), name: expect.any(String) },
+      ]);
+
+      signInAs(bjarni);
+      expect(await getCalendarEvents()).toEqual([]);
+    });
+
+    it("refuses a shared event with nobody real on it", async () => {
+      signInAs(anna);
+
+      const result = await createCalendarEvent({
+        ...lecture,
+        visibility: "shared",
+        sharedWith: [anna._id.toString()],
+      });
+
       expect(result.success).toBe(false);
-      expect(await CalendarEvent.countDocuments()).toBe(0);
+    });
+
+    it("lists everyone but the viewer as shareable", async () => {
+      signInAs(anna);
+
+      const people = await getShareableUsers();
+
+      expect(people.map((person) => person.id)).not.toContain(anna._id.toString());
+      expect(people.map((person) => person.id)).toEqual(
+        expect.arrayContaining([bjarni._id.toString(), cecil._id.toString()])
+      );
     });
 
     it("attaches a team event to the student's team", async () => {

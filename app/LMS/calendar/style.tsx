@@ -661,3 +661,42 @@ export const SettingsTitle = styled.h3`
   font-weight: 700;
   color: var(--primary-black-100);
 `;
+
+export const PeopleSearch = styled.input`
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+`;
+
+export const PeoplePicker = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-height: 11rem;
+  overflow-y: auto;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem;
+`;
+
+export const PersonOption = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--primary-black-5);
+  }
+`;
+
+export const PickedSummary = styled.p`
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
+`;

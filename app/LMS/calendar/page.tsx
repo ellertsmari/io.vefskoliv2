@@ -5,6 +5,7 @@ import { isActingAsTeacher } from "utils/userUtils";
 import { getGroupCalendarEvents } from "serverActions/groups/getGroupCalendarEvents";
 import {
   getCalendarEvents,
+  getShareableUsers,
   getViewerTeamName,
 } from "serverActions/calendarEvents";
 import { getSemester } from "serverActions/semester";
@@ -29,12 +30,14 @@ export default async function CalendarPage() {
   // While a teacher views as a student, the calendar behaves as that student.
   const isTeacher = isActingAsTeacher(session);
 
-  const [events, groupProjectEvents, semester, teamName] = await Promise.all([
-    getCalendarEvents(),
-    getGroupCalendarEvents(),
-    getSemester(),
-    isTeacher ? Promise.resolve(null) : getViewerTeamName(),
-  ]);
+  const [events, groupProjectEvents, semester, teamName, people] =
+    await Promise.all([
+      getCalendarEvents(),
+      getGroupCalendarEvents(),
+      getSemester(),
+      isTeacher ? Promise.resolve(null) : getViewerTeamName(),
+      isTeacher ? Promise.resolve([]) : getShareableUsers(),
+    ]);
 
   // Group projects are managed on their own pages; here they are read-only.
   const generated: CalendarEvent[] = groupProjectEvents.map((event) => ({
@@ -49,6 +52,7 @@ export default async function CalendarPage() {
       semester={semester}
       isTeacher={isTeacher}
       teamName={teamName}
+      people={people}
       settings={
         isTeacher ? (
           <SemesterCard

@@ -8,6 +8,7 @@ import { auth } from "../../auth";
 import { CalendarEvent } from "../models/calendarEvent";
 import { Team } from "../models/team";
 import { GroupProject } from "../models/groupProject";
+import { User } from "../models/user";
 import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions, isActingAsTeacher } from "../utils/userUtils";
 import {
@@ -40,9 +41,10 @@ import {
 /**
  * Calendar permissions, enforced here; the UI only mirrors them.
  * - Teachers create events for everyone and may edit or delete any event.
- * - Students create events for themselves or their team, and may edit or
- *   delete only their own.
- * - Students see everyone's events, their own, and their teams'.
+ * - Students create events for everyone, their team, people they pick, or
+ *   themselves, and may edit or delete only their own.
+ * - Students see shared events, their own, their teams', and those shared
+ *   with them.
  */
 
 type StoredEvent = {
@@ -58,8 +60,11 @@ type StoredEvent = {
   owner: { _id: ObjectId; name?: string; role?: string; avatarUrl?: string } | null;
   visibility: EventVisibility;
   team?: { _id: ObjectId; name?: string } | null;
+  sharedWith?: Array<{ _id: ObjectId; name?: string }>;
   seriesId?: string;
 };
+
+export type ShareableUser = { id: string; name: string; avatarUrl?: string };
 
 const CALENDAR_PATH = "/LMS/calendar";
 
@@ -101,13 +106,19 @@ const toClientEvent = (
   isTeacher: boolean
 ): ClientEvent => {
   const ownerId = event.owner ? String(event.owner._id) : null;
+  const sharedWith = (event.sharedWith ?? []).map((person) => ({
+    id: String(person._id),
+    name: person.name ?? "Unknown",
+  }));
   const ownerLabel = !event.owner
     ? "Vefskólinn"
     : event.visibility === "team" && event.team?.name
       ? `${event.team.name}`
-      : ownerId === viewerId
-        ? "You"
-        : (event.owner.name ?? "Unknown");
+      : event.visibility === "shared"
+        ? sharedWith.map((person) => person.name).join(", ")
+        : ownerId === viewerId
+          ? "You"
+          : (event.owner.name ?? "Unknown");
   return {
     id: String(event._id),
     date: event.startDate,
@@ -123,6 +134,7 @@ const toClientEvent = (
     ownerLabel,
     ownerName: event.owner?.name,
     ownerAvatarUrl: event.owner?.avatarUrl ?? undefined,
+    sharedWith: event.visibility === "shared" ? sharedWith : undefined,
     canEdit: canEditEvent(isTeacher, viewerId, { owner: ownerId }),
     seriesId: event.seriesId,
   };
@@ -158,12 +170,14 @@ export async function getCalendarEvents(): Promise<ClientEvent[]> {
             { visibility: "everyone" },
             { owner: new ObjectId(viewerId) },
             { visibility: "team", team: { $in: await teamIdsOf(viewerId) } },
+            { visibility: "shared", sharedWith: new ObjectId(viewerId) },
           ],
         };
     const rows = await CalendarEvent.find(filter)
       .sort({ startDate: 1, startTime: 1 })
       .populate("owner", "name role avatarUrl")
       .populate("team", "name")
+      .populate("sharedWith", "name")
       .lean<StoredEvent[]>();
     return rows.map((row) => toClientEvent(row, viewerId, isTeacher));
   } catch (error) {
@@ -173,36 +187,80 @@ export async function getCalendarEvents(): Promise<ClientEvent[]> {
 }
 
 /**
- * Decide who an event is for. Teachers publish to everyone. Students choose
- * private or team; "team" needs a team to attach to.
+ * Everyone a student may share an event with: every active account but
+ * their own. Names are already on the people page; nothing else is exposed.
+ */
+export async function getShareableUsers(): Promise<ShareableUser[]> {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+  try {
+    await connectToDatabase();
+    const users = await User.find(
+      { status: { $ne: "pending" } },
+      { name: 1, avatarUrl: 1 }
+    )
+      .sort({ name: 1 })
+      .lean<Array<{ _id: ObjectId; name: string; avatarUrl?: string }>>();
+    return users
+      .filter((user) => String(user._id) !== session.user.id)
+      .map((user) => ({
+        id: String(user._id),
+        name: user.name,
+        avatarUrl: user.avatarUrl ?? undefined,
+      }));
+  } catch (error) {
+    handleActionError("getShareableUsers", error);
+    return [];
+  }
+}
+
+type Audience = {
+  visibility: EventVisibility;
+  team: ObjectId | null;
+  sharedWith: ObjectId[];
+};
+
+/**
+ * Decide who an event is for. Teachers publish to everyone. Students choose;
+ * "team" needs a team to attach to and "shared" needs real people.
  */
 const resolveAudience = async (
   requested: EventVisibility | undefined,
+  sharedWithIds: string[],
   isTeacher: boolean,
   userId: string
-): Promise<
-  | { ok: true; visibility: EventVisibility; team: ObjectId | null }
-  | { ok: false; message: string }
-> => {
-  if (isTeacher) return { ok: true, visibility: "everyone", team: null };
-  const visibility = requested ?? "private";
-  if (visibility === "everyone") {
-    return {
-      ok: false,
-      message: "Students can share an event with their team or keep it private.",
-    };
+): Promise<{ ok: true; audience: Audience } | { ok: false; message: string }> => {
+  if (isTeacher) {
+    return { ok: true, audience: { visibility: "everyone", team: null, sharedWith: [] } };
   }
+  const visibility = requested ?? "private";
   if (visibility === "team") {
     const team = await currentTeamOf(userId);
     if (!team) {
       return {
         ok: false,
-        message: "You are not on a team right now, so this can only be private.",
+        message: "You are not on a team right now; pick people or keep it private.",
       };
     }
-    return { ok: true, visibility, team: team._id };
+    return { ok: true, audience: { visibility, team: team._id, sharedWith: [] } };
   }
-  return { ok: true, visibility, team: null };
+  if (visibility === "shared") {
+    const ids = [...new Set(sharedWithIds)].filter(
+      (id) => ObjectId.isValid(id) && id !== userId
+    );
+    const found = await User.find(
+      { _id: { $in: ids.map((id) => new ObjectId(id)) } },
+      { _id: 1 }
+    ).lean<Array<{ _id: ObjectId }>>();
+    if (found.length === 0) {
+      return { ok: false, message: "Pick at least one person to share with." };
+    }
+    return {
+      ok: true,
+      audience: { visibility, team: null, sharedWith: found.map((user) => user._id) },
+    };
+  }
+  return { ok: true, audience: { visibility, team: null, sharedWith: [] } };
 };
 
 export async function createCalendarEvent(
@@ -224,8 +282,13 @@ export async function createCalendarEvent(
 
   try {
     await connectToDatabase();
-    const audience = await resolveAudience(input.visibility, isTeacher, session.user.id);
-    if (!audience.ok) return failure(audience.message);
+    const resolved = await resolveAudience(
+      input.visibility,
+      input.sharedWith,
+      isTeacher,
+      session.user.id
+    );
+    if (!resolved.ok) return failure(resolved.message);
 
     const occurrences = input.repeatWeeklyUntil
       ? expandWeekly(base.startDate, base.endDate, input.repeatWeeklyUntil)
@@ -237,8 +300,7 @@ export async function createCalendarEvent(
         ...base,
         ...occurrence,
         owner: new ObjectId(session.user.id),
-        visibility: audience.visibility,
-        team: audience.team,
+        ...resolved.audience,
         seriesId,
       }))
     );
@@ -257,6 +319,7 @@ const loadEditable = async (eventId: string, session: Session) => {
     owner: ObjectId | null;
     visibility: EventVisibility;
     team?: ObjectId | null;
+    sharedWith?: ObjectId[];
     seriesId?: string;
   }>();
   if (!event) return null;
@@ -293,13 +356,20 @@ export async function updateCalendarEvent(
     }
 
     // A teacher editing a student's event leaves its audience alone.
-    let visibility = event.visibility;
-    let team = event.team ?? null;
+    let audience: Audience = {
+      visibility: event.visibility,
+      team: event.team ?? null,
+      sharedWith: event.sharedWith ?? [],
+    };
     if (!isTeacher) {
-      const audience = await resolveAudience(input.visibility, false, session.user.id);
-      if (!audience.ok) return failure(audience.message);
-      visibility = audience.visibility;
-      team = audience.team;
+      const resolved = await resolveAudience(
+        input.visibility,
+        input.sharedWith,
+        false,
+        session.user.id
+      );
+      if (!resolved.ok) return failure(resolved.message);
+      audience = resolved.audience;
     }
 
     if (options.applyToSeries && event.seriesId) {
@@ -307,12 +377,12 @@ export async function updateCalendarEvent(
       const { startDate: _s, endDate: _e, ...shared } = base;
       await CalendarEvent.updateMany(
         { seriesId: event.seriesId },
-        { $set: { ...shared, visibility, team }, $unset: unsetMissing(shared) }
+        { $set: { ...shared, ...audience }, $unset: unsetMissing(shared) }
       );
     } else {
       await CalendarEvent.updateOne(
         { _id: event._id },
-        { $set: { ...base, visibility, team }, $unset: unsetMissing(base) }
+        { $set: { ...base, ...audience }, $unset: unsetMissing(base) }
       );
     }
     revalidatePath(CALENDAR_PATH);

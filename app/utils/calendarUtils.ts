@@ -53,7 +53,9 @@ export const CalendarEventInputSchema = z
         .max(2000, "Keep the link under 2000 characters")
         .url("Please enter a full link, including https://")
     ),
-    visibility: z.enum(["everyone", "team", "private"]).optional(),
+    visibility: z.enum(["everyone", "team", "shared", "private"]).optional(),
+    /** User ids for a "shared" event. */
+    sharedWith: z.array(z.string().trim().min(1)).max(100).default([]),
     /** Create one copy per week from the start date up to and including this day. */
     repeatWeeklyUntil: optionalString(
       z.string().regex(DATE_RE, "Please pick a last date")
@@ -79,6 +81,13 @@ export const CalendarEventInputSchema = z
         code: z.ZodIssueCode.custom,
         path: ["endTime"],
         message: "The end time must be after the start time",
+      });
+    }
+    if (input.visibility === "shared" && input.sharedWith.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sharedWith"],
+        message: "Pick at least one person to share with",
       });
     }
     if (input.repeatWeeklyUntil) {
@@ -253,7 +262,47 @@ export const canEditEvent = (
 
 /** What a viewer may pick for an event they create. */
 export const allowedVisibilities = (isTeacher: boolean): EventVisibility[] =>
-  isTeacher ? ["everyone"] : ["private", "team"];
+  isTeacher ? ["everyone"] : ["everyone", "team", "shared", "private"];
+
+/**
+ * Tidy a typed time into "HH:MM" (24-hour). Accepts "9", "9:5", "930",
+ * "14.30" and "14:30"; anything else comes back unchanged for validation to
+ * report. Text fields are used instead of native time inputs because those
+ * follow the browser locale, and a 12-hour AM/PM box confuses students here.
+ */
+export const normalizeTime = (raw: string): string => {
+  const text = raw.trim();
+  if (text === "") return "";
+  let hours: number;
+  let minutes: number;
+  const separated = text.match(/^(\d{1,2})[:.h](\d{1,2})$/);
+  if (separated) {
+    hours = Number(separated[1]);
+    minutes = Number(separated[2]);
+  } else if (/^\d{1,4}$/.test(text)) {
+    // "9" is nine o'clock; "930" and "0930" are half past.
+    hours = Number(text.length <= 2 ? text : text.slice(0, -2));
+    minutes = text.length <= 2 ? 0 : Number(text.slice(-2));
+  } else {
+    return text;
+  }
+  if (hours > 23 || minutes > 59) return text;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_LONG = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** "Mon 21 September 2026", so a picked date reads the same in any locale. */
+export const describeDate = (key: string): string => {
+  const [y, m, d] = key.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  const date = new Date(y, m - 1, d);
+  return `${DAY_NAMES[date.getDay()]} ${d} ${MONTH_LONG[m - 1]} ${y}`;
+};
 
 export const defaultVisibility = (isTeacher: boolean): EventVisibility =>
   isTeacher ? "everyone" : "private";

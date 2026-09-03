@@ -16,9 +16,9 @@ import {
  *
  * `owner: null` marks an imported school event, which only teachers may edit.
  * Otherwise the owner is whoever created it: students may edit and delete
- * their own, teachers anything. `visibility` decides who else sees it; a
- * "team" event also records which team, since a student can be on several
- * teams over the years.
+ * their own, teachers anything. `visibility` decides who else sees it: a
+ * "team" event records which team (a student can be on several over the
+ * years) and a "shared" event lists the people it was shared with.
  *
  * Every occurrence of a repeating event shares a `seriesId`, and imported or
  * copied events carry an `importKey` so running the import twice changes
@@ -48,8 +48,13 @@ const calendarEventSchema = new Schema(
     visibility: {
       type: Schema.Types.String,
       required: true,
-      enum: ["everyone", "team", "private"],
+      enum: ["everyone", "team", "shared", "private"],
       default: "everyone",
+    },
+    sharedWith: {
+      type: [{ type: Schema.Types.ObjectId, ref: "User" }],
+      default: [],
+      index: true,
     },
     team: {
       type: Schema.Types.ObjectId,

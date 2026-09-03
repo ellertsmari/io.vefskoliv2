@@ -6,7 +6,9 @@ import {
   addDays,
   allowedVisibilities,
   canEditEvent,
+  describeDate,
   expandWeekly,
+  normalizeTime,
   initialMonthIndex,
   normalizeEventInput,
   semesterMonths,
@@ -165,8 +167,49 @@ describe("permissions", () => {
     expect(canEditEvent(false, "a", { owner: null })).toBe(false);
   });
 
-  it("offers teachers 'everyone' and students private or team", () => {
+  it("offers teachers 'everyone' and students the full choice", () => {
     expect(allowedVisibilities(true)).toEqual(["everyone"]);
-    expect(allowedVisibilities(false)).toEqual(["private", "team"]);
+    expect(allowedVisibilities(false)).toEqual([
+      "everyone",
+      "team",
+      "shared",
+      "private",
+    ]);
+  });
+
+  it("requires people for a shared event", () => {
+    const parsed = CalendarEventInputSchema.safeParse({
+      ...valid,
+      visibility: "shared",
+      sharedWith: [],
+    });
+    expect(parsed.success).toBe(false);
+  });
+});
+
+describe("normalizeTime", () => {
+  it.each([
+    ["9", "09:00"],
+    ["9:5", "09:05"],
+    ["930", "09:30"],
+    ["14.30", "14:30"],
+    ["14:30", "14:30"],
+    ["0", "00:00"],
+    ["", ""],
+  ])("turns %p into %p", (raw, expected) => {
+    expect(normalizeTime(raw)).toBe(expected);
+  });
+
+  it("leaves what it cannot read for validation to report", () => {
+    expect(normalizeTime("25:00")).toBe("25:00");
+    expect(normalizeTime("ten")).toBe("ten");
+    expect(normalizeTime("2 pm")).toBe("2 pm");
+  });
+});
+
+describe("describeDate", () => {
+  it("spells the date out with its weekday", () => {
+    expect(describeDate("2026-09-21")).toBe("Mon 21 September 2026");
+    expect(describeDate("")).toBe("");
   });
 });
