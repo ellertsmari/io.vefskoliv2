@@ -56,3 +56,19 @@ export function safeSerialize<T>(obj: T): T {
     return obj;
   }
 }
+
+/**
+ * A stored date as an ISO string, whatever shape it was stored in. Guides
+ * imported by hand carry `updatedAt` as a string or not at all, and calling
+ * toISOString on those took the whole editor list down with it. Anything
+ * unreadable becomes the epoch rather than an exception.
+ */
+export function isoDate(value: unknown): string {
+  const date =
+    value instanceof Date
+      ? value
+      : typeof value === "string" || typeof value === "number"
+        ? new Date(value)
+        : new Date(0);
+  return Number.isNaN(date.getTime()) ? new Date(0).toISOString() : date.toISOString();
+}

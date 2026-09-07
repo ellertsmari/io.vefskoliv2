@@ -7,6 +7,7 @@ import { connectToDatabase } from "./mongoose-connector";
 import { calculateReturnStatus } from "../utils/guideUtils";
 import { handleActionError } from "../utils/errors";
 import { REQUIRED_REVIEWS_COUNT } from "../constants/peerReview";
+import { isoDate } from "../utils/serialization";
 import { ReturnStatus } from "types/guideTypes";
 
 /** Where the signed-in student's latest return of a guide stands. */
@@ -54,7 +55,7 @@ export async function getReturnSummary(
       projectName: latest.projectName,
       projectUrl: latest.projectUrl,
       liveVersion: latest.liveVersion,
-      returnedAt: new Date(latest.createdAt).toISOString(),
+      returnedAt: isoDate(latest.createdAt),
       status: calculateReturnStatus(returns, reviews),
       reviewsReceived: reviews.length,
       reviewsNeeded: REQUIRED_REVIEWS_COUNT,

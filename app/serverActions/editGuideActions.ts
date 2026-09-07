@@ -7,6 +7,7 @@ import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions } from "../utils/userUtils";
 import { getDiscipline, getIsSpecialty } from "../utils/guideTaxonomy";
 import { extractModuleNumber } from "../utils/moduleUtils";
+import { isoDate } from "../utils/serialization";
 import {
   failure,
   successNoData,
@@ -35,12 +36,13 @@ type LeanGuide = {
   title: string;
   description?: string;
   module?: { title?: string };
-  order?: number;
+  /** A number in the schema, but hand-imported guides have carried strings. */
+  order?: unknown;
   discipline?: string;
   isSpecialty?: boolean;
   category?: string;
   gradingMode?: string;
-  updatedAt?: Date;
+  updatedAt?: unknown;
 };
 
 /**
@@ -75,11 +77,11 @@ export async function getGuidesForEditor(): Promise<EditorGuideRow[]> {
         description: row.description ?? "",
         moduleTitle: row.module?.title ?? "",
         moduleNumber: extractModuleNumber(row.module?.title ?? ""),
-        order: row.order ?? 0,
+        order: Number(row.order) || 0,
         discipline: getDiscipline(row),
         isSpecialty: getIsSpecialty(row),
         gradingMode: (row.gradingMode === "auto" ? "auto" : "peerReview") as EditorGuideRow["gradingMode"],
-        updatedAt: (row.updatedAt ?? new Date(0)).toISOString(),
+        updatedAt: isoDate(row.updatedAt),
       }))
       .sort(
         (a, b) =>
