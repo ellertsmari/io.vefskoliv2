@@ -1,145 +1,111 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFormDraft } from "utils/hooks/useStorage";
-import { extractModuleNumber } from "../../utils/moduleUtils";
-import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import dynamic from "next/dynamic";
+import { useFormDraft } from "utils/hooks/useStorage";
+import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
+import {
+  TileHead,
+  TileIcon,
+  TileTitle,
+  TileBody,
+  TileIconButton,
+  SubSectionHeading,
+  Eyebrow,
+  ToolAnchor,
+  ToolLink,
+} from "UIcomponents/guideTiles/style";
+import {
+  DescriptionIcon,
+  TopicsIcon,
+  GoalsIcon,
+  RequirementsIcon,
+  MaterialsIcon,
+  SubmitIcon,
+  ExpandIcon,
+} from "UIcomponents/guideTiles/icons";
 import { GuideType } from "../../models/guide";
 import { MODULE_TITLES } from "../../constants/moduleTitles";
+import { getDiscipline, getIsSpecialty, type Discipline } from "../../utils/guideTaxonomy";
+import { ExerciseEditor, type ExerciseForm } from "./ExerciseEditor";
+import { FocusMode } from "./FocusMode";
 import {
-  getDiscipline,
-  getIsSpecialty,
-  axesToCategory,
-  type Discipline,
-} from "../../utils/guideTaxonomy";
+  buildGuidePayload,
+  exerciseFromGuide,
+  formFromGuide,
+  validateExercise,
+  validateForm,
+  type GradingMode,
+  type GuideForm,
+} from "./editGuidePayload";
 import {
-  ExerciseEditor,
-  emptyTask,
-  type ExerciseForm,
-} from "./ExerciseEditor";
-import {
-  FormContainer,
-  BackLink,
-  HeaderLinks,
-  ViewLink,
-  FormHeader,
-  FormTitle,
+  EditorShell,
+  EditorHeader,
+  EditorTitleBlock,
+  TitleInput,
+  HeaderActions,
   StatusMessage,
-  Form,
-  Section,
-  SectionTitle,
-  InputGroup,
-  Label,
+  SettingsStrip,
+  SettingField,
+  SettingCheck,
+  TileGrid,
+  EditTile,
+  TileHint,
+  TileEditor,
+  ListRow,
+  RowFields,
+  RowRemove,
+  RowAdd,
   Input,
-  TextArea,
-  ButtonGroup,
-  Button,
-  ArraySection,
-  ArrayItem,
-  RemoveButton,
-  AddButton,
   Select,
   MarkdownEditorWrapper,
-  MultiFieldItem,
-  MultiFieldRow,
-  MultiFieldGroup,
-  SmallLabel,
-  RemoveButtonSmall
+  Button,
 } from "./styles.EditGuideForm";
 
 // Dynamically import MDEditor to avoid SSR issues
-const MDEditor = dynamic(
-  () => import("@uiw/react-md-editor"),
-  { ssr: false }
-);
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 interface EditGuideFormProps {
   guide: GuideType;
 }
 
+/** The long texts a teacher can open on their own, full screen. */
+type FocusField = "description" | "topics" | "requirements";
+
+const FOCUS_TITLES: Record<FocusField, string> = {
+  description: "Description",
+  topics: "Topics",
+  requirements: "Idea for return",
+};
+
+/**
+ * The guide editor, laid out as the guide page's board: the same tiles in
+ * the same places, each opened up for editing, so what a teacher changes
+ * is what a student reads. Tiles stay put — arranging is a reading
+ * preference, not an authoring one — and any long text can be expanded to
+ * full screen with a live preview beside it.
+ */
 export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
   const router = useRouter();
-  // What the last save or check said, shown under the title instead of a
-  // browser alert.
-  const [status, setStatus] = useState<{ ok: boolean; text: string }>();
-  const [gradingMode, setGradingMode] = useState<"peerReview" | "auto">(
-    (guide.gradingMode as "peerReview" | "auto") || "peerReview"
+  const [form, setForm] = useState<GuideForm>(() => formFromGuide(guide));
+  const [exercise, setExercise] = useState<ExerciseForm>(() => exerciseFromGuide(guide));
+  const [gradingMode, setGradingMode] = useState<GradingMode>(
+    guide.gradingMode === "auto" ? "auto" : "peerReview"
   );
-
-  // Authoring copy of the exercise (includes the answer key — teacher-only view).
-  const [exercise, setExercise] = useState<ExerciseForm>(() => {
-    const ex = guide.exercise;
-    if (ex && Array.isArray(ex.tasks) && ex.tasks.length > 0) {
-      return {
-        passThreshold: ex.passThreshold ?? 0.7,
-        tasks: ex.tasks.map((t: any) => {
-          // Tasks this editor cannot author (short-answer, code — written by
-          // hand in the database) are carried verbatim and written back
-          // untouched. Reading them into the quiz shape below would replace
-          // their fields with empty options and lose the task.
-          if (t.type && t.type !== "quiz") {
-            return { kind: "opaque", raw: t } as const;
-          }
-          return {
-            kind: "quiz",
-            // Preserved so the task keeps its identity across a save; stored
-            // attempts key their answers by this id.
-            _id: typeof t._id === "string" ? t._id : undefined,
-            prompt: t.prompt || "",
-            options: Array.isArray(t.options) ? t.options : ["", ""],
-            correctAnswers: Array.isArray(t.correctAnswers)
-              ? t.correctAnswers
-              : [],
-            allowMultiple: !!t.allowMultiple,
-            points: t.points ?? 1,
-            explanation: t.explanation || "",
-            hint: t.hint || "",
-            goal: t.goal || "",
-          } as const;
-        }),
-        // The editor authors quiz questions only, so its pool field is the
-        // quiz pool. A legacy global poolSize means exactly that.
-        poolSize: ex.poolSizes?.quiz ?? ex.poolSize ?? 0,
-      };
-    }
-    return { passThreshold: 0.7, poolSize: 0, tasks: [emptyTask()] };
-  });
-
-  // Canonical taxonomy axes (category is derived from these on save).
   const [discipline, setDiscipline] = useState<Discipline>(getDiscipline(guide));
   const [isSpecialty, setIsSpecialty] = useState<boolean>(getIsSpecialty(guide));
-
-  const [formData, setFormData] = useState({
-    title: guide.title || '',
-    description: guide.description || '',
-    topicsList: guide.topicsList || '',
-    order: guide.order || 0,
-    themeIdea: {
-      title: guide.themeIdea?.title || '',
-      description: guide.themeIdea?.description || ''
-    },
-    // The number is derived from the title on save (see extractModuleNumber);
-    // the stored one is unreliable and was a second thing to keep in step.
-    module: {
-      title: guide.module?.title || '',
-      number: extractModuleNumber(guide.module?.title || '')
-    },
-    knowledge: guide.knowledge?.map(k => k.knowledge) || [],
-    skills: guide.skills?.map(s => s.skill) || [],
-    resources: guide.resources?.map(r => ({ link: r.link || '', description: r.description || '' })) || [],
-    references: guide.references?.map(r => ({ type: r.type || '', name: r.name || '', link: r.link || '' })) || [],
-    classes: guide.classes?.map(c => ({ title: c.title || '', link: c.link || '' })) || []
-  });
-
   const [saving, setSaving] = useState(false);
+  // What the last save or check said, under the title instead of an alert.
+  const [status, setStatus] = useState<{ ok: boolean; text: string }>();
+  const [focus, setFocus] = useState<FocusField | null>(null);
+
   // Everything typed into this form, so a reload mid-edit costs nothing.
   const draft = useFormDraft(
     `edit-guide:${guide._id}`,
-    { formData, exercise, gradingMode, discipline, isSpecialty },
+    { form, exercise, gradingMode, discipline, isSpecialty },
     (saved) => {
-      setFormData(saved.formData);
+      setForm(saved.form);
       setExercise(saved.exercise);
       setGradingMode(saved.gradingMode);
       setDiscipline(saved.discipline);
@@ -147,143 +113,47 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
     }
   );
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const patch = (changes: Partial<GuideForm>) =>
+    setForm((prev) => ({ ...prev, ...changes }));
 
-  const handleNestedChange = (section: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: { ...(prev[section as keyof typeof prev] as object), [field]: value }
-    }));
-  };
+  const setList = <K extends "knowledge" | "skills" | "resources" | "classes" | "references">(
+    key: K,
+    next: GuideForm[K]
+  ) => patch({ [key]: next } as Partial<GuideForm>);
 
-  const handleArrayChange = (field: string, index: number, value: string | { [key: string]: string }) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: (prev[field as keyof typeof prev] as any[]).map((item: any, i: number) =>
-        i === index ? (typeof value === 'string' ? value : value) : item
-      )
-    }));
-  };
+  const closeFocus = useCallback(() => setFocus(null), []);
 
-  const handleMultiFieldChange = (field: string, index: number, subField: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: (prev[field as keyof typeof prev] as any[]).map((item: any, i: number) =>
-        i === index ? { ...item, [subField]: value } : item
-      )
-    }));
+  const focusValue: Record<FocusField, string> = {
+    description: form.description,
+    topics: form.topicsList,
+    requirements: form.themeIdea.description,
   };
-
-  const addArrayItem = (field: string, defaultValue: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...(prev[field as keyof typeof prev] as any[]), defaultValue]
-    }));
-  };
-
-  const removeArrayItem = (field: string, index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: (prev[field as keyof typeof prev] as any[]).filter((_: any, i: number) => i !== index)
-    }));
-  };
-
-  // Validate the authored exercise before saving an auto-graded guide.
-  // Returns an error string, or null when the exercise is valid.
-  const validateExercise = (): string | null => {
-    if (exercise.tasks.length === 0) {
-      return "Add at least one question to the exercise.";
-    }
-    for (let i = 0; i < exercise.tasks.length; i++) {
-      const task = exercise.tasks[i];
-      const n = i + 1;
-      // Opaque tasks are authored in the database and validated there.
-      if (task.kind !== "quiz") continue;
-      if (!task.prompt.trim()) return `Question ${n}: add a prompt.`;
-      const filledOptions = task.options.filter((o) => o.trim());
-      if (filledOptions.length < 2)
-        return `Question ${n}: add at least two options.`;
-      if (task.correctAnswers.length === 0)
-        return `Question ${n}: mark at least one correct answer.`;
-    }
-    const quizCount = exercise.tasks.filter((t) => t.kind === "quiz").length;
-    if (exercise.poolSize >= quizCount && exercise.poolSize > 0)
-      return `The question pool must be smaller than the ${quizCount} quiz question(s) available (leave it empty to serve all).`;
-    return null;
+  const setFocusValue = (field: FocusField, value: string) => {
+    if (field === "description") patch({ description: value });
+    else if (field === "topics") patch({ topicsList: value });
+    else patch({ themeIdea: { ...form.themeIdea, description: value } });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus(undefined);
 
-    // Build the grading-specific part of the payload.
-    let gradingPayload: Record<string, unknown>;
-    if (gradingMode === "auto") {
-      const exerciseError = validateExercise();
-      if (exerciseError) {
-        setStatus({ ok: false, text: exerciseError });
-        return;
-      }
-      gradingPayload = {
-        gradingMode: "auto",
-        exercise: {
-          passThreshold: exercise.passThreshold,
-          tasks: exercise.tasks.map((t) =>
-            // Hand-authored task types go back exactly as they came.
-            t.kind === "opaque"
-              ? t.raw
-              : {
-                  type: "quiz",
-                  // Keeps the task's identity across the save, so stored
-                  // attempts stay attached to their question.
-                  ...(t._id ? { _id: t._id } : {}),
-                  prompt: t.prompt.trim(),
-                  options: t.options.map((o) => o.trim()),
-                  allowMultiple: t.allowMultiple,
-                  points: t.points,
-                  correctAnswers: t.correctAnswers,
-                  ...(t.explanation.trim()
-                    ? { explanation: t.explanation.trim() }
-                    : {}),
-                  ...(t.hint.trim() ? { hint: t.hint.trim() } : {}),
-                  ...(t.goal.trim() ? { goal: t.goal.trim() } : {}),
-                }
-          ),
-          ...(exercise.poolSize > 0
-            ? { poolSizes: { quiz: exercise.poolSize } }
-            : {}),
-        },
-      };
-    } else {
-      // Peer-reviewed guide: clear any previously authored exercise.
-      gradingPayload = { gradingMode: "peerReview", exercise: null };
+    const problem =
+      validateForm(form) ?? (gradingMode === "auto" ? validateExercise(exercise) : null);
+    if (problem) {
+      setStatus({ ok: false, text: problem });
+      return;
     }
 
     setSaving(true);
-
     try {
       const response = await fetch(`/api/guides/${guide._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
-          module: {
-            title: formData.module.title,
-            number: extractModuleNumber(formData.module.title),
-          },
-          ...gradingPayload,
-          // Canonical taxonomy axes + derived legacy `category` mirror.
-          discipline,
-          isSpecialty,
-          category: axesToCategory(discipline, isSpecialty),
-          knowledge: formData.knowledge.map(k => ({ knowledge: k })),
-          skills: formData.skills.map(s => ({ skill: s })),
-          updatedAt: new Date().toISOString()
-        })
+          ...buildGuidePayload(form, exercise, gradingMode, discipline, isSpecialty),
+          updatedAt: new Date().toISOString(),
+        }),
       });
 
       if (response.ok) {
@@ -292,390 +162,394 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
         setStatus({ ok: true, text: "Saved. Students see the change straight away." });
         router.refresh();
       } else {
-        setStatus({ ok: false, text: "The guide could not be saved. Check the fields and try again." });
+        setStatus({
+          ok: false,
+          text: "The guide could not be saved. Check the fields and try again.",
+        });
       }
     } catch (error) {
-      console.error('Error saving guide:', error);
-      setStatus({ ok: false, text: "The guide could not be saved. Check your connection and try again." });
+      console.error("Error saving guide:", error);
+      setStatus({
+        ok: false,
+        text: "The guide could not be saved. Check your connection and try again.",
+      });
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <FormContainer>
-      <HeaderLinks>
-        <BackLink href="/LMS/edit-guides">← All guides</BackLink>
-        <ViewLink
-          href={`/guides/${guide._id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          View as student ↗
-        </ViewLink>
-      </HeaderLinks>
-      <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
+  const knowledgeGoals = form.knowledge.filter((k) => k.trim());
 
-      <FormHeader>
-        <FormTitle>{guide.title}</FormTitle>
-      </FormHeader>
+  return (
+    <EditorShell as="form" onSubmit={handleSubmit}>
+      <EditorHeader>
+        <EditorTitleBlock>
+          <Eyebrow>Editing · {form.moduleTitle || "no module yet"}</Eyebrow>
+          <TitleInput
+            aria-label="Guide title"
+            value={form.title}
+            placeholder="Guide title"
+            onChange={(e) => patch({ title: e.target.value })}
+            required
+          />
+        </EditorTitleBlock>
+        <HeaderActions>
+          <ToolLink href="/LMS/edit-guides">All guides</ToolLink>
+          <ToolAnchor href={`/guides/${guide._id}`} target="_blank" rel="noopener noreferrer">
+            View as student ↗
+          </ToolAnchor>
+          <Button type="submit" $variant="primary" disabled={saving}>
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </HeaderActions>
+      </EditorHeader>
+
+      <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
       {status && (
-        <StatusMessage role={status.ok ? "status" : "alert"} $error={!status.ok}>
+        <StatusMessage role={status.ok ? "status" : "alert"} $error={!status.ok} style={{ margin: 0 }}>
           {status.text}
         </StatusMessage>
       )}
 
-      <Form onSubmit={handleSubmit}>
-        <Section>
-          <SectionTitle>Basic Information</SectionTitle>
-          
-          <InputGroup>
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              required
-            />
-          </InputGroup>
-
-          <InputGroup>
-            <Label htmlFor="description">Description (Markdown)</Label>
-            <MarkdownEditorWrapper data-color-mode="light">
-              <MDEditor
-                value={formData.description}
-                onChange={(value) => handleInputChange('description', value || '')}
-                preview="edit"
-                height={300}
-              />
-            </MarkdownEditorWrapper>
-          </InputGroup>
-
-          <InputGroup>
-            <Label htmlFor="discipline">Discipline</Label>
-            <Select
-              id="discipline"
-              value={discipline}
-              onChange={(e) => setDiscipline(e.target.value as Discipline)}
-              required
-            >
-              <option value="code">Code</option>
-              <option value="design">Design</option>
-            </Select>
-          </InputGroup>
-
-          <InputGroup>
-            <Label htmlFor="isSpecialty">
-              <input
-                id="isSpecialty"
-                type="checkbox"
-                checked={isSpecialty}
-                onChange={(e) => setIsSpecialty(e.target.checked)}
-                style={{ marginRight: "0.5rem" }}
-              />
-              Specialty guide (optional — can replace a lower grade in the same
-              discipline, and does not count toward progress)
-            </Label>
-          </InputGroup>
-
-          <InputGroup>
-            <Label htmlFor="order">Order</Label>
-            <Input
-              id="order"
-              type="number"
-              value={formData.order}
-              onChange={(e) => handleInputChange('order', parseInt(e.target.value))}
-              required
-            />
-          </InputGroup>
-
-          <InputGroup>
-            <Label htmlFor="topicsList">Topics List</Label>
-            <TextArea
-              id="topicsList"
-              value={formData.topicsList}
-              onChange={(e) => handleInputChange('topicsList', e.target.value)}
-              required
-              rows={3}
-            />
-          </InputGroup>
-        </Section>
-
-        <Section>
-          <SectionTitle>Grading</SectionTitle>
-          <InputGroup>
-            <Label htmlFor="gradingMode">How is this guide completed?</Label>
-            <Select
-              id="gradingMode"
-              value={gradingMode}
-              onChange={(e) =>
-                setGradingMode(e.target.value as "peerReview" | "auto")
-              }
-            >
-              <option value="peerReview">
-                Peer review (submit a project, get reviewed)
+      <SettingsStrip>
+        <SettingField>
+          Module
+          <Select
+            value={form.moduleTitle}
+            onChange={(e) => patch({ moduleTitle: e.target.value })}
+            required
+          >
+            <option value="">Pick a module</option>
+            {MODULE_TITLES.map((title) => (
+              <option key={title} value={title}>
+                {title}
               </option>
-              <option value="auto">
-                Auto-graded exercise (graded instantly, no peer review)
-              </option>
-            </Select>
-          </InputGroup>
-        </Section>
+            ))}
+          </Select>
+        </SettingField>
+        <SettingField style={{ minWidth: "5rem" }}>
+          Order
+          <Input
+            type="number"
+            value={form.order}
+            onChange={(e) => patch({ order: parseInt(e.target.value) || 0 })}
+            required
+          />
+        </SettingField>
+        <SettingField>
+          Discipline
+          <Select value={discipline} onChange={(e) => setDiscipline(e.target.value as Discipline)}>
+            <option value="code">Code</option>
+            <option value="design">Design</option>
+          </Select>
+        </SettingField>
+        <SettingField style={{ minWidth: "14rem" }}>
+          How it is completed
+          <Select
+            value={gradingMode}
+            onChange={(e) => setGradingMode(e.target.value as GradingMode)}
+          >
+            <option value="peerReview">Peer review — return a project</option>
+            <option value="auto">Auto-graded exercise</option>
+          </Select>
+        </SettingField>
+        <SettingCheck>
+          <input
+            type="checkbox"
+            checked={isSpecialty}
+            onChange={(e) => setIsSpecialty(e.target.checked)}
+          />
+          Speciality guide (optional; can replace a lower grade in the same discipline)
+        </SettingCheck>
+      </SettingsStrip>
+
+      <TileGrid>
+        <Tile
+          label="Description"
+          accent="violet"
+          icon={<DescriptionIcon />}
+          tall
+          onExpand={() => setFocus("description")}
+        >
+          <Markdown
+            value={form.description}
+            onChange={(value) => patch({ description: value })}
+          />
+        </Tile>
+
+        <Tile
+          label="Idea for return"
+          accent="amber"
+          icon={<RequirementsIcon />}
+          tall
+          onExpand={() => setFocus("requirements")}
+        >
+          <SubSectionHeading>Idea title</SubSectionHeading>
+          <Input
+            aria-label="Idea title"
+            value={form.themeIdea.title}
+            placeholder="e.g. A landing page for a café"
+            onChange={(e) => patch({ themeIdea: { ...form.themeIdea, title: e.target.value } })}
+            style={{ marginBottom: "0.75rem" }}
+          />
+          <TileHint>
+            Prefilled as the project title when a student returns; they may
+            hand in anything that meets the goals.
+          </TileHint>
+          <Markdown
+            value={form.themeIdea.description}
+            onChange={(value) => patch({ themeIdea: { ...form.themeIdea, description: value } })}
+          />
+        </Tile>
+
+        <Tile
+          label="Topics"
+          accent="blue"
+          icon={<TopicsIcon />}
+          onExpand={() => setFocus("topics")}
+        >
+          <Markdown value={form.topicsList} onChange={(value) => patch({ topicsList: value })} />
+        </Tile>
+
+        <Tile label="Goals" accent="teal" icon={<GoalsIcon />}>
+          <SubSectionHeading>Knowledge</SubSectionHeading>
+          <StringList
+            items={form.knowledge}
+            placeholder="What the student will know"
+            addLabel="+ Knowledge goal"
+            onChange={(next) => setList("knowledge", next)}
+          />
+          <SubSectionHeading>Skills</SubSectionHeading>
+          <StringList
+            items={form.skills}
+            placeholder="What the student will be able to do"
+            addLabel="+ Skill"
+            onChange={(next) => setList("skills", next)}
+          />
+        </Tile>
+
+        <Tile label="Materials" accent="rose" icon={<MaterialsIcon />} span={2}>
+          <TileHint>
+            Shown as one reading list, in this order. A row with no link is dropped on save.
+          </TileHint>
+          <SubSectionHeading>Resources</SubSectionHeading>
+          <RowList
+            rows={form.resources}
+            fields={[
+              { key: "description", placeholder: "What it is" },
+              { key: "link", placeholder: "https://…", type: "url" },
+            ]}
+            addLabel="+ Resource"
+            onChange={(next) => setList("resources", next)}
+          />
+          <SubSectionHeading>Classes and lecture materials</SubSectionHeading>
+          <RowList
+            rows={form.classes}
+            fields={[
+              { key: "title", placeholder: "Title" },
+              { key: "link", placeholder: "https://…", type: "url" },
+            ]}
+            addLabel="+ Class material"
+            onChange={(next) => setList("classes", next)}
+          />
+          <SubSectionHeading>References</SubSectionHeading>
+          <RowList
+            rows={form.references}
+            fields={[
+              {
+                key: "type",
+                placeholder: "Type",
+                options: ["Class", "Resource", "Article", "Video", "Documentation"],
+              },
+              { key: "name", placeholder: "Name" },
+              { key: "link", placeholder: "https://…", type: "url" },
+            ]}
+            addLabel="+ Reference"
+            onChange={(next) => setList("references", next)}
+          />
+        </Tile>
 
         {gradingMode === "auto" && (
-          <ExerciseEditor
-            value={exercise}
-            onChange={setExercise}
-            knowledgeGoals={formData.knowledge.filter((k) => k.trim())}
-          />
-        )}
-
-        <Section>
-          <SectionTitle>Theme Idea</SectionTitle>
-          
-          <InputGroup>
-            <Label htmlFor="themeTitle">Theme Title</Label>
-            <Input
-              id="themeTitle"
-              value={formData.themeIdea.title}
-              onChange={(e) => handleNestedChange('themeIdea', 'title', e.target.value)}
-              required
+          <Tile label="Exercise" accent="green" icon={<SubmitIcon />} span={2} tall>
+            <ExerciseEditor
+              value={exercise}
+              onChange={setExercise}
+              knowledgeGoals={knowledgeGoals}
             />
-          </InputGroup>
+          </Tile>
+        )}
+      </TileGrid>
 
-          <InputGroup>
-            <Label htmlFor="themeDescription">Theme Description (Markdown)</Label>
-            <MarkdownEditorWrapper data-color-mode="light">
-              <MDEditor
-                value={formData.themeIdea.description}
-                onChange={(value) => handleNestedChange('themeIdea', 'description', value || '')}
-                preview="edit"
-                height={250}
-              />
-            </MarkdownEditorWrapper>
-          </InputGroup>
-        </Section>
-
-        <Section>
-          <SectionTitle>Module Information</SectionTitle>
-          
-          <InputGroup>
-            <Label htmlFor="moduleTitle">Module Title</Label>
-            <Select
-              id="moduleTitle"
-              value={formData.module.title}
-              onChange={(e) => handleNestedChange('module', 'title', e.target.value)}
-              required
-            >
-              <option value="">Select a module</option>
-              {MODULE_TITLES.map(moduleTitle => (
-                <option key={moduleTitle} value={moduleTitle}>
-                  {moduleTitle}
-                </option>
-              ))}
-            </Select>
-          </InputGroup>
-
-        </Section>
-
-        <ArraySection>
-          <SectionTitle>Knowledge Items</SectionTitle>
-          {formData.knowledge.map((item, index) => (
-            <ArrayItem key={index}>
-              <Input
-                value={item}
-                onChange={(e) => handleArrayChange('knowledge', index, e.target.value)}
-                placeholder="Knowledge item"
-                required
-              />
-              <RemoveButton
-                type="button"
-                onClick={() => removeArrayItem('knowledge', index)}
-              >
-                Remove
-              </RemoveButton>
-            </ArrayItem>
-          ))}
-          <AddButton
-            type="button"
-            onClick={() => addArrayItem('knowledge', '')}
-          >
-            Add Knowledge Item
-          </AddButton>
-        </ArraySection>
-
-        <ArraySection>
-          <SectionTitle>Skills</SectionTitle>
-          {formData.skills.map((item, index) => (
-            <ArrayItem key={index}>
-              <Input
-                value={item}
-                onChange={(e) => handleArrayChange('skills', index, e.target.value)}
-                placeholder="Skill"
-                required
-              />
-              <RemoveButton
-                type="button"
-                onClick={() => removeArrayItem('skills', index)}
-              >
-                Remove
-              </RemoveButton>
-            </ArrayItem>
-          ))}
-          <AddButton
-            type="button"
-            onClick={() => addArrayItem('skills', '')}
-          >
-            Add Skill
-          </AddButton>
-        </ArraySection>
-
-        <ArraySection>
-          <SectionTitle>Resources</SectionTitle>
-          {formData.resources.map((resource, index) => (
-            <MultiFieldItem key={index}>
-              <MultiFieldRow>
-                <MultiFieldGroup>
-                  <SmallLabel>Description</SmallLabel>
-                  <Input
-                    value={resource.description}
-                    onChange={(e) => handleMultiFieldChange('resources', index, 'description', e.target.value)}
-                    placeholder="Resource description"
-                  />
-                </MultiFieldGroup>
-                <RemoveButtonSmall
-                  type="button"
-                  onClick={() => removeArrayItem('resources', index)}
-                >
-                  Remove
-                </RemoveButtonSmall>
-              </MultiFieldRow>
-              <MultiFieldRow>
-                <MultiFieldGroup>
-                  <SmallLabel>Link</SmallLabel>
-                  <Input
-                    value={resource.link}
-                    onChange={(e) => handleMultiFieldChange('resources', index, 'link', e.target.value)}
-                    placeholder="https://..."
-                    type="url"
-                  />
-                </MultiFieldGroup>
-              </MultiFieldRow>
-            </MultiFieldItem>
-          ))}
-          <AddButton
-            type="button"
-            onClick={() => addArrayItem('resources', { description: '', link: '' })}
-          >
-            Add Resource
-          </AddButton>
-        </ArraySection>
-
-        <ArraySection>
-          <SectionTitle>Classes / Materials</SectionTitle>
-          {formData.classes.map((classItem, index) => (
-            <MultiFieldItem key={index}>
-              <MultiFieldRow>
-                <MultiFieldGroup>
-                  <SmallLabel>Title</SmallLabel>
-                  <Input
-                    value={classItem.title}
-                    onChange={(e) => handleMultiFieldChange('classes', index, 'title', e.target.value)}
-                    placeholder="Class/Material title"
-                  />
-                </MultiFieldGroup>
-                <RemoveButtonSmall
-                  type="button"
-                  onClick={() => removeArrayItem('classes', index)}
-                >
-                  Remove
-                </RemoveButtonSmall>
-              </MultiFieldRow>
-              <MultiFieldRow>
-                <MultiFieldGroup>
-                  <SmallLabel>Link</SmallLabel>
-                  <Input
-                    value={classItem.link}
-                    onChange={(e) => handleMultiFieldChange('classes', index, 'link', e.target.value)}
-                    placeholder="https://..."
-                    type="url"
-                  />
-                </MultiFieldGroup>
-              </MultiFieldRow>
-            </MultiFieldItem>
-          ))}
-          <AddButton
-            type="button"
-            onClick={() => addArrayItem('classes', { title: '', link: '' })}
-          >
-            Add Class/Material
-          </AddButton>
-        </ArraySection>
-
-        <ArraySection>
-          <SectionTitle>References</SectionTitle>
-          {formData.references.map((reference, index) => (
-            <MultiFieldItem key={index}>
-              <MultiFieldRow>
-                <MultiFieldGroup style={{ flex: '0 0 120px' }}>
-                  <SmallLabel>Type</SmallLabel>
-                  <Select
-                    value={reference.type}
-                    onChange={(e) => handleMultiFieldChange('references', index, 'type', e.target.value)}
-                  >
-                    <option value="">Select type</option>
-                    <option value="Class">Class</option>
-                    <option value="Resource">Resource</option>
-                    <option value="Article">Article</option>
-                    <option value="Video">Video</option>
-                    <option value="Documentation">Documentation</option>
-                  </Select>
-                </MultiFieldGroup>
-                <MultiFieldGroup>
-                  <SmallLabel>Name</SmallLabel>
-                  <Input
-                    value={reference.name}
-                    onChange={(e) => handleMultiFieldChange('references', index, 'name', e.target.value)}
-                    placeholder="Reference name"
-                  />
-                </MultiFieldGroup>
-                <RemoveButtonSmall
-                  type="button"
-                  onClick={() => removeArrayItem('references', index)}
-                >
-                  Remove
-                </RemoveButtonSmall>
-              </MultiFieldRow>
-              <MultiFieldRow>
-                <MultiFieldGroup>
-                  <SmallLabel>Link</SmallLabel>
-                  <Input
-                    value={reference.link}
-                    onChange={(e) => handleMultiFieldChange('references', index, 'link', e.target.value)}
-                    placeholder="https://..."
-                    type="url"
-                  />
-                </MultiFieldGroup>
-              </MultiFieldRow>
-            </MultiFieldItem>
-          ))}
-          <AddButton
-            type="button"
-            onClick={() => addArrayItem('references', { type: '', name: '', link: '' })}
-          >
-            Add Reference
-          </AddButton>
-        </ArraySection>
-
-        <ButtonGroup>
-          <Button type="submit" disabled={saving} $variant="primary">
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-          <Button type="button" onClick={() => router.push('/LMS/edit-guides')}>
-            Back to all guides
-          </Button>
-        </ButtonGroup>
-      </Form>
-    </FormContainer>
+      {focus && (
+        <FocusMode
+          title={FOCUS_TITLES[focus]}
+          value={focusValue[focus]}
+          onChange={(value) => setFocusValue(focus, value)}
+          onClose={closeFocus}
+        />
+      )}
+    </EditorShell>
   );
 };
+
+// ── Pieces ────────────────────────────────────────────────────────────────
+
+const Tile = ({
+  label,
+  accent,
+  icon,
+  span,
+  tall,
+  onExpand,
+  children,
+}: {
+  label: string;
+  accent: string;
+  icon: React.ReactNode;
+  span?: 1 | 2;
+  tall?: boolean;
+  /** Present on tiles whose text can be opened full screen. */
+  onExpand?: () => void;
+  children: React.ReactNode;
+}) => (
+  <EditTile $span={span} $tall={tall} aria-label={label}>
+    <TileHead>
+      <TileIcon $accent={accent}>{icon}</TileIcon>
+      <TileTitle>{label}</TileTitle>
+      {onExpand && (
+        <TileIconButton
+          type="button"
+          aria-label={`Open ${label} full screen`}
+          title="Full screen"
+          onClick={onExpand}
+        >
+          <ExpandIcon />
+        </TileIconButton>
+      )}
+    </TileHead>
+    <TileBody>{children}</TileBody>
+  </EditTile>
+);
+
+const Markdown = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => (
+  <TileEditor>
+    <MarkdownEditorWrapper
+      data-color-mode="light"
+      style={{ flex: 1, minHeight: "12rem", display: "flex", flexDirection: "column" }}
+    >
+      <MDEditor
+        value={value}
+        onChange={(next) => onChange(next || "")}
+        preview="edit"
+        height="100%"
+        visibleDragbar={false}
+      />
+    </MarkdownEditorWrapper>
+  </TileEditor>
+);
+
+const StringList = ({
+  items,
+  placeholder,
+  addLabel,
+  onChange,
+}: {
+  items: string[];
+  placeholder: string;
+  addLabel: string;
+  onChange: (next: string[]) => void;
+}) => (
+  <div>
+    {items.map((item, index) => (
+      // Position, not text: two goals can read the same while being typed.
+      <ListRow key={index}>
+        <Input
+          value={item}
+          placeholder={placeholder}
+          onChange={(e) => onChange(items.map((v, i) => (i === index ? e.target.value : v)))}
+        />
+        <RowRemove type="button" onClick={() => onChange(items.filter((_, i) => i !== index))}>
+          Remove
+        </RowRemove>
+      </ListRow>
+    ))}
+    <RowAdd type="button" onClick={() => onChange([...items, ""])}>
+      {addLabel}
+    </RowAdd>
+  </div>
+);
+
+type RowField<T> = {
+  key: keyof T & string;
+  placeholder: string;
+  type?: "url" | "text";
+  /** A select instead of a text input. */
+  options?: string[];
+};
+
+function RowList<T extends Record<string, string>>({
+  rows,
+  fields,
+  addLabel,
+  onChange,
+}: {
+  rows: T[];
+  fields: RowField<T>[];
+  addLabel: string;
+  onChange: (next: T[]) => void;
+}) {
+  const blank = Object.fromEntries(fields.map((f) => [f.key, ""])) as T;
+  return (
+    <div>
+      {rows.map((row, index) => (
+        <ListRow key={index}>
+          <RowFields style={{ gridTemplateColumns: `repeat(${fields.length}, minmax(0, 1fr))` }}>
+            {fields.map((field) =>
+              field.options ? (
+                <Select
+                  key={field.key}
+                  aria-label={field.placeholder}
+                  value={row[field.key]}
+                  style={{ padding: "0.45rem 0.6rem", fontSize: "var(--text-sm)" }}
+                  onChange={(e) =>
+                    onChange(rows.map((r, i) => (i === index ? { ...r, [field.key]: e.target.value } : r)))
+                  }
+                >
+                  <option value="">{field.placeholder}</option>
+                  {field.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+              ) : (
+                <Input
+                  key={field.key}
+                  aria-label={field.placeholder}
+                  type={field.type ?? "text"}
+                  value={row[field.key]}
+                  placeholder={field.placeholder}
+                  onChange={(e) =>
+                    onChange(rows.map((r, i) => (i === index ? { ...r, [field.key]: e.target.value } : r)))
+                  }
+                />
+              )
+            )}
+          </RowFields>
+          <RowRemove type="button" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
+            Remove
+          </RowRemove>
+        </ListRow>
+      ))}
+      <RowAdd type="button" onClick={() => onChange([...rows, blank])}>
+        {addLabel}
+      </RowAdd>
+    </div>
+  );
+}

@@ -1,11 +1,22 @@
 "use client";
-import styled, { css } from "styled-components";
-import Link from "next/link";
+import styled from "styled-components";
 import { PageContainer } from "globalStyles/pageStyles";
+import { tileSurface, TileHead as SharedTileHead } from "UIcomponents/guideTiles/style";
 
 const MOBILE = "700px";
 
 export { PageTitle, TitleBlock } from "globalStyles/pageStyles";
+// The tile vocabulary is shared with the guide editor.
+export {
+  TileIcon,
+  TileTitle,
+  TileBody,
+  SubSectionHeading,
+  Eyebrow,
+  ToolButton,
+  ToolLink,
+  TileIconButton as MinimizeButton,
+} from "UIcomponents/guideTiles/style";
 
 /** Full width — the canvas should use the whole desk, not a 1200px column. */
 export const Shell = styled(PageContainer).attrs({ $width: "full" as const })`
@@ -45,70 +56,11 @@ export const ControlsDivider = styled.span`
   flex-shrink: 0;
 `;
 
-/** Module name above the guide title — context, not a heading of its own. */
-export const Eyebrow = styled.p`
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--primary-black-60);
-  margin: 0;
-`;
-
 export const Toolbar = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
-`;
-
-/**
- * Canvas controls, styled like the rest of the app's small controls rather
- * than as underlined text. `$active` is the pressed state of the snap toggle.
- */
-const toolStyles = css<{ $active?: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  height: 2rem;
-  padding: 0 0.75rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid
-    ${({ $active }) =>
-      $active ? "var(--theme-module3-60)" : "var(--primary-black-10)"};
-  background: ${({ $active }) =>
-    $active ? "var(--theme-module3-10)" : "var(--primary-white)"};
-  color: ${({ $active }) =>
-    $active ? "var(--theme-module3-hover)" : "var(--primary-black-60)"};
-  font: inherit;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-  &:hover {
-    background: ${({ $active }) =>
-      $active ? "var(--theme-module3-10)" : "var(--primary-black-5)"};
-    color: ${({ $active }) =>
-      $active ? "var(--theme-module3-hover)" : "var(--primary-black-100)"};
-  }
-
-  svg {
-    width: 0.875rem;
-    height: 0.875rem;
-    flex-shrink: 0;
-  }
-`;
-
-export const ToolButton = styled.button<{ $active?: boolean }>`
-  ${toolStyles}
-`;
-
-/** The same control as a link, for "Edit guide" in the header. */
-export const ToolLink = styled(Link)<{ $active?: boolean }>`
-  ${toolStyles}
-  text-decoration: none;
 `;
 
 /**
@@ -206,19 +158,13 @@ export const Tile = styled.article<{
   top: var(--tile-y);
   width: var(--tile-w);
   height: var(--tile-h);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  ${tileSurface}
   background: ${({ $swapTarget }) =>
     $swapTarget ? "var(--theme-module3-10)" : "var(--primary-white)"};
-  /* Plain card, same as every other surface in the app. The only colour a tile
-     carries is its icon; a coloured top rule and a tinted header made the board
-     louder than the pages around it. Dashed marks a pending swap. */
+  /* Dashed marks a pending swap. */
   border: 1px ${({ $swapTarget }) => ($swapTarget ? "dashed" : "solid")}
     ${({ $swapTarget }) =>
       $swapTarget ? "var(--theme-module3-100)" : "var(--primary-black-10)"};
-  border-radius: var(--radius-lg);
-  overflow: hidden;
   box-shadow: ${({ $dragging }) =>
     $dragging
       ? "0 16px 40px rgba(0, 0, 0, 0.18)"
@@ -257,13 +203,7 @@ export const Tile = styled.article<{
  * The whole header is the drag surface — it is chrome, not content, so there
  * is nothing in it worth selecting. The body below stays fully selectable.
  */
-export const TileHead = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.7rem 0.85rem;
-  border-bottom: 1px solid var(--primary-black-10);
-  flex-shrink: 0;
+export const TileHead = styled(SharedTileHead)`
   cursor: grab;
   user-select: none;
   /* Stops touch drags from scrolling the page instead of moving the tile. */
@@ -276,65 +216,6 @@ export const TileHead = styled.div`
   @media (max-width: ${MOBILE}) {
     cursor: default;
     touch-action: auto;
-  }
-`;
-
-/** The one place a section's colour appears: a tinted chip with a coloured glyph. */
-export const TileIcon = styled.span<{ $accent: string }>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-md);
-  background: ${({ $accent }) => `var(--accent-${$accent}-10)`};
-  color: ${({ $accent }) => `var(--accent-${$accent}-text)`};
-
-  svg {
-    width: 1.1rem;
-    height: 1.1rem;
-  }
-`;
-
-export const TileTitle = styled.h2`
-  flex: 1;
-  min-width: 0;
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--primary-black-100);
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-/**
- * Sits in the drag surface, so it stops its own pointerdown from reaching the
- * header — otherwise minimising would begin a drag on the way to the click.
- */
-export const MinimizeButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--primary-black-30);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--primary-black-5);
-    color: var(--primary-black-100);
-  }
-
-  svg {
-    width: 1rem;
-    height: 1rem;
   }
 `;
 
@@ -361,14 +242,6 @@ export const GripButton = styled.button`
     width: 1rem;
     height: 1rem;
   }
-`;
-
-export const TileBody = styled.div`
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 0.85rem;
-  scrollbar-width: thin;
 `;
 
 /** Corner grip. Quiet until the tile is hovered, like a window resize corner. */
@@ -400,19 +273,6 @@ export const ResizeHandle = styled.div`
 
   @media (max-width: ${MOBILE}) {
     display: none;
-  }
-`;
-
-export const SubSectionHeading = styled.h3`
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--primary-black-60);
-  margin: 0 0 0.35rem 0;
-
-  &:not(:first-child) {
-    margin-top: 1rem;
   }
 `;
 
