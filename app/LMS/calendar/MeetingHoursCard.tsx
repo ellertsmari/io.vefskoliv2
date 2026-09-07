@@ -7,6 +7,7 @@ import {
   saveBookingWindow,
 } from "serverActions/meetings";
 import {
+  DEFAULT_LECTURE_MINUTES,
   MEETING_SLOT_MINUTES,
   MIN_TEACHERS_PRESENT,
   WEEKDAY_NAMES,
@@ -32,8 +33,9 @@ import {
 
 /**
  * The weekly hours in which students may book a meeting. Windows belong to
- * the whole teacher team; a slot inside one is offered only when at least
- * two teachers have no "Not available" event at that time.
+ * the whole teacher team; a slot inside one is offered only when no lecture
+ * or holiday is on and at least two teachers have no "Not available" event
+ * at that time.
  */
 export const MeetingHoursCard = ({
   windows,
@@ -84,9 +86,11 @@ export const MeetingHoursCard = ({
       <SettingsTitle>Meeting hours</SettingsTitle>
       <FieldHint>
         When students may book a {MEETING_SLOT_MINUTES}-minute meeting. A time
-        is offered only while at least {MIN_TEACHERS_PRESENT} teachers are free,
-        so mark yourself &quot;Not available&quot; on the calendar when you
-        teach elsewhere and those times drop out on their own.
+        is offered only while at least {MIN_TEACHERS_PRESENT} teachers are free.
+        Lectures and holidays on the calendar take everyone, so those times
+        drop out on their own; mark yourself &quot;Not available&quot; when you
+        teach elsewhere. A lecture with no end time counts as{" "}
+        {DEFAULT_LECTURE_MINUTES} minutes.
       </FieldHint>
 
       {windows.length > 0 && (

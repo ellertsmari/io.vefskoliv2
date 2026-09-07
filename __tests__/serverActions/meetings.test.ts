@@ -155,6 +155,80 @@ describe("meetings", () => {
       expect(slots[0].teachers.sort()).toEqual(["Smári", "Þórdís"]);
     });
 
+    it("drops the times a lecture is on, for every teacher", async () => {
+      // A third teacher would cover a "not available"; a lecture takes all.
+      await createDummyUser("teacher", { name: "Þórdís" });
+      signInAs(smari);
+      await createCalendarEvent({
+        title: "Intro to CSS",
+        category: "lecture",
+        startDate: nextTuesday,
+        startTime: "13:00",
+        endTime: "13:30",
+      });
+
+      signInAs(anna);
+      const slots = await getMeetingSlots(rangeFrom, rangeTo);
+
+      expect(slots.map((slot) => slot.startTime)).toEqual(["13:40"]);
+    });
+
+    it("assumes an hour for a lecture with only a start time", async () => {
+      signInAs(smari);
+      await createCalendarEvent({
+        title: "Intro to CSS",
+        category: "lecture",
+        startDate: nextTuesday,
+        startTime: "12:30",
+      });
+
+      signInAs(anna);
+      const slots = await getMeetingSlots(rangeFrom, rangeTo);
+
+      expect(slots.map((slot) => slot.startTime)).toEqual(["13:40"]);
+    });
+
+    it("ignores a lecture with no time at all", async () => {
+      signInAs(smari);
+      await createCalendarEvent({
+        title: "Intro to CSS",
+        category: "lecture",
+        startDate: nextTuesday,
+      });
+
+      signInAs(anna);
+      expect(await getMeetingSlots(rangeFrom, rangeTo)).toHaveLength(3);
+    });
+
+    it("offers nothing on a holiday", async () => {
+      signInAs(smari);
+      await createCalendarEvent({
+        title: "Day off",
+        category: "holiday",
+        startDate: nextTuesday,
+      });
+
+      signInAs(anna);
+      expect(await getMeetingSlots(rangeFrom, rangeTo)).toEqual([]);
+    });
+
+    it("ignores a student's own event, whatever it is called", async () => {
+      // The action refuses this; a stored one still must not block anyone.
+      await CalendarEvent.create({
+        title: "My lecture",
+        category: "lecture",
+        startDate: nextTuesday,
+        endDate: nextTuesday,
+        startTime: "13:00",
+        endTime: "14:00",
+        owner: anna._id,
+        visibility: "private",
+      });
+
+      signInAs(anna);
+      expect(await getMeetingSlots(rangeFrom, rangeTo)).toHaveLength(3);
+    });
+
     it("offers nothing when only one teacher exists", async () => {
       await createDummyUser("user");
       const { User } = await import("models/user");

@@ -11,8 +11,9 @@ import {
  * A weekly window in which students may book a meeting with the teachers,
  * e.g. Tuesdays 13:00–15:00 from 5 October to 18 December. Windows belong
  * to the teacher team, not to one teacher: a slot inside a window is offered
- * only when enough teachers have no "unavailable" event at that time (see
- * serverActions/meetings). Times are "HH:MM", dates "YYYY-MM-DD".
+ * only when no lecture or holiday is on and enough teachers have no
+ * "unavailable" event at that time (see serverActions/meetings). Times are
+ * "HH:MM", dates "YYYY-MM-DD".
  */
 const bookingWindowSchema = new Schema(
   {

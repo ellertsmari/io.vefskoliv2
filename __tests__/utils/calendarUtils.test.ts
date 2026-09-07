@@ -6,6 +6,7 @@ import {
   addDays,
   addMinutes,
   allowedVisibilities,
+  coversSlot,
   slotStarts,
   timesOverlap,
   weekdayOf,
@@ -239,5 +240,42 @@ describe("meeting slots", () => {
   it("knows the weekday of a date, Monday first", () => {
     expect(weekdayOf("2026-09-07")).toBe(0);
     expect(weekdayOf("2026-09-13")).toBe(6);
+  });
+
+  describe("coversSlot", () => {
+    const day = "2026-09-08";
+    const on = (block: Partial<Parameters<typeof coversSlot>[0]>) => ({
+      category: "unavailable" as const,
+      startDate: day,
+      endDate: day,
+      ...block,
+    });
+
+    it("covers the whole day when the event has no times", () => {
+      expect(coversSlot(on({}), day, "13:00", "13:20")).toBe(true);
+      expect(coversSlot(on({}), "2026-09-09", "13:00", "13:20")).toBe(false);
+    });
+
+    it("covers only the overlapping times when both are set", () => {
+      const block = on({ startTime: "13:00", endTime: "13:30" });
+      expect(coversSlot(block, day, "13:20", "13:40")).toBe(true);
+      expect(coversSlot(block, day, "13:40", "14:00")).toBe(false);
+    });
+
+    it("runs 'not available' to the end of the day without an end time", () => {
+      expect(coversSlot(on({ startTime: "13:00" }), day, "17:00", "17:20")).toBe(true);
+    });
+
+    it("lets a lecture with no time at all cover nothing", () => {
+      expect(coversSlot(on({ category: "lecture" }), day, "13:00", "13:20")).toBe(false);
+      expect(coversSlot(on({ category: "holiday" }), day, "13:00", "13:20")).toBe(true);
+    });
+
+    it("gives a lecture an hour when it has no end time", () => {
+      const lecture = on({ category: "lecture", startTime: "12:30" });
+      expect(coversSlot(lecture, day, "13:20", "13:40")).toBe(true);
+      expect(coversSlot(lecture, day, "13:40", "14:00")).toBe(false);
+      expect(coversSlot(on({ category: "lecture", startTime: "23:30" }), day, "23:40", "23:59")).toBe(true);
+    });
   });
 });

@@ -133,7 +133,8 @@ export const BookMeetingDialog = ({
           <FormGrid>
             <FieldHint>
               {MEETING_SLOT_MINUTES} minutes with at least {MIN_TEACHERS_PRESENT}{" "}
-              teachers. Only times when they are both free are shown.
+              teachers. Only times when they are both free are shown, so
+              lectures and holidays never appear here.
             </FieldHint>
 
             <MonthNav>

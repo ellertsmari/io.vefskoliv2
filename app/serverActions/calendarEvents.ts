@@ -18,6 +18,7 @@ import {
   canEditEvent,
   expandWeekly,
   normalizeEventInput,
+  pickableCategories,
   type CalendarEventInput,
   type CopyEventsInput,
 } from "../utils/calendarUtils";
@@ -158,7 +159,11 @@ export async function getViewerTeamName(): Promise<string | null> {
   }
 }
 
-/** "Not available" is a teacher's own status; meetings come from booking. */
+/**
+ * Meetings come from booking, and only teachers may add what keeps teachers
+ * out of meetings: "not available", lectures and holidays (see
+ * serverActions/meetings). Mirrors pickableCategories in the form.
+ */
 const refuseCategory = (
   category: ClientEvent["category"],
   isTeacher: boolean
@@ -168,6 +173,9 @@ const refuseCategory = (
   }
   if (category === "unavailable" && !isTeacher) {
     return "Only teachers can mark themselves as not available.";
+  }
+  if (!pickableCategories(isTeacher).includes(category)) {
+    return "Only teachers can add lectures and holidays.";
   }
   return null;
 };

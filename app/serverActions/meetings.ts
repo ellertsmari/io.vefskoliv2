@@ -14,14 +14,17 @@ import {
   BookingWindowInputSchema,
   MEETING_SLOT_MINUTES,
   MIN_TEACHERS_PRESENT,
+  SCHOOL_BUSY_CATEGORIES,
+  TEACHER_BUSY_CATEGORIES,
   addDays,
   addMinutes,
+  coversSlot,
   slotStarts,
-  timesOverlap,
   todayKey,
   weekdayOf,
   type BookMeetingInput,
   type BookingWindowInput,
+  type BusyBlock,
 } from "../utils/calendarUtils";
 import type {
   BookingWindowInfo,
@@ -125,19 +128,14 @@ export async function deleteBookingWindow(
 
 type Teacher = { _id: ObjectId; name: string };
 
-type BusyRow = {
-  owner: ObjectId | null;
-  startDate: string;
-  endDate: string;
-  startTime?: string;
-  endTime?: string;
-};
+type BusyRow = BusyBlock & { owner: ObjectId | null };
 
 type BookedRow = { startDate: string; startTime?: string };
 
 /**
- * Which teachers are free for one slot: no "not available" event covering
- * it. An event without times blocks the whole day.
+ * Which teachers are free for one slot. A lecture or holiday on the school
+ * calendar takes everyone; otherwise a teacher is free unless one of their
+ * own "not available" events covers the slot.
  */
 const freeTeachers = (
   teachers: Teacher[],
@@ -145,24 +143,21 @@ const freeTeachers = (
   date: string,
   startTime: string,
   endTime: string
-): Teacher[] =>
-  teachers.filter(
+): Teacher[] => {
+  const covering = busy.filter((block) => coversSlot(block, date, startTime, endTime));
+  if (covering.some((block) => block.category !== "unavailable")) return [];
+  return teachers.filter(
     (teacher) =>
-      !busy.some(
-        (block) =>
-          block.owner &&
-          String(block.owner) === String(teacher._id) &&
-          block.startDate <= date &&
-          block.endDate >= date &&
-          (!block.startTime ||
-            timesOverlap(startTime, endTime, block.startTime, block.endTime ?? "23:59"))
+      !covering.some(
+        (block) => block.owner && String(block.owner) === String(teacher._id)
       )
   );
+};
 
 /**
  * Every bookable slot between two dates. A slot is offered when it lies in
- * a meeting-hours window, is in the future, nobody has booked it, and at
- * least MIN_TEACHERS_PRESENT teachers are free.
+ * a meeting-hours window, is in the future, nobody has booked it, no lecture
+ * or holiday is on, and at least MIN_TEACHERS_PRESENT teachers are free.
  */
 async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSlot[]> {
   const windows = await BookingWindow.find({
@@ -178,13 +173,18 @@ async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSl
   if (teachers.length < MIN_TEACHERS_PRESENT) return [];
 
   const [busy, booked] = await Promise.all([
+    // School-wide blocks must be on the school calendar: a student's own
+    // event, whatever it is called, keeps nobody out of a meeting.
     CalendarEvent.find(
       {
-        category: "unavailable",
         startDate: { $lte: toDate },
         endDate: { $gte: fromDate },
+        $or: [
+          { category: { $in: TEACHER_BUSY_CATEGORIES } },
+          { category: { $in: SCHOOL_BUSY_CATEGORIES }, visibility: "everyone" },
+        ],
       },
-      { owner: 1, startDate: 1, endDate: 1, startTime: 1, endTime: 1 }
+      { owner: 1, category: 1, startDate: 1, endDate: 1, startTime: 1, endTime: 1 }
     ).lean<BusyRow[]>(),
     CalendarEvent.find(
       { category: "meeting", startDate: { $gte: fromDate, $lte: toDate } },

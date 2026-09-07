@@ -9,6 +9,7 @@ import {
   type ShareableUser,
 } from "serverActions/calendarEvents";
 import {
+  DEFAULT_LECTURE_MINUTES,
   MAX_REPEAT_WEEKS,
   pickableCategories,
   defaultVisibility,
@@ -290,6 +291,16 @@ export const EventForm = ({
                   Shown to everyone as striped time, and no meetings can be
                   booked with you then.
                 </FieldHint>
+              )}
+              {category === "lecture" && isTeacher && (
+                <FieldHint>
+                  Students can&apos;t book a meeting while a lecture is on.
+                  Add an end time so the right times drop out; without one
+                  the lecture counts as {DEFAULT_LECTURE_MINUTES} minutes.
+                </FieldHint>
+              )}
+              {category === "holiday" && isTeacher && (
+                <FieldHint>No meetings can be booked on a holiday.</FieldHint>
               )}
             </Field>
 

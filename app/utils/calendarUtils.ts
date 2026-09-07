@@ -33,6 +33,13 @@ export const pickableCategories = (isTeacher: boolean): EventCategory[] =>
 export const MIN_TEACHERS_PRESENT = 2;
 export const MEETING_SLOT_MINUTES = 20;
 
+/**
+ * How long a lecture is taken to last when it has a start time but no end,
+ * so it still keeps meeting slots free of it. Set an end time on the event
+ * to override.
+ */
+export const DEFAULT_LECTURE_MINUTES = 60;
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -343,6 +350,46 @@ export const timesOverlap = (
   bStart: string,
   bEnd: string
 ): boolean => aStart < bEnd && bStart < aEnd;
+
+/**
+ * What keeps teachers out of meetings. "unavailable" is one teacher's own
+ * status; a lecture or holiday keeps every teacher busy, since the whole
+ * school is there (or nobody is).
+ */
+export const TEACHER_BUSY_CATEGORIES = ["unavailable"] as const;
+export const SCHOOL_BUSY_CATEGORIES = ["lecture", "holiday"] as const;
+
+export type BusyBlock = {
+  category: EventCategory;
+  startDate: string;
+  endDate: string;
+  startTime?: string | null;
+  endTime?: string | null;
+};
+
+/**
+ * Whether a busy event covers a slot on a day. "Not available" or a holiday
+ * without times covers the whole day; a lecture without times says nothing
+ * about when it is, so it covers nothing. With only a start time, "not
+ * available" runs to the end of the day and a lecture lasts
+ * DEFAULT_LECTURE_MINUTES.
+ */
+export const coversSlot = (
+  block: BusyBlock,
+  date: string,
+  startTime: string,
+  endTime: string
+): boolean => {
+  if (block.startDate > date || block.endDate < date) return false;
+  if (!block.startTime) return block.category !== "lecture";
+  let blockEnd = block.endTime ?? "23:59";
+  if (!block.endTime && block.category === "lecture") {
+    const assumed = addMinutes(block.startTime, DEFAULT_LECTURE_MINUTES);
+    // addMinutes wraps past midnight; a late lecture just runs out the day.
+    blockEnd = assumed > block.startTime ? assumed : "23:59";
+  }
+  return timesOverlap(startTime, endTime, block.startTime, blockEnd);
+};
 
 /** Monday-first weekday of a "YYYY-MM-DD" key (0 = Mon … 6 = Sun). */
 export const weekdayOf = (key: string): number => {

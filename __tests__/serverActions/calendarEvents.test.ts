@@ -38,9 +38,10 @@ const signInAs = (user: Doc) =>
     user: { id: user._id.toString(), role: user.role },
   });
 
-const lecture = {
-  title: "Intro to CSS",
-  category: "lecture" as const,
+// A category both roles may pick, so the same fixture serves every test.
+const workshop = {
+  title: "CSS workshop",
+  category: "groupwork" as const,
   startDate: "2026-09-02",
   startTime: "10:00",
   endTime: "12:00",
@@ -73,13 +74,13 @@ describe("calendar events", () => {
     it("publishes a teacher's event to everyone", async () => {
       signInAs(teacher);
 
-      const result = await createCalendarEvent(lecture);
+      const result = await createCalendarEvent(workshop);
 
       expect(result.success).toBe(true);
       const stored = await CalendarEvent.findOne().lean<CalendarEventType>();
       expect(stored).toEqual(
         expect.objectContaining({
-          title: "Intro to CSS",
+          title: "CSS workshop",
           startDate: "2026-09-02",
           endDate: "2026-09-02",
           startTime: "10:00",
@@ -93,16 +94,30 @@ describe("calendar events", () => {
     it("keeps a student's event private by default", async () => {
       signInAs(anna);
 
-      await createCalendarEvent({ ...lecture, title: "Study" });
+      await createCalendarEvent({ ...workshop, title: "Study" });
 
       expect((await CalendarEvent.findOne().lean<CalendarEventType>())?.visibility).toBe("private");
+    });
+
+    it("lets only teachers add lectures and holidays", async () => {
+      signInAs(anna);
+      for (const category of ["lecture", "holiday"] as const) {
+        const result = await createCalendarEvent({ ...workshop, category });
+        expect(result.success).toBe(false);
+        expect(result.message).toMatch(/Only teachers/);
+      }
+      expect(await CalendarEvent.countDocuments()).toBe(0);
+
+      signInAs(teacher);
+      const result = await createCalendarEvent({ ...workshop, category: "holiday" });
+      expect(result.success).toBe(true);
     });
 
     it("lets a student publish to everyone", async () => {
       signInAs(anna);
 
       const result = await createCalendarEvent({
-        ...lecture,
+        ...workshop,
         visibility: "everyone",
       });
 
@@ -114,7 +129,7 @@ describe("calendar events", () => {
       signInAs(anna);
 
       const result = await createCalendarEvent({
-        ...lecture,
+        ...workshop,
         title: "Study group",
         visibility: "shared",
         sharedWith: [cecil._id.toString(), anna._id.toString(), "not-an-id"],
@@ -139,7 +154,7 @@ describe("calendar events", () => {
       signInAs(anna);
 
       const result = await createCalendarEvent({
-        ...lecture,
+        ...workshop,
         visibility: "shared",
         sharedWith: [anna._id.toString()],
       });
@@ -162,7 +177,7 @@ describe("calendar events", () => {
       signInAs(anna);
 
       const result = await createCalendarEvent({
-        ...lecture,
+        ...workshop,
         title: "Team meeting",
         visibility: "team",
       });
@@ -178,7 +193,7 @@ describe("calendar events", () => {
     it("refuses a team event from someone without a team", async () => {
       signInAs(cecil);
 
-      const result = await createCalendarEvent({ ...lecture, visibility: "team" });
+      const result = await createCalendarEvent({ ...workshop, visibility: "team" });
 
       expect(result.success).toBe(false);
       if (!result.success) expect(result.message).toMatch(/not on a team/i);
@@ -189,7 +204,7 @@ describe("calendar events", () => {
       signInAs(teacher);
 
       const result = await createCalendarEvent({
-        ...lecture,
+        ...workshop,
         repeatWeeklyUntil: "2026-09-23",
       });
 
@@ -209,7 +224,7 @@ describe("calendar events", () => {
     it("reports field errors", async () => {
       signInAs(teacher);
 
-      const result = await createCalendarEvent({ ...lecture, title: "" });
+      const result = await createCalendarEvent({ ...workshop, title: "" });
 
       expect(result.success).toBe(false);
       if (!result.success) expect(result.errors?.title).toBeDefined();
@@ -219,16 +234,16 @@ describe("calendar events", () => {
   describe("reading", () => {
     beforeEach(async () => {
       signInAs(teacher);
-      await createCalendarEvent(lecture);
+      await createCalendarEvent(workshop);
       signInAs(anna);
-      await createCalendarEvent({ ...lecture, title: "Anna private" });
+      await createCalendarEvent({ ...workshop, title: "Anna private" });
       await createCalendarEvent({
-        ...lecture,
+        ...workshop,
         title: "Team meeting",
         visibility: "team",
       });
       signInAs(cecil);
-      await createCalendarEvent({ ...lecture, title: "Cecil private" });
+      await createCalendarEvent({ ...workshop, title: "Cecil private" });
     });
 
     it("keeps students' own and team events out of a teacher's calendar", async () => {
@@ -236,14 +251,14 @@ describe("calendar events", () => {
 
       const events = await getCalendarEvents();
 
-      expect(events.map((event) => event.title)).toEqual(["Intro to CSS"]);
+      expect(events.map((event) => event.title)).toEqual(["CSS workshop"]);
       expect(events[0].canEdit).toBe(true);
     });
 
     it("shows a teacher an event a student shared with them", async () => {
       signInAs(anna);
       await createCalendarEvent({
-        ...lecture,
+        ...workshop,
         title: "Ask the teacher",
         visibility: "shared",
         sharedWith: [teacher._id.toString()],
@@ -254,7 +269,7 @@ describe("calendar events", () => {
 
       expect(events.map((event) => event.title).sort()).toEqual([
         "Ask the teacher",
-        "Intro to CSS",
+        "CSS workshop",
       ]);
       expect(events.find((event) => event.title === "Ask the teacher")?.canEdit).toBe(true);
     });
@@ -265,14 +280,14 @@ describe("calendar events", () => {
       const events = await getCalendarEvents();
 
       expect(events.map((event) => event.title).sort()).toEqual([
-        "Intro to CSS",
+        "CSS workshop",
         "Team meeting",
       ]);
       const meeting = events.find((event) => event.title === "Team meeting")!;
       expect(meeting.canEdit).toBe(false);
       expect(meeting.ownerLabel).toBe("Team Rocket");
       expect(meeting.visibility).toBe("team");
-      const shared = events.find((event) => event.title === "Intro to CSS")!;
+      const shared = events.find((event) => event.title === "CSS workshop")!;
       expect(shared.source).toBe("school");
       expect(shared.canEdit).toBe(false);
     });
@@ -290,12 +305,12 @@ describe("calendar events", () => {
       const events = await getCalendarEvents();
 
       expect(events.map((event) => event.title).sort()).toEqual([
-        "Intro to CSS",
+        "CSS workshop",
         "Team meeting",
       ]);
       expect(events.every((event) => !event.canEdit)).toBe(true);
 
-      await createCalendarEvent({ ...lecture, title: "As Bjarni" });
+      await createCalendarEvent({ ...workshop, title: "As Bjarni" });
       const created = await CalendarEvent.findOne({ title: "As Bjarni" }).lean<CalendarEventType>();
       expect(created?.owner?.toString()).toBe(bjarni._id.toString());
       expect(created?.visibility).toBe("private");
@@ -305,7 +320,7 @@ describe("calendar events", () => {
       signInAs(bjarni);
 
       const events = await getCalendarEvents();
-      const shared = events.find((event) => event.title === "Intro to CSS")!;
+      const shared = events.find((event) => event.title === "CSS workshop")!;
 
       expect(shared.ownerName).toBeTruthy();
       expect(shared.ownerAvatarUrl).toBeTruthy();
@@ -326,22 +341,22 @@ describe("calendar events", () => {
   describe("editing and deleting", () => {
     it("lets a student change and remove their own event only", async () => {
       signInAs(anna);
-      await createCalendarEvent({ ...lecture, title: "Mine" });
+      await createCalendarEvent({ ...workshop, title: "Mine" });
       const mine = await CalendarEvent.findOne({ title: "Mine" });
       signInAs(cecil);
-      await createCalendarEvent({ ...lecture, title: "Cecil's" });
+      await createCalendarEvent({ ...workshop, title: "Cecil's" });
       const cecils = await CalendarEvent.findOne({ title: "Cecil's" });
 
       signInAs(anna);
       const denied = await updateCalendarEvent(cecils!._id.toString(), {
-        ...lecture,
+        ...workshop,
         title: "Hijacked",
       });
       expect(denied.success).toBe(false);
       expect((await deleteCalendarEvent(cecils!._id.toString())).success).toBe(false);
 
       const allowed = await updateCalendarEvent(mine!._id.toString(), {
-        ...lecture,
+        ...workshop,
         title: "Renamed",
         startTime: "",
         endTime: "",
@@ -357,12 +372,12 @@ describe("calendar events", () => {
 
     it("lets a teacher edit a student's event without changing its audience", async () => {
       signInAs(anna);
-      await createCalendarEvent({ ...lecture, title: "Team meeting", visibility: "team" });
+      await createCalendarEvent({ ...workshop, title: "Team meeting", visibility: "team" });
       const event = await CalendarEvent.findOne();
 
       signInAs(teacher);
       const result = await updateCalendarEvent(event!._id.toString(), {
-        ...lecture,
+        ...workshop,
         title: "Team meeting (moved)",
       });
 
@@ -375,12 +390,12 @@ describe("calendar events", () => {
 
     it("applies a change to every week of a series but keeps the dates", async () => {
       signInAs(teacher);
-      await createCalendarEvent({ ...lecture, repeatWeeklyUntil: "2026-09-16" });
+      await createCalendarEvent({ ...workshop, repeatWeeklyUntil: "2026-09-16" });
       const second = await CalendarEvent.findOne({ startDate: "2026-09-09" });
 
       const result = await updateCalendarEvent(
         second!._id.toString(),
-        { ...lecture, title: "CSS, part 2", startDate: "2026-10-01" },
+        { ...workshop, title: "CSS, part 2", startDate: "2026-10-01" },
         { applyToSeries: true }
       );
 
@@ -400,7 +415,7 @@ describe("calendar events", () => {
 
     it("deletes one week or the whole series", async () => {
       signInAs(teacher);
-      await createCalendarEvent({ ...lecture, repeatWeeklyUntil: "2026-09-16" });
+      await createCalendarEvent({ ...workshop, repeatWeeklyUntil: "2026-09-16" });
       const [first, second] = await CalendarEvent.find().sort({ startDate: 1 });
 
       expect((await deleteCalendarEvent(first._id.toString())).success).toBe(true);
@@ -439,9 +454,9 @@ describe("calendar events", () => {
 
     it("copies shared events forward by whole weeks, once", async () => {
       signInAs(teacher);
-      await createCalendarEvent({ ...lecture, startDate: "2025-09-03" });
+      await createCalendarEvent({ ...workshop, startDate: "2025-09-03" });
       signInAs(anna);
-      await createCalendarEvent({ ...lecture, title: "Not copied", startDate: "2025-09-03" });
+      await createCalendarEvent({ ...workshop, title: "Not copied", startDate: "2025-09-03" });
 
       signInAs(teacher);
       const result = await copyCalendarEvents({
@@ -455,7 +470,7 @@ describe("calendar events", () => {
       const copy = await CalendarEvent.findOne({ startDate: "2026-09-02" }).lean<CalendarEventType>();
       expect(copy).toEqual(
         expect.objectContaining({
-          title: "Intro to CSS",
+          title: "CSS workshop",
           startTime: "10:00",
           owner: null,
           visibility: "everyone",

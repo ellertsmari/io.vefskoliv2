@@ -7,11 +7,13 @@
 
 export type EventCategory =
   | "milestone"
+  /** Teachers only. A timed lecture blocks meeting slots for every teacher. */
   | "lecture"
   | "groupwork"
   | "deadline"
+  /** Teachers only. Blocks meeting slots for the whole day. */
   | "holiday"
-  /** A teacher is busy (teaching another group); blocks meeting slots. */
+  /** A teacher is busy (teaching another group); blocks their own slots. */
   | "unavailable"
   /** A student's booked meeting with the teachers. Made by booking only. */
   | "meeting";
