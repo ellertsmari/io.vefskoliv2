@@ -45,3 +45,8 @@ dbBackup/
 # local scratch
 .venv/
 pictures_for_claude/
+
+# AI-assistant instructions are personal: each contributor keeps their own.
+# AGENTS.md is re-created by `next dev`, so it can't just be deleted.
+AGENTS.md
+CLAUDE.md
