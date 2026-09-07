@@ -178,11 +178,9 @@ export const StepList = styled.nav`
   width: 100%;
   overflow-x: auto;
   padding-bottom: 0.25rem;
-
-  @media (max-width: 760px) {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
+  /* On a phone the row scrolls sideways rather than stacking: six stacked
+     steps pushed the actual content below the fold. */
+  scrollbar-width: thin;
 `;
 
 type StepStateProps = { $state: "done" | "current" | "available" | "locked" };
@@ -195,6 +193,10 @@ export const StepButton = styled.button<StepStateProps>`
   position: relative;
   flex: 1 1 0;
   min-width: 10rem;
+
+  @media (max-width: 760px) {
+    min-width: 7rem;
+  }
   /* Marker above the label, not beside it: with them side by side the
      connector to the next step ran straight through the label text. */
   display: flex;
@@ -273,11 +275,11 @@ export const StepLabel = styled.span`
   color: var(--primary-black-100);
   transition: color 0.15s ease;
 
-  ${StepButton}:disabled & {
+  ${StepButton}[aria-disabled="true"] & {
     color: var(--primary-black-30);
   }
 
-  ${StepButton}:hover:not(:disabled) & {
+  ${StepButton}:hover:not([aria-disabled="true"]) & {
     color: var(--theme-module3-hover);
   }
 `;
@@ -285,6 +287,22 @@ export const StepLabel = styled.span`
 export const StepHint = styled.span`
   font-size: var(--text-xs);
   color: var(--primary-black-60);
+
+  @media (max-width: 760px) {
+    display: none;
+  }
+`;
+
+/** The open step's hint, shown under the row where the per-step hints are hidden. */
+export const StepCurrentHint = styled.p`
+  display: none;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
+
+  @media (max-width: 760px) {
+    display: block;
+  }
 `;
 
 /** Joins a step to the next one. Sits behind the markers, not between them. */
@@ -297,10 +315,6 @@ export const StepConnector = styled.span`
   top: 1.125rem;
   height: 1px;
   background: var(--primary-black-10);
-
-  @media (max-width: 760px) {
-    display: none;
-  }
 `;
 
 /** Holds whichever step is open. */
@@ -476,6 +490,22 @@ export const StatLabel = styled.div`
   color: var(--primary-black-60);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+`;
+
+/**
+ * "Handed in" — the calm, persistent kind of confirmation. A flash of "saved"
+ * next to the button disappears on reload, and then the form looks exactly
+ * like one nobody has touched.
+ */
+export const SubmittedNote = styled.p`
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--error-success-10, #e6f7ee);
+  border: 1px solid var(--error-success-30, #a7e3c1);
+  color: var(--primary-black-100);
+  font-size: var(--text-sm);
+  font-weight: 600;
 `;
 
 export const Message = styled.p<{ $error?: boolean }>`

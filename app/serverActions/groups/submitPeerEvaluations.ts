@@ -31,11 +31,10 @@ const SubmitPeerEvaluationsSchema = z.object({
           .min(1, { message: "A short justification is required" })
           .max(5000),
         teambuildingScore: peerScore,
-        teambuildingComment: z
-          .string()
-          .trim()
-          .min(1, { message: "A short justification is required" })
-          .max(5000),
+        // Optional: the form asks for one justification per person and puts
+        // it in contributionComment. Kept so older clients and tests that
+        // send a comment per axis keep working.
+        teambuildingComment: z.string().trim().max(5000).optional(),
       })
     )
     .min(1)
@@ -110,7 +109,7 @@ export async function submitPeerEvaluations(
               contributionScore: evaluation.contributionScore,
               contributionComment: evaluation.contributionComment,
               teambuildingScore: evaluation.teambuildingScore,
-              teambuildingComment: evaluation.teambuildingComment,
+              teambuildingComment: evaluation.teambuildingComment ?? "",
             },
           },
           { upsert: true }

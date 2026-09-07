@@ -160,6 +160,10 @@ export type GroupProjectListItem = SerializedGroupProject & {
   myTeamId: string | null;
   myTeamName: string | null;
   hasPreferences: boolean;
+  /** Peer evaluation is open, I am on a team, and I have not handed in yet. */
+  peerEvalPending: boolean;
+  /** Other teams I still have to score while team evaluation is open. */
+  teamsToScore: number;
 };
 
 /** Another project's rubric, offered as a starting point in the rubric editor. */

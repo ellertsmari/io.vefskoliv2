@@ -1,10 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useFormDraft } from "utils/hooks/useStorage";
 import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
-import { GroupProjectDetails, PeerEvaluationEntry } from "types/groupTypes";
+import {
+  GroupProjectDetails,
+  PeerEvaluationEntry,
+  SerializedTeam,
+} from "types/groupTypes";
 import {
   CONTRIBUTION_SCORES,
   PEER_AXIS_LABELS,
@@ -24,10 +28,12 @@ import {
   MutedText,
   TextArea,
   PrimaryButton,
+  SecondaryButton,
   Message,
   ChipRow,
   Pill,
   SelectableChip,
+  SubmittedNote,
 } from "../../styles";
 import { MemberAvatar } from "./TeamHubTab";
 import { TeamEvalForm } from "./TeamEvalForm";
@@ -54,7 +60,7 @@ const ScoreButtons = styled.div<{ $attention?: boolean }>`
   margin: ${({ $attention }) => ($attention ? "0 -0.4rem" : "0")};
   border-radius: var(--radius-md);
   outline: ${({ $attention }) =>
-    $attention ? "2px dashed var(--error-failure-100)" : "none"};
+    $attention ? "2px dashed var(--error-warning-100)" : "none"};
 `;
 
 const ScoreButton = styled.button<{ $selected: boolean }>`
@@ -86,12 +92,13 @@ const Footer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 `;
 
 const BalanceCard = styled.div<{ $over: boolean; $sticky?: boolean }>`
   border: 2px solid
     ${({ $over }) =>
-      $over ? "var(--error-failure-100)" : "var(--primary-black-10)"};
+      $over ? "var(--error-warning-100)" : "var(--primary-black-10)"};
   background: var(--primary-white);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
@@ -137,7 +144,7 @@ const StatusPill = styled.span<{ $tone: "ok" | "pending" | "over" }>`
     $tone === "pending" ? "var(--primary-black-100)" : "var(--primary-white)"};
   background: ${({ $tone }) =>
     $tone === "over"
-      ? "var(--error-failure-100)"
+      ? "var(--error-warning-100)"
       : $tone === "pending"
         ? "var(--primary-black-10)"
         : "var(--error-success-100)"};
@@ -162,8 +169,8 @@ const NameChips = styled.div`
 const NameChip = styled.span`
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--error-failure-100);
-  color: var(--error-failure-100);
+  border: 1px solid var(--error-warning-100);
+  color: var(--primary-black-100);
   font-weight: 600;
 `;
 
@@ -193,7 +200,7 @@ const OverNote = styled.p`
   margin: 0;
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--error-failure-100);
+  color: var(--primary-black-100);
 `;
 
 const Notice = styled.div`
@@ -204,9 +211,39 @@ const Notice = styled.div`
   font-size: var(--text-sm);
 `;
 
+/** The long explanation, out of the way until someone wants it. */
+const HowItWorks = styled.details`
+  font-size: var(--text-sm);
+  color: var(--primary-black-60);
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-black-100);
+  }
+
+  p {
+    margin: 0.5rem 0 0;
+    line-height: 1.5;
+  }
+`;
+
+const Progress = styled.p`
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+`;
+
 /** Sign a score the way the balance counts it: "+2", "0", "−1". */
 const signed = (score: number) =>
   score > 0 ? `+${score}` : score < 0 ? `−${Math.abs(score)}` : "0";
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 
 /**
  * The running total of one axis, which has to end at zero or less.
@@ -239,7 +276,7 @@ const BalanceMeter = ({
     members.filter((member) => scoreOf(axis, member._id) != null).length;
   // Ups usually get picked before the downs that pay for them, so a high
   // balance halfway through is the normal state. Only a finished axis that is
-  // still over gets the red treatment.
+  // still over gets flagged.
   const isOver = (axis: PeerAxis) =>
     balances[axis] > PEER_BALANCE_MAX && scoredCount(axis) === members.length;
   const over = axes.some(isOver);
@@ -263,7 +300,7 @@ const BalanceMeter = ({
               <StatusPill $tone={axisOver ? "over" : pending ? "pending" : "ok"}>
                 {signed(balance)}
                 {axisOver
-                  ? " · too high"
+                  ? " · needs balancing"
                   : complete
                     ? " · OK"
                     : ` so far · ${scored} of ${members.length} scored`}
@@ -313,17 +350,23 @@ const BalanceMeter = ({
 
 type MemberEval = {
   contributionScore: number | null;
-  contributionComment: string;
   teambuildingScore: number | null;
-  teambuildingComment: string;
+  /** One justification per person, covering both scores. */
+  comment: string;
 };
 
 const emptyEval: MemberEval = {
   contributionScore: null,
-  contributionComment: "",
   teambuildingScore: null,
-  teambuildingComment: "",
+  comment: "",
 };
+
+/** Older submissions carried a comment per axis; show both, joined. */
+const commentFrom = (entry: PeerEvaluationEntry) =>
+  [entry.contributionComment, entry.teambuildingComment]
+    .map((text) => text.trim())
+    .filter((text, index, all) => text && all.indexOf(text) === index)
+    .join("\n");
 
 const ScorePicker = ({
   scores,
@@ -357,7 +400,11 @@ const ScorePicker = ({
   </ScoreButtons>
 );
 
-const PeerEvaluationSection = ({
+/**
+ * Step: rate yourself and your teammates. Private to the teachers, who turn
+ * it into one confirmed figure per axis per student.
+ */
+export const TeammatesStep = ({
   details,
   userId,
 }: {
@@ -375,6 +422,7 @@ const PeerEvaluationSection = ({
         ...myTeam.members.filter((member) => member._id !== userId),
       ]
     : [];
+  const alreadySubmitted = details.myPeerEvaluations.length > 0;
 
   const [evals, setEvals] = useState<Record<string, MemberEval>>(() =>
     Object.fromEntries(
@@ -387,9 +435,8 @@ const PeerEvaluationSection = ({
           existing
             ? {
                 contributionScore: existing.contributionScore,
-                contributionComment: existing.contributionComment,
                 teambuildingScore: existing.teambuildingScore,
-                teambuildingComment: existing.teambuildingComment,
+                comment: commentFrom(existing),
               }
             : { ...emptyEval },
         ];
@@ -407,11 +454,28 @@ const PeerEvaluationSection = ({
     setEvals
   );
 
+  if (!details.project.peerEvalOpen) {
+    return (
+      <Card>
+        <SectionTitle>Rate your teammates</SectionTitle>
+        <MutedText>
+          This opens once every team has presented. Your teachers close it
+          again a few days later, so do it while the project is fresh.
+        </MutedText>
+      </Card>
+    );
+  }
+
   if (!myTeam || members.length === 0) {
     return (
-      <MutedText>
-        Peer evaluation is open, but you are not on a team in this project.
-      </MutedText>
+      <Card>
+        <SectionTitle>Rate your teammates</SectionTitle>
+        <MutedText>
+          You are not on a team in this project, so there is nobody for you to
+          rate here. If that is a mistake, tell one of your teachers and they
+          will put you on the right team.
+        </MutedText>
+      </Card>
     );
   }
 
@@ -432,13 +496,24 @@ const PeerEvaluationSection = ({
     );
   };
 
+  /** Everybody Average on both axes — the shape of an even team. */
+  const startEven = () => {
+    setEvals((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([id, entry]) => [
+          id,
+          { ...entry, contributionScore: 0, teambuildingScore: 0 },
+        ])
+      )
+    );
+  };
+
   const incomplete = members.some((member) => {
     const entry = evals[member._id];
     return (
       entry.contributionScore === null ||
       entry.teambuildingScore === null ||
-      !entry.contributionComment.trim() ||
-      !entry.teambuildingComment.trim()
+      !entry.comment.trim()
     );
   });
 
@@ -450,7 +525,7 @@ const PeerEvaluationSection = ({
   const overBudget =
     balances.contribution > PEER_BALANCE_MAX ||
     balances.teambuilding > PEER_BALANCE_MAX;
-  // Red only once an axis is fully scored: while it is half done, a high
+  // Flag only once an axis is fully scored: while it is half done, a high
   // balance is expected and pointing at it just frightens people off.
   const axisComplete = (axis: PeerAxis) =>
     scores.every((entry) =>
@@ -464,6 +539,9 @@ const PeerEvaluationSection = ({
     teambuilding:
       balances.teambuilding > PEER_BALANCE_MAX && axisComplete("teambuilding"),
   };
+  const nothingScoredYet = scores.every(
+    (entry) => entry.contributionScore === null && entry.teambuildingScore === null
+  );
 
   // Answers saved before the balance rule existed are left exactly as they
   // were — the rule applies to what is submitted from now on. Say so, rather
@@ -489,15 +567,18 @@ const PeerEvaluationSection = ({
         return {
           targetId: member._id,
           contributionScore: entry.contributionScore!,
-          contributionComment: entry.contributionComment,
+          contributionComment: entry.comment,
           teambuildingScore: entry.teambuildingScore!,
-          teambuildingComment: entry.teambuildingComment,
         };
       }),
     });
     setSaving(false);
     setFeedback({
-      text: result.success ? "Peer evaluation submitted!" : result.message,
+      text: result.success
+        ? alreadySubmitted
+          ? "Changes saved"
+          : "Handed in — thank you!"
+        : result.message,
       error: !result.success,
     });
     if (result.success) {
@@ -509,25 +590,42 @@ const PeerEvaluationSection = ({
   return (
     <form onSubmit={handleSubmit}>
       <Layout>
+        <SectionTitle>Rate your teammates</SectionTitle>
+        {alreadySubmitted && (
+          <SubmittedNote role="status">
+            ✓ Handed in. You can change your answers until your teachers close
+            this.
+          </SubmittedNote>
+        )}
         <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
         <MutedText>
-          Rate yourself and each teammate honestly — this is about how the
-          group work went as a whole, and you are part of the group. Your
-          answers go to your teachers only, never to other students, and a
-          short justification is required for every score. Your teachers read
-          all of it, then confirm one contribution figure and one teamwork
-          figure for each student — those confirmed figures, not these scores
-          directly, are what turn the team’s project grade into each person’s
-          own grade.
+          How did the group work go? Score yourself and each teammate on
+          contribution and teamwork, <strong>compared with the rest of the
+          team</strong>, and say why in a sentence or two. Only your teachers
+          see this. It stays open until they close it.
         </MutedText>
-        <MutedText>
-          The scores are <strong>relative</strong>: each one says how that
-          person did compared with the rest of the team, so a team cannot be
-          rated above its own average. Marking somebody up means marking
-          somebody else down, and the balance below has to end at 0 or less. If
-          everyone pulled their weight equally, leave the whole team on
-          Average — that is what an even team looks like.
-        </MutedText>
+        <HowItWorks>
+          <summary>How the scores work</summary>
+          <p>
+            The scores are relative, so a team cannot be rated above its own
+            average: marking somebody up means marking somebody else down, and
+            each balance below has to end at 0 or less. If everyone pulled
+            their weight equally, leave the whole team on Average.
+          </p>
+          <p>
+            Your teachers read every answer, then confirm one contribution
+            figure and one teamwork figure per student. Those confirmed figures
+            are what turn the team&apos;s project grade into each person&apos;s
+            own grade. Nothing you write here reaches another student.
+          </p>
+        </HowItWorks>
+        {nothingScoredYet && (
+          <div>
+            <SecondaryButton type="button" onClick={startEven}>
+              Everyone pulled their weight equally — start from Average
+            </SecondaryButton>
+          </div>
+        )}
         {savedOverBudget && (
           <Notice>
             Your saved answers were given before this rule existed, and they
@@ -579,17 +677,6 @@ const PeerEvaluationSection = ({
                   the contribution balance over.
                 </OverNote>
               )}
-              <TextArea
-                value={entry.contributionComment}
-                placeholder="Why did you pick this score?"
-                style={{ minHeight: "60px" }}
-                required
-                onChange={(event) =>
-                  update(member._id, {
-                    contributionComment: event.target.value,
-                  })
-                }
-              />
 
               <AxisLabel>
                 {isSelf
@@ -613,15 +700,18 @@ const PeerEvaluationSection = ({
                   the teamwork balance over.
                 </OverNote>
               )}
+
+              <AxisLabel>
+                {isSelf ? "Why these scores for yourself?" : "Why these scores?"}
+              </AxisLabel>
               <TextArea
-                value={entry.teambuildingComment}
-                placeholder="Why did you pick this score?"
+                value={entry.comment}
+                placeholder="A sentence or two your teachers can go on"
                 style={{ minHeight: "60px" }}
                 required
+                aria-label={`Why these scores for ${isSelf ? "yourself" : member.name}`}
                 onChange={(event) =>
-                  update(member._id, {
-                    teambuildingComment: event.target.value,
-                  })
+                  update(member._id, { comment: event.target.value })
                 }
               />
             </Card>
@@ -638,7 +728,11 @@ const PeerEvaluationSection = ({
             type="submit"
             disabled={saving || incomplete || overBudget}
           >
-            {saving ? "Submitting…" : "Submit peer evaluation"}
+            {saving
+              ? "Submitting…"
+              : alreadySubmitted
+                ? "Save changes"
+                : "Hand in"}
           </PrimaryButton>
           {(flagged.contribution || flagged.teambuilding) && (
             <Message $error>
@@ -650,10 +744,10 @@ const PeerEvaluationSection = ({
               balance is too high. See the box above for what to lower.
             </Message>
           )}
-          {incomplete && (
+          {incomplete && !overBudget && (
             <MutedText>
-              Pick both scores and write both justifications for yourself and
-              every teammate.
+              Pick both scores and write a reason for yourself and every
+              teammate.
             </MutedText>
           )}
           {feedback && (
@@ -665,40 +759,114 @@ const PeerEvaluationSection = ({
   );
 };
 
-const TeamEvaluationSection = ({
+/** The other teams in the order they present; unscheduled ones last. */
+const inPresentationOrder = (
+  teams: SerializedTeam[],
+  slots: GroupProjectDetails["project"]["presentationSlots"]
+) => {
+  const slotOf = new Map(slots.map((slot) => [slot.team, slot]));
+  return [...teams].sort((a, b) => {
+    const slotA = slotOf.get(a._id)?.startTime;
+    const slotB = slotOf.get(b._id)?.startTime;
+    if (slotA && slotB) return slotA.localeCompare(slotB);
+    if (slotA) return -1;
+    if (slotB) return 1;
+    return a.name.localeCompare(b.name);
+  });
+};
+
+/**
+ * Step: score the other teams' presentations against the rubric. Built for
+ * presentation day: teams in slot order, a running count, and after one is
+ * handed in the next unscored team opens.
+ */
+export const PresentationsStep = ({
   details,
 }: {
   details: GroupProjectDetails;
 }) => {
-  const otherTeams = details.teams.filter(
-    (team) => team._id !== details.myTeamId
+  const { project } = details;
+  const otherTeams = useMemo(
+    () =>
+      inPresentationOrder(
+        details.teams.filter((team) => team._id !== details.myTeamId),
+        project.presentationSlots
+      ),
+    [details.teams, details.myTeamId, project.presentationSlots]
   );
+  const slotOf = (teamId: string) =>
+    project.presentationSlots.find((slot) => slot.team === teamId);
+  const isScored = (teamId: string) =>
+    (details.myTeamEvaluations[teamId]?.length ?? 0) > 0;
+  const firstUnscored = otherTeams.find((team) => !isScored(team._id));
+
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(
-    otherTeams[0]?._id ?? null
+    firstUnscored?._id ?? otherTeams[0]?._id ?? null
   );
   const selectedTeam = otherTeams.find((team) => team._id === selectedTeamId);
+  const scoredCount = otherTeams.filter((team) => isScored(team._id)).length;
+
+  if (!project.teamEvalOpen) {
+    return (
+      <Card>
+        <SectionTitle>Score the presentations</SectionTitle>
+        <MutedText>
+          {project.presentationDate
+            ? `Opens on presentation day, ${formatDate(project.presentationDate)}. `
+            : "Opens on presentation day. "}
+          You will score every other team on the rubric while they present.
+        </MutedText>
+      </Card>
+    );
+  }
 
   if (otherTeams.length === 0) {
-    return <MutedText>There are no other teams to evaluate.</MutedText>;
+    return (
+      <Card>
+        <SectionTitle>Score the presentations</SectionTitle>
+        <MutedText>There are no other teams to score.</MutedText>
+      </Card>
+    );
   }
+
+  // After a save, move on to the next team that still needs a score — in
+  // presentation order, starting after the one just done.
+  const advance = (fromId: string) => {
+    const index = otherTeams.findIndex((team) => team._id === fromId);
+    const after = [...otherTeams.slice(index + 1), ...otherTeams.slice(0, index)];
+    const next = after.find(
+      (team) => team._id !== fromId && !isScored(team._id)
+    );
+    if (next) setSelectedTeamId(next._id);
+  };
 
   return (
     <Layout>
+      <SectionTitle>Score the presentations</SectionTitle>
       <MutedText>
-        Score the other teams&apos; presentations. Pick a team to evaluate:
+        Score each team while they present, or straight after. Your scores and
+        comments go to the team and the teachers. It stays open until your
+        teachers close it, usually the day after presentations.
       </MutedText>
+      <Progress aria-live="polite">
+        {scoredCount === otherTeams.length
+          ? `✓ All ${otherTeams.length} teams scored`
+          : `${scoredCount} of ${otherTeams.length} teams scored`}
+      </Progress>
       <ChipRow>
         {otherTeams.map((team) => {
-          const done = (details.myTeamEvaluations[team._id]?.length ?? 0) > 0;
+          const slot = slotOf(team._id);
           return (
             <SelectableChip
               key={team._id}
               type="button"
               $selected={selectedTeamId === team._id}
+              aria-pressed={selectedTeamId === team._id}
               onClick={() => setSelectedTeamId(team._id)}
             >
+              {isScored(team._id) ? "✓ " : ""}
               {team.name}
-              {done ? " ✓" : ""}
+              {slot ? ` · ${slot.startTime}` : ""}
             </SelectableChip>
           );
         })}
@@ -706,47 +874,23 @@ const TeamEvaluationSection = ({
       {selectedTeam && (
         <TeamEvalForm
           key={selectedTeam._id}
-          heading={`Evaluate ${selectedTeam.name}`}
-          rubric={rubricForProject(details.project.rubric)}
+          heading={
+            selectedTeam.projectName
+              ? `${selectedTeam.name} — ${selectedTeam.projectName}`
+              : selectedTeam.name
+          }
+          rubric={rubricForProject(project.rubric)}
           existing={details.myTeamEvaluations[selectedTeam._id] || []}
-          draftKey={`team-eval:${details.project._id}:${selectedTeam._id}`}
+          draftKey={`team-eval:${project._id}:${selectedTeam._id}`}
           onSubmit={(data) =>
             submitTeamEvaluation({
-              projectId: details.project._id,
+              projectId: project._id,
               teamId: selectedTeam._id,
               ...data,
             })
           }
+          onSubmitted={() => advance(selectedTeam._id)}
         />
-      )}
-    </Layout>
-  );
-};
-
-export const EvaluateTab = ({
-  details,
-  userId,
-}: {
-  details: GroupProjectDetails;
-  userId: string;
-}) => {
-  return (
-    <Layout>
-      {details.project.peerEvalOpen && details.myTeamId && (
-        <section>
-          <Layout>
-            <SectionTitle>Peer evaluation — you and your teammates</SectionTitle>
-            <PeerEvaluationSection details={details} userId={userId} />
-          </Layout>
-        </section>
-      )}
-      {details.project.teamEvalOpen && (
-        <section>
-          <Layout>
-            <SectionTitle>Team evaluation — other teams</SectionTitle>
-            <TeamEvaluationSection details={details} />
-          </Layout>
-        </section>
       )}
     </Layout>
   );

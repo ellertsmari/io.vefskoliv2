@@ -37,9 +37,12 @@ const UpdateTeamHubSchema = z.object({
     website: optionalUrl,
     backend: optionalUrl,
   }),
-  coverImage: optionalStoredImageSchema,
-  teamPhoto: optionalStoredImageSchema,
-  logo: optionalStoredImageSchema,
+  // Images save the moment they are picked (see setTeamImage), so the hub form
+  // no longer sends them. Optional rather than removed: an older client that
+  // still sends them keeps working.
+  coverImage: optionalStoredImageSchema.optional(),
+  teamPhoto: optionalStoredImageSchema.optional(),
+  logo: optionalStoredImageSchema.optional(),
 });
 
 export type UpdateTeamHubData = z.input<typeof UpdateTeamHubSchema>;
@@ -78,15 +81,20 @@ export async function updateTeamHub(
 
     const previousImages = [team.coverImage, team.teamPhoto, team.logo];
 
-    team.set(updates);
+    // An image field that was not sent is left alone — set() with undefined
+    // would unset it.
+    const changes = Object.fromEntries(
+      Object.entries(updates).filter(([, value]) => value !== undefined)
+    );
+    team.set(changes);
     await team.save();
 
     // Whatever the save just superseded is now unreachable — drop it from the
     // store rather than paying to keep every version a team ever uploaded.
     await deleteReplacedImages(previousImages, [
-      updates.coverImage,
-      updates.teamPhoto,
-      updates.logo,
+      team.coverImage,
+      team.teamPhoto,
+      team.logo,
     ]);
 
     return successNoData("Team hub saved");

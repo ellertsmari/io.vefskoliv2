@@ -551,18 +551,39 @@ const PeerEvalReport = ({
                               </>
                             )}
                           </strong>
-                          <span>
-                            Contribution:{" "}
-                            {CONTRIBUTION_SCORES[evaluation.contributionScore]
-                              ?.label ?? evaluation.contributionScore}{" "}
-                            — {evaluation.contributionComment}
-                          </span>
-                          <span>
-                            Teamwork:{" "}
-                            {TEAMBUILDING_SCORES[evaluation.teambuildingScore]
-                              ?.label ?? evaluation.teambuildingScore}{" "}
-                            — {evaluation.teambuildingComment}
-                          </span>
+                          {evaluation.teambuildingComment ? (
+                            // Older rows: one justification per axis.
+                            <>
+                              <span>
+                                Contribution:{" "}
+                                {CONTRIBUTION_SCORES[
+                                  evaluation.contributionScore
+                                ]?.label ?? evaluation.contributionScore}{" "}
+                                — {evaluation.contributionComment}
+                              </span>
+                              <span>
+                                Teamwork:{" "}
+                                {TEAMBUILDING_SCORES[
+                                  evaluation.teambuildingScore
+                                ]?.label ?? evaluation.teambuildingScore}{" "}
+                                — {evaluation.teambuildingComment}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span>
+                                Contribution:{" "}
+                                {CONTRIBUTION_SCORES[
+                                  evaluation.contributionScore
+                                ]?.label ?? evaluation.contributionScore}
+                                {" · "}Teamwork:{" "}
+                                {TEAMBUILDING_SCORES[
+                                  evaluation.teambuildingScore
+                                ]?.label ?? evaluation.teambuildingScore}
+                              </span>
+                              <span>{evaluation.contributionComment}</span>
+                            </>
+                          )}
                         </ReceivedEval>
                       ))}
                     </td>

@@ -3,6 +3,7 @@ import { StudentHomePage } from "../../components/studentHome/StudentHomePage";
 import { TeacherHomePage } from "../../components/teacherHome/TeacherHomePage";
 import { Module } from "../../../types/guideTypes";
 import { getGuides } from "../../serverActions/getGuides";
+import { getGroupProjects } from "../../serverActions/groups/getGroupProjects";
 import { extendGuides, fetchModules } from "../../utils/guideUtils";
 import { safeSerialize } from "../../utils/serialization";
 import { EmptyState, ErrorState } from "UIcomponents/states/States";
@@ -31,7 +32,10 @@ const Dashboard = async () => {
 
   // Authenticated user - show personalized home page based on role
   try {
-    const fetchedGuides = (await getGuides(session.user.id)) || [];
+    const [fetchedGuides, groupProjects] = await Promise.all([
+      getGuides(session.user.id).then((guides) => guides || []),
+      getGroupProjects(),
+    ]);
     const extendedGuides = await extendGuides(fetchedGuides);
 
     if (extendedGuides.length < 1) {
@@ -49,7 +53,13 @@ const Dashboard = async () => {
     const serializedGuides = safeSerialize(extendedGuides);
     const serializedModules = safeSerialize(modules);
 
-    return <StudentHomePage extendedGuides={serializedGuides} modules={serializedModules} />;
+    return (
+      <StudentHomePage
+        extendedGuides={serializedGuides}
+        modules={serializedModules}
+        groupProjects={groupProjects}
+      />
+    );
   } catch (error) {
     console.error("Error in home page:", error);
     return (

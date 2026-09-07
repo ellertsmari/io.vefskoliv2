@@ -15,6 +15,7 @@ import { JudgeInvitation } from "models/judgeInvitation";
 import { getShowcase, getShowcaseTeam } from "serverActions/groups/getShowcase";
 import { setShowcaseConsent } from "serverActions/groups/setShowcaseConsent";
 import { removeTeamImage } from "serverActions/groups/removeTeamImage";
+import { setTeamImage } from "serverActions/groups/setTeamImage";
 import { UserDocument } from "models/user";
 
 jest.mock("../../auth", () => ({
@@ -263,6 +264,83 @@ describe("public showcase", () => {
       expect(result.success).toBe(false);
       const stored = await Team.findById(team._id);
       expect(stored.projectName).toBe("Cool App");
+    });
+  });
+
+  describe("setTeamImage — images save the moment they are picked", () => {
+    it("stores a picked image without a hub save, and takes it down again", async () => {
+      const member = await createDummyUser("user");
+      const project = await createProject();
+      const team = await createTeamWith(project._id, [member], {
+        coverImage: "",
+      });
+
+      loginAs(member);
+      const put = await setTeamImage({
+        teamId: team._id.toString(),
+        field: "coverImage",
+        value: "https://example.com/new-cover.png",
+      });
+      expect(put.success).toBe(true);
+      expect((await Team.findById(team._id)).coverImage).toBe(
+        "https://example.com/new-cover.png"
+      );
+
+      const remove = await setTeamImage({
+        teamId: team._id.toString(),
+        field: "coverImage",
+        value: "",
+      });
+      expect(remove.success).toBe(true);
+      expect((await Team.findById(team._id)).coverImage).toBe("");
+    });
+
+    it("lets a member remove a photo from a completed project, but not add one", async () => {
+      const member = await createDummyUser("user");
+      const project = await createProject({ status: "archived" });
+      const team = await createTeamWith(project._id, [member]);
+
+      loginAs(member);
+      const add = await setTeamImage({
+        teamId: team._id.toString(),
+        field: "logo",
+        value: "https://example.com/new-logo.png",
+      });
+      expect(add.success).toBe(false);
+
+      const remove = await setTeamImage({
+        teamId: team._id.toString(),
+        field: "teamPhoto",
+        value: "",
+      });
+      expect(remove.success).toBe(true);
+      expect((await Team.findById(team._id)).teamPhoto).toBe("");
+    });
+
+    it("refuses outsiders and anything that is not an uploaded image", async () => {
+      const member = await createDummyUser("user");
+      const outsider = await createDummyUser("user");
+      const project = await createProject();
+      const team = await createTeamWith(project._id, [member]);
+
+      loginAs(outsider);
+      const byOutsider = await setTeamImage({
+        teamId: team._id.toString(),
+        field: "coverImage",
+        value: "",
+      });
+      expect(byOutsider.success).toBe(false);
+
+      loginAs(member);
+      const notAnImage = await setTeamImage({
+        teamId: team._id.toString(),
+        field: "coverImage",
+        value: "javascript:alert(1)",
+      });
+      expect(notAnImage.success).toBe(false);
+      expect((await Team.findById(team._id)).coverImage).toBe(
+        "https://example.com/cover.png"
+      );
     });
   });
 

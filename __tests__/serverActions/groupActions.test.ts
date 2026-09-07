@@ -348,6 +348,73 @@ describe("group work server actions", () => {
       expect(teacherList).toHaveLength(3);
     });
 
+    it("tells a student what each project still needs from them", async () => {
+      const teacher = await createDummyUser("teacher");
+      const me = await createDummyUser("user");
+      const mate = await createDummyUser("user");
+      const rival = await createDummyUser("user");
+      const project = await createProject(
+        { status: "active", peerEvalOpen: true, teamEvalOpen: true },
+        teacher
+      );
+      const mine = await Team.create({
+        project: project._id,
+        name: "Mine",
+        members: [me._id, mate._id],
+      });
+      const theirs = await Team.create({
+        project: project._id,
+        name: "Theirs",
+        members: [rival._id],
+      });
+      await Team.create({
+        project: project._id,
+        name: "Third",
+        members: [],
+      });
+
+      loginAs(me);
+      let [item] = await getGroupProjects();
+      expect(item.myTeamId).toBe(mine._id.toString());
+      expect(item.peerEvalPending).toBe(true);
+      expect(item.teamsToScore).toBe(2);
+
+      // Scoring one team and handing in the peer evaluation clears both.
+      await submitTeamEvaluation({
+        projectId: project._id.toString(),
+        teamId: theirs._id.toString(),
+        entries: defaultRubricEntries(),
+        overallComment: "",
+      });
+      await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          {
+            targetId: me._id.toString(),
+            contributionScore: 0,
+            contributionComment: "ok",
+            teambuildingScore: 0,
+          },
+          {
+            targetId: mate._id.toString(),
+            contributionScore: 0,
+            contributionComment: "ok",
+            teambuildingScore: 0,
+          },
+        ],
+      });
+      [item] = await getGroupProjects();
+      expect(item.peerEvalPending).toBe(false);
+      expect(item.teamsToScore).toBe(1);
+
+      // Somebody with no team has nothing pending, whatever is open.
+      const loner = await createDummyUser("user");
+      loginAs(loner);
+      [item] = await getGroupProjects();
+      expect(item.peerEvalPending).toBe(false);
+      expect(item.teamsToScore).toBe(0);
+    });
+
     it("withholds the project brief from students until the form is filled in", async () => {
       const teacher = await createDummyUser("teacher");
       const student = await createDummyUser("user");
@@ -555,6 +622,38 @@ describe("group work server actions", () => {
       expect(evals).toHaveLength(2);
       const forB = evals.find((entry) => entry.target.toString() === idB);
       expect(forB?.contributionScore).toBe(-1);
+    });
+
+    it("accepts one justification per person — the teamwork comment is optional", async () => {
+      const { studentA, studentB, project } = await setupTeam();
+      loginAs(studentA);
+      const [idA, idB] = [studentA._id.toString(), studentB._id.toString()];
+
+      const result = await submitPeerEvaluations({
+        projectId: project._id.toString(),
+        evaluations: [
+          {
+            targetId: idA,
+            contributionScore: 0,
+            contributionComment: "We both did our share",
+            teambuildingScore: 0,
+          },
+          {
+            targetId: idB,
+            contributionScore: 0,
+            contributionComment: "Reliable and easy to work with",
+            teambuildingScore: 0,
+          },
+        ],
+      });
+      expect(result.success).toBe(true);
+
+      const forB = await PeerEvaluation.findOne({
+        project: project._id,
+        target: idB,
+      });
+      expect(forB?.contributionComment).toBe("Reliable and easy to work with");
+      expect(forB?.teambuildingComment).toBe("");
     });
 
     it("rejects when the gate is closed or the target is not a teammate", async () => {

@@ -52,6 +52,8 @@ import {
 import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
 import { Suspense, lazy, useMemo } from "react";
 import { extractModuleNumber } from "utils/moduleUtils";
+import type { GroupProjectListItem } from "types/groupTypes";
+import { GroupWorkWidget, groupWorkItems } from "./GroupWorkWidget";
 import Modal from "UIcomponents/modal/modal";
 import { LoadingSpinner } from "UIcomponents/states/States";
 
@@ -67,12 +69,18 @@ const GradingSlideshow = lazy(() =>
 interface StudentHomePageProps {
   extendedGuides: ExtendedGuideInfo[];
   modules: Module[];
+  /** The student's group projects, for the "what does it need from me" widget. */
+  groupProjects?: GroupProjectListItem[];
 }
 
 /** How many upcoming guides the "Continue Learning" widget shows. */
 const NEXT_GUIDES_SHOWN = 3;
 
-export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProps) => {
+export const StudentHomePage = ({
+  extendedGuides,
+  modules,
+  groupProjects = [],
+}: StudentHomePageProps) => {
   // Organize guides by priority
   const organizedGuides = useMemo(() => {
     // A guide counts as "returned" once the student has submitted it. We only
@@ -205,6 +213,7 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
   }, [extendedGuides]);
 
   const hasNothingToDo =
+    groupWorkItems(groupProjects).length === 0 &&
     organizedGuides.guidesNeedingReview.length === 0 &&
     organizedGuides.guidesAwaitingProjects.length === 0 &&
     organizedGuides.nextGuidesToReturn.length === 0;
@@ -378,6 +387,10 @@ export const StudentHomePage = ({ extendedGuides, modules }: StudentHomePageProp
         {/* Side by side, so what to work on next is on screen rather than
             below a long list of reviews owed. */}
         <WorkRow>
+          {/* Priority 0: a group project waiting on the student. Evaluations
+              open and close within days, so this outranks the guides. */}
+          <GroupWorkWidget projects={groupProjects} />
+
           {/* Priority 1: peer reviews owed — time-sensitive */}
           {organizedGuides.guidesNeedingReview.length > 0 && (
             <Section>

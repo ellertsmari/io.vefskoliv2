@@ -28,10 +28,10 @@ import {
   MutedText,
   ChipRow,
   SelectableChip,
-  Label,
   TextArea,
   PrimaryButton,
   Message,
+  SubmittedNote,
 } from "../../styles";
 
 const Form = styled.form`
@@ -71,8 +71,11 @@ const IconChipLabel = ({
 
 export const PreferencesForm = ({
   details,
+  onSaved,
 }: {
   details: GroupProjectDetails;
+  /** Called after a successful save — the page moves on to the brief. */
+  onSaved?: () => void;
 }) => {
   const router = useRouter();
   const existing = details.myPreferences;
@@ -148,6 +151,7 @@ export const PreferencesForm = ({
     if (result.success) {
       draft.clear();
       router.refresh();
+      onSaved?.();
     }
   };
 
@@ -275,6 +279,12 @@ export const PreferencesForm = ({
         )}
         {feedback && <Message $error={feedback.error}>{feedback.text}</Message>}
       </Footer>
+      {existing && complete && (
+        <SubmittedNote role="status">
+          ✓ Your preferences are in. Change them any time while teams are
+          forming.
+        </SubmittedNote>
+      )}
     </Form>
   );
 };

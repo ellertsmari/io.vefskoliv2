@@ -30,7 +30,13 @@ const peerEvaluationSchema = new Schema({
     min: -2,
     max: 2,
   },
-  teambuildingComment: { type: Schema.Types.String, required: true },
+  // One justification per person is enough: it is stored on the contribution
+  // side and this stays empty. Older rows carry a comment per axis.
+  teambuildingComment: {
+    type: Schema.Types.String,
+    required: false,
+    default: "",
+  },
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
 });
 

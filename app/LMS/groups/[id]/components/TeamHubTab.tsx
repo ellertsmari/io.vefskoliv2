@@ -22,7 +22,7 @@ import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import { updateTeamHub } from "serverActions/groups/updateTeamHub";
 import { setShowcaseConsent } from "serverActions/groups/setShowcaseConsent";
 import { setShowcaseQuotes } from "serverActions/groups/setShowcaseQuotes";
-import { removeTeamImage } from "serverActions/groups/removeTeamImage";
+import { setTeamImage } from "serverActions/groups/setTeamImage";
 import {
   Card,
   SectionTitle,
@@ -60,6 +60,40 @@ const Footer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
+`;
+
+/**
+ * Follows the form down the page while there is something unsaved, so the
+ * save button is never three screens away from the field being edited — and
+ * so leaving the step with unsaved text is a choice, not an accident.
+ */
+const SaveBar = styled.div<{ $dirty: boolean }>`
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--primary-white);
+  border: 1px solid
+    ${({ $dirty }) =>
+      $dirty ? "var(--error-warning-100)" : "var(--primary-black-10)"};
+  box-shadow: ${({ $dirty }) =>
+    $dirty ? "0 6px 20px rgba(0, 0, 0, 0.12)" : "none"};
+`;
+
+const DirtyText = styled.span`
+  font-size: var(--text-sm);
+  font-weight: 600;
+`;
+
+const Required = styled.span`
+  color: var(--error-failure-100);
+  margin-left: 0.2rem;
 `;
 
 const FeedbackEntry = styled.div`
@@ -155,55 +189,38 @@ const ShowcaseLink = styled.a`
   }
 `;
 
-const ShowcaseBanner = styled.div`
-  background: linear-gradient(135deg, var(--theme-module3-100) 0%, var(--theme-module3-hover) 100%);
-  color: white;
-  border-radius: var(--radius-lg);
-  padding: 1rem 1.25rem;
+const ShowcaseStatus = styled.div<{ $live: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  box-shadow: 0 8px 20px rgba(101, 99, 235, 0.25);
-`;
-
-const BannerText = styled.span`
-  font-weight: 600;
-  font-size: var(--text-base);
-`;
-
-const BannerActions = styled.span`
-  display: flex;
-  gap: 0.5rem;
-  margin-left: auto;
-`;
-
-const BannerButton = styled.button`
-  background: white;
-  color: var(--theme-module3-hover);
-  border: none;
+  padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
-  padding: 0.45rem 1rem;
   font-size: var(--text-sm);
-  font-weight: 700;
+  background: ${({ $live }) =>
+    $live ? "var(--theme-module3-10)" : "var(--primary-black-5)"};
+  border: 1px solid
+    ${({ $live }) =>
+      $live ? "var(--theme-module3-60)" : "var(--primary-black-10)"};
+`;
+
+const StatusText = styled.span`
+  font-weight: 600;
+  flex: 1 1 auto;
+`;
+
+const SmallButton = styled.button`
+  background: var(--primary-white);
+  color: var(--primary-black-100);
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.9rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
   cursor: pointer;
 
   &:hover {
-    background: var(--theme-module3-10);
-  }
-`;
-
-const BannerLink = styled.a`
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: var(--radius-md);
-  padding: 0.45rem 1rem;
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-decoration: none;
-
-  &:hover {
-    border-color: white;
+    border-color: var(--primary-black-100);
   }
 `;
 
@@ -222,11 +239,21 @@ const ConsentRow = styled.label`
   }
 `;
 
-const ConsentNote = styled.p`
+const FinePrint = styled.details`
   font-size: var(--text-xs);
   color: var(--primary-black-60);
-  margin: 0.5rem 0 0;
   line-height: 1.5;
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-black-100);
+    font-size: var(--text-sm);
+  }
+
+  p {
+    margin: 0.5rem 0 0;
+  }
 `;
 
 const initials = (name: string) =>
@@ -252,19 +279,14 @@ export const MemberAvatar = ({
 
 /**
  * Each member's own answer to whether their NAME appears on the public
- * showcase.
+ * showcase. Saves on its own the moment it is ticked — nobody should have to
+ * press "Save" to withdraw — and keeps working after the project completes,
+ * because the showcase page stays up.
  *
- * Kept out of the team-hub form on purpose. That form is read-only once a
- * project is archived, but archived projects stay on the showcase forever, so
- * consent has to remain changeable long after the course ends. It also saves on
- * its own — nobody should have to press "Save team hub" to withdraw.
- *
- * Only names are asked about here. Consent for the team photo is given by
- * choosing to be in the picture when it is taken, and undone by removing it —
- * an earlier version gated the photo on unanimous agreement here, which held
- * whole teams hostage to one person who had simply never seen this card.
+ * Only names are asked about. Consent for the team photo is given by choosing
+ * to be in the picture, and undone by removing it.
  */
-const ShowcaseConsentCard = ({
+const ShowcaseConsent = ({
   teamId,
   consent,
 }: {
@@ -286,14 +308,7 @@ const ShowcaseConsentCard = ({
   };
 
   return (
-    <Card>
-      <SectionTitle>Your name on the public showcase</SectionTitle>
-      <MutedText>
-        Your project page is public — anyone can open it without logging in. You
-        choose whether your name appears on it, and you can change your mind at
-        any time, including after the course has ended.
-      </MutedText>
-
+    <div>
       <ConsentRow>
         <input
           type="checkbox"
@@ -301,18 +316,28 @@ const ShowcaseConsentCard = ({
           disabled={saving}
           onChange={(e) => save(e.target.checked)}
         />
-        <span>Show my name on our public project page</span>
+        <span>
+          Show my name on our public project page
+          {feedback && <MutedText as="span"> · {feedback}</MutedText>}
+        </span>
       </ConsentRow>
-
-      <ConsentNote>
-        This is yours alone — it never affects your teammates, and leaving it
-        unticked holds nothing up. {consent.nameAgreed} of{" "}
-        {consent.memberCount} in your team have chosen to be named so far. You
-        do not need to give a reason either way, and nobody is told who answered
-        what.
-      </ConsentNote>
-      {feedback && <ConsentNote>{feedback}</ConsentNote>}
-    </Card>
+      <FinePrint>
+        <summary>About names and photos on the public page</summary>
+        <p>
+          The page is public: anyone can open it without logging in. Your
+          name is yours alone to add or remove, at any time, including after
+          the course ends. It never affects your teammates and holds nothing
+          up. {consent.nameAgreed} of {consent.memberCount} in your team have
+          chosen to be named so far; nobody is told who answered what.
+        </p>
+        <p>
+          The team photo works the same way: be in it if you want to, and any
+          team member can remove it at any time without giving a reason. If
+          you would rather not have people in the picture, use a second
+          project image instead.
+        </p>
+      </FinePrint>
+    </div>
   );
 };
 
@@ -329,25 +354,31 @@ export const TeamHubTab = ({
   const team =
     teamOverride ?? details.teams.find((t) => t._id === details.myTeamId);
   const archived = details.project.status === "archived";
-  const rubric = details.project.rubric;
   const readOnly = archived && !isTeacher;
 
-  const [name, setName] = useState(team?.name || "");
-  const [projectName, setProjectName] = useState(team?.projectName || "");
-  const [tagline, setTagline] = useState(team?.tagline || "");
+  const savedText = {
+    name: team?.name || "",
+    projectName: team?.projectName || "",
+    tagline: team?.tagline || "",
+    projectDescription: team?.projectDescription || "",
+    links: Object.fromEntries(
+      TEAM_LINK_KEYS.map((key) => [key, team?.links[key] || ""])
+    ) as Record<TeamLinkKey, string>,
+  };
+
+  const [name, setName] = useState(savedText.name);
+  const [projectName, setProjectName] = useState(savedText.projectName);
+  const [tagline, setTagline] = useState(savedText.tagline);
   const [projectDescription, setProjectDescription] = useState(
-    team?.projectDescription || ""
+    savedText.projectDescription
   );
   const [links, setLinks] = useState<Record<TeamLinkKey, string>>(
-    () =>
-      Object.fromEntries(
-        TEAM_LINK_KEYS.map((key) => [key, team?.links[key] || ""])
-      ) as Record<TeamLinkKey, string>
+    savedText.links
   );
   const [coverImage, setCoverImage] = useState(team?.coverImage || "");
   const [teamPhoto, setTeamPhoto] = useState(team?.teamPhoto || "");
   const [logo, setLogo] = useState(team?.logo || "");
-  // Text lives in the draft; images are already stored the moment they upload.
+  // Text lives in the draft; images are stored the moment they are picked.
   const draft = useFormDraft(
     team ? `team-hub:${team._id}` : null,
     { name, projectName, tagline, projectDescription, links },
@@ -363,19 +394,28 @@ export const TeamHubTab = ({
     text: string;
     error: boolean;
   } | null>(null);
+  const [imageFeedback, setImageFeedback] = useState<{
+    text: string;
+    error: boolean;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [justSaved, setJustSaved] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // The public page exists once the team has a project name and the project
-  // has left formation (getShowcaseTeam enforces the same).
+  const dirty =
+    JSON.stringify({ name, projectName, tagline, projectDescription, links }) !==
+    JSON.stringify(savedText);
+
+  // The public page exists once the team has a SAVED project name and the
+  // project has left formation (getShowcaseTeam enforces the same).
   const showcaseIsLive =
-    Boolean(projectName.trim()) && details.project.status !== "formation";
-  const showcaseUrl = () =>
-    `${window.location.origin}/showcase/${team?._id}`;
+    Boolean(savedText.projectName.trim()) &&
+    details.project.status !== "formation";
+  const showcasePath = team ? `/showcase/${team._id}` : "";
 
   const handleCopyShowcase = async () => {
-    await navigator.clipboard.writeText(showcaseUrl());
+    await navigator.clipboard.writeText(
+      `${window.location.origin}${showcasePath}`
+    );
     setCopied(true);
   };
 
@@ -388,22 +428,25 @@ export const TeamHubTab = ({
     );
   }
 
-  // Clearing an image persists immediately rather than waiting for "Save team
-  // hub": removal has to work on archived projects too, where the form itself
-  // is read-only. Picking a NEW image still goes through the normal save.
   const imageSetters = {
     coverImage: setCoverImage,
     teamPhoto: setTeamPhoto,
     logo: setLogo,
   } as const;
 
+  // Picking or removing an image saves at once: what the field shows is what
+  // is stored, so nothing is lost by leaving the step without pressing Save.
   const handleImageChange =
     (field: keyof typeof imageSetters) => async (value: string) => {
       imageSetters[field](value);
-      if (value !== "") return;
-      const result = await removeTeamImage({ teamId: team._id, field });
-      setFeedback({
-        text: result.success ? "Image removed" : result.message,
+      setImageFeedback(null);
+      const result = await setTeamImage({ teamId: team._id, field, value });
+      setImageFeedback({
+        text: result.success
+          ? value === ""
+            ? "Image removed"
+            : "Image saved"
+          : result.message,
         error: !result.success,
       });
       if (result.success) router.refresh();
@@ -420,18 +463,14 @@ export const TeamHubTab = ({
       tagline,
       projectDescription,
       links,
-      coverImage,
-      teamPhoto,
-      logo,
     });
     setSaving(false);
     setFeedback({
-      text: result.success ? "Team hub saved!" : result.message,
+      text: result.success ? "Saved" : result.message,
       error: !result.success,
     });
     if (result.success) {
       draft.clear();
-      setJustSaved(true);
       setCopied(false);
       router.refresh();
     }
@@ -441,8 +480,7 @@ export const TeamHubTab = ({
     <Layout>
       <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
       {/* Once there is feedback (or a grade), it is the reason a student opens
-          this tab at all — so it goes above the hub form they spent the
-          project filling in, rather than below it where it needs finding. */}
+          this step at all — so it goes above the hub form. */}
       {team._id === details.myTeamId && (
         <TeamFeedbackSection details={details} teamId={team._id} />
       )}
@@ -459,21 +497,19 @@ export const TeamHubTab = ({
         </Members>
       </Card>
 
-      {!isTeacher && (
-        <ShowcaseConsentCard teamId={team._id} consent={team.showcaseConsent} />
-      )}
-
       <form onSubmit={handleSubmit}>
         <Layout>
           <TwoColumns>
             <Card>
-              <SectionTitle>Your team</SectionTitle>
+              <SectionTitle>Your project</SectionTitle>
               <Label>
                 Team name
+                <Required aria-hidden>*</Required>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
+                  aria-required
                   disabled={readOnly}
                 />
               </Label>
@@ -487,7 +523,7 @@ export const TeamHubTab = ({
                 />
               </Label>
               <Label>
-                Tagline — one-line pitch for the showcase
+                Tagline — one line for the showcase
                 <Input
                   value={tagline}
                   onChange={(e) => setTagline(e.target.value)}
@@ -526,88 +562,93 @@ export const TeamHubTab = ({
             </Card>
           </TwoColumns>
 
-          <Card>
-            <SectionTitle>Showcase images</SectionTitle>
-            <MutedText>
-              These make your project shine on the{" "}
-              <ShowcaseLink
-                href={`/showcase/${team._id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                public showcase page ↗
-              </ShowcaseLink>{" "}
-              — a link you can put in your portfolio or CV. Anyone can open it
-              without logging in, so choose images you are happy for the world
-              to see.
-            </MutedText>
-            <TwoColumns>
-              <ImageUploadField
-                id="cover-image"
-                prefix="cover-image"
-                label="Cover screenshot"
-                description="A crisp shot of your product actually working — this is the big image people see first, both on the showcase grid and at the top of your page."
-                value={coverImage}
-                onChange={handleImageChange("coverImage")}
-                disabled={readOnly}
-                canRemove
-              />
-              <ImageUploadField
-                id="team-photo"
-                prefix="team-photo"
-                label="Team photo — or a second project image"
-                description="Take the picture with whoever wants to be in it. Nobody has to be, no reason is needed, and anyone can leave themselves out without saying so. Any team member can remove this photo later, at any time, including after the course ends. Would you rather not put a picture of people on a public page? Upload another image of your project instead — a second screenshot, a mockup, a detail you are proud of."
-                value={teamPhoto}
-                onChange={handleImageChange("teamPhoto")}
-                disabled={readOnly}
-                canRemove
-              />
-              <ImageUploadField
-                id="team-logo"
-                prefix="team-logo"
-                label="Logo (optional)"
-                description="Your project's mark, shown next to the title. Square works best."
-                value={logo}
-                onChange={handleImageChange("logo")}
-                disabled={readOnly}
-                canRemove
-              />
-            </TwoColumns>
-          </Card>
-
           {!readOnly && (
-            <Footer>
-              <PrimaryButton type="submit" disabled={saving}>
-                {saving ? "Saving…" : "Save team hub"}
+            <SaveBar $dirty={dirty}>
+              <PrimaryButton type="submit" disabled={saving || !dirty}>
+                {saving ? "Saving…" : "Save"}
               </PrimaryButton>
+              {dirty && !saving && <DirtyText>Unsaved changes</DirtyText>}
               {feedback && (
                 <Message $error={feedback.error}>{feedback.text}</Message>
               )}
-            </Footer>
-          )}
-
-          {justSaved && showcaseIsLive && (
-            <ShowcaseBanner role="status">
-              <BannerText>
-                🎉 Your showcase page is live — share it in your portfolio or
-                CV!
-              </BannerText>
-              <BannerActions>
-                <BannerButton type="button" onClick={handleCopyShowcase}>
-                  {copied ? "Copied!" : "Copy link"}
-                </BannerButton>
-                <BannerLink
-                  href={`/showcase/${team._id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View page ↗
-                </BannerLink>
-              </BannerActions>
-            </ShowcaseBanner>
+              {!dirty && !feedback && (
+                <MutedText>Images save on their own when you pick them.</MutedText>
+              )}
+            </SaveBar>
           )}
         </Layout>
       </form>
+
+      <Card>
+        <SectionTitle>Public showcase</SectionTitle>
+        <ShowcaseStatus $live={showcaseIsLive} role="status">
+          <StatusText>
+            {showcaseIsLive
+              ? "Your project page is live — a link for your portfolio or CV."
+              : details.project.status === "formation"
+                ? "Your project page goes live once the project starts and you have saved a project name."
+                : "Your project page goes live once you save a project name above."}
+          </StatusText>
+          {showcaseIsLive && (
+            <>
+              <SmallButton type="button" onClick={handleCopyShowcase}>
+                {copied ? "Copied!" : "Copy link"}
+              </SmallButton>
+              <ShowcaseLink
+                href={showcasePath}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View page ↗
+              </ShowcaseLink>
+            </>
+          )}
+        </ShowcaseStatus>
+
+        {!isTeacher && (
+          <ShowcaseConsent teamId={team._id} consent={team.showcaseConsent} />
+        )}
+
+        <MutedText>
+          Images for the page. Anyone can see them without logging in, and
+          each one saves as soon as it is picked.
+        </MutedText>
+        <TwoColumns>
+          <ImageUploadField
+            id="cover-image"
+            prefix="cover-image"
+            label="Cover screenshot"
+            description="A crisp shot of your product working — the first thing people see, on the grid and at the top of your page."
+            value={coverImage}
+            onChange={handleImageChange("coverImage")}
+            disabled={readOnly}
+            canRemove
+          />
+          <ImageUploadField
+            id="team-photo"
+            prefix="team-photo"
+            label="Team photo — or a second project image"
+            description="Whoever wants to be in it. Any member can remove it later, at any time."
+            value={teamPhoto}
+            onChange={handleImageChange("teamPhoto")}
+            disabled={readOnly}
+            canRemove
+          />
+          <ImageUploadField
+            id="team-logo"
+            prefix="team-logo"
+            label="Logo (optional)"
+            description="Your project's mark, shown next to the title. Square works best."
+            value={logo}
+            onChange={handleImageChange("logo")}
+            disabled={readOnly}
+            canRemove
+          />
+        </TwoColumns>
+        {imageFeedback && (
+          <Message $error={imageFeedback.error}>{imageFeedback.text}</Message>
+        )}
+      </Card>
     </Layout>
   );
 };
@@ -649,7 +690,7 @@ const groupFeedback = (entries: StudentFeedbackEntry[]): FeedbackGroup[] => {
   if (students.length > 0) {
     groups.push({
       key: "students",
-      label: "The other students",
+      label: "Classmates",
       entries: students,
     });
   }
@@ -688,20 +729,20 @@ const TeamFeedbackSection = ({
             do not have to wait for the rest of the class.
           </MutedText>
           <Checklist>
-            {details.project.peerEvalOpen && (
-              <ChecklistItem $done={!unlock.peerEvalPending}>
-                {unlock.peerEvalPending
-                  ? "Peer evaluation — not handed in yet"
-                  : "Peer evaluation — handed in ✓"}
-              </ChecklistItem>
-            )}
             {details.project.teamEvalOpen && (
               <ChecklistItem $done={unlock.teamsToScore === 0}>
                 {unlock.teamsToScore === 0
                   ? "Every other team scored ✓"
-                  : `${unlock.teamsToScore} more team${
+                  : `Score the presentations — ${unlock.teamsToScore} more team${
                       unlock.teamsToScore === 1 ? "" : "s"
-                    } to score`}
+                    }`}
+              </ChecklistItem>
+            )}
+            {details.project.peerEvalOpen && (
+              <ChecklistItem $done={!unlock.peerEvalPending}>
+                {unlock.peerEvalPending
+                  ? "Rate your teammates — not handed in yet"
+                  : "Teammates rated ✓"}
               </ChecklistItem>
             )}
           </Checklist>
@@ -760,11 +801,9 @@ const TeamFeedbackSection = ({
           <SectionTitle>Your grade</SectionTitle>
           <BigGrade>{grade.grade} / 10</BigGrade>
           <MutedText>
-            Your own grade, and what each row of the rubric came to for you.
-            It is your team&apos;s presentation result adjusted by the
-            contribution and teamwork figures your teachers confirmed for you:
-            an average team member keeps the team&apos;s result, and from there
-            it runs up to +30% and down to −70%.
+            Your team&apos;s presentation result, adjusted by the contribution
+            and teamwork figures your teachers confirmed for you. An average
+            team member keeps the team&apos;s result.
           </MutedText>
           {gradeRows.map((item) => (
             <GradeRow key={item.key}>

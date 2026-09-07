@@ -41,10 +41,11 @@ const ProjectTitle = styled.h3`
   margin: 0;
 `;
 
-const CallToAction = styled.span`
+const CallToAction = styled.span<{ $urgent?: boolean }>`
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--theme-module3-100);
+  color: ${({ $urgent }) =>
+    $urgent ? "var(--error-failure-100)" : "var(--theme-module3-100)"};
 `;
 
 const PillRow = styled.div`
@@ -81,10 +82,25 @@ const ProjectCard = ({
   project: GroupProjectListItem;
   isTeacher: boolean;
 }) => {
+  // Lead with what is owed. The team name is nice to know; an evaluation
+  // sitting unsubmitted is what the student came for.
   const studentCta = () => {
     if (isTeacher) return null;
     if (project.status === "formation" && !project.hasPreferences) {
       return <CallToAction>Fill in your preferences →</CallToAction>;
+    }
+    if (project.teamsToScore > 0) {
+      return (
+        <CallToAction $urgent>
+          Score the presentations — {project.teamsToScore} team
+          {project.teamsToScore === 1 ? "" : "s"} left →
+        </CallToAction>
+      );
+    }
+    if (project.peerEvalPending) {
+      return (
+        <CallToAction $urgent>Rate your teammates — not handed in →</CallToAction>
+      );
     }
     if (project.myTeamName) {
       return <CallToAction>Your team: {project.myTeamName} →</CallToAction>;
@@ -93,6 +109,16 @@ const ProjectCard = ({
       return <CallToAction>Waiting for team assignment…</CallToAction>;
     }
     return null;
+  };
+
+  const evalPill = (open: boolean, pending: boolean, label: string) => {
+    if (!open) return null;
+    if (isTeacher || !project.myTeamId) return <Pill>{label} open</Pill>;
+    return (
+      <Pill>
+        {label}: {pending ? "to do" : "done ✓"}
+      </Pill>
+    );
   };
 
   return (
@@ -111,8 +137,12 @@ const ProjectCard = ({
         <Pill>
           {project.teamCount} team{project.teamCount === 1 ? "" : "s"}
         </Pill>
-        {project.peerEvalOpen && <Pill>Peer evaluation open</Pill>}
-        {project.teamEvalOpen && <Pill>Team evaluation open</Pill>}
+        {evalPill(
+          project.teamEvalOpen,
+          project.teamsToScore > 0,
+          "Presentation scoring"
+        )}
+        {evalPill(project.peerEvalOpen, project.peerEvalPending, "Teammate rating")}
       </PillRow>
       {studentCta()}
     </ClickableCard>

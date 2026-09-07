@@ -7,7 +7,11 @@ import {
   GroupProjectDetails,
   SerializedJudgeInvitation,
 } from "types/groupTypes";
-import { PROJECT_STATUS_LABELS } from "constants/groupWork";
+import {
+  DISCIPLINE_META,
+  PROJECT_STATUS_LABELS,
+  rubricForProject,
+} from "constants/groupWork";
 import {
   PageContainer,
   PageHeader,
@@ -18,11 +22,13 @@ import {
   TabBar,
   TabButton,
   StepPanel,
+  SectionTitle,
+  ScorePill,
 } from "../styles";
 import { PreferencesForm } from "./components/PreferencesForm";
 import { TeamHubTab } from "./components/TeamHubTab";
 import { TeamsGallery } from "./components/TeamsGallery";
-import { EvaluateTab } from "./components/EvaluateTab";
+import { PresentationsStep, TeammatesStep } from "./components/EvaluateTab";
 import { TeacherOverview } from "./components/TeacherOverview";
 import { AssignmentBoard } from "./components/AssignmentBoard";
 import { TeacherEvaluations } from "./components/TeacherEvaluations";
@@ -46,6 +52,32 @@ const Description = styled(Card)`
   padding: 1rem 1.5rem;
 `;
 
+/** The student's own presentation slot, where they will look for it: the header. */
+const SlotLine = styled.p`
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--primary-black-100);
+`;
+
+const RubricRow = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--primary-black-10);
+  font-size: var(--text-sm);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+`;
+
+const RubricTitle = styled.span`
+  font-weight: 600;
+`;
+
 type Props = {
   details: GroupProjectDetails;
   reports: EvaluationReports | null;
@@ -61,6 +93,68 @@ const formatDate = (iso: string) =>
     year: "numeric",
   });
 
+const formatDay = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+
+const STEP_IDS = [
+  "preferences",
+  "brief",
+  "team",
+  "teams",
+  "presentations",
+  "teammates",
+] as const;
+type StepId = (typeof STEP_IDS)[number];
+
+/**
+ * What the rubric means for the student, on the brief where they will read it
+ * before the work starts rather than inside a scoring form afterwards.
+ */
+const HowYouAreGraded = ({ details }: { details: GroupProjectDetails }) => {
+  const { project } = details;
+  const rubric = rubricForProject(project.rubric);
+  const panelPercent = Math.round(project.panelWeight * 100);
+  return (
+    <Card>
+      <SectionTitle>How you will be graded</SectionTitle>
+      <MutedText>
+        Every team is scored 0–10 on each row below, by the teachers, any
+        invited judges, and the other students.{" "}
+        {panelPercent === 100
+          ? "Only the teachers' and judges' scores count towards the grade; the students' scores are feedback."
+          : `The teachers and judges carry ${panelPercent}% of each score, the student audience the other ${100 - panelPercent}%.`}
+      </MutedText>
+      <div>
+        {rubric.map((item) => {
+          const meta = DISCIPLINE_META[item.discipline ?? "general"];
+          return (
+            <RubricRow key={item.key}>
+              <ScorePill $color={meta.color} $background={meta.background}>
+                {meta.label}
+              </ScorePill>
+              <span>
+                <RubricTitle>{item.title}</RubricTitle>
+                {item.description && (
+                  <MutedText as="span"> — {item.description}</MutedText>
+                )}
+              </span>
+            </RubricRow>
+          );
+        })}
+      </div>
+      <MutedText>
+        Your own grade is the team&apos;s result adjusted by the contribution
+        and teamwork figures your teachers confirm from the teammate ratings.
+        An average team member keeps the team&apos;s result.
+      </MutedText>
+    </Card>
+  );
+};
+
 export const ProjectView = ({
   details,
   reports,
@@ -72,17 +166,32 @@ export const ProjectView = ({
 
   const teacherTabs = ["Overview", "Assignment", "Evaluations", "Settings"];
 
+  const mySlot = myTeamId
+    ? project.presentationSlots.find((slot) => slot.team === myTeamId) ?? null
+    : null;
+
   /**
    * The student's route through the project. Every step is listed whether or
    * not it is open yet — a locked step with a reason tells you what happens
    * next, which a hidden one cannot.
    */
-  const steps = useMemo<Step[]>(() => {
+  const { steps, defaultStep } = useMemo(() => {
     // The server withholds the brief until the formation questions are all
     // answered, so this flag doubles as "step one is finished".
     const preferencesDone = !project.descriptionLocked;
     const inFormation = project.status === "formation";
-    const evaluationOpen = (project.peerEvalOpen && !!myTeamId) || project.teamEvalOpen;
+    const unlock = details.myFeedbackUnlock;
+    const otherTeamCount = teams.filter((team) => team._id !== myTeamId).length;
+    const presentationsDone =
+      otherTeamCount > 0 &&
+      Object.keys(details.myTeamEvaluations).length >= otherTeamCount;
+    const teammatesDone = details.myPeerEvaluations.length > 0;
+    const presentationDay = project.presentationDate
+      ? formatDay(project.presentationDate)
+      : null;
+    const presentationsPassed =
+      !!project.presentationDate &&
+      new Date(project.presentationDate).getTime() < Date.now();
 
     const list: Step[] = [];
 
@@ -101,10 +210,9 @@ export const ProjectView = ({
       id: "brief",
       label: "Project brief",
       locked: project.descriptionLocked,
-      done: preferencesDone && !inFormation,
       hint: project.descriptionLocked
         ? "Unlocks when your preferences are in"
-        : "What you are building",
+        : "What you are building, and how it is graded",
     });
 
     list.push({
@@ -112,7 +220,7 @@ export const ProjectView = ({
       label: "Your team",
       locked: !myTeamId,
       hint: myTeamId
-        ? "Your team and its workspace"
+        ? "Your team, its workspace and your feedback"
         : "Your teachers are still putting teams together",
     });
 
@@ -123,41 +231,74 @@ export const ProjectView = ({
       hint: teams.length === 0 ? "Nothing to see until teams exist" : "Everyone on the project",
     });
 
-    if (evaluationOpen) {
+    if (!inFormation) {
       list.push({
-        id: "evaluate",
-        label: "Evaluate",
-        hint: "Give your feedback",
+        id: "presentations",
+        label: "Score the presentations",
+        locked: !project.teamEvalOpen,
+        done: presentationsDone,
+        hint: project.teamEvalOpen
+          ? presentationsDone
+            ? "All teams scored — you can still adjust"
+            : unlock.teamsToScore > 0
+              ? `${unlock.teamsToScore} team${unlock.teamsToScore === 1 ? "" : "s"} still to score`
+              : "Open now"
+          : presentationsDone
+            ? "Closed · handed in"
+            : presentationsPassed
+              ? "Closed"
+              : presentationDay
+                ? `Opens on presentation day, ${presentationDay}`
+                : "Opens on presentation day",
+      });
+
+      list.push({
+        id: "teammates",
+        label: "Rate your teammates",
+        locked: !project.peerEvalOpen || !myTeamId,
+        done: teammatesDone,
+        hint:
+          project.peerEvalOpen && myTeamId
+            ? teammatesDone
+              ? "Handed in — you can still change it"
+              : "Open now · only your teachers see this"
+            : teammatesDone
+              ? "Closed · handed in"
+              : presentationsPassed
+                ? "Closed"
+                : "Opens once every team has presented",
       });
     }
 
-    return list;
-  }, [
-    project.status,
-    project.descriptionLocked,
-    project.peerEvalOpen,
-    project.teamEvalOpen,
-    myTeamId,
-    teams.length,
-  ]);
+    // Land on whatever needs the student most: an open evaluation they have
+    // not handed in, then the formation form, then their team.
+    const pick = (): StepId => {
+      if (inFormation && !preferencesDone) return "preferences";
+      if (project.teamEvalOpen && unlock.teamsToScore > 0) return "presentations";
+      if (project.peerEvalOpen && myTeamId && unlock.peerEvalPending) {
+        return "teammates";
+      }
+      if (inFormation) return "brief";
+      if (myTeamId) return "team";
+      return "brief";
+    };
+
+    return { steps: list, defaultStep: pick() };
+  }, [project, details, teams, myTeamId]);
 
   const tabs = isTeacher ? teacherTabs : [];
 
-  // Open on the first step that still needs the student, not simply the first.
-  const firstOpenStep =
-    steps.find((step) => !step.locked && !step.done)?.id ??
-    steps.find((step) => !step.locked)?.id ??
-    steps[0]?.id;
-
-  const [activeTab, setActiveTab] = useState(
-    isTeacher ? teacherTabs[0] : firstOpenStep
+  const [activeTab, setActiveTab] = useState<string>(
+    isTeacher ? teacherTabs[0] : defaultStep
   );
   const available = isTeacher
     ? teacherTabs
     : steps.filter((step) => !step.locked).map((step) => step.id);
-  const currentTab = available.includes(activeTab ?? "")
-    ? (activeTab as string)
-    : available[0];
+  const currentTab = available.includes(activeTab)
+    ? activeTab
+    : available.includes(defaultStep)
+      ? defaultStep
+      : available[0];
 
   return (
     <PageContainer $width="wide">
@@ -174,6 +315,12 @@ export const ProjectView = ({
             {project.presentationDate &&
               ` · Presentations ${formatDate(project.presentationDate)}`}
           </MutedText>
+          {!isTeacher && mySlot && project.presentationDate && (
+            <SlotLine>
+              Your presentation: {formatDay(project.presentationDate)},{" "}
+              {mySlot.startTime}–{mySlot.endTime}
+            </SlotLine>
+          )}
         </HeaderInfo>
       </PageHeader>
 
@@ -200,27 +347,37 @@ export const ProjectView = ({
       {!isTeacher && (
         <StepPanel>
           {currentTab === "preferences" && (
-            <PreferencesForm details={details} />
+            <PreferencesForm
+              details={details}
+              onSaved={() => setActiveTab("brief")}
+            />
           )}
-          {currentTab === "brief" &&
-            (project.description ? (
-              <Description>
-                <MarkdownReader>{project.description}</MarkdownReader>
-              </Description>
-            ) : (
-              <MutedText>
-                Your teachers haven&apos;t written the brief yet — it will
-                appear here.
-              </MutedText>
-            ))}
+          {currentTab === "brief" && (
+            <>
+              {project.description ? (
+                <Description>
+                  <MarkdownReader>{project.description}</MarkdownReader>
+                </Description>
+              ) : (
+                <MutedText>
+                  Your teachers haven&apos;t written the brief yet — it will
+                  appear here.
+                </MutedText>
+              )}
+              <HowYouAreGraded details={details} />
+            </>
+          )}
           {currentTab === "team" && (
             <TeamHubTab details={details} isTeacher={false} />
           )}
           {currentTab === "teams" && (
             <TeamsGallery details={details} userId={userId} />
           )}
-          {currentTab === "evaluate" && (
-            <EvaluateTab details={details} userId={userId} />
+          {currentTab === "presentations" && (
+            <PresentationsStep details={details} />
+          )}
+          {currentTab === "teammates" && (
+            <TeammatesStep details={details} userId={userId} />
           )}
         </StepPanel>
       )}
