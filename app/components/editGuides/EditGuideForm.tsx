@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useFormDraft } from "utils/hooks/useStorage";
+import { extractModuleNumber } from "../../utils/moduleUtils";
 import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import dynamic from "next/dynamic";
 import { GuideType } from "../../models/guide";
@@ -20,8 +22,11 @@ import {
 import {
   FormContainer,
   BackLink,
+  HeaderLinks,
+  ViewLink,
   FormHeader,
   FormTitle,
+  StatusMessage,
   Form,
   Section,
   SectionTitle,
@@ -55,6 +60,10 @@ interface EditGuideFormProps {
 }
 
 export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
+  const router = useRouter();
+  // What the last save or check said, shown under the title instead of a
+  // browser alert.
+  const [status, setStatus] = useState<{ ok: boolean; text: string }>();
   const [gradingMode, setGradingMode] = useState<"peerReview" | "auto">(
     (guide.gradingMode as "peerReview" | "auto") || "peerReview"
   );
@@ -111,9 +120,11 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
       title: guide.themeIdea?.title || '',
       description: guide.themeIdea?.description || ''
     },
+    // The number is derived from the title on save (see extractModuleNumber);
+    // the stored one is unreliable and was a second thing to keep in step.
     module: {
       title: guide.module?.title || '',
-      number: guide.module?.number || 0
+      number: extractModuleNumber(guide.module?.title || '')
     },
     knowledge: guide.knowledge?.map(k => k.knowledge) || [],
     skills: guide.skills?.map(s => s.skill) || [],
@@ -205,13 +216,14 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStatus(undefined);
 
     // Build the grading-specific part of the payload.
     let gradingPayload: Record<string, unknown>;
     if (gradingMode === "auto") {
       const exerciseError = validateExercise();
       if (exerciseError) {
-        alert(exerciseError);
+        setStatus({ ok: false, text: exerciseError });
         return;
       }
       gradingPayload = {
@@ -259,6 +271,10 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
         },
         body: JSON.stringify({
           ...formData,
+          module: {
+            title: formData.module.title,
+            number: extractModuleNumber(formData.module.title),
+          },
           ...gradingPayload,
           // Canonical taxonomy axes + derived legacy `category` mirror.
           discipline,
@@ -271,15 +287,16 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
       });
 
       if (response.ok) {
+        // Stay on the page: a save is not the end of editing.
         draft.clear();
-        alert('Guide updated successfully!');
-        window.location.href = '/LMS/edit-guides';
+        setStatus({ ok: true, text: "Saved. Students see the change straight away." });
+        router.refresh();
       } else {
-        alert('Error updating guide');
+        setStatus({ ok: false, text: "The guide could not be saved. Check the fields and try again." });
       }
     } catch (error) {
       console.error('Error saving guide:', error);
-      alert('Error saving guide');
+      setStatus({ ok: false, text: "The guide could not be saved. Check your connection and try again." });
     } finally {
       setSaving(false);
     }
@@ -287,12 +304,26 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
 
   return (
     <FormContainer>
-      <BackLink href="/LMS/edit-guides">← Back to Edit Guides</BackLink>
+      <HeaderLinks>
+        <BackLink href="/LMS/edit-guides">← All guides</BackLink>
+        <ViewLink
+          href={`/guides/${guide._id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View as student ↗
+        </ViewLink>
+      </HeaderLinks>
       <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
-      
+
       <FormHeader>
-        <FormTitle>Edit Guide: {guide.title}</FormTitle>
+        <FormTitle>{guide.title}</FormTitle>
       </FormHeader>
+      {status && (
+        <StatusMessage role={status.ok ? "status" : "alert"} $error={!status.ok}>
+          {status.text}
+        </StatusMessage>
+      )}
 
       <Form onSubmit={handleSubmit}>
         <Section>
@@ -445,17 +476,6 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
             </Select>
           </InputGroup>
 
-          <InputGroup>
-            <Label htmlFor="moduleNumber">Module Number</Label>
-            {/* ⚠️ WARNING: module.number is often undefined in database - handle with care */}
-            <Input
-              id="moduleNumber"
-              type="number"
-              value={formData.module.number || 0}
-              onChange={(e) => handleNestedChange('module', 'number', parseInt(e.target.value) || 0)}
-              required
-            />
-          </InputGroup>
         </Section>
 
         <ArraySection>
@@ -651,8 +671,8 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
           <Button type="submit" disabled={saving} $variant="primary">
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
-          <Button type="button" onClick={() => window.location.href = '/LMS/edit-guides'}>
-            Cancel
+          <Button type="button" onClick={() => router.push('/LMS/edit-guides')}>
+            Back to all guides
           </Button>
         </ButtonGroup>
       </Form>

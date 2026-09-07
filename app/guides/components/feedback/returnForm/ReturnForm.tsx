@@ -10,23 +10,39 @@ import { Input } from "UIcomponents/input/Input";
 import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import { useLocalState } from "utils/hooks/useStorage";
 import { LoadingSpinner } from "UIcomponents/states/States";
+import { RETURN_FIELDS, linkWarning } from "utils/returnFields";
+import type { Discipline } from "utils/guideTaxonomy";
 import {
   SuccessPanel,
   SuccessHeading,
   SuccessText,
+  FormIntro,
 } from "./style.ReturnSuccess";
 
-export const ReturnForm = ({ guideId }: { guideId: string }) => {
+type FormProps = {
+  guideId: string;
+  /** Decides what the two links are called and what they are checked against. */
+  discipline?: Discipline;
+  /**
+   * Prefilled as the project title. The guide's idea is only an idea — a
+   * student may hand in something they built for another reason, as long as
+   * it covers the guide's goals — so the field stays editable.
+   */
+  defaultTitle?: string;
+  /** Set when a return already exists; the form says so. */
+  returningAgain?: boolean;
+  /** Shown as a button on the success panel; absent means no button. */
+  onDone?: () => void;
+};
+
+export const ReturnForm = (props: FormProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <Modal
       modalTrigger={<Button style="default">RETURN</Button>}
       modalContent={
-        <FormContent
-          guideId={guideId}
-          closeModal={() => setIsModalOpen(false)}
-        />
+        <FormContent {...props} onDone={() => setIsModalOpen(false)} />
       }
       state={[isModalOpen, setIsModalOpen]}
     />
@@ -38,9 +54,7 @@ export const ReturnForm = ({ guideId }: { guideId: string }) => {
  * a container of its own — the guide canvas, where a tile holding a single
  * button that opens a dialog was a lot of paper for very little.
  */
-export const InlineReturnForm = ({ guideId }: { guideId: string }) => (
-  <FormContent guideId={guideId} />
-);
+export const InlineReturnForm = (props: FormProps) => <FormContent {...props} />;
 
 /**
  * Prepend https:// to URL-ish values typed without a scheme ("github.com/me/x").
@@ -56,12 +70,11 @@ const normalizeUrl = (value: string | undefined): string | undefined => {
 
 const FormContent = ({
   guideId,
-  closeModal,
-}: {
-  guideId: string;
-  /** Absent when the form is rendered inline — there is nothing to close. */
-  closeModal?: () => void;
-}) => {
+  discipline = "code",
+  defaultTitle,
+  returningAgain = false,
+  onDone,
+}: FormProps) => {
   // localStorage, not sessionStorage: a closed tab used to take the half
   // written return with it.
   const [formData, setFormData, loading] = useLocalState<ReturnFormData>(
@@ -70,6 +83,7 @@ const FormContent = ({
   );
   const [state, formAction, isPending] = useActionState(returnGuide, undefined);
   const router = useRouter();
+  const fields = RETURN_FIELDS[discipline];
 
   // On success: clear the draft and refresh server data so the guide's
   // status/card update behind the modal — WITHOUT a hard redirect that
@@ -89,8 +103,9 @@ const FormContent = ({
       <SuccessPanel>
         <SuccessHeading>Return submitted! 🎉</SuccessHeading>
         <SuccessText>
-          Your project is now in the review queue, and classmates will be
-          assigned to review it.
+          {returningAgain
+            ? "Your new return replaces the old one in the review queue, and classmates will be assigned to review it."
+            : "Your project is now in the review queue, and classmates will be assigned to review it."}
         </SuccessText>
         <SuccessText>
           <strong>What happens next:</strong> to complete this guide you also
@@ -98,14 +113,18 @@ const FormContent = ({
           guide&apos;s card when one is ready for you. Once your reviews are in
           and your project has been reviewed, you&apos;ll see your result here.
         </SuccessText>
-        {closeModal && (
-          <Button style="default" onClick={closeModal}>
+        {onDone && (
+          <Button style="default" onClick={onDone}>
             GOT IT
           </Button>
         )}
       </SuccessPanel>
     );
   }
+
+  // The idea's title is only a starting point; an empty string means the
+  // student cleared it on purpose, so only an untouched draft gets the default.
+  const projectName = formData?.projectName ?? defaultTitle ?? "";
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -115,6 +134,7 @@ const FormContent = ({
       ...formData,
       projectUrl: normalizeUrl(formData?.projectUrl),
       liveVersion: normalizeUrl(formData?.liveVersion),
+      projectName,
       // a blob URL from ImageUploadField — already absolute, no normalization
       pictureUrl: formData?.pictureUrl,
     };
@@ -125,7 +145,7 @@ const FormContent = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, projectName, [e.target.name]: e.target.value });
   };
 
   // Extract errors from state (only present when success is false)
@@ -133,11 +153,20 @@ const FormContent = ({
 
   return (
     <Form onSubmit={handleSubmit}>
+        {returningAgain && (
+          <FormIntro>
+            Returning again. Reviews are given on your latest return, so this
+            one replaces the previous one in the queue.
+          </FormIntro>
+        )}
         <Input
           id={"projectUrl"}
           type={"text"}
           name={"projectUrl"}
-          label={"Github or Figma URL"}
+          label={fields.projectUrl.label}
+          placeholder={fields.projectUrl.placeholder}
+          hint={fields.projectUrl.hint}
+          warning={linkWarning(discipline, "projectUrl", formData?.projectUrl ?? "")}
           required={true}
           disabled={isPending}
           value={formData?.projectUrl || ""}
@@ -152,7 +181,10 @@ const FormContent = ({
           id={"liveVersion"}
           type={"text"}
           name={"liveVersion"}
-          label={"Live version or prototype(Figma)"}
+          label={fields.liveVersion.label}
+          placeholder={fields.liveVersion.placeholder}
+          hint={fields.liveVersion.hint}
+          warning={linkWarning(discipline, "liveVersion", formData?.liveVersion ?? "")}
           value={formData?.liveVersion || ""}
           onChange={handleInputChange}
           required={true}
@@ -169,7 +201,7 @@ const FormContent = ({
           label={"Image that suits your project (optional)"}
           value={formData?.pictureUrl || ""}
           onChange={(value) =>
-            setFormData({ ...formData, pictureUrl: value })
+            setFormData({ ...formData, projectName, pictureUrl: value })
           }
           disabled={isPending}
         />
@@ -178,7 +210,12 @@ const FormContent = ({
           type={"text"}
           name={"projectName"}
           label={"Project title"}
-          value={formData?.projectName || ""}
+          hint={
+            defaultTitle
+              ? "Prefilled from the guide's idea. Change it if you are handing in something of your own — anything that meets the guide's goals counts."
+              : undefined
+          }
+          value={projectName}
           onChange={handleInputChange}
           required={true}
           disabled={isPending}
@@ -193,6 +230,7 @@ const FormContent = ({
           type={"textarea"}
           name={"comment"}
           label={"Short project description"}
+          hint="What you built and what a reviewer should look at first."
           value={formData?.comment || ""}
           onChange={handleInputChange}
           required={true}

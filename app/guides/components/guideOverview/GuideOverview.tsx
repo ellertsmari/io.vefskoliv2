@@ -2,10 +2,11 @@
 
 import { useMemo, useRef, useState } from "react";
 import MarkdownReader from "UIcomponents/markdown/reader";
-import { InlineReturnForm } from "../feedback/returnForm/ReturnForm";
+import { SubmitTile, GuestSubmit } from "../feedback/returnForm/SubmitTile";
 import { ExerciseLauncher } from "../exercise/ExerciseLauncher";
 import { ClientGuide, GradingMode } from "types/guideTypes";
 import type { ExerciseSummary } from "serverActions/exerciseSession";
+import type { ReturnSummary } from "serverActions/getReturnSummary";
 import { useLocalState } from "utils/hooks/useStorage";
 import { collectMaterials } from "./materials";
 import {
@@ -33,6 +34,7 @@ import {
   ControlsDivider,
   Toolbar,
   ToolButton,
+  ToolLink,
   Dock,
   DockChip,
   EmptyCanvasHint,
@@ -61,7 +63,14 @@ import {
   ArrangeIcon,
   ResetIcon,
   MinimizeIcon,
+  EditIcon,
 } from "./sectionIcons";
+
+/**
+ * Who is looking. A teacher gets an edit link instead of a return form; a
+ * teacher viewing as a student counts as that student.
+ */
+export type GuideViewer = "guest" | "student" | "teacher";
 
 type GuideSection = {
   id: string;
@@ -117,12 +126,15 @@ const NUDGE_STEP = 0.05;
 
 export const GuideOverview = ({
   guide,
-  isAuthenticated = true, // Default to true to maintain backwards compatibility
+  viewer = "student",
   exerciseSummary,
+  returnSummary = null,
 }: {
   guide: ClientGuide;
-  isAuthenticated?: boolean;
+  viewer?: GuideViewer;
   exerciseSummary?: ExerciseSummary;
+  /** The student's latest return of this guide, when there is one. */
+  returnSummary?: ReturnSummary | null;
 }) => {
   const guideId = guide?._id?.toString() ?? "unknown";
   const [savedLayout, setSavedLayout] = useLocalState<Layout>(
@@ -149,8 +161,9 @@ export const GuideOverview = ({
   const dragRef = useRef<DragState | null>(null);
 
   const sections = useMemo(
-    () => (guide ? buildSections(guide, isAuthenticated, exerciseSummary) : []),
-    [guide, isAuthenticated, exerciseSummary]
+    () =>
+      guide ? buildSections(guide, viewer, exerciseSummary, returnSummary) : [],
+    [guide, viewer, exerciseSummary, returnSummary]
   );
 
   // A saved arrangement can outlive the guide it was saved for — a section may
@@ -469,6 +482,12 @@ export const GuideOverview = ({
           <ControlsDivider aria-hidden="true" />
 
           <Toolbar>
+            {viewer === "teacher" && (
+              <ToolLink href={`/LMS/edit-guides/${guideId}`}>
+                <EditIcon />
+                Edit guide
+              </ToolLink>
+            )}
             <ToolButton
               type="button"
               $active={snapEnabled}
@@ -569,8 +588,9 @@ export const GuideOverview = ({
  */
 function buildSections(
   guide: ClientGuide,
-  isAuthenticated: boolean,
-  exerciseSummary?: ExerciseSummary
+  viewer: GuideViewer,
+  exerciseSummary?: ExerciseSummary,
+  returnSummary: ReturnSummary | null = null
 ): GuideSection[] {
   const {
     description,
@@ -683,20 +703,25 @@ function buildSections(
     });
   }
 
-  // Auto-graded guides only get a tile once there is a summary to launch from;
-  // everyone else gets the return form.
-  const submission = isAutoGraded ? (
-    exerciseSummary ? (
-      <ExerciseLauncher
-        guideId={guide._id.toString()}
-        summary={exerciseSummary}
-      />
-    ) : null
-  ) : (
-    <InlineReturnForm guideId={guide._id.toString()} />
-  );
+  // Teachers edit guides rather than return them, so they get no Submit
+  // tile (the edit link is in the header). Visitors are told what the tile
+  // is for and where to sign in. Students get the exercise launcher once
+  // there is a summary to launch from, or the return tile.
+  const submission =
+    viewer === "teacher" ? null : viewer === "guest" ? (
+      <GuestSubmit guideId={guide._id.toString()} />
+    ) : isAutoGraded ? (
+      exerciseSummary ? (
+        <ExerciseLauncher
+          guideId={guide._id.toString()}
+          summary={exerciseSummary}
+        />
+      ) : null
+    ) : (
+      <SubmitTile guide={guide} summary={returnSummary} />
+    );
 
-  if (isAuthenticated && submission) {
+  if (submission) {
     sections.push({
       id: "submit",
       label: "Submit",

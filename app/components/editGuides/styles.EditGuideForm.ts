@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import Link from "next/link";
 
 export const FormContainer = styled.div`
   max-width: 800px;
@@ -6,16 +7,44 @@ export const FormContainer = styled.div`
   padding: 2rem;
 `;
 
-export const BackLink = styled.a`
-  display: inline-block;
+export const HeaderLinks = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
   margin-bottom: 1.5rem;
+`;
+
+export const BackLink = styled(Link)`
+  display: inline-block;
   color: var(--theme-module3-100);
   text-decoration: none;
   font-size: var(--text-sm);
-  
+
   &:hover {
     text-decoration: underline;
   }
+`;
+
+export const ViewLink = styled.a`
+  display: inline-block;
+  color: var(--primary-black-60);
+  text-decoration: none;
+  font-size: var(--text-sm);
+
+  &:hover {
+    color: var(--primary-black-100);
+    text-decoration: underline;
+  }
+`;
+
+export const StatusMessage = styled.p<{ $error?: boolean }>`
+  margin: -1rem 0 1.5rem 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  background: ${({ $error }) => ($error ? "var(--error-failure-10, #fdecec)" : "var(--accent-green-10, #e8f5ec)")};
+  color: ${({ $error }) => ($error ? "var(--error-failure-100)" : "var(--accent-green-text, #1f6b3a)")};
 `;
 
 export const FormHeader = styled.header`

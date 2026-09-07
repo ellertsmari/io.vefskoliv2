@@ -9,6 +9,7 @@ import { getShortAnswerReview } from "../../../serverActions/shortAnswerReview";
 import { ShortAnswerReviewPanel } from "../../../components/editGuides/ShortAnswerReviewPanel";
 import { safeSerialize } from "../../../utils/serialization";
 import { Session } from "next-auth";
+import { hasTeacherPermissions } from "../../../utils/userUtils";
 
 interface EditGuidePageProps {
   params: Promise<{ id: string }>;
@@ -17,15 +18,15 @@ interface EditGuidePageProps {
 const EditGuidePage = async ({ params }: EditGuidePageProps) => {
   const session: Session | null = await auth();
   
+  const { id } = await params;
+
   if (!session?.user?.id) {
-    redirect("/auth/signin");
+    redirect(`/signin?callbackUrl=/LMS/edit-guides/${id}`);
   }
 
-  if (session.user.role !== "teacher") {
+  if (!hasTeacherPermissions(session)) {
     redirect("/LMS/dashboard");
   }
-
-  const { id } = await params;
 
   try {
     const guide = await getGuideForTeacher(id);

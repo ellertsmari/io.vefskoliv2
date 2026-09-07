@@ -50,7 +50,7 @@ describe("ReturnForm", () => {
     fireEvent.click(getByText("RETURN"));
 
     await waitFor(() => {
-      expect(getByLabelText("Github or Figma URL")).toBeDefined();
+      expect(getByLabelText("GitHub repository")).toBeDefined();
     });
   });
 
@@ -76,14 +76,14 @@ describe("ReturnForm", () => {
     fireEvent.click(getByText("RETURN"));
 
     await waitFor(() => {
-      expect(getByLabelText("Github or Figma URL")).toBeDefined();
+      expect(getByLabelText("GitHub repository")).toBeDefined();
     });
 
-    fireEvent.change(getByLabelText("Github or Figma URL"), {
+    fireEvent.change(getByLabelText("GitHub repository"), {
       target: { value: projectUrl },
     });
 
-    fireEvent.change(getByLabelText("Live version or prototype(Figma)"), {
+    fireEvent.change(getByLabelText("Live page"), {
       target: { value: liveVersion },
     });
 
@@ -120,12 +120,12 @@ describe("ReturnForm", () => {
 
     // Wait for form to be visible
     await waitFor(() => {
-      expect(getByLabelText("Github or Figma URL")).toBeDefined();
+      expect(getByLabelText("GitHub repository")).toBeDefined();
     });
 
     // Verify all form fields are rendered
-    expect(getByLabelText("Github or Figma URL")).toBeDefined();
-    expect(getByLabelText("Live version or prototype(Figma)")).toBeDefined();
+    expect(getByLabelText("GitHub repository")).toBeDefined();
+    expect(getByLabelText("Live page")).toBeDefined();
     expect(getByLabelText("Project title")).toBeDefined();
     expect(getByLabelText("Short project description")).toBeDefined();
     expect(getByLabelText("Image that suits your project (optional)")).toBeDefined();

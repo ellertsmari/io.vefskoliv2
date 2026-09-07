@@ -13,6 +13,7 @@ import {
   type ActionResult,
 } from "../utils/errors";
 import { optionalStoredImageSchema } from "../utils/imageUpload";
+import { isActingAsTeacher } from "../utils/userUtils";
 
 export type ReturnFormData = {
   projectUrl?: string;
@@ -51,6 +52,11 @@ export async function returnGuide(
 
   if (!session?.user) {
     return failure("You must be logged in to submit a return");
+  }
+  if (isActingAsTeacher(session)) {
+    return failure(
+      "Guides are returned by students. Switch to a student view to return on their behalf."
+    );
   }
   const user = session?.user as AdapterUser;
 

@@ -1,9 +1,11 @@
 import { auth } from "../../../auth";
 import { getGuide } from "serverActions/getGuide";
-import { GuideOverview } from "../components/guideOverview/GuideOverview";
+import { getReturnSummary } from "serverActions/getReturnSummary";
+import { GuideOverview, type GuideViewer } from "../components/guideOverview/GuideOverview";
 import { ClientGuide, GradingMode } from "types/guideTypes";
 import { getExerciseSummary } from "serverActions/exerciseSession";
 import { ErrorState } from "UIcomponents/states/States";
+import { isActingAsTeacher } from "utils/userUtils";
 import { Session } from "next-auth";
 
 type ParamsType = Promise<{ id: string }>;
@@ -25,28 +27,32 @@ const GuidePage = async ({ params }: { params: ParamsType }) => {
     );
   }
 
-  // Pass authentication status to determine if return form should be shown
-  const isAuthenticated = !!session?.user?.id;
+  // A teacher viewing as a student is a student here, like everywhere else.
+  const viewer: GuideViewer = !session?.user?.id
+    ? "guest"
+    : isActingAsTeacher(session)
+      ? "teacher"
+      : "student";
+  const isAuto = guide.gradingMode === GradingMode.AUTO;
 
-  // Where the student stands, so the guide can show a button rather than the
-  // whole exercise: not started, part way through, finished, or perfect.
-  const exerciseSummary =
-    isAuthenticated && guide.gradingMode === GradingMode.AUTO
-      ? (await getExerciseSummary(id)) ?? undefined
-      : undefined;
+  // Where the student stands, so the guide can lead with that rather than
+  // with an empty form: exercise progress for auto-graded guides, the
+  // latest return for peer-reviewed ones.
+  const [exerciseSummary, returnSummary] = await Promise.all([
+    viewer === "student" && isAuto
+      ? getExerciseSummary(id).then((summary) => summary ?? undefined)
+      : Promise.resolve(undefined),
+    viewer === "student" && !isAuto ? getReturnSummary(id) : Promise.resolve(null),
+  ]);
 
   return (
     <GuideOverview
       guide={guide}
-      isAuthenticated={isAuthenticated}
+      viewer={viewer}
       exerciseSummary={exerciseSummary}
+      returnSummary={returnSummary}
     />
   );
 };
 
 export default GuidePage;
-
-
-
-
-

@@ -58,3 +58,19 @@ export const ErrorMessage = styled(Paragraph)`
   color: var(--error-failure-100);
   font-size: var(--text-sm);
 `;
+
+/** Guidance that is there before anything goes wrong. */
+export const HintMessage = styled(Paragraph)`
+  margin-top: 0.3rem;
+  color: var(--primary-black-60);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+`;
+
+/** Amber, not red: the value is accepted, it just looks like the wrong one. */
+export const WarningMessage = styled(Paragraph)`
+  margin-top: 0.3rem;
+  color: var(--accent-amber-text, #8a5a00);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+`;

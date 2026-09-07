@@ -1,5 +1,7 @@
 "use client";
 
+import { returnFieldsFor } from "utils/returnFields";
+
 import { useState, useEffect, useActionState, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "UIcomponents/modal/modal";
@@ -132,10 +134,10 @@ const GradingReviewItem = ({
           </ReviewMeta>
           <ProjectLinks>
             <ProjectLink href={review.return.projectUrl} target="_blank" rel="noopener noreferrer">
-              Project URL
+              {returnFieldsFor(review.guide).projectUrl.label}
             </ProjectLink>
             <ProjectLink href={review.return.liveVersion} target="_blank" rel="noopener noreferrer">
-              Live Version
+              {returnFieldsFor(review.guide).liveVersion.label}
             </ProjectLink>
           </ProjectLinks>
         </ReviewItemInfo>

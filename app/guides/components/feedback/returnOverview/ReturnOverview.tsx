@@ -8,6 +8,8 @@ import {
   Wrapper,
 } from "globalStyles/globalStyles";
 import { OverviewWrapper, ReturnLinksWrapper } from "./style";
+import { useGuide } from "providers/GuideProvider";
+import { returnFieldsFor } from "utils/returnFields";
 
 export const ReturnOverview = ({
   theReview,
@@ -69,17 +71,21 @@ const ReturnLinks = ({
   theReturn: ReturnDocument;
   linkStyle: "default" | "outlined";
 }) => {
+  // The links are named for the guide's discipline — repository and live
+  // page, or Figma file and prototype — the same words the form used.
+  const { guide } = useGuide();
+  const fields = returnFieldsFor(guide ?? {});
   return (
     <>
       <ReturnLinksWrapper>
         <UnstyledLink href={theReturn.projectUrl} target="_blank">
           <MaterialButton $styletype={linkStyle}>
-            Github or Figma URL
+            {fields.projectUrl.label}
           </MaterialButton>
         </UnstyledLink>
         <UnstyledLink href={theReturn.liveVersion} target="_blank">
           <MaterialButton $styletype={linkStyle}>
-            Live version or prototype (Figma)
+            {fields.liveVersion.label}
           </MaterialButton>
         </UnstyledLink>
       </ReturnLinksWrapper>

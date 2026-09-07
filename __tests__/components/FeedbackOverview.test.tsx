@@ -116,7 +116,7 @@ describe("Feedback", () => {
     expect(getByText(mockFeedbackGiven[0].comment)).toBeDefined();
 
     const projectUrlLink = screen.getByRole("link", {
-      name: /Github or Figma URL/i,
+      name: /GitHub repository/i,
     });
     expect(projectUrlLink).toBeDefined();
     expect(projectUrlLink.getAttribute("href")).toBe(
@@ -124,7 +124,7 @@ describe("Feedback", () => {
     );
 
     const liveVersionLink = screen.getByRole("link", {
-      name: /Live version or prototype \(Figma\)/i,
+      name: /Live page/i,
     });
     expect(liveVersionLink).toBeDefined();
     expect(liveVersionLink.getAttribute("href")).toBe(

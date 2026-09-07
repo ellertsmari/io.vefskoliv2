@@ -1,4 +1,5 @@
 import React, { useState, useActionState, startTransition } from "react";
+import { returnFieldsFor } from "utils/returnFields";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { FeedbackDocument, GradedFeedbackDocument } from "models/review";
 import { returnGrade } from "serverActions/returnGrade";
@@ -249,10 +250,10 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
                     <ProjectName>{returnDoc.projectName}</ProjectName>
                     <LinkRow>
                       <ProjectLink href={returnDoc.projectUrl} target="_blank" rel="noopener noreferrer">
-                        Project URL
+                        {returnFieldsFor(guide).projectUrl.label}
                       </ProjectLink>
                       <ProjectLink href={returnDoc.liveVersion} target="_blank" rel="noopener noreferrer">
-                        Live Version
+                        {returnFieldsFor(guide).liveVersion.label}
                       </ProjectLink>
                       {returnDoc.pictureUrl &&
                         (returnDoc.pictureUrl.startsWith("data:") ? (

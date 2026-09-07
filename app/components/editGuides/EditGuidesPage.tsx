@@ -1,207 +1,240 @@
 "use client";
 
-import { useState } from "react";
-import { GuideInfo } from "../../../types/guideTypes";
-import { GUIDE_CATEGORIES } from "../../constants/guideCategories";
-import { MODULE_TITLES } from "../../constants/moduleTitles";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import type { EditorGuideRow } from "serverActions/editGuideActions";
+import { deleteGuide } from "serverActions/editGuideActions";
 import {
   PageContainer,
   Header,
   Title,
+  Subtitle,
+  Toolbar,
+  SearchInput,
+  FilterSelect,
+  ModuleHeading,
   GuidesList,
   GuideCard,
+  CardTop,
+  OrderBadge,
   GuideTitle,
   GuideDescription,
+  Pills,
+  Pill,
   GuideActions,
-  ActionButton,
-  SearchContainer,
-  SearchInput,
-  FilterContainer,
-  FilterSelect
+  ActionLink,
+  DangerButton,
+  ConfirmRow,
+  ConfirmButton,
+  Message,
+  EmptyNote,
 } from "./styles.EditGuidesPage";
 
 // Strip markdown formatting for plain text preview
-const stripMarkdown = (text: string, maxLength: number = 200): string => {
-  if (!text) return '';
+const stripMarkdown = (text: string, maxLength: number = 160): string => {
+  if (!text) return "";
 
   let stripped = text
-    // Remove headers
-    .replace(/^#{1,6}\s+/gm, '')
-    // Remove bold/italic
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    // Remove links but keep text
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // Remove images
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
-    // Remove inline code
-    .replace(/`([^`]+)`/g, '$1')
-    // Remove blockquotes
-    .replace(/^>\s+/gm, '')
-    // Remove list markers
-    .replace(/^[-*+]\s+/gm, '')
-    .replace(/^\d+\.\s+/gm, '')
-    // Remove horizontal rules
-    .replace(/^[-*_]{3,}$/gm, '')
-    // Collapse multiple newlines
-    .replace(/\n{2,}/g, ' ')
-    // Replace single newlines with space
-    .replace(/\n/g, ' ')
-    // Collapse multiple spaces
-    .replace(/\s{2,}/g, ' ')
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^>\s+/gm, "")
+    .replace(/^[-*+]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/^[-*_]{3,}$/gm, "")
+    .replace(/\n{2,}/g, " ")
+    .replace(/\n/g, " ")
+    .replace(/\s{2,}/g, " ")
     .trim();
 
   if (stripped.length > maxLength) {
-    stripped = stripped.substring(0, maxLength).trim() + '...';
+    stripped = stripped.substring(0, maxLength).trim() + "…";
   }
 
   return stripped;
 };
 
-interface EditGuidesPageProps {
-  guides: GuideInfo[];
-}
+type DisciplineFilter = "all" | "code" | "design";
 
-export const EditGuidesPage = ({ guides }: EditGuidesPageProps) => {
+/**
+ * The teacher's list of guides, grouped by module in the order students meet
+ * them. Every action is a real link or an inline confirmation — no browser
+ * alerts, no full reloads.
+ */
+export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedModule, setSelectedModule] = useState("all");
+  const [discipline, setDiscipline] = useState<DisciplineFilter>("all");
+  const [selectedModule, setSelectedModule] = useState<string>("all");
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ ok: boolean; text: string }>();
+  const [busy, startWork] = useTransition();
 
-  // Get unique modules from guides - use title as primary identifier since number is often undefined
-  const modules = [...new Set(guides.map(guide => {
-    const title = guide.module?.title || 'Untitled Module';
-    return title;
-  }))]
-    .sort((a, b) => {
-      // Use the predefined MODULE_TITLES order since numbers are unreliable
-      const moduleOrder = [...MODULE_TITLES, 'Untitled Module'];
-      
-      const indexA = moduleOrder.indexOf(a as any);
-      const indexB = moduleOrder.indexOf(b as any);
-      
-      // If both are in the order array, sort by their position
-      if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
-      }
-      // If only one is in the order array, put it first
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
-      // If neither is in the order array, sort alphabetically
-      return a.localeCompare(b);
-    });
-
-  const filteredGuides = guides.filter(guide => {
-    const matchesSearch = guide.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         guide.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || guide.category === selectedCategory;
-    const title = guide.module?.title || 'Untitled Module';
-    const matchesModule = selectedModule === "all" || title === selectedModule;
-    return matchesSearch && matchesCategory && matchesModule;
-  });
-
-  const handleEditGuide = (guideId: string) => {
-    window.location.href = `/LMS/edit-guides/${guideId}`;
-  };
-
-  const handleDeleteGuide = async (guideId: string, title: string) => {
-    if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
-      try {
-        const response = await fetch(`/api/guides/${guideId}`, {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          alert('Guide deleted successfully!');
-          window.location.reload();
-        } else {
-          alert('Error deleting guide');
-        }
-      } catch (error) {
-        console.error('Error deleting guide:', error);
-        alert('Error deleting guide');
-      }
+  const modules = useMemo(() => {
+    const seen = new Map<number, string>();
+    for (const guide of guides) {
+      if (!seen.has(guide.moduleNumber)) seen.set(guide.moduleNumber, guide.moduleTitle);
     }
+    return [...seen.entries()].sort(([a], [b]) => a - b);
+  }, [guides]);
+
+  const filtered = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return guides.filter((guide) => {
+      if (discipline !== "all" && guide.discipline !== discipline) return false;
+      if (selectedModule !== "all" && String(guide.moduleNumber) !== selectedModule) return false;
+      if (!term) return true;
+      return (
+        guide.title.toLowerCase().includes(term) ||
+        guide.description.toLowerCase().includes(term)
+      );
+    });
+  }, [guides, searchTerm, discipline, selectedModule]);
+
+  // Grouped for the headings; `filtered` is already in module order.
+  const groups = useMemo(() => {
+    const byModule = new Map<number, EditorGuideRow[]>();
+    for (const guide of filtered) {
+      const list = byModule.get(guide.moduleNumber);
+      if (list) list.push(guide);
+      else byModule.set(guide.moduleNumber, [guide]);
+    }
+    return [...byModule.entries()];
+  }, [filtered]);
+
+  const handleDelete = (guide: EditorGuideRow) => {
+    setMessage(undefined);
+    startWork(async () => {
+      const result = await deleteGuide(guide.id);
+      setConfirming(null);
+      setMessage({
+        ok: result.success,
+        text: result.success ? `Deleted “${guide.title}”` : (result.message ?? "Could not delete the guide"),
+      });
+      if (result.success) router.refresh();
+    });
   };
 
   return (
     <PageContainer>
       <Header>
-        <Title>Edit Guides</Title>
+        <Title>Edit guides</Title>
+        <Subtitle>
+          {guides.length} guides · open one to edit it, or view it the way a
+          student sees it
+        </Subtitle>
       </Header>
 
-      <SearchContainer>
+      <Toolbar>
         <SearchInput
-          type="text"
-          placeholder="Search guides..."
+          type="search"
+          placeholder="Search by title or description…"
+          aria-label="Search guides"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-      </SearchContainer>
-
-      <FilterContainer>
         <FilterSelect
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          aria-label="Filter by discipline"
+          value={discipline}
+          onChange={(e) => setDiscipline(e.target.value as DisciplineFilter)}
         >
-          <option value="all">All Categories</option>
-          {GUIDE_CATEGORIES.map(category => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
+          <option value="all">Code and design</option>
+          <option value="code">Code guides</option>
+          <option value="design">Design guides</option>
         </FilterSelect>
-        
         <FilterSelect
+          aria-label="Filter by module"
           value={selectedModule}
           onChange={(e) => setSelectedModule(e.target.value)}
         >
-          <option value="all">All Modules</option>
-          {modules.map(module => (
-            <option key={module} value={module}>
-              {module}
+          <option value="all">All modules</option>
+          {modules.map(([number, title]) => (
+            <option key={number} value={number}>
+              {title || `Module ${number}`}
             </option>
           ))}
         </FilterSelect>
-      </FilterContainer>
+      </Toolbar>
 
-      <GuidesList>
-        {filteredGuides.map(guide => (
-          <GuideCard key={guide._id.toString()}>
-            <GuideTitle>{guide.title}</GuideTitle>
-            <GuideDescription>{stripMarkdown(guide.description)}</GuideDescription>
-            <div>
-              <strong>Category:</strong> {guide.category}
-            </div>
-            <div>
-              <strong>Module:</strong> {guide.module?.title || 'Untitled Module'}
-            </div>
-            <div>
-              <strong>Order:</strong> {guide.order}
-            </div>
-            <GuideActions>
-              <ActionButton 
-                onClick={() => handleEditGuide(guide._id.toString())}
-                $variant="primary"
-              >
-                Edit
-              </ActionButton>
-              <ActionButton 
-                onClick={() => handleDeleteGuide(guide._id.toString(), guide.title)}
-                $variant="danger"
-              >
-                Delete
-              </ActionButton>
-            </GuideActions>
-          </GuideCard>
-        ))}
-      </GuidesList>
+      {message && (
+        <Message role={message.ok ? "status" : "alert"} $error={!message.ok}>
+          {message.text}
+        </Message>
+      )}
 
-      {filteredGuides.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--primary-black-60)' }}>
-          No guides found matching your search criteria.
-        </div>
+      {groups.length === 0 ? (
+        <EmptyNote>No guides match. Clear the search or the filters.</EmptyNote>
+      ) : (
+        groups.map(([number, moduleGuides]) => (
+          <section key={number} aria-labelledby={`module-${number}`}>
+            <ModuleHeading id={`module-${number}`}>
+              {moduleGuides[0].moduleTitle || `Module ${number}`}
+            </ModuleHeading>
+            <GuidesList>
+              {moduleGuides.map((guide) => (
+                <GuideCard key={guide.id}>
+                  <CardTop>
+                    <OrderBadge>#{guide.order}</OrderBadge>
+                    <GuideTitle>{guide.title}</GuideTitle>
+                  </CardTop>
+                  <Pills>
+                    <Pill $tone={guide.discipline}>
+                      {guide.discipline === "code" ? "Code" : "Design"}
+                    </Pill>
+                    {guide.isSpecialty && <Pill $tone="muted">Speciality</Pill>}
+                    <Pill $tone="muted">
+                      {guide.gradingMode === "auto" ? "Auto-graded" : "Peer review"}
+                    </Pill>
+                  </Pills>
+                  {guide.description && (
+                    <GuideDescription>{stripMarkdown(guide.description)}</GuideDescription>
+                  )}
+                  <GuideActions>
+                    <ActionLink href={`/LMS/edit-guides/${guide.id}`} $primary>
+                      Edit
+                    </ActionLink>
+                    <ActionLink href={`/guides/${guide.id}`} target="_blank" rel="noopener noreferrer">
+                      View as student
+                    </ActionLink>
+                    {confirming === guide.id ? (
+                      <ConfirmRow>
+                        Delete this guide?
+                        <ConfirmButton
+                          type="button"
+                          $danger
+                          disabled={busy}
+                          onClick={() => handleDelete(guide)}
+                        >
+                          {busy ? "Deleting…" : "Yes, delete"}
+                        </ConfirmButton>
+                        <ConfirmButton
+                          type="button"
+                          disabled={busy}
+                          onClick={() => setConfirming(null)}
+                        >
+                          Keep it
+                        </ConfirmButton>
+                      </ConfirmRow>
+                    ) : (
+                      <DangerButton
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setConfirming(guide.id)}
+                      >
+                        Delete
+                      </DangerButton>
+                    )}
+                  </GuideActions>
+                </GuideCard>
+              ))}
+            </GuidesList>
+          </section>
+        ))
       )}
     </PageContainer>
   );

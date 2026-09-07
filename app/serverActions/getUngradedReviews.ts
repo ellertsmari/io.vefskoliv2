@@ -17,6 +17,9 @@ export type UngradedReviewWithDetails = {
   guide: {
     _id: string;
     title: string;
+    /** For naming the return's links (repository/live page or file/prototype). */
+    discipline?: string;
+    category?: string;
   };
   return: {
     _id: string;
@@ -80,6 +83,8 @@ export async function getUngradedReviews(): Promise<UngradedReviewWithDetails[]>
         guide: {
           _id: guide._id.toString(),
           title: guide.title,
+          discipline: guide.discipline ?? undefined,
+          category: guide.category,
         },
         return: {
           _id: returnDoc._id.toString(),

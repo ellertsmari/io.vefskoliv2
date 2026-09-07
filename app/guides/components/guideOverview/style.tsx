@@ -1,5 +1,6 @@
 "use client";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
+import Link from "next/link";
 import { PageContainer } from "globalStyles/pageStyles";
 
 const MOBILE = "700px";
@@ -65,7 +66,7 @@ export const Toolbar = styled.div`
  * Canvas controls, styled like the rest of the app's small controls rather
  * than as underlined text. `$active` is the pressed state of the snap toggle.
  */
-export const ToolButton = styled.button<{ $active?: boolean }>`
+const toolStyles = css<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -98,6 +99,16 @@ export const ToolButton = styled.button<{ $active?: boolean }>`
     height: 0.875rem;
     flex-shrink: 0;
   }
+`;
+
+export const ToolButton = styled.button<{ $active?: boolean }>`
+  ${toolStyles}
+`;
+
+/** The same control as a link, for "Edit guide" in the header. */
+export const ToolLink = styled(Link)<{ $active?: boolean }>`
+  ${toolStyles}
+  text-decoration: none;
 `;
 
 /**

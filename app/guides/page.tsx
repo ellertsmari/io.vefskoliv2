@@ -45,7 +45,12 @@ const GuidesPage = async () => {
     // Public access - fetch guides without user-specific data
     try {
       const publicGuides = await getPublicGuides();
-      if (!publicGuides || publicGuides.length < 1) {
+      if (publicGuides === null) {
+        return (
+          <ErrorState message="We couldn't load the guides. Please refresh the page and try again." />
+        );
+      }
+      if (publicGuides.length < 1) {
         return (
           <EmptyState
             title="No guides yet"

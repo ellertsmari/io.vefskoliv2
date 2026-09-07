@@ -1,33 +1,30 @@
 import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
 import { EditGuidesPage } from "../../components/editGuides/EditGuidesPage";
-import { getGuides } from "../../serverActions/getGuides";
-import { safeSerialize } from "../../utils/serialization";
+import { getGuidesForEditor } from "../../serverActions/editGuideActions";
+import { hasTeacherPermissions } from "../../utils/userUtils";
+import { ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
+
+export const dynamic = "force-dynamic";
 
 const EditGuides = async () => {
   const session: Session | null = await auth();
-  
-  if (!session?.user?.id) {
-    redirect("/auth/signin");
-  }
 
-  if (session.user.role !== "teacher") {
+  if (!session?.user?.id) {
+    redirect("/signin?callbackUrl=/LMS/edit-guides");
+  }
+  if (!hasTeacherPermissions(session)) {
     redirect("/LMS/dashboard");
   }
 
   try {
-    const fetchedGuides = (await getGuides(session.user.id)) || [];
-    const serializedGuides = safeSerialize(fetchedGuides);
-
-    return <EditGuidesPage guides={serializedGuides} />;
+    const guides = await getGuidesForEditor();
+    return <EditGuidesPage guides={guides} />;
   } catch (error) {
     console.error("Error in edit guides page:", error);
     return (
-      <div>
-        <h1>Error</h1>
-        <p>Something went wrong loading guides: {error instanceof Error ? error.message : 'Unknown error'}</p>
-      </div>
+      <ErrorState message="We couldn't load the guides. Please refresh the page and try again." />
     );
   }
 };

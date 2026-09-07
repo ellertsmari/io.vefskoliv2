@@ -23,6 +23,24 @@ describe("returnGuide", () => {
     jest.clearAllMocks();
   });
 
+  it("refuses a teacher who is not viewing as a student", async () => {
+    (auth as jest.Mock).mockResolvedValueOnce({
+      user: { id: new ObjectId().toString(), role: "teacher" },
+    });
+
+    const result = await returnGuide(undefined, {
+      projectUrl: "https://github.com/example/project",
+      liveVersion: "https://example.github.io/project",
+      projectName: "Example",
+      comment: "Not for teachers",
+      guideId: new ObjectId().toString(),
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/student view/);
+    expect(await Return.countDocuments()).toBe(0);
+  });
+
   it("should return a guide", async () => {
     const projectUrl = "https://github.com/example/project";
     const liveVersion = "https://example.com/live-version";
