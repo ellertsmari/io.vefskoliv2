@@ -124,7 +124,10 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
 
   // Everything typed into this form, so a reload mid-edit costs nothing.
   const draft = useFormDraft(
-    `edit-guide:${guide._id}`,
+    // Versioned: a draft saved by the editor before hand-authored tasks were
+    // carried through untouched held them as empty quiz questions, and
+    // restoring it made every save fail. Old drafts are simply not read.
+    `edit-guide:v2:${guide._id}`,
     { form, exercise, gradingMode, discipline, isSpecialty },
     (saved) => {
       setForm(saved.form);

@@ -7,6 +7,7 @@ import {
   type GuideForm,
 } from "app/components/editGuides/editGuidePayload";
 import type { GuideType } from "models/guide";
+import type { ExerciseForm } from "app/components/editGuides/ExerciseEditor";
 
 const guide = {
   title: "HTML & CSS - Layouting",
@@ -57,6 +58,9 @@ describe("validateExercise", () => {
     const exercise = exerciseFromGuide(guide);
     // Two quiz questions: a pool of one is fine, a pool of two is the whole set.
     expect(validateExercise({ ...exercise, poolSize: 1 })).toBeNull();
+    // A task from an old draft, with no kind at all.
+    const stale = { ...exercise, tasks: [{ prompt: "x" } as unknown as ExerciseForm["tasks"][number]] };
+    expect(validateExercise(stale)).toMatch(/older version of the editor/);
     expect(validateExercise(exercise)).toMatch(/pool/);
     expect(validateExercise({ ...exercise, tasks: [] })).toMatch(/at least one/);
     const blank = { ...exercise.tasks[0], prompt: " " } as typeof exercise.tasks[0];

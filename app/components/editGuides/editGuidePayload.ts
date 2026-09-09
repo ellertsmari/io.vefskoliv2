@@ -122,8 +122,12 @@ export const validateExercise = (exercise: ExerciseForm): string | null => {
   for (let i = 0; i < exercise.tasks.length; i++) {
     const task = exercise.tasks[i];
     const n = i + 1;
-    // Opaque tasks are authored in the database and validated there.
-    if (task.kind !== "quiz") continue;
+    // Opaque tasks are authored in the database and validated there. Anything
+    // else is a task shape this editor no longer writes (an old draft).
+    if (task.kind === "opaque") continue;
+    if (task.kind !== "quiz") {
+      return `Question ${n} was saved by an older version of the editor. Discard the draft and try again.`;
+    }
     if (!task.prompt.trim()) return `Question ${n}: add a prompt.`;
     const filledOptions = task.options.filter((o) => o.trim());
     if (filledOptions.length < 2) return `Question ${n}: add at least two options.`;
