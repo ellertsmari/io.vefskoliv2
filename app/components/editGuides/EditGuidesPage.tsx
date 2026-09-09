@@ -2,6 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useLocalState } from "utils/hooks/useStorage";
+import { LoadingSpinner } from "UIcomponents/states/States";
 import type { EditorGuideRow } from "serverActions/editGuideActions";
 import { deleteGuide } from "serverActions/editGuideActions";
 import {
@@ -28,6 +30,7 @@ import {
   ConfirmButton,
   Message,
   EmptyNote,
+  ClearFiltersButton,
 } from "./styles.EditGuidesPage";
 
 // Strip markdown formatting for plain text preview
@@ -61,6 +64,17 @@ const stripMarkdown = (text: string, maxLength: number = 160): string => {
 
 type DisciplineFilter = "all" | "code" | "design";
 
+type Filters = { search: string; discipline: DisciplineFilter; module: string };
+
+const NO_FILTERS: Filters = { search: "", discipline: "all", module: "all" };
+
+/**
+ * Where the list's search and filters live between visits, so opening a guide
+ * and coming back lands on the same list. Same idea as the module picker on
+ * the student guide page.
+ */
+export const FILTERS_STORAGE_KEY = "editGuides:filters";
+
 /**
  * The teacher's list of guides, grouped by module in the order students meet
  * them. Every action is a real link or an inline confirmation — no browser
@@ -68,9 +82,14 @@ type DisciplineFilter = "all" | "code" | "design";
  */
 export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [discipline, setDiscipline] = useState<DisciplineFilter>("all");
-  const [selectedModule, setSelectedModule] = useState<string>("all");
+  const [storedFilters, setFilters, loadingFilters] = useLocalState<Partial<Filters>>(
+    FILTERS_STORAGE_KEY,
+    NO_FILTERS
+  );
+  // Over the defaults, so an older or hand-edited stored value never lacks a key.
+  const filters: Filters = { ...NO_FILTERS, ...storedFilters };
+  const { search: searchTerm, discipline, module: selectedModule } = filters;
+  const setFilter = (change: Partial<Filters>) => setFilters({ ...filters, ...change });
   const [confirming, setConfirming] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string }>();
   const [busy, startWork] = useTransition();
@@ -120,6 +139,10 @@ export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
     });
   };
 
+  // The saved filters arrive after the first render; showing the unfiltered
+  // list first would flash every guide before narrowing down.
+  if (loadingFilters) return <LoadingSpinner label="Loading guides…" />;
+
   return (
     <PageContainer>
       <Header>
@@ -136,12 +159,12 @@ export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
           placeholder="Search by title or description…"
           aria-label="Search guides"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => setFilter({ search: e.target.value })}
         />
         <FilterSelect
           aria-label="Filter by discipline"
           value={discipline}
-          onChange={(e) => setDiscipline(e.target.value as DisciplineFilter)}
+          onChange={(e) => setFilter({ discipline: e.target.value as DisciplineFilter })}
         >
           <option value="all">Code and design</option>
           <option value="code">Code guides</option>
@@ -150,7 +173,7 @@ export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
         <FilterSelect
           aria-label="Filter by module"
           value={selectedModule}
-          onChange={(e) => setSelectedModule(e.target.value)}
+          onChange={(e) => setFilter({ module: e.target.value })}
         >
           <option value="all">All modules</option>
           {modules.map(([number, title]) => (
@@ -168,7 +191,12 @@ export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
       )}
 
       {groups.length === 0 ? (
-        <EmptyNote>No guides match. Clear the search or the filters.</EmptyNote>
+        <EmptyNote>
+          No guides match.{" "}
+          <ClearFiltersButton type="button" onClick={() => setFilters(NO_FILTERS)}>
+            Clear the search and filters
+          </ClearFiltersButton>
+        </EmptyNote>
       ) : (
         groups.map(([number, moduleGuides]) => (
           <section key={number} aria-labelledby={`module-${number}`}>

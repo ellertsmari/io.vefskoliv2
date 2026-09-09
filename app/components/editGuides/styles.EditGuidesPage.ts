@@ -222,3 +222,14 @@ export const EmptyNote = styled.p`
   padding: 2rem;
   color: var(--primary-black-60);
 `;
+
+/** Inline "start over" link in the empty state; the filters persist, so it needs one. */
+export const ClearFiltersButton = styled.button`
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--theme-module3-100);
+  text-decoration: underline;
+  cursor: pointer;
+`;

@@ -159,7 +159,14 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
       if (response.ok) {
         // Stay on the page: a save is not the end of editing.
         draft.clear();
-        setStatus({ ok: true, text: "Saved. Students see the change straight away." });
+        const { shifted = 0 } = (await response.json().catch(() => ({}))) as { shifted?: number };
+        setStatus({
+          ok: true,
+          text:
+            shifted > 0
+              ? `Saved. ${shifted === 1 ? "One other guide" : `${shifted} other guides`} in the module moved to make room for #${form.order}.`
+              : "Saved. Students see the change straight away.",
+        });
         router.refresh();
       } else {
         setStatus({

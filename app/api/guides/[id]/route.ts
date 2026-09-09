@@ -4,6 +4,8 @@ import { z } from "zod";
 import { auth } from "../../../../auth";
 import { Guide } from "../../../models/guide";
 import { connectToDatabase } from "../../../serverActions/mongoose-connector";
+import { extractModuleNumber } from "../../../utils/moduleUtils";
+import { planOrderShift } from "../../../utils/guideOrder";
 
 /**
  * One exercise task as submitted by the editor.
@@ -140,6 +142,51 @@ const GuideUpdateSchema = z.object({
     .optional(),
 });
 
+type OrderRow = {
+  _id: Types.ObjectId;
+  module?: { title?: string };
+  /** A number in the schema, but hand-imported guides have carried strings. */
+  order?: unknown;
+};
+
+/**
+ * Make room for a guide that takes another guide's number in its module.
+ *
+ * Only the order numbers of the other guides change; their `updatedAt` is
+ * left alone because nobody edited them. Orders are written with $set rather
+ * than $inc because hand-imported guides can hold the order as a string.
+ *
+ * Returns how many guides moved.
+ */
+async function makeRoomForOrder(
+  guideId: string,
+  targetModule: number,
+  from: number | null,
+  to: number
+): Promise<number> {
+  const rows = await Guide.find(
+    { _id: { $ne: new Types.ObjectId(guideId) } },
+    { module: 1, order: 1 }
+  ).lean<OrderRow[]>();
+
+  const neighbours = rows
+    .filter((row) => extractModuleNumber(row.module?.title ?? "") === targetModule)
+    .map((row) => ({ id: String(row._id), order: Number(row.order) || 0 }));
+
+  const moves = planOrderShift(neighbours, from, to);
+  if (moves.length === 0) return 0;
+
+  await Guide.bulkWrite(
+    moves.map((move) => ({
+      updateOne: {
+        filter: { _id: new Types.ObjectId(move.id) },
+        update: { $set: { order: move.order } },
+      },
+    }))
+  );
+  return moves.length;
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -185,6 +232,20 @@ export async function PUT(
 
     await connectToDatabase();
 
+    // A new order number that another guide in the module already has moves
+    // that guide, and the ones between, out of the way (see planOrderShift).
+    let shifted = 0;
+    if (validated.data.order !== undefined) {
+      const current = await Guide.findById(id, { module: 1, order: 1 }).lean<OrderRow | null>();
+      if (!current) {
+        return NextResponse.json({ error: "Guide not found" }, { status: 404 });
+      }
+      const currentModule = extractModuleNumber(current.module?.title ?? "");
+      const targetModule = validated.data.module?.number ?? currentModule;
+      const from = targetModule === currentModule ? Number(current.order) || 0 : null;
+      shifted = await makeRoomForOrder(id, targetModule, from, validated.data.order);
+    }
+
     const updatedGuide = await Guide.findByIdAndUpdate(id, update, {
       new: true,
       runValidators: true,
@@ -197,6 +258,8 @@ export async function PUT(
     return NextResponse.json({
       message: "Guide updated successfully",
       guide: updatedGuide,
+      /** How many other guides in the module changed number to make room. */
+      shifted,
     });
   } catch (error) {
     // Log server-side; don't echo internals back to the client.
