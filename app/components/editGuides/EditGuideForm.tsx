@@ -63,6 +63,28 @@ import {
   Button,
 } from "./styles.EditGuideForm";
 
+/**
+ * The server's validation problems, in the teacher's words: the first few,
+ * with "exercise.tasks.3.helpLinks.0.url" read out as "question 4 → help
+ * link 1 → url". Without this a rejected save was a dead end.
+ */
+export const describeSaveFailure = (issues?: Array<{ path: string; message: string }>) => {
+  if (!issues || issues.length === 0) {
+    return "The guide could not be saved. Check the fields and try again.";
+  }
+  const where = (path: string) =>
+    path
+      .replace(/^exercise\.tasks\.(\d+)/, (_, n) => `question ${Number(n) + 1}`)
+      .replace(/\.helpLinks\.(\d+)/, (_, n) => ` → help link ${Number(n) + 1}`)
+      .replace(/\.(\d+)/g, (_, n) => ` ${Number(n) + 1}`)
+      .replace(/\./g, " → ");
+  const shown = issues.slice(0, 3).map((issue) =>
+    issue.path ? `${where(issue.path)}: ${issue.message}` : issue.message
+  );
+  const more = issues.length > 3 ? ` (and ${issues.length - 3} more)` : "";
+  return `The guide could not be saved. ${shown.join("; ")}${more}.`;
+};
+
 // Dynamically import MDEditor to avoid SSR issues
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
@@ -169,10 +191,10 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
         });
         router.refresh();
       } else {
-        setStatus({
-          ok: false,
-          text: "The guide could not be saved. Check the fields and try again.",
-        });
+        const body = (await response.json().catch(() => null)) as {
+          issues?: Array<{ path: string; message: string }>;
+        } | null;
+        setStatus({ ok: false, text: describeSaveFailure(body?.issues) });
       }
     } catch (error) {
       console.error("Error saving guide:", error);

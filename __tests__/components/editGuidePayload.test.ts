@@ -99,4 +99,24 @@ describe("buildGuidePayload", () => {
     expect(exercise.tasks[1].type).toBe("code");
     expect(exercise.poolSizes).toEqual({ quiz: 2 });
   });
+
+  it("carries the hand-authored short-answer and code pools through a save", () => {
+    const withPools = {
+      ...guide,
+      exercise: { ...guide.exercise, poolSizes: { quiz: 2, shortAnswer: 5, code: 3 } },
+    } as unknown as GuideType;
+    const exercise = exerciseFromGuide(withPools);
+    expect(exercise.poolSize).toBe(2);
+    expect(exercise.otherPools).toEqual({ shortAnswer: 5, code: 3 });
+
+    const payload = buildGuidePayload(form, exercise, "auto", "code", false);
+    expect((payload.exercise as { poolSizes: unknown }).poolSizes).toEqual({
+      quiz: 2,
+      shortAnswer: 5,
+      code: 3,
+    });
+    // Clearing the quiz pool keeps the others.
+    const cleared = buildGuidePayload(form, { ...exercise, poolSize: 0 }, "auto", "code", false);
+    expect((cleared.exercise as { poolSizes: unknown }).poolSizes).toEqual({ shortAnswer: 5, code: 3 });
+  });
 });

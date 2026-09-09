@@ -54,6 +54,11 @@ export type ExerciseForm = {
   passThreshold: number; // 0..1
   /** 0 = serve every question; N = serve N random questions per visit */
   poolSize: number;
+  /**
+   * Pool sizes for the task types this editor cannot author (short answer,
+   * code). Set by hand in the database; carried through a save untouched.
+   */
+  otherPools?: Partial<Record<"shortAnswer" | "code", number>>;
   tasks: TaskForm[];
 };
 

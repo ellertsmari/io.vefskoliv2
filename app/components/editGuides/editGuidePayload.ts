@@ -89,6 +89,10 @@ export const exerciseFromGuide = (guide: GuideType): ExerciseForm => {
       // The editor authors quiz questions only, so its pool field is the
       // quiz pool. A legacy global poolSize means exactly that.
       poolSize: ex.poolSizes?.quiz ?? ex.poolSize ?? 0,
+      otherPools: {
+        ...(ex.poolSizes?.shortAnswer ? { shortAnswer: ex.poolSizes.shortAnswer } : {}),
+        ...(ex.poolSizes?.code ? { code: ex.poolSizes.code } : {}),
+      },
     };
   }
   return {
@@ -156,6 +160,11 @@ export const buildGuidePayload = (
   discipline: Discipline,
   isSpecialty: boolean
 ): Record<string, unknown> => {
+  // The editor only sets the quiz pool; the hand-authored pools ride along.
+  const poolSizes = {
+    ...exercise.otherPools,
+    ...(exercise.poolSize > 0 ? { quiz: exercise.poolSize } : {}),
+  };
   const grading =
     gradingMode === "auto"
       ? {
@@ -181,7 +190,7 @@ export const buildGuidePayload = (
                     ...(t.goal.trim() ? { goal: t.goal.trim() } : {}),
                   }
             ),
-            ...(exercise.poolSize > 0 ? { poolSizes: { quiz: exercise.poolSize } } : {}),
+            ...(Object.keys(poolSizes).length > 0 ? { poolSizes } : {}),
           },
         }
       : // Peer-reviewed guide: clear any previously authored exercise.

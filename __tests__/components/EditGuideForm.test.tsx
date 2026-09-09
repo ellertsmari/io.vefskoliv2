@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { EditGuideForm } from "app/components/editGuides/EditGuideForm";
+import { EditGuideForm, describeSaveFailure } from "app/components/editGuides/EditGuideForm";
 import type { GuideType } from "models/guide";
 
 jest.mock("next/navigation", () => ({
@@ -88,5 +88,30 @@ describe("EditGuideForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/description/);
     expect(fetchSpy).not.toHaveBeenCalled();
     delete (global as { fetch?: unknown }).fetch;
+  });
+});
+
+describe("describeSaveFailure", () => {
+  it("names the question and field the server rejected", () => {
+    expect(
+      describeSaveFailure([
+        { path: "exercise.tasks.3.helpLinks.0.url", message: "Invalid url" },
+        { path: "title", message: "String must contain at least 1 character(s)" },
+      ])
+    ).toBe(
+      "The guide could not be saved. question 4 → help link 1 → url: Invalid url; title: String must contain at least 1 character(s)."
+    );
+  });
+
+  it("falls back to the generic message without details", () => {
+    expect(describeSaveFailure(undefined)).toBe(
+      "The guide could not be saved. Check the fields and try again."
+    );
+    expect(describeSaveFailure([])).toMatch(/Check the fields/);
+  });
+
+  it("counts what it does not show", () => {
+    const issues = Array.from({ length: 5 }, (_, i) => ({ path: `skills.${i}.skill`, message: "Required" }));
+    expect(describeSaveFailure(issues)).toMatch(/\(and 2 more\)\.$/);
   });
 });

@@ -208,7 +208,15 @@ export async function PUT(
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: validated.error.flatten() },
+        {
+          error: "Invalid input",
+          details: validated.error.flatten(),
+          // With the full path, so the form can say which question is wrong.
+          issues: validated.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
         { status: 400 }
       );
     }
