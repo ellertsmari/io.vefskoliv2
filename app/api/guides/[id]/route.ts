@@ -54,9 +54,12 @@ const exerciseTaskSchema = z
         message: "The entry point must be a plain function name",
       })
       .optional(),
-    // Quiz-only; required by the refinement below when type === "quiz".
-    options: z.array(z.string()).min(2).optional(),
-    correctAnswers: z.array(z.number().int().min(0)).min(1).optional(),
+    // Quiz-only; the refinement below requires them when type === "quiz".
+    // No minimum here: mongoose gives every task empty `options` and
+    // `correctAnswers` arrays on its first save, and a short-answer or code
+    // task carrying those must not be refused as a broken quiz.
+    options: z.array(z.string()).optional(),
+    correctAnswers: z.array(z.number().int().min(0)).optional(),
     allowMultiple: z.boolean().optional(),
   })
   .passthrough()

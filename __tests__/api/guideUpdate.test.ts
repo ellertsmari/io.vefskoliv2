@@ -10,6 +10,12 @@ import {
 } from "../__mocks__/mongoHandler";
 import { Guide } from "models/guide";
 import { PUT } from "app/api/guides/[id]/route";
+import { getGuideForTeacher } from "serverActions/getGuide";
+import {
+  buildGuidePayload,
+  exerciseFromGuide,
+  formFromGuide,
+} from "app/components/editGuides/editGuidePayload";
 import { auth } from "../../auth";
 
 jest.mock("../../auth", () => ({
@@ -108,5 +114,65 @@ describe("PUT /api/guides/[id] order", () => {
     const ids = await seedModule("3 - The fundamentals", [1, 2]);
     expect((await put(ids["1"], { order: 2 })).status).toBe(401);
     expect(await ordersOf(ids)).toEqual({ "1": 1, "2": 2 });
+  });
+
+  it("saves a guide with hand-authored tasks twice in a row", async () => {
+    const guide = await createDummyGuide();
+    await Guide.collection.updateOne(
+      { _id: guide._id },
+      {
+        $set: {
+          module: { title: "3 - The fundamentals", number: 3 },
+          gradingMode: "auto",
+          exercise: {
+            passThreshold: 0.7,
+            poolSizes: { shortAnswer: 1 },
+            tasks: [
+              { type: "quiz", prompt: "Pick one", options: ["a", "b"], correctAnswers: [0], points: 1 },
+              { type: "shortAnswer", prompt: "Type it", acceptedAnswers: ["x"], points: 1 },
+              { type: "shortAnswer", prompt: "Type it again", acceptedAnswers: ["y"], points: 1 },
+              { type: "code", prompt: "Write it", entryPoint: "f", tests: [], points: 2 },
+            ],
+          },
+        },
+      }
+    );
+    const id = String(guide._id);
+
+    // What the editor sends: the guide as loaded, straight back.
+    const roundTrip = async () => {
+      const loaded = await getGuideForTeacher(id);
+      const payload = buildGuidePayload(
+        formFromGuide(loaded!),
+        exerciseFromGuide(loaded!),
+        "auto",
+        "code",
+        false
+      );
+      return put(id, payload);
+    };
+
+    expect((await roundTrip()).status).toBe(200);
+    // Mongoose has now added empty `options`/`correctAnswers` arrays to the
+    // non-quiz tasks; that must not make them look like broken quizzes.
+    const second = await roundTrip();
+    expect(await second.json()).not.toHaveProperty("issues");
+    expect(second.status).toBe(200);
+
+    // A real quiz question with too few options is still refused.
+    const broken = await put(id, {
+      exercise: {
+        passThreshold: 0.7,
+        tasks: [{ type: "quiz", prompt: "Pick one", options: ["a"], correctAnswers: [0] }],
+      },
+    });
+    expect(broken.status).toBe(400);
+    expect((await broken.json()).issues.map((i: { path: string }) => i.path)).toEqual([
+      "exercise.tasks.0.options",
+    ]);
+
+    const saved = await Guide.findById(id).lean<{ exercise: { tasks: { type: string }[]; poolSizes: unknown } }>();
+    expect(saved!.exercise.tasks.map((t) => t.type)).toEqual(["quiz", "shortAnswer", "shortAnswer", "code"]);
+    expect(saved!.exercise.poolSizes).toEqual({ shortAnswer: 1 });
   });
 });
