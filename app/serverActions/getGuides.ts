@@ -78,7 +78,15 @@ const addGradesReceived = (): PipelineStage => {
   };
 };
 
-// grab the latest return from each user which has received less than 2 reviews
+// grab the latest return from each other user, unless this user has already
+// reviewed that latest return.
+//
+// The order matters: pick each author's newest return FIRST, then drop the
+// ones already reviewed. Filtering first let an author's older return resurface
+// as a "new" project the moment their newest one was reviewed, so one student
+// ended up reviewing (and being graded on) the same work twice. An author who
+// returns again after being reviewed still shows up, because their newest
+// return is unreviewed.
 const lookupAvailableForReview = (userId: ObjectId): PipelineStage => {
   return {
     $lookup: {
@@ -91,7 +99,6 @@ const lookupAvailableForReview = (userId: ObjectId): PipelineStage => {
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
                 { $ne: ["$owner", userId] }, // exclude the user
-                { $not: { $in: ["$_id", "$$reviewsGivenReturns"] } }, // Exclude returns user has already reviewed
               ],
             },
           },
@@ -107,6 +114,13 @@ const lookupAvailableForReview = (userId: ObjectId): PipelineStage => {
         },
         {
           $replaceRoot: { newRoot: "$mostRecentReturn" }, // Replace the root with the most recent return
+        },
+        {
+          // Only now exclude what the user has already reviewed, so a reviewed
+          // newest return hides the author instead of exposing an older one.
+          $match: {
+            $expr: { $not: { $in: ["$_id", "$$reviewsGivenReturns"] } },
+          },
         },
         {
           $lookup: {

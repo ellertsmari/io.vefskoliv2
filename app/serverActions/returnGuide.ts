@@ -26,6 +26,10 @@ export type ReturnFormData = {
 
 type ReturnFormState = ActionResult<void> | undefined;
 
+// Two returns of one guide by one student inside this window are one
+// submission. (Not exported: a "use server" file may only export functions.)
+const DUPLICATE_RETURN_WINDOW_MS = 10_000;
+
 export async function returnGuide(
   state: ReturnFormState,
   data: ReturnFormData
@@ -65,6 +69,19 @@ export async function returnGuide(
     // 10s. A server action can land on a lambda where nothing has connected
     // yet, so every entry point connects for itself.
     await connectToDatabase();
+
+    // A double-click on the return form used to save two returns 0.4s apart.
+    // Both then got handed out for review, and one classmate reviewed the same
+    // work twice. Anything this close together is the same submission, so the
+    // second one is dropped and reported as the success it effectively was.
+    const justReturned = await Return.exists({
+      owner: user.id,
+      guide: guideId,
+      createdAt: { $gt: new Date(Date.now() - DUPLICATE_RETURN_WINDOW_MS) },
+    });
+    if (justReturned) {
+      return successNoData("Return submitted successfully");
+    }
 
     await Return.create({
       projectUrl,

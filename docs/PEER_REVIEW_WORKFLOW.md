@@ -47,6 +47,14 @@ Everything below applies to **peer-reviewed** guides only.
 - Each student must give feedback to **2 different students** per guide
 - Students cannot review their own work
 - Students cannot review the same return twice
+- Only an author's **newest** return of a guide is ever offered for review. Once a
+  student has reviewed it, that author disappears from their list — an older
+  return never resurfaces as a "new" project. If the author returns again later,
+  their new return is offered as normal, so returning again never costs an author
+  their reviews.
+- Two returns of the same guide by the same student within 10 seconds count as one
+  submission (the second is dropped). This stops a double-click on the return form
+  from creating two returns that both get handed out for review.
 - Feedback includes a vote (PASS / NO PASS / RECOMMEND) and a comment
 
 ### Grading (Review of Reviews)

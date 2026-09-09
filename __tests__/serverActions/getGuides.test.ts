@@ -174,6 +174,45 @@ describe("getGuides", () => {
       expect(actual).toEqual(expected);
     });
 
+    it("offers an author's newer return even when the user reviewed an older one", async () => {
+      // The author returned again after being reviewed. Their newest return is
+      // unreviewed, so it must be on offer — otherwise re-returning would cost
+      // the author their reviews.
+      const reviewer = await createDummyUser();
+      const author = await createDummyUser();
+      const guide = await createDummyGuide();
+
+      const olderReturn = await createDummyReturn(author, guide);
+      await createDummyFeedbackWithReturn(reviewer, guide, olderReturn);
+      const newerReturn = await createDummyReturn(author, guide);
+
+      const guides = await getGuides(reviewer._id.toString());
+      const gottenGuide = findGuideById(guides, guide._id);
+      if (!gottenGuide) throw new Error("gottenGuide is null");
+
+      expect(gottenGuide.availableForReview.map((r: any) => r._id)).toEqual([
+        newerReturn._id.toString(),
+      ]);
+    });
+
+    it("does not resurface an older return once the author's newest is reviewed", async () => {
+      // This is how one student came to review the same project twice: after
+      // reviewing the newest return, the older one used to come back as new.
+      const reviewer = await createDummyUser();
+      const author = await createDummyUser();
+      const guide = await createDummyGuide();
+
+      await createDummyReturn(author, guide);
+      const newestReturn = await createDummyReturn(author, guide);
+      await createDummyFeedbackWithReturn(reviewer, guide, newestReturn);
+
+      const guides = await getGuides(reviewer._id.toString());
+      const gottenGuide = findGuideById(guides, guide._id);
+      if (!gottenGuide) throw new Error("gottenGuide is null");
+
+      expect(gottenGuide.availableForReview).toEqual([]);
+    });
+
     it("ignores returns the user has already given feedback on", async () => {
       const userD = await createDummyUser();
 

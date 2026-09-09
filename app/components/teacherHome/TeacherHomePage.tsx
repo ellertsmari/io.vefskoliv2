@@ -166,7 +166,12 @@ const GradingReviewItem = ({
   );
 };
 
-const GradingModal = () => {
+const GradingModal = ({
+  onQueueChange,
+}: {
+  /** Tells the dashboard card how many reviews are left, so it never goes stale. */
+  onQueueChange: (count: number) => void;
+}) => {
   const [reviews, setReviews] = useState<UngradedReviewWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -174,13 +179,18 @@ const GradingModal = () => {
     const fetchReviews = async () => {
       const data = await getUngradedReviews();
       setReviews(data);
+      onQueueChange(data.length);
       setLoading(false);
     };
     fetchReviews();
-  }, []);
+  }, [onQueueChange]);
 
   const handleGraded = (reviewId: string) => {
-    setReviews(prev => prev.filter(r => r._id !== reviewId));
+    setReviews(prev => {
+      const next = prev.filter(r => r._id !== reviewId);
+      onQueueChange(next.length);
+      return next;
+    });
   };
 
   if (loading) {
@@ -291,7 +301,7 @@ export const TeacherHomePage = () => {
             {hasUngraded && <BadgeCount>{ungradedCount}</BadgeCount>}
           </PrimaryAction>
         }
-        modalContent={<GradingModal />}
+        modalContent={<GradingModal onQueueChange={setUngradedCount} />}
       />
 
       <MeetingsPanel />

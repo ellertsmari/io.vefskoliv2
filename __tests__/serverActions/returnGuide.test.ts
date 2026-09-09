@@ -79,6 +79,56 @@ describe("returnGuide", () => {
 
     expect(actualReturn).toMatchObject(expectedReturn);
   });
+  it("saves a return submitted twice within a few seconds only once", async () => {
+    // A double-click on the form used to create two returns 0.4s apart, and
+    // both were handed out for review.
+    const userId = new ObjectId().toString();
+    const guideId = new ObjectId().toString();
+    (auth as jest.Mock).mockResolvedValue({ user: { id: userId } });
+
+    const formData = {
+      projectUrl: "https://github.com/example/project",
+      liveVersion: "https://example.github.io/project",
+      projectName: "Example",
+      comment: "Submitted twice by accident",
+      guideId,
+    };
+    const first = await returnGuide(undefined, formData);
+    const second = await returnGuide(undefined, formData);
+
+    // The student's work did land, so the second click is not an error to them.
+    expect(first.success).toBe(true);
+    expect(second.success).toBe(true);
+    expect(await Return.countDocuments({ owner: userId, guide: guideId })).toBe(1);
+  });
+
+  it("still accepts a deliberate second return of the same guide later on", async () => {
+    const userId = new ObjectId().toString();
+    const guideId = new ObjectId().toString();
+    (auth as jest.Mock).mockResolvedValue({ user: { id: userId } });
+
+    await Return.create({
+      projectUrl: "https://github.com/example/project",
+      liveVersion: "https://example.github.io/project",
+      projectName: "Example",
+      comment: "First attempt",
+      owner: new ObjectId(userId),
+      guide: new ObjectId(guideId),
+      createdAt: new Date(Date.now() - 60_000),
+    });
+
+    const result = await returnGuide(undefined, {
+      projectUrl: "https://github.com/example/project",
+      liveVersion: "https://example.github.io/project",
+      projectName: "Example",
+      comment: "Fixed and returned again",
+      guideId,
+    });
+
+    expect(result.success).toBe(true);
+    expect(await Return.countDocuments({ owner: userId, guide: guideId })).toBe(2);
+  });
+
   it("should handle form parsing errors", async () => {
     const formData = {
       projectUrl: "",
