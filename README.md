@@ -1,77 +1,162 @@
-## About
+# Vefskólinn LMS
 
-This is a Learning Management System (LMS) used by Vefskóli at Tækniskóli.
+[![CI](https://github.com/ellertsmari/io.vefskoliv2/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ellertsmari/io.vefskoliv2/actions/workflows/ci.yml)
 
-### Features:
+**A home for learning, building, and sharing work.**
 
-- Register users and login
-- View information about projects that need to be completed (known as guides)
-- Return your project work (known as returns)
-- Give feedback on other students' returns (known as feedback)
-- Grade other students' feedback out of 10 (known as a \_graded_review)
-- Be notified of your status for a given guide. (see guideTypes.ts)
-- View all feedback given and received for a guide
-- View information about other students and teachers
-- Filter guides based on modules
+The learning management system for Vefskólinn's web development programme. Students follow learning guides, build projects, review each other's work, and track their progress. Teachers manage the course, give feedback, and see where students need support.
 
-## Getting Started
+[Features](#features) · [Run locally](#run-locally) · [Development](#development) · [Project structure](#project-structure) · [Documentation](#documentation)
 
-Setup a MongoDB instance and add the connection string MONGODB_CONNECTION to your env files.
-Create guides that follow the schema setout in app/models/guide.ts
+## Features
 
-Then, run the development server:
+| Area | What it supports |
+| --- | --- |
+| **Learning guides** | Code and design material organised by module, with learning outcomes, resources, and an editor for teachers. |
+| **Projects and peer review** | Project submissions, feedback between students, teacher grading of reviews, and clear progress states. |
+| **Interactive exercises** | Quizzes, short answers, and JavaScript/TypeScript coding tasks, with feedback, saved attempts, and teacher review of held answers. |
+| **Community activity logs** | Activity forms with dates, hours, evidence images, teacher approval, and progress across configurable reporting periods. |
+| **Group projects** | Team workspaces, project milestones, rubric assessment, peer evaluation, and publication to the project showcase. |
+| **Course planning** | A semester calendar, teacher availability, and student meeting bookings. |
+| **People and progress** | Student and teacher dashboards, account approvals, profiles, and teacher reports. |
+| **Lecture resources** | Zoom recording listings and a link to shared Google Drive materials. |
+| **Canvas integration** | LTI 1.3 launch, content selection, and grade passback endpoints when configured. |
+
+### How learning works
+
+A **guide** is a learning unit: its instructions, outcomes, resources, and completion requirements live together. Guides support three completion paths:
+
+| Path | Student work | Assessment |
+| --- | --- | --- |
+| **Project** | Submit a **return** containing project links and a reflection; review other students' work. | Peers review the project. Teachers grade the reviews students write. |
+| **Exercise** | Complete quiz, short-answer, or code tasks on the guide page. | The exercise engine checks answers; held short answers can be reviewed by a teacher. |
+| **Activity log** | Record participation, time spent, and supporting evidence. | Teachers approve activities; approved hours count toward the reporting-period targets. |
+
+The Module 2 Community & Networking activity log has a separate activation and reporting-year setup step. See the [activity log guide](docs/activity-log-guide.md) for the hour targets, carry-forward rules, and migration instructions.
+
+## Run locally
+
+### 1. Install dependencies
+
+Use **Node.js 24**, matching [CI](.github/workflows/ci.yml), and a MongoDB database for local development. The commands below follow CI's npm workflow and use `package-lock.json`.
+
+```bash
+git clone https://github.com/ellertsmari/io.vefskoliv2.git
+cd io.vefskoliv2
+npm ci
+```
+
+### 2. Configure the environment
+
+Create `.env.local` in the project root:
+
+```dotenv
+MONGODB_CONNECTION=mongodb://127.0.0.1:27017/vefskolinn_dev
+AUTH_SECRET=replace-with-a-generated-secret
+NEXTAUTH_URL=http://localhost:3000
+```
+
+Generate a value for `AUTH_SECRET` with:
+
+```bash
+openssl rand -base64 32
+```
+
+Use your development database connection string if MongoDB runs elsewhere. Local environment files are ignored by Git.
+
+### 3. Start the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [localhost:3000](http://localhost:3000).
 
-## Understanding the guide data
+New registrations need teacher approval before they can sign in. For an empty development database, register your account, then have the database administrator set that account's `role` to `teacher` and `status` to `active` in the `users` collection. That teacher can approve later registrations on the **People** page and create learning guides in the guide editor.
 
-Each model includes schema and associated types.
-The Review collection is used for both Feedback and GradedFeedback. The owner of the original return is determined from the owner of the linked return document.
+### Optional integrations
 
-The data for all guides is grabbed using getGuides. That information is then enriched/extended with calculated statuses in a server function before being passed to the client.
+Configure these only when working on the corresponding feature:
 
-## Folder Structure
+| Integration | Configuration |
+| --- | --- |
+| **Zoom recordings** | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, and `ZOOM_CLIENT_SECRET` for the configured account's server-to-server OAuth app. |
+| **Canvas / LTI** | Start with [.env.lti.example](.env.lti.example) and the [LTI setup guide](documentation/LTI_SETUP.md). Existing LTI routes also read `NEXTAUTH_SECRET`; keep it aligned with `AUTH_SECRET`. |
+| **Vercel Blob** | Configure a Blob store for public showcase image uploads. See the [upload route](app/api/blob/upload/route.ts). |
+| **Google Drive** | Currently a shared-folder link in [GoogleDriveButton](app/LMS/resources/components/googleDriveButton/googleDriveButton.tsx). Automatic recording uploads are not implemented. |
 
-The project uses the following structure:
+Activity-log evidence images use a separate, authenticated storage path; they are not public showcase uploads.
 
-- **`app/`**: Contains core application files organized by function.
-  - **`assets/`**: Stores static assets, such as images or logos.
-  - **`components/`**: Contains React components organized by feature or section.
-  - **`globalStyles/`**: Holds global styling files shared across components for a consistent theme.
-  - **`models/`**: Includes all Mongoose models and schemas used for MongoDB collections (e.g., User, Guide).
-  - **`pages/`**: All Next.js pages, defining the routes for the application.
-  - **`providers/`**: Contains React Context providers used to supply global state and context to the application.
-  - **`serverActions/`**: Contains server-side functions, such as authentication and data fetching.
-  - **`UIcomponents/`**: Houses UI elements that are styled and reusable across the app.
-  - **`utils/`**: Utility functions that provide reusable logic and helper methods.
-  - **`layout.tsx`**: Defines the main layout for pages, including structure, headers, and footers.
+## Development
 
-Other root-level files and directories:
+The app uses **Next.js App Router, React, TypeScript, MongoDB/Mongoose, Auth.js, and styled-components**. Tests use Jest, Testing Library, and an isolated MongoDB test server. Code exercises execute through QuickJS WebAssembly with TypeScript checking on the server.
 
-- **`auth.config.ts` / `auth.ts`**: Configuration files for authentication.
-- **`middleware.ts`**: Middleware settings for handling requests.
-- **`public/`**: Contains public assets like images that can be accessed directly.
-- **`types/`**: Type definitions used throughout the application.
-- **`__tests__/`**: Test files for components and utilities.
-- **`jest.config.ts`**: Configuration for Jest testing.
-- **`next.config.mjs`**: Configuration for Next.js application settings.
-- **`tsconfig.json`**: TypeScript configuration
+### Everyday commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server. |
+| `npm test -- --runInBand` | Run the test suite sequentially. |
+| `npm run build` | Create the production build. |
+| `npm run typecheck` | Check TypeScript, including generated route types. |
+| `npm run verify:trace` | Check that the build includes the runtime files needed by the exercise engine. |
+| `npm run verify` | Run the build, type check, tests, and build trace check in order. |
+| `npm start` | Serve an existing production build. |
+
+On a fresh checkout, build before running the standalone type check: Next.js generates the route and asset declarations it needs. CI follows that order.
+
+If a development server is already running, put the production build in its own directory so it does not overwrite the development output:
+
+```bash
+NEXT_DIST_DIR=.next-verify npm run build
+NEXT_DIST_DIR=.next-verify npm run verify:trace
+```
+
+The repository contains both npm and Yarn lockfiles, and `package.json` declares Yarn. CI currently installs with npm. Keep dependency changes consistent across the committed lockfiles.
+
+### Working with course data
+
+Guide content and student records live in MongoDB. A fresh database does not automatically contain the school's curriculum. The guide editor can create guides; scripts in [`scripts/`](scripts/) handle specific migrations and setup tasks.
+
+Review each script's purpose and target database before running it. The [Module 2 activation script](scripts/enable-module2-activity-log.mjs) previews changes by default and requires `--apply` to update the guide. Reporting-year dates are then configured by a teacher in the activity log.
+
+## Project structure
+
+```text
+app/
+├── LMS/                 Dashboards, calendar, groups, reports, and resources
+├── guides/              Guide pages, exercises, submissions, and activity logs
+├── showcase/            Public group-project showcase
+├── api/                 Route handlers for guides, uploads, evidence, and LTI
+├── components/          Feature components and navigation
+├── UIcomponents/        Shared interface components
+├── models/              MongoDB schemas and model types
+├── serverActions/       Data access and server-side operations
+├── lib/                 Authentication, Canvas/LTI, and supporting services
+├── utils/               Grading, progress, validation, and shared helpers
+├── globalStyles/        Theme tokens and shared styles
+└── providers/           React context providers
+types/                   Shared application types
+__tests__/               Component, API, server-action, and utility tests
+scripts/                 Data migrations and verification tools
+docs/                    Feature behaviour and implementation notes
+documentation/           Integration setup and supporting documentation
+auth.ts / auth.config.ts Authentication and session configuration
+proxy.ts                 Request-level authentication
+next.config.mjs          Build, headers, uploads, and runtime file tracing
+vercel.json              Deployment configuration
+```
 
 ## Documentation
 
-- **[Peer Review Workflow](docs/PEER_REVIEW_WORKFLOW.md)** - Detailed documentation of the peer review system, business rules, and UI/UX requirements
+| Topic | Read more |
+| --- | --- |
+| Project submissions and reviews | [Peer review workflow](docs/PEER_REVIEW_WORKFLOW.md) |
+| Writing exercise questions | [Exercise authoring](docs/exercise-authoring.md) |
+| Exercise engine decisions | [Exercise engine notes](docs/exercise-engine-tasks.md) |
+| Community participation forms | [Activity logs and Module 2 setup](docs/activity-log-guide.md) |
+| Group assessment | [Peer evaluation](docs/peer-evaluation.md) |
+| Who can see feedback and grades | [Feedback visibility](docs/feedback-visibility.md) |
+| Canvas connection | [LTI setup](documentation/LTI_SETUP.md) · [Canvas integration](documentation/CANVAS_INTEGRATION_GUIDE.md) |
 
-## Notes
-
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) in order to automatically optimize and load Inter, a custom Google Font.
+Some longer design notes describe earlier implementation stages. Use the current code and tests to confirm behaviour when a historical note differs.
