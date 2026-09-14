@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import type { ActivityProgress } from "./activityLogTypes";
 import { ModuleType, GuideType } from "../app/models/guide";
 import { ReviewDocument, GradedReviewDocument } from "../app/models/review";
 import { ReturnDocument } from "../app/models/return";
@@ -238,6 +239,9 @@ export type ExerciseAttemptInfo = {
 };
 
 export type GuideInfo = {
+  submissionType?: "activityLog" | null;
+  activityCycleId?: Types.ObjectId | string | null;
+  activityProgress?: ActivityProgress;
   _id: Types.ObjectId;
   title: string;
   description: string;
@@ -291,6 +295,7 @@ export type ExtendedGuideInfo = GuideWithLink & {
 };
 
 export enum ReturnStatus {
+  IN_PROGRESS = "IN PROGRESS",
   NOT_RETURNED = "Not Returned",
   AWAITING_REVIEWS = "AWAITING REVIEWS",
   PASSED = "PASSED",

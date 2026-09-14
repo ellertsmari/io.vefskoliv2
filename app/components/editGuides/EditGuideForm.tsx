@@ -113,7 +113,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
   const [form, setForm] = useState<GuideForm>(() => formFromGuide(guide));
   const [exercise, setExercise] = useState<ExerciseForm>(() => exerciseFromGuide(guide));
   const [gradingMode, setGradingMode] = useState<GradingMode>(
-    guide.gradingMode === "auto" ? "auto" : "peerReview"
+    guide.submissionType === "activityLog" ? "activityLog" : guide.gradingMode === "auto" ? "auto" : "peerReview"
   );
   const [discipline, setDiscipline] = useState<Discipline>(getDiscipline(guide));
   const [isSpecialty, setIsSpecialty] = useState<boolean>(getIsSpecialty(guide));
@@ -283,6 +283,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
           >
             <option value="peerReview">Peer review — return a project</option>
             <option value="auto">Auto-graded exercise</option>
+            <option value="activityLog">Activity log — record hours &amp; evidence</option>
           </Select>
         </SettingField>
         <SettingCheck>
@@ -294,6 +295,8 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
           Speciality guide (optional; can replace a lower grade in the same discipline)
         </SettingCheck>
       </SettingsStrip>
+
+      {gradingMode === "activityLog" && <p>Students record activities and teachers approve their hours. After saving, <a href={`/guides/${guide._id}`}>open the activity log</a> to set semester dates and targets or review students.</p>}
 
       <TileGrid>
         <Tile

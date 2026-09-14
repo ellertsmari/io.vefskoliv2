@@ -6,6 +6,7 @@ import { extractModuleNumber } from "utils/moduleUtils";
 export const createPublicGuideInfo = (guide: GuideType): GuideInfo => {
   return {
     _id: guide._id,
+    submissionType: guide.submissionType,
     title: guide.title,
     description: guide.description,
     category: guide.category,

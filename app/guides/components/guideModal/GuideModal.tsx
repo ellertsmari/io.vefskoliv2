@@ -39,7 +39,7 @@ export const GuideModal = () => {
           </StatusRow>
         </TitleContainer>
       </Header>
-      {guide.gradingMode === GradingMode.AUTO ? (
+      {guide.submissionType === "activityLog" ? <Paragraph>Open the activity log to see semester progress, record hours, or review activities.</Paragraph> : guide.gradingMode === GradingMode.AUTO ? (
         // Auto-graded guides have no peer feedback; point the student back to
         // the exercise to review their result or try again.
         <Paragraph>

@@ -27,6 +27,7 @@ export type EditorGuideRow = {
   discipline: "code" | "design";
   isSpecialty: boolean;
   gradingMode: "peerReview" | "auto";
+  submissionType?: "activityLog";
   /** ISO date. */
   updatedAt: string;
 };
@@ -42,6 +43,7 @@ type LeanGuide = {
   isSpecialty?: boolean;
   category?: string;
   gradingMode?: string;
+  submissionType?: "activityLog";
   updatedAt?: unknown;
 };
 
@@ -66,6 +68,7 @@ export async function getGuidesForEditor(): Promise<EditorGuideRow[]> {
         isSpecialty: 1,
         category: 1,
         gradingMode: 1,
+        submissionType: 1,
         updatedAt: 1,
       }
     ).lean<LeanGuide[]>();
@@ -74,6 +77,7 @@ export async function getGuidesForEditor(): Promise<EditorGuideRow[]> {
       .map((row) => ({
         id: String(row._id),
         title: row.title,
+        submissionType: row.submissionType,
         description: row.description ?? "",
         moduleTitle: row.module?.title ?? "",
         moduleNumber: extractModuleNumber(row.module?.title ?? ""),

@@ -169,6 +169,10 @@ const exerciseSchema = new Schema({
 });
 
 const guideSchema = new Schema({
+  // Completion format is separate from grading policy. Existing guides retain
+  // their peer-review/auto behavior unless explicitly changed by a teacher.
+  submissionType: { type: String, enum: ["activityLog"], required: false },
+  activityCycleId: { type: Schema.Types.ObjectId, ref: "ActivityCycle", required: false },
   // Canonical taxonomy axes (see app/utils/guideTaxonomy.ts). Not strictly
   // required so existing/un-migrated docs still read fine — the taxonomy helpers
   // fall back to deriving these from `category`.

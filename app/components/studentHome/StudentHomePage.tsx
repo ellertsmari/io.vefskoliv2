@@ -518,10 +518,10 @@ function getNextGuidesToReturn(
   limit: number,
 ): ExtendedGuideInfo[] {
   const completedGuides = guides.filter(
-    (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED,
+    (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED && guide.returnStatus !== ReturnStatus.IN_PROGRESS,
   );
   const unreturnedGuides = guides.filter(
-    (guide) => guide.returnStatus === ReturnStatus.NOT_RETURNED,
+    (guide) => guide.returnStatus === ReturnStatus.NOT_RETURNED || guide.returnStatus === ReturnStatus.IN_PROGRESS,
   );
   if (unreturnedGuides.length === 0) return [];
 

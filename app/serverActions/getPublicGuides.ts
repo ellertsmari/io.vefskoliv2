@@ -11,6 +11,7 @@ export async function getPublicGuides(): Promise<GuideType[] | null> {
     const guides = await Guide.find({})
       .select({
         _id: 1,
+        submissionType: 1,
         title: 1,
         description: 1,
         category: 1,

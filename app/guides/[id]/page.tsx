@@ -7,6 +7,8 @@ import { getExerciseSummary } from "serverActions/exerciseSession";
 import { ErrorState } from "UIcomponents/states/States";
 import { isActingAsTeacher } from "utils/userUtils";
 import { Session } from "next-auth";
+import { getActivityLog } from "serverActions/activityLog";
+import { ActivityLogView } from "../components/activityLog/ActivityLogView";
 
 type ParamsType = Promise<{ id: string }>;
 
@@ -33,6 +35,9 @@ const GuidePage = async ({ params }: { params: ParamsType }) => {
     : isActingAsTeacher(session)
       ? "teacher"
       : "student";
+  if (guide.submissionType === "activityLog" && viewer !== "guest") {
+    return <ActivityLogView key={`${id}-${session?.user?.id}`} guideId={id} title={guide.title} description={guide.description} guideDetails={guide} initial={await getActivityLog(id)} />;
+  }
   const isAuto = guide.gradingMode === GradingMode.AUTO;
 
   // Where the student stands, so the guide can lead with that rather than

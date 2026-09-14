@@ -6,6 +6,10 @@ import { Guide } from "models/guide";
 import { PipelineStage } from "mongoose";
 import { GuideInfo } from "types/guideTypes";
 import { hasTeacherPermissions } from "utils/userUtils";
+import { ActivityCycleModel } from "models/activityCycle";
+import { ActivityEntryModel } from "models/activityEntry";
+import { calculateActivityProgress } from "utils/activityLog";
+import type { ActivityCycle, ActivityEntry } from "types/activityLogTypes";
 
 // grab user's submitted returns
 const lookupReturnsSubmitted = (userId: ObjectId): PipelineStage => {
@@ -319,6 +323,8 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
       order: 1,
       module: 1,
       gradingMode: 1,
+      submissionType: 1,
+      activityCycleId: 1,
 
       // this user's project returns
       returnsSubmitted: 1,
@@ -389,7 +395,18 @@ export async function getGuides(
     const result = await Guide.aggregate(pipeline).exec();
 
     // Serialize MongoDB documents to plain objects for client components
-    const serializedResult = JSON.parse(JSON.stringify(result));
+    const serializedResult: GuideInfo[] = JSON.parse(JSON.stringify(result));
+    const logs = serializedResult.filter((g) => g.submissionType === "activityLog" && g.activityCycleId);
+    if (logs.length) {
+      const [cycles, entries] = await Promise.all([
+        ActivityCycleModel.find({ _id: { $in: logs.map((g) => g.activityCycleId) }, guide: { $in: logs.map((g) => g._id) } }).lean<(ActivityCycle & { _id: ObjectId; guide: ObjectId })[]>(),
+        ActivityEntryModel.find({ owner: userId, cycle: { $in: logs.map((g) => g.activityCycleId) }, guide: { $in: logs.map((g) => g._id) } }).select("cycle guide sessions status").lean<(ActivityEntry & { _id: ObjectId; cycle: ObjectId; guide: ObjectId })[]>(),
+      ]);
+      for (const guide of logs) {
+        const cycle = cycles.find((c) => String(c._id) === String(guide.activityCycleId) && String(c.guide) === String(guide._id));
+        if (cycle) guide.activityProgress = calculateActivityProgress(entries.filter((e) => String(e.cycle) === String(cycle._id) && String(e.guide) === String(guide._id)).map((e) => ({ id: String(e._id), sessions: e.sessions, status: e.status })), cycle);
+      }
+    }
 
     return serializedResult as GuideInfo[];
   } catch (e) {

@@ -37,7 +37,7 @@ describe("editGuideActions", () => {
     // an order stored as text. These used to throw and empty the whole list.
     await Guide.collection.updateOne(
       { _id: a._id },
-      { $set: { module: { title: "3 - The fundamentals" }, order: "2", updatedAt: "2026-08-12T10:00:00.000Z" } }
+      { $set: { module: { title: "3 - The fundamentals" }, order: "2", updatedAt: "2026-08-12T10:00:00.000Z", submissionType: "activityLog" } }
     );
     await Guide.collection.updateOne(
       { _id: b._id },
@@ -49,7 +49,7 @@ describe("editGuideActions", () => {
 
     expect(rows.map((row) => row.moduleNumber)).toEqual([1, 3]);
     expect(rows[1]).toEqual(
-      expect.objectContaining({ id: String(a._id), order: 2, updatedAt: "2026-08-12T10:00:00.000Z" })
+      expect.objectContaining({ id: String(a._id), order: 2, updatedAt: "2026-08-12T10:00:00.000Z", submissionType: "activityLog" })
     );
     expect(rows[0].updatedAt).toBe(new Date(0).toISOString());
   });

@@ -68,6 +68,7 @@ export const SubmitTile = ({
 };
 
 const TONE: Record<ReturnStatus, "ok" | "wait" | "bad" | "star"> = {
+  [ReturnStatus.IN_PROGRESS]: "wait",
   [ReturnStatus.NOT_RETURNED]: "wait",
   [ReturnStatus.AWAITING_REVIEWS]: "wait",
   [ReturnStatus.PASSED]: "ok",

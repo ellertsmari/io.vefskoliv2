@@ -88,6 +88,7 @@ const exerciseTaskSchema = z
  * EditGuideForm sends; unknown keys are stripped by default.
  */
 const GuideUpdateSchema = z.object({
+  submissionType: z.literal("activityLog").nullable().optional(),
   title: z.string().trim().min(1).optional(),
   description: z.string().optional(),
   topicsList: z.string().optional(),
@@ -226,7 +227,7 @@ export async function PUT(
 
     // Drop undefined keys so partial updates don't unset existing fields, and
     // translate `exercise: null` into an explicit $unset.
-    const { exercise, ...rest } = validated.data;
+    const { exercise, submissionType, ...rest } = validated.data;
     const updateFields = Object.fromEntries(
       Object.entries(rest).filter(([, v]) => v !== undefined)
     );
@@ -239,6 +240,14 @@ export async function PUT(
       update.$unset = { exercise: 1 };
     } else if (exercise !== undefined) {
       update.exercise = exercise;
+    }
+    if (submissionType === null) {
+      update.$unset = { ...(update.$unset as Record<string, number> ?? {}), submissionType: 1 };
+    } else if (submissionType !== undefined) {
+      update.submissionType = submissionType;
+      update.gradingMode = "peerReview";
+      delete update.exercise;
+      update.$unset = { ...(update.$unset as Record<string, number> ?? {}), exercise: 1 };
     }
 
     await connectToDatabase();

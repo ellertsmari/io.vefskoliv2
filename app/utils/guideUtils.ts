@@ -28,6 +28,18 @@ export const extendGuides = (
   now: Date = new Date()
 ): ExtendedGuideInfo[] => {
   return guides.map((guide) => {
+    if (guide.submissionType === "activityLog") {
+      const complete = guide.activityProgress?.complete ?? false;
+      const started = (guide.activityProgress?.recordedMinutes ?? 0) > 0;
+      return {
+        ...guide, link: `/guides/${guide._id}`,
+        returnStatus: complete ? ReturnStatus.PASSED : started ? ReturnStatus.IN_PROGRESS : ReturnStatus.NOT_RETURNED,
+        reviewStatus: ReviewStatus.NOT_APPLICABLE,
+        gradesReceivedStatus: GradesReceivedStatus.NOT_APPLICABLE,
+        gradesGivenStatus: GradesGivenStatus.NOT_APPLICABLE,
+        grade: complete ? 10 : undefined,
+      };
+    }
     // Auto-graded guides skip peer review entirely: status and grade come from
     // the student's best exercise attempt, and the review/grade steps are N/A.
     if (guide.gradingMode === GradingMode.AUTO) {

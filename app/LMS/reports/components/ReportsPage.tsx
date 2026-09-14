@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { getStudentGuides } from "serverActions/getStudentGuides";
 import { extractModuleNumber } from "utils/moduleUtils";
+import { formatActivityTime } from "utils/activityLog";
 import Modal from "UIcomponents/modal/modal";
 import { ReviewDetailsModal } from "./ReviewDetailsModal";
 import {
@@ -72,6 +73,10 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
 
     // Add all guides that have been returned
     studentGuides.forEach(guide => {
+      if (guide.submissionType === "activityLog") {
+        guidesMap.set(guide._id.toString(), { ...guide, hasReturned: Boolean(guide.activityProgress?.recordedMinutes), hasReviewed: false, reviewCount: 0, gradeCount: 0 });
+        return;
+      }
       if (guide.returnsSubmitted && guide.returnsSubmitted.length > 0) {
         guidesMap.set(guide._id.toString(), {
           ...guide,
@@ -85,6 +90,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
 
     // Add review information to existing guides or create new entries
     studentGuides.forEach(guide => {
+      if (guide.submissionType === "activityLog") return;
       const reviewCount = guide.reviewsGiven?.length || 0;
       const gradeCount = guide.gradesGiven?.length || 0;
       
@@ -158,6 +164,15 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
               {combinedGuides.length > 0 ? (
                 <GuideGrid>
                   {combinedGuides.map((guide) => (
+                    guide.submissionType === "activityLog" ? <GuideCard as="a" href={guide.link} key={guide._id.toString()}>
+                      <ModuleBadge>Module {extractModuleNumber(guide.module.title)}</ModuleBadge>
+                      <GuideTitle>{guide.title}</GuideTitle>
+                      <GuideStatus status={guide.returnStatus}>{guide.returnStatus}</GuideStatus>
+                      <GuideDetails>
+                        {guide.activityProgress?.periods.map((p: { id: string; label: string; creditedMinutes: number; targetMinutes: number }) => <div key={p.id}>{p.label}: {formatActivityTime(p.creditedMinutes)} / {formatActivityTime(p.targetMinutes)}</div>)}
+                        Open activity log →
+                      </GuideDetails>
+                    </GuideCard> :
                     <Modal
                       size="xl"
                       key={guide._id.toString()}

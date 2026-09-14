@@ -3,10 +3,12 @@
  */
 import { auth } from "auth";
 import { Return } from "models/return";
+import { Guide } from "models/guide";
 import {
   closeDatabase,
   clearDatabase,
   connect,
+  createDummyGuide,
 } from "../__mocks__/mongoHandler";
 import { ObjectId } from "mongodb";
 import { returnGuide } from "serverActions/returnGuide";
@@ -100,6 +102,29 @@ describe("returnGuide", () => {
     expect(first.success).toBe(true);
     expect(second.success).toBe(true);
     expect(await Return.countDocuments({ owner: userId, guide: guideId })).toBe(1);
+  });
+
+  it.each([false, true])("refuses project returns for an activity log, with a recent legacy return: %s", async (hasRecentReturn) => {
+    const guide = await createDummyGuide();
+    await Guide.updateOne({ _id: guide._id }, { $set: { submissionType: "activityLog" } });
+    const userId = new ObjectId();
+    (auth as jest.Mock).mockResolvedValue({ user: { id: userId.toString(), role: "user" } });
+    const formData = {
+      projectUrl: "https://github.com/example/project",
+      liveVersion: "https://example.github.io/project",
+      projectName: "Example",
+      comment: "This guide now uses an activity log",
+      guideId: guide._id.toString(),
+    };
+    if (hasRecentReturn) {
+      await Return.create({ ...formData, owner: userId, guide: guide._id });
+    }
+
+    const result = await returnGuide(undefined, formData);
+
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/activity log/);
+    expect(await Return.countDocuments({ owner: userId, guide: guide._id })).toBe(hasRecentReturn ? 1 : 0);
   });
 
   it("still accepts a deliberate second return of the same guide later on", async () => {

@@ -216,7 +216,7 @@ export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
                     </Pill>
                     {guide.isSpecialty && <Pill $tone="muted">Speciality</Pill>}
                     <Pill $tone="muted">
-                      {guide.gradingMode === "auto" ? "Auto-graded" : "Peer review"}
+                      {guide.submissionType === "activityLog" ? "Activity log" : guide.gradingMode === "auto" ? "Auto-graded" : "Peer review"}
                     </Pill>
                   </Pills>
                   {guide.description && (

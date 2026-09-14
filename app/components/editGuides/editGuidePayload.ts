@@ -27,7 +27,7 @@ export type GuideForm = {
   references: ReferenceItem[];
 };
 
-export type GradingMode = "peerReview" | "auto";
+export type GradingMode = "peerReview" | "auto" | "activityLog";
 
 export const formFromGuide = (guide: GuideType): GuideForm => ({
   title: guide.title || "",
@@ -205,6 +205,7 @@ export const buildGuidePayload = (
     rows.filter((row) => Object.values(row).some((value) => value.trim()));
 
   return {
+    submissionType: gradingMode === "activityLog" ? "activityLog" : null,
     title: form.title.trim(),
     description: form.description,
     topicsList: form.topicsList,

@@ -31,6 +31,9 @@ import { CANVAS_SCORE_MAXIMUM, CanvasScore } from "./types";
  */
 export const resolveCanvasScore = (guide: ExtendedGuideInfo): CanvasScore => {
   const scoreMaximum = CANVAS_SCORE_MAXIMUM;
+  if (guide.submissionType === "activityLog" && !guide.activityProgress?.complete) {
+    return { scoreMaximum, activityProgress: guide.returnStatus === ReturnStatus.NOT_RETURNED ? "Initialized" : "InProgress", gradingProgress: "NotReady" };
+  }
 
   if (guide.returnStatus === ReturnStatus.NOT_RETURNED) {
     return {

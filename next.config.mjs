@@ -87,7 +87,7 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      // Images no longer travel through server actions — the browser uploads
+      // Public showcase images no longer travel through server actions — the browser uploads
       // them straight to Blob and submits only the URL. The raised limit stays
       // for records still holding a legacy inline data URL, which are re-sent
       // as-is whenever such a record is saved without re-uploading its image.

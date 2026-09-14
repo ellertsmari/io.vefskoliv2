@@ -2,6 +2,7 @@
 import { AdapterUser } from "next-auth/adapters";
 import { auth } from "../../auth";
 import { Return } from "../models/return";
+import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
@@ -69,6 +70,10 @@ export async function returnGuide(
     // 10s. A server action can land on a lambda where nothing has connected
     // yet, so every entry point connects for itself.
     await connectToDatabase();
+
+    if (await Guide.exists({ _id: new ObjectId(guideId), submissionType: "activityLog" })) {
+      return failure("Use this guide's activity log to record hours and evidence.");
+    }
 
     // A double-click on the return form used to save two returns 0.4s apart.
     // Both then got handed out for review, and one classmate reviewed the same

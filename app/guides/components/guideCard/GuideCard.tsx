@@ -29,7 +29,7 @@ const GuideCard = ({
   const { returnStatus, reviewStatus, grade, gradesReceivedStatus } = guide;
 
   const link =
-    guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
+    guide.submissionType === "activityLog" || guide.returnStatus === ReturnStatus.NOT_RETURNED ? guide.link : undefined;
   return (
     <GuideProvider guide={guide}>
       <CardWrapper>
