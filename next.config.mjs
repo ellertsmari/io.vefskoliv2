@@ -38,7 +38,16 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      {
+        source: "/LMS/live",
+        headers: [{
+          key: "Permissions-Policy",
+          value: "camera=(self), microphone=(self), display-capture=(self), geolocation=()",
+        }],
+      },
+    ];
   },
   // `next dev` and `next build` both write to .next by default, so running a
   // build while a dev server is up overwrites the manifests that server is

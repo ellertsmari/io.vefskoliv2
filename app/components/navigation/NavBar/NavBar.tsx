@@ -8,12 +8,14 @@ import GroupsIcon from "../../../assets/icons/groups.svg"
 import PeopleIcon from "../../../assets/icons/people.svg"
 import CalendarIcon from "../../../assets/icons/calendar.svg"
 import DocsIcon from "../../../assets/icons/docs.svg"
+import LiveIcon from "../../../assets/icons/live.svg"
 
 type Link = { page: string; title: string; icon: string; };
 export type NavBarProps = { links: Link[] };
 
 const links: Link[] = [
   { page: "/LMS/dashboard", title: "HOME", icon: HomeIcon },
+  { page: "/LMS/live", title: "LIVE", icon: LiveIcon },
   { page: "/guides", title: "GUIDES", icon: GuidesIcon },
   { page: "/LMS/groups", title: "GROUPS", icon: GroupsIcon },
   { page: "/LMS/resources", title: "RESOURCES", icon: ResourcesIcon },

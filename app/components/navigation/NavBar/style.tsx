@@ -111,6 +111,7 @@ export const MobileNav = styled(Nav)`
   flex-direction: row;
   justify-content: space-between;
   gap: 8px;
+  overflow-x: auto;
 
   @media (min-width: ${breakpoint}) {
     display: none;
@@ -118,6 +119,7 @@ export const MobileNav = styled(Nav)`
 `;
 
 export const MobileNavbarButton = styled(NavbarButton)`
+  flex-shrink: 0;
   width: 40px;
   height: 40px;
   display: flex;

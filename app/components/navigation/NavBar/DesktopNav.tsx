@@ -9,6 +9,7 @@ export const DesktopNavbar = ({ links }: NavBarProps) => {
     const currentPage = pathname === link.page
     return (
       <DesktopNavbarButton
+        as={link.page === "/LMS/live" || pathname === "/LMS/live" ? "a" : undefined}
         $active={currentPage}
         key={link.page}
         href={link.page}

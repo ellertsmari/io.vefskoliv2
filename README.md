@@ -20,6 +20,7 @@ The learning management system for Vefskólinn's web development programme. Stud
 | **Course planning** | A semester calendar, teacher availability, and student meeting bookings. |
 | **People and progress** | Student and teacher dashboards, account approvals, profiles, and teacher reports. |
 | **Lecture resources** | Zoom recording listings and a link to shared Google Drive materials. |
+| **Live classroom demo** | Reverse Flash: teacher-hosted sessions, student joining, camera, microphone, and teacher screen sharing through LiveKit. |
 | **Canvas integration** | LTI 1.3 launch, content selection, and grade passback endpoints when configured. |
 
 ### How learning works
@@ -84,6 +85,7 @@ Configure these only when working on the corresponding feature:
 | **Canvas / LTI** | Start with [.env.lti.example](.env.lti.example) and the [LTI setup guide](documentation/LTI_SETUP.md). Existing LTI routes also read `NEXTAUTH_SECRET`; keep it aligned with `AUTH_SECRET`. |
 | **Vercel Blob** | Configure a Blob store for public showcase image uploads. See the [upload route](app/api/blob/upload/route.ts). |
 | **Google Drive** | Currently a shared-folder link in [GoogleDriveButton](app/LMS/resources/components/googleDriveButton/googleDriveButton.tsx). Automatic recording uploads are not implemented. |
+| **Reverse Flash / LiveKit** | Start with [.env.live.example](.env.live.example) and the [classroom demo guide](docs/reverse-flash.md). A local video server supports a same-computer demo; a hosted server is needed for other computers. |
 
 Activity-log evidence images use a separate, authenticated storage path; they are not public showcase uploads.
 
@@ -155,6 +157,7 @@ vercel.json              Deployment configuration
 | Writing exercise questions | [Exercise authoring](docs/exercise-authoring.md) |
 | Exercise engine decisions | [Exercise engine notes](docs/exercise-engine-tasks.md) |
 | Community participation forms | [Activity logs and Module 2 setup](docs/activity-log-guide.md) |
+| Live classroom | [Reverse Flash demo and video server setup](docs/reverse-flash.md) |
 | Group assessment | [Peer evaluation](docs/peer-evaluation.md) |
 | Who can see feedback and grades | [Feedback visibility](docs/feedback-visibility.md) |
 | Canvas connection | [LTI setup](documentation/LTI_SETUP.md) · [Canvas integration](documentation/CANVAS_INTEGRATION_GUIDE.md) |
