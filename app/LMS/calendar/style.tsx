@@ -3,19 +3,17 @@
 import styled from "styled-components";
 import { PageContainer } from "globalStyles/pageStyles";
 
-/**
- * Dense grid, so the wide page width. Also fills the scroll area's height so
- * the month grid absorbs the leftover space rather than overflowing it by a
- * few pixels and forcing a scroll.
- */
+/** Let the app shell scroll the whole month, including at browser zoom. */
 export const CalendarContainer = styled(PageContainer).attrs({
   $width: "wide" as const,
 })`
   /* Centred, unlike the other pages: the month grid is a fixed-proportion block
      rather than a column of content, so it reads better balanced than pinned left. */
   margin-inline: auto;
-  height: 100%;
-  min-height: 0;
+  min-width: 0;
+  flex-shrink: 0;
+  container: calendar / inline-size;
+  padding: clamp(1rem, 2vw, 2rem);
   gap: 1.25rem;
 `;
 
@@ -35,6 +33,7 @@ export {
 
 export const MonthNav = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 `;
@@ -101,29 +100,37 @@ export const LegendItem = styled.li<{ $color: string; $hollow?: boolean }>`
 
 export const Layout = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   gap: 1.25rem;
-  /* Takes the height the header and legend don't use. */
-  flex: 1;
-  min-height: 0;
+  min-width: 0;
 
-  @media (min-width: 900px) {
-    grid-template-columns: minmax(0, 1fr) 320px;
+  /* Use the page's available width, which also accounts for the LMS sidebar. */
+  @container calendar (min-width: 66rem) {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+`;
+
+export const GridScroll = styled.div`
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-lg);
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-module3-100);
+    outline-offset: 2px;
   }
 `;
 
 export const Grid = styled.div`
   display: grid;
+  /* Seven equal columns; narrow screens scroll instead of crushing the days. */
+  min-width: 44.25rem;
   grid-template-columns: 2.25rem repeat(7, minmax(0, 1fr));
-  /* Weekday header sizes to content; week rows share whatever is left, down to
-     a floor below which the calendar scrolls rather than crushing the cells. */
+  /* Keep the same day height across months, window heights and event counts. */
   grid-template-rows: auto;
-  grid-auto-rows: minmax(5.5rem, 1fr);
-  height: 100%;
-  min-height: 0;
-  border: 1px solid var(--primary-black-10);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  grid-auto-rows: 6.5rem;
   background: var(--primary-white);
 `;
 
@@ -166,7 +173,8 @@ export const DayCell = styled.button<{
   flex-direction: column;
   align-items: stretch;
   gap: 0.25rem;
-  /* Height comes from the grid row, which stretches to fill the page. */
+  /* Event content never changes the dimensions of a day. */
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   padding: 0.4rem;
@@ -308,17 +316,25 @@ export const Panel = styled.aside<{ $sheet: boolean }>`
   border-radius: var(--radius-lg);
   background: var(--primary-white);
   padding: 1.25rem;
-  position: sticky;
-  top: 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 
-  @media (max-width: 899px) {
+  @container calendar (min-width: 66rem) {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100dvh - 8rem);
+    overflow-y: auto;
+  }
+
+  @container calendar (width < 66rem) {
     ${(props) =>
       props.$sheet &&
       `
       position: fixed;
       inset: auto 0 0 0;
-      max-height: 70vh;
+      max-height: 70dvh;
       overflow-y: auto;
+      padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
       border-radius: var(--radius-lg) var(--radius-lg) 0 0;
       box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
       z-index: 50;
@@ -337,7 +353,7 @@ export const SheetClose = styled.button`
   cursor: pointer;
   padding: 0 0 0.5rem 0.5rem;
 
-  @media (max-width: 899px) {
+  @container calendar (width < 66rem) {
     display: inline-block;
   }
 `;

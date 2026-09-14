@@ -15,6 +15,8 @@ import {
 } from "utils/calendarUtils";
 import type {
   CalendarEvent,
+  CategoryMeta,
+  EventCategory,
   MeetingSlot,
   SemesterInfo,
 } from "types/calendarTypes";
@@ -39,6 +41,7 @@ import {
   Legend,
   LegendItem,
   Layout,
+  GridScroll,
   Grid,
   Corner,
   WeekdayHead,
@@ -141,6 +144,19 @@ type Dialog =
   | null;
 
 const isHatched = (event: CalendarEvent) => event.category === "unavailable";
+
+const OTHER_EVENT_META: CategoryMeta = {
+  label: "Other event",
+  color: "var(--primary-black-60)",
+};
+
+// Stored events may have missing or older category values. Keep them visible
+// without letting a metadata lookup take down the month or day detail.
+const categoryMeta = (category: unknown): CategoryMeta =>
+  typeof category === "string" &&
+  Object.prototype.hasOwnProperty.call(CATEGORY_META, category)
+    ? CATEGORY_META[category as EventCategory]
+    : OTHER_EVENT_META;
 
 export default function CalendarView({
   events,
@@ -352,80 +368,82 @@ export default function CalendarView({
       </Legend>
 
       <Layout>
-        <Grid>
-          <Corner />
-          {WEEKDAYS.map((wd) => (
-            <WeekdayHead key={wd}>{wd}</WeekdayHead>
-          ))}
+        <GridScroll role="region" aria-label="Month calendar" tabIndex={0}>
+          <Grid>
+            <Corner />
+            {WEEKDAYS.map((wd) => (
+              <WeekdayHead key={wd}>{wd}</WeekdayHead>
+            ))}
 
-          {weeks.map((week) => (
-            <Fragment key={toKey(week[0])}>
-              <WeekNumCell>V{isoWeek(week[0])}</WeekNumCell>
-              {week.map((day) => {
-                const key = toKey(day);
-                const inMonth = day.getMonth() === month;
-                const weekendDay = mondayIndex(day) >= 5;
-                const daySpans = inMonth ? spansOnDay(key) : [];
-                const dayEvents = inMonth ? (eventsByDate.get(key) ?? []) : [];
-                const visible = dayEvents.slice(0, daySpans.length > 0 ? 2 : 3);
-                const hidden = dayEvents.length - visible.length;
+            {weeks.map((week) => (
+              <Fragment key={toKey(week[0])}>
+                <WeekNumCell>V{isoWeek(week[0])}</WeekNumCell>
+                {week.map((day) => {
+                  const key = toKey(day);
+                  const inMonth = day.getMonth() === month;
+                  const weekendDay = mondayIndex(day) >= 5;
+                  const daySpans = inMonth ? spansOnDay(key) : [];
+                  const dayEvents = inMonth ? (eventsByDate.get(key) ?? []) : [];
+                  const visible = dayEvents.slice(0, daySpans.length > 0 ? 2 : 3);
+                  const hidden = dayEvents.length - visible.length;
 
-                return (
-                  <DayCell
-                    key={key}
-                    type="button"
-                    $muted={!inMonth}
-                    $weekend={weekendDay}
-                    $selected={selectedKey === key && inMonth}
-                    $today={key === today}
-                    disabled={!inMonth}
-                    aria-label={`${formatLongDate(key)}, ${dayEvents.length + daySpans.length} events`}
-                    onClick={() => {
-                      if (!inMonth) return;
-                      setSelectedKey(key);
-                      setConfirmDelete(null);
-                    }}
-                  >
-                    <DayNumber $muted={!inMonth} $today={key === today}>
-                      {day.getDate()}
-                    </DayNumber>
-                    {daySpans.map((event) => {
-                      const isStart = event.date === key;
-                      const isEnd = event.endDate === key;
-                      // Repeat the label at the start of every week row.
-                      const showLabel = isStart || mondayIndex(day) === 0;
-                      return (
-                        <SpanBar
+                  return (
+                    <DayCell
+                      key={key}
+                      type="button"
+                      $muted={!inMonth}
+                      $weekend={weekendDay}
+                      $selected={selectedKey === key && inMonth}
+                      $today={key === today}
+                      disabled={!inMonth}
+                      aria-label={`${formatLongDate(key)}, ${dayEvents.length + daySpans.length} events`}
+                      onClick={() => {
+                        if (!inMonth) return;
+                        setSelectedKey(key);
+                        setConfirmDelete(null);
+                      }}
+                    >
+                      <DayNumber $muted={!inMonth} $today={key === today}>
+                        {day.getDate()}
+                      </DayNumber>
+                      {daySpans.map((event) => {
+                        const isStart = event.date === key;
+                        const isEnd = event.endDate === key;
+                        // Repeat the label at the start of every week row.
+                        const showLabel = isStart || mondayIndex(day) === 0;
+                        return (
+                          <SpanBar
+                            key={event.id}
+                            $color={categoryMeta(event.category).color}
+                            $start={isStart}
+                            $end={isEnd}
+                            $hatched={isHatched(event)}
+                            title={event.title}
+                          >
+                            {showLabel ? event.title : " "}
+                          </SpanBar>
+                        );
+                      })}
+                      {visible.map((event) => (
+                        <EventPill
                           key={event.id}
-                          $color={CATEGORY_META[event.category].color}
-                          $start={isStart}
-                          $end={isEnd}
+                          $color={categoryMeta(event.category).color}
+                          $hollow={isMine(event) && !isHatched(event)}
                           $hatched={isHatched(event)}
                           title={event.title}
                         >
-                          {showLabel ? event.title : " "}
-                        </SpanBar>
-                      );
-                    })}
-                    {visible.map((event) => (
-                      <EventPill
-                        key={event.id}
-                        $color={CATEGORY_META[event.category].color}
-                        $hollow={isMine(event) && !isHatched(event)}
-                        $hatched={isHatched(event)}
-                        title={event.title}
-                      >
-                        {event.time ? `${event.time} ` : ""}
-                        {event.title}
-                      </EventPill>
-                    ))}
-                    {hidden > 0 && <MorePill>+{hidden} more</MorePill>}
-                  </DayCell>
-                );
-              })}
-            </Fragment>
-          ))}
-        </Grid>
+                          {event.time ? `${event.time} ` : ""}
+                          {event.title}
+                        </EventPill>
+                      ))}
+                      {hidden > 0 && <MorePill>+{hidden} more</MorePill>}
+                    </DayCell>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </Grid>
+        </GridScroll>
 
         <Panel $sheet={selectedKey !== null} aria-live="polite">
           {selectedKey ? (
@@ -439,7 +457,7 @@ export default function CalendarView({
               ) : (
                 <EventList>
                   {selectedEvents.map((event) => {
-                    const meta = CATEGORY_META[event.category];
+                    const meta = categoryMeta(event.category);
                     const confirming = confirmDelete === event.id;
                     return (
                       <EventItem key={event.id} $color={meta.color}>

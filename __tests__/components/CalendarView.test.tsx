@@ -1,4 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render as renderComponent, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { StyleSheetManager } from "styled-components";
 import CalendarView from "../../app/LMS/calendar/CalendarView";
 import type { CalendarEvent, SemesterInfo } from "types/calendarTypes";
 
@@ -13,6 +15,15 @@ jest.mock("serverActions/calendarEvents", () => ({
   updateCalendarEvent: jest.fn(),
   deleteCalendarEvent: jest.fn().mockResolvedValue({ success: true }),
 }));
+
+// These tests exercise interactions. jsdom's CSS parser predates container
+// queries; keep style tags detached and check layout in a real browser.
+const render = (ui: ReactElement) =>
+  renderComponent(
+    <StyleSheetManager target={document.createElement("div")}>
+      {ui}
+    </StyleSheetManager>
+  );
 
 const semester: SemesterInfo = {
   label: "Autumn Semester 2026",
@@ -67,6 +78,57 @@ describe("CalendarView", () => {
     fireEvent.click(screen.getByText("Today"));
     expect(screen.getAllByText("September 2026").length).toBeGreaterThan(0);
     expect(screen.getByText("Thu 3 September")).toBeDefined();
+  });
+
+  it.each([
+    ["legacy-category", undefined],
+    [undefined, undefined],
+    [null, undefined],
+    ["legacy-category", "2026-10-09"],
+    [undefined, "2026-10-09"],
+    [null, "2026-10-09"],
+  ])("browses and opens an event with category %s and end date %s", (category, endDate) => {
+    // Stored records can predate the current category schema.
+    const legacyEvent = {
+      id: "legacy",
+      date: "2026-10-05",
+      endDate,
+      title: "Existing event",
+      category,
+      canEdit: true,
+    } as unknown as CalendarEvent;
+    render(
+      <CalendarView events={[...events, legacyEvent]} semester={semester} isTeacher />
+    );
+
+    fireEvent.click(screen.getByLabelText("Next month"));
+    expect(screen.getAllByText("October 2026")).toHaveLength(2);
+    expect(screen.getByText("Existing event")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText(/Mon 5 October/));
+    expect(screen.getAllByText("Existing event")).toHaveLength(2);
+    expect(screen.getByText("Other event")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Edit"));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("CANCEL"));
+
+    fireEvent.click(screen.getByLabelText("Previous month"));
+    expect(screen.getAllByText("September 2026")).toHaveLength(2);
+  });
+
+  it("opens a day whose overflow events have an unknown category", () => {
+    const dayEvents = Array.from({ length: 4 }, (_, index) => ({
+      ...events[0],
+      id: `event-${index}`,
+      title: `Event ${index}`,
+      category: index === 3 ? "legacy-category" : "lecture",
+    })) as CalendarEvent[];
+    render(<CalendarView events={dayEvents} semester={semester} isTeacher />);
+
+    expect(screen.getByText("+1 more")).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText(/Wed 16 September/));
+    expect(screen.getByText("Event 3")).toBeInTheDocument();
+    expect(screen.getByText("Other event")).toBeInTheDocument();
   });
 
   it("shows edit and delete only for events the viewer may edit", () => {
