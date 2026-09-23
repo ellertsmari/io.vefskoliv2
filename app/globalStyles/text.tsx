@@ -19,12 +19,6 @@ export const SubHeadingLabel = styled.label`
   color: var(--primary-black-100);
 `;
 
-export const SubHeading1Bold = styled.h3`
-  font-size: var(--text-2xl);
-  font-weight: 600;
-  color: var(--primary-black-100);
-`;
-
 export const SubHeading2 = styled.h3`
   font-size: var(--text-base);
   font-weight: 600;

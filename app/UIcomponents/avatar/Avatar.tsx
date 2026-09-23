@@ -1,7 +1,7 @@
 "use client";
 import { AvatarCircle, AvatarImage, AvatarInitials } from "./style";
 
-export const getInitials = (name?: string | null) =>
+const getInitials = (name?: string | null) =>
   name
     ?.split(" ")
     .filter((w): w is string => !!w)
@@ -39,5 +39,3 @@ export const Avatar = ({ name, url, size = 58 }: Props) => (
     )}
   </AvatarCircle>
 );
-
-export default Avatar;

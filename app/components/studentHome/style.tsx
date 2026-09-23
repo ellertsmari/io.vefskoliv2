@@ -20,11 +20,7 @@ export {
   WidgetRow as StatusRow,
   WidgetRow as WorkRow,
   Widget as Section,
-  WidgetTitle as SectionTitle,
   WidgetSubtitle as SectionSubtitle,
-  WidgetHeader,
-  WidgetHeaderText,
-  WidgetIcon,
 } from "UIcomponents/widgetGrid/style";
 
 export { WidgetHeading } from "UIcomponents/widgetGrid/WidgetHeading";

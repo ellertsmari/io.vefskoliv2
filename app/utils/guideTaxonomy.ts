@@ -18,8 +18,6 @@
 
 export type Discipline = "code" | "design";
 
-export const DISCIPLINES: readonly Discipline[] = ["code", "design"] as const;
-
 export type GuideAxes = { discipline: Discipline; isSpecialty: boolean };
 
 /** Anything we can read taxonomy from — a full guide, a lean doc, or a fixture. */
@@ -70,12 +68,6 @@ export const getIsSpecialty = (guide: GuideLike): boolean =>
     ? guide.isSpecialty
     : categoryToAxes(guide.category).isSpecialty;
 
-export const isCodeGuide = (guide: GuideLike): boolean =>
-  getDiscipline(guide) === "code";
-
 /** Convenience for call sites that only have a legacy `category` string. */
 export const isCodeCategory = (category?: string | null): boolean =>
   categoryToAxes(category).discipline === "code";
-
-export const isDesignGuide = (guide: GuideLike): boolean =>
-  getDiscipline(guide) === "design";

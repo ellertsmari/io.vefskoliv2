@@ -127,7 +127,7 @@ export const Eyebrow = styled.p`
  * app's small controls rather than as underlined text. `$active` is a
  * pressed state.
  */
-export const toolStyles = css<{ $active?: boolean }>`
+const toolStyles = css<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;

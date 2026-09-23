@@ -107,7 +107,7 @@ export type ServerTask =
   | ServerCodeTask;
 
 /** Default share of a code task's points carried by the structural check. */
-export const DEFAULT_CONSTRUCT_WEIGHT = 0.2;
+const DEFAULT_CONSTRUCT_WEIGHT = 0.2;
 
 /**
  * A task whose `type` this build does not know how to grade or serve. Reachable
@@ -157,7 +157,7 @@ export type ServerExercise = {
 export type ExerciseAnswers = Record<string, ExerciseAnswerValue>;
 
 /** Narrow an arbitrary stored task to one this build can grade and serve. */
-export const isKnownTask = (
+const isKnownTask = (
   task: ServerTask | UnknownServerTask
 ): task is ServerTask =>
   task.type === ExerciseTaskType.QUIZ ||

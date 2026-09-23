@@ -5,7 +5,7 @@ import { formatActivityTime as time } from "utils/activityLog";
 import type { ActionResult } from "utils/errors";
 import styles from "./ActivityLog.module.css";
 
-export async function prepareActivityImage(file: File): Promise<string> {
+async function prepareActivityImage(file: File): Promise<string> {
   if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 10 * 1024 * 1024) throw new Error("Choose a JPG, PNG or WebP image under 10 MB.");
   const url = URL.createObjectURL(file);
   try {

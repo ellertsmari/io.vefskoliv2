@@ -18,7 +18,7 @@ export const REQUIRED_GRADES_COUNT = 2;
 export const FAIL_THRESHOLD = 2;
 
 /** Minimum grade value */
-export const MIN_GRADE = 0;
+const MIN_GRADE = 0;
 
 /** Maximum grade value */
 export const MAX_GRADE = 10;
@@ -110,7 +110,7 @@ export const REVIEW_QUALITY_BANDS: ReviewQualityBand[] = [
 ];
 
 /** The band a grade falls in, or undefined if it is outside MIN_GRADE..MAX_GRADE. */
-export const reviewQualityBand = (
+const reviewQualityBand = (
   grade: number
 ): ReviewQualityBand | undefined =>
   REVIEW_QUALITY_BANDS.find((band) => grade >= band.min && grade <= band.max);

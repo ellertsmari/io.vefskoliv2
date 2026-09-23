@@ -1,8 +1,6 @@
 "use client";
 import styled from "styled-components";
 
-export const WIDGET_GRID_BREAKPOINT = "1000px";
-
 /**
  * Dashboard layout: one full-width stack, top to bottom.
  *
@@ -148,6 +146,3 @@ export const WidgetSubtitle = styled.p`
 `;
 
 /** Header with no subtitle under it — used by the compact widgets. */
-export const WidgetTitleOnly = styled(WidgetTitle)`
-  margin-bottom: 1rem;
-`;

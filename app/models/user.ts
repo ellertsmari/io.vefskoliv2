@@ -15,7 +15,7 @@ import {
  * from before this field existed have no value stored and read as `active`
  * through the schema default.
  */
-export const USER_STATUSES = ["pending", "active"] as const;
+const USER_STATUSES = ["pending", "active"] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 
 export interface RequiredUserInfo {

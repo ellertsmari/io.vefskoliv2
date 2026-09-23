@@ -6,7 +6,7 @@ import styled from "styled-components";
  * max-width (800 / 1100 / 1200 / 1400 / none), so "the same" page frame drifted
  * per feature. Pick a width by what the content is, not by page.
  */
-export const PAGE_WIDTHS = {
+const PAGE_WIDTHS = {
   narrow: "800px", // prose and reading (docs)
   default: "1200px", // cards and lists (dashboard, groups, people)
   wide: "1400px", // dense grids and tables (calendar, reports)

@@ -54,7 +54,7 @@ const atTime = (value: Date | string, time: string): Date | null => {
 };
 
 /** When the last presentation is over — end of the last slot, or end of the presentation day when no slots are scheduled. */
-export function lastPresentationEnd(project: ProjectLike): Date | null {
+function lastPresentationEnd(project: ProjectLike): Date | null {
   if (!project.presentationDate) return null;
   let latest: Date | null = null;
   for (const slot of project.presentationSlots || []) {

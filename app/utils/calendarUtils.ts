@@ -10,7 +10,7 @@ import type {
  * No "use client"/"use server" directive, so both sides can import it.
  */
 
-export const EVENT_CATEGORIES = [
+const EVENT_CATEGORIES = [
   "milestone",
   "lecture",
   "groupwork",
@@ -150,7 +150,7 @@ export const normalizeEventInput = (input: ParsedCalendarEventInput) => ({
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export const toDateKey = (d: Date): string =>
+const toDateKey = (d: Date): string =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 export const todayKey = (): string => toDateKey(new Date());

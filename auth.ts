@@ -10,8 +10,6 @@ import { verifyCredentials } from "app/lib/credentials";
 import { getClientIp } from "app/lib/clientIp";
 import { refreshToken, snapshotUser } from "app/lib/sessionToken";
 
-export { getUser } from "app/lib/credentials";
-
 /**
  * How long a signed-in browser stays signed in without visiting, and how
  * often a visit extends that. A week covers a normal study rhythm; a token

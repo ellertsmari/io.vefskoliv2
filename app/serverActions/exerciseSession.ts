@@ -681,11 +681,3 @@ export const finishExercise = async (
     return handleActionError("finishExercise", e, "Could not finish the exercise");
   }
 };
-
-/** Ensure the known tasks helper stays reachable for callers that need counts. */
-export const countExerciseTasks = async (
-  guideId: string
-): Promise<number | null> => {
-  const exercise = await loadExercise(guideId);
-  return exercise ? knownTasks(exercise).length : null;
-};

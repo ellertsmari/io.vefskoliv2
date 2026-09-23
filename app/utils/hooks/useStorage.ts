@@ -60,45 +60,6 @@ export function useLocalState<T>(
   return [state, setValue, loading];
 }
 
-/**
- * Custom hook for sessionStorage that mimics react-session-hooks useSessionState
- */
-export function useSessionState<T>(
-  key: string,
-  defaultValue?: T
-): [T | undefined, (value: T) => void, boolean] {
-  const [state, setState] = useState<T | undefined>(defaultValue);
-  const [loading, setLoading] = useState(true);
-
-  // Initialize from sessionStorage
-  useEffect(() => {
-    try {
-      if (typeof window !== 'undefined' && window.sessionStorage && typeof window.sessionStorage.getItem === 'function') {
-        const item = window.sessionStorage.getItem(key);
-        if (item !== null) {
-          setState(JSON.parse(item));
-        }
-      }
-    } catch (error) {
-      console.error(`Error reading sessionStorage key "${key}":`, error);
-    } finally {
-      setLoading(false);
-    }
-  }, [key]);
-
-  const setValue = useCallback((value: T) => {
-    try {
-      setState(value);
-      if (typeof window !== 'undefined' && window.sessionStorage && typeof window.sessionStorage.setItem === 'function') {
-        window.sessionStorage.setItem(key, JSON.stringify(value));
-      }
-    } catch (error) {
-      console.error(`Error setting sessionStorage key "${key}":`, error);
-    }
-  }, [key]);
-
-  return [state, setValue, loading];
-}
 // ── Form drafts ─────────────────────────────────────────────────────────────
 
 const DRAFT_PREFIX = "draft:";

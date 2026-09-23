@@ -16,7 +16,7 @@ export const LOGIN_LIMITS = {
   perIp: { limit: 30, windowSeconds: 15 * 60 },
 } as const;
 
-export async function getUser(
+async function getUser(
   email: string,
   options: { withPassword?: boolean } = {}
 ): Promise<UserDocument | null> {

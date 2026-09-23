@@ -13,7 +13,6 @@ import { returnGuide } from "serverActions/returnGuide";
 import { ReturnForm } from "app/guides/components/feedback/returnForm/ReturnForm";
 import React from "react";
 jest.mock("../../auth", () => ({
-  getUser: jest.fn(),
   signIn: jest.fn(),
   auth: jest.fn(),
 }));

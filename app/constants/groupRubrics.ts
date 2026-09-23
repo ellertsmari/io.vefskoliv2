@@ -10,7 +10,7 @@ import MODULE_RUBRICS from "./moduleRubrics.json";
  * settings rubric editor. Kept out of `groupWork.ts` on purpose — every group
  * page imports that module, and only the teacher settings tab needs this.
  */
-export const MODULE_RUBRIC_PRESETS: Record<number, RubricItem[]> =
+const MODULE_RUBRIC_PRESETS: Record<number, RubricItem[]> =
   MODULE_RUBRICS as Record<number, RubricItem[]>;
 
 /** Modules that have a preset rubric, ascending. */

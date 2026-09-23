@@ -93,7 +93,7 @@ export const extendGuides = (
  * The student's best attempt on an auto-graded guide, or undefined if none.
  * "Best" = highest score (ties broken arbitrarily, which is fine).
  */
-export const bestAttempt = (
+const bestAttempt = (
   attempts: ExerciseAttemptInfo[] = []
 ): ExerciseAttemptInfo | undefined => {
   if (attempts.length === 0) return undefined;

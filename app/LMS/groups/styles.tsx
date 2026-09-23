@@ -121,7 +121,7 @@ export const ScorePill = styled(Pill)<{ $color: string; $background: string }>`
     `color-mix(in srgb, ${$color} 20%, transparent)`};
 `;
 
-export const buttonBase = css`
+const buttonBase = css`
   border-radius: var(--radius-md);
   padding: 0.6rem 1.25rem;
   font-size: var(--text-sm);
@@ -562,12 +562,6 @@ export const ExternalLink = styled.a`
   &:hover {
     border-color: var(--primary-black-100);
   }
-`;
-
-export const ImagesRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 `;
 
 export const TeamImage = styled.img`

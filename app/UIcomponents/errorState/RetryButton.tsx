@@ -35,5 +35,3 @@ export const RetryButton = ({ onRetry, label = "TRY AGAIN" }: Props) => {
     </DefaultButton>
   );
 };
-
-export default RetryButton;

@@ -97,7 +97,7 @@ export const LOCATION_ICONS: Record<string, string> = {
 // Module 4, back-end tech in Module 5).
 export const GROUP_PROJECT_MODULES = [1, 3, 4, 5, 6] as const;
 
-export const MODULE_TECH_STACK: Record<number, readonly TechStackOption[]> = {
+const MODULE_TECH_STACK: Record<number, readonly TechStackOption[]> = {
   1: ["HTML", "CSS", "Figma"],
   3: ["HTML", "CSS", "Tailwind", "TypeScript", "Figma"],
   4: ["React", "TypeScript", "Tailwind", "Styled Components", "Figma"],
@@ -153,10 +153,6 @@ export const TEAM_LINK_LABELS: Record<TeamLinkKey, string> = {
   website: "Live website",
   backend: "Backend",
 };
-
-// Team images are uploaded via utils/imageUpload (browser-compressed data
-// URLs stored inline) — they'll feed the future showcase page.
-export const MAX_TEAM_IMAGES = 3;
 
 // How many pieces of feedback a team may publish on its showcase page. A
 // handful reads as a highlight; the whole pile reads as a transcript.
@@ -250,8 +246,8 @@ export const PEER_RESULT_STEP = 0.1;
  * Only teacher-confirmed figures ever reach this function. What the team wrote
  * is advice for the teacher setting them.
  */
-export const PEER_BOOST_SCALE = 0.025;
-export const PEER_PENALTY_SCALE = 0.175;
+const PEER_BOOST_SCALE = 0.025;
+const PEER_PENALTY_SCALE = 0.175;
 
 export function peerGradeFactor(
   contribution: number,
@@ -309,7 +305,7 @@ export const peerBalance = (scores: (number | null | undefined)[]): number =>
   scores.reduce<number>((total, score) => total + (score ?? 0), 0);
 
 /** What is wrong with one axis' balance, or null when it is within budget. */
-export function peerBalanceMessage(
+function peerBalanceMessage(
   axis: PeerAxis,
   balance: number
 ): string | null {
@@ -413,12 +409,12 @@ export function disciplineMetaForCategory(
 // (24-hour clock); the end time follows from the presentation length. The
 // default length per module comes from the presentation format in the docs
 // (M1: 20 min, M3/M4/M5: 30 min, M6: 40 min).
-export const PRESENTATION_DAY_START = "09:00";
-export const PRESENTATION_DAY_END = "16:00";
-export const PRESENTATION_START_STEP_MINUTES = 10;
-export const DEFAULT_PRESENTATION_LENGTH = 30;
+const PRESENTATION_DAY_START = "09:00";
+const PRESENTATION_DAY_END = "16:00";
+const PRESENTATION_START_STEP_MINUTES = 10;
+const DEFAULT_PRESENTATION_LENGTH = 30;
 
-export const MODULE_PRESENTATION_LENGTH: Record<number, number> = {
+const MODULE_PRESENTATION_LENGTH: Record<number, number> = {
   1: 20,
   3: 30,
   4: 30,
@@ -470,7 +466,7 @@ export type RubricItem = {
   discipline?: RubricDiscipline;
 };
 
-export const DEFAULT_RUBRIC: RubricItem[] = [
+const DEFAULT_RUBRIC: RubricItem[] = [
   {
     key: "product",
     title: "Product",

@@ -29,5 +29,3 @@ export const ErrorState = ({ code, title, message, digest, children }: Props) =>
     {digest && <ErrorDigest>Reference: {digest}</ErrorDigest>}
   </StateWrapper>
 );
-
-export default ErrorState;

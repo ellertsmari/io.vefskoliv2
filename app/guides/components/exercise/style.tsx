@@ -1,41 +1,9 @@
 import styled, { css } from "styled-components";
 
-export const TaskCard = styled.fieldset`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  border: none;
-  padding: 0;
-  margin-left: 0;
-  margin-right: 0;
-`;
-
-export const TaskPrompt = styled.legend`
-  padding: 0;
-`;
-
 export const TaskMeta = styled.span`
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--primary-black-60);
-`;
-
-export const ExerciseMeta = styled.p`
-  margin: 0 0 1rem 0;
-  font-size: var(--text-sm);
-  color: var(--primary-black-60);
-`;
-
-export const SubmitRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-`;
-
-export const AnsweredCount = styled.span`
-  font-size: var(--text-sm);
   color: var(--primary-black-60);
 `;
 
@@ -191,39 +159,4 @@ export const ShortAnswerInput = styled.input`
   &:disabled {
     opacity: 0.6;
   }
-`;
-
-export const ResultBanner = styled.div<{ $passed: boolean }>`
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-  font-weight: 600;
-  color: ${({ $passed }) => ($passed ? "var(--primary-black-100)" : "var(--primary-black-100)")};
-  background-color: ${({ $passed }) => ($passed ? "var(--error-success-30)" : "var(--error-failure-30)")};
-`;
-
-export const TaskResultNote = styled.p<{
-  $correct: boolean;
-  $partial?: boolean;
-}>`
-  margin: 0;
-  font-size: var(--text-sm);
-  color: ${({ $correct, $partial }) =>
-    $correct ? "var(--primary-black-100)" : $partial ? "var(--primary-black-100)" : "var(--primary-black-100)"};
-`;
-
-export const GoalBreakdownList = styled.ul`
-  list-style: none;
-  margin: 0 0 1rem 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--primary-black-10);
-  border-radius: var(--radius-md);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-`;
-
-export const GoalItem = styled.li<{ $mastered: boolean }>`
-  font-size: var(--text-sm);
-  color: ${({ $mastered }) => ($mastered ? "var(--primary-black-100)" : "var(--primary-black-100)")};
 `;

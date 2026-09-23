@@ -62,7 +62,7 @@ export type ExerciseForm = {
   tasks: TaskForm[];
 };
 
-export const emptyTask = (): QuizTaskForm => ({
+const emptyTask = (): QuizTaskForm => ({
   kind: "quiz",
   prompt: "",
   options: ["", ""],

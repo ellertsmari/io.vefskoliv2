@@ -7,7 +7,7 @@ const breakPoint = "450px";
  * exercise or a two-column report needs the room. Without this every modal fell
  * back to 90dvw, which is why they read as mostly whitespace on a wide screen.
  */
-export const MODAL_SIZES = {
+const MODAL_SIZES = {
   sm: "420px", // confirmations, short prompts
   md: "560px", // default: forms, profile
   lg: "820px", // slideshows, attempt reviews
