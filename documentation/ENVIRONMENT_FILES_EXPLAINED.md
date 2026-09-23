@@ -184,7 +184,6 @@ Send one final email:
 
 - **`VERCEL_ENVIRONMENT_VARIABLES.md`** - How to deploy to Vercel
 - **`CANVAS_QUICK_REFERENCE.md`** - Canvas setup steps
-- **`ENVIRONMENT_SETUP_COMPLETE.md`** - What's already done
 - **`.env.lti.example`** - Template for developers
 
 ---

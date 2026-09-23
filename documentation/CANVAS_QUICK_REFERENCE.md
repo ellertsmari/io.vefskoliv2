@@ -129,7 +129,6 @@ Before testing, verify:
 ## 📚 Full Documentation
 - Detailed guide: `CANVAS_INTEGRATION_GUIDE.md`
 - Technical details: `LTI_SETUP.md`
-- Security audit: `FINAL_SECURITY_AUDIT.md`
 - Canvas docs: https://canvas.instructure.com/doc/api/file.lti_dev_key_config.html
 
 ---
