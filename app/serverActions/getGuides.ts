@@ -10,6 +10,7 @@ import { ActivityCycleModel } from "models/activityCycle";
 import { ActivityEntryModel } from "models/activityEntry";
 import { calculateActivityProgress } from "utils/activityLog";
 import type { ActivityCycle, ActivityEntry } from "types/activityLogTypes";
+import { safeSerialize } from "utils/serialization";
 
 // grab user's submitted returns
 const lookupReturnsSubmitted = (userId: ObjectId): PipelineStage => {
@@ -395,7 +396,7 @@ export async function getGuides(
     const result = await Guide.aggregate(pipeline).exec();
 
     // Serialize MongoDB documents to plain objects for client components
-    const serializedResult: GuideInfo[] = JSON.parse(JSON.stringify(result));
+    const serializedResult: GuideInfo[] = safeSerialize(result);
     const logs = serializedResult.filter((g) => g.submissionType === "activityLog" && g.activityCycleId);
     if (logs.length) {
       const [cycles, entries] = await Promise.all([

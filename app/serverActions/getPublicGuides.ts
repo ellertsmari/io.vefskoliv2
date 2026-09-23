@@ -2,6 +2,7 @@
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { GuideType } from "models/guide";
+import { safeSerialize } from "utils/serialization";
 
 export async function getPublicGuides(): Promise<GuideType[] | null> {
   try {
@@ -33,7 +34,7 @@ export async function getPublicGuides(): Promise<GuideType[] | null> {
       .exec();
 
     // Serialize MongoDB documents to plain objects for client components
-    return JSON.parse(JSON.stringify(guides));
+    return safeSerialize(guides);
   } catch (e) {
     // Null, not a stand-in list: a visitor during an outage used to be shown
     // two invented guides, which read as the real course.
