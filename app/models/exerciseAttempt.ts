@@ -10,10 +10,17 @@ import {
 /**
  * A student's attempt at an auto-graded guide exercise.
  *
- * One document per submission (students may retry, producing multiple attempts).
- * `score` is on the same 0..10 scale as peer-review grades so it flows through the
- * existing grade/progress UI unchanged. Grading happens server-side in the
- * `submitExercise` action; the stored answers are the student's raw responses.
+ * ONE `active` document per student per guide, open for good — see
+ * docs/exercise-continuous-attempt.md. It records what the student did; the
+ * score is derived from that and the current answer key (exerciseAttemptState)
+ * and only cached here for listing.
+ *
+ * Documents from the old numbered-attempt model (`submitted`, `inProgress`)
+ * are folded into the active one the first time it is loaded, and kept as
+ * `merged` history.
+ *
+ * `score` is on the same 0..10 scale as peer-review grades so it flows through
+ * the existing grade/progress UI unchanged.
  */
 const exerciseAttemptSchema = new Schema({
   guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide", index: true },
@@ -37,15 +44,28 @@ const exerciseAttemptSchema = new Schema({
   // would re-serve the questions whose answers the student was just shown.
   attemptNumber: { type: Schema.Types.Number, required: true, default: 1 },
 
-  // An attempt is worked through one question at a time and only scores when
-  // it is finished. Exactly one in-progress attempt exists per student per
-  // guide (partial unique index below).
+  // `active`: the one continuous attempt. `merged`: an old numbered attempt
+  // already folded into it. `inProgress` and `submitted` are the old model,
+  // read only by the merge.
   status: {
     type: Schema.Types.String,
     required: true,
-    enum: ["inProgress", "submitted"],
+    enum: ["inProgress", "submitted", "active", "merged"],
     default: "submitted",
   },
+
+  // Active attempts only — what the student did, from which the score is
+  // derived. Shapes in utils/exerciseAttemptState.ts:
+  //   slots: { entries: { taskId, answer? }[] }[]   the quiz, one per place
+  //   served: string[]                              short-answer + code tasks
+  //   tries: { [taskId]: answer[] }                 every short-answer try
+  slots: { type: Schema.Types.Mixed, required: false },
+  served: { type: [Schema.Types.String], required: false, default: undefined },
+  tries: { type: Schema.Types.Mixed, required: false },
+
+  // Cached with the score so the guide list can tell "opened" from "started"
+  // without deriving anything.
+  answeredCount: { type: Schema.Types.Number, required: false },
 
   // Per-task record, keyed by task id: how it went while working through.
   //
@@ -78,6 +98,18 @@ exerciseAttemptSchema.index(
     unique: true,
     partialFilterExpression: { status: "inProgress" },
     name: "one_in_progress_attempt_per_guide",
+  }
+);
+
+// Exactly one continuous attempt per student per guide. A different key order
+// from the index above: two indexes on one key pattern cannot differ only by
+// their partial filter on older MongoDB versions.
+exerciseAttemptSchema.index(
+  { owner: 1, guide: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: "active" },
+    name: "one_active_attempt_per_guide",
   }
 );
 

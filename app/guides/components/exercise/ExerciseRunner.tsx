@@ -4,15 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useFormDraft } from "utils/hooks/useStorage";
 import { DraftNotice } from "UIcomponents/draftNotice/DraftNotice";
 import {
-  startExercise,
+  openExercise,
   checkAnswer,
-  finishExercise,
-  getExerciseSummary,
-  type CheckedAnswer,
-  type ExerciseSummary,
-  type FinishedExercise,
-  type StartedExercise,
+  newQuestion,
+  type ExerciseItem,
 } from "serverActions/exerciseSession";
+import type { ScoreSummary } from "utils/exerciseAttemptState";
 import {
   ExerciseTaskType,
   MAX_CODE_LENGTH,
@@ -20,13 +17,12 @@ import {
   type ExercisePublic,
   type ExerciseTaskPublic,
 } from "types/guideTypes";
-import type { ExerciseProgress } from "utils/exerciseUtils";
 import { MAX_ANSWER_LENGTH } from "utils/shortAnswer";
 import { Button } from "globalStyles/buttons/default/style";
 import { Border } from "globalStyles/globalStyles";
 import { CodeTaskFields, CodeFeedbackView } from "./CodeTask";
 import { Option, OptionInput, ShortAnswerInput, TaskMeta } from "./style";
-import { Trophy, PerfectBanner, PerfectText, ProgressLabel } from "./launcherStyle";
+import { ProgressLabel } from "./launcherStyle";
 import {
   RunnerShell,
   RunnerHeader,
@@ -41,40 +37,56 @@ import {
   Prompt,
   Feedback,
   Spacer,
-  GoalList,
-  GoalRow,
-  ScoreBig,
   SegmentBar,
   Segment,
-  ConfirmNotice,
 } from "./runnerStyle";
+import { formatPoints, passMark } from "./passMark";
 
 /**
- * The exercise, one question at a time, with free movement between them.
+ * The exercise, one question at a time, in the student's one attempt.
  *
- * Nothing advances on its own and nothing is locked: Previous and Next always
- * work, the segmented bar jumps straight to any question, and Check can be
- * pressed as many times as the student likes. A question left unanswered simply
- * earns nothing, which is what skipping already meant.
+ * Nothing advances on its own and nothing is locked except a multiple-choice
+ * question guessed wrong: Previous and Next always work, and the segmented bar
+ * jumps straight to any question. There is no Finish — every answer is saved
+ * the moment it is checked, and the score is live. Closing is just closing.
  *
- * Answers are checked on the SERVER. The key never reaches the browser, and
- * first-try accuracy — the grade — is recorded there rather than reported by
- * the client.
+ * Answers are checked on the SERVER. The key never reaches the browser until
+ * a question is locked, and the halving is counted there, not reported by the
+ * client.
  */
 
-type Phase = "loading" | "running" | "finished" | "error";
+type Phase = "loading" | "running" | "error";
 
 /** How a question looks in the progress bar. */
-type SegmentState = "untried" | "correct" | "wrong";
-
 const segmentState = (
-  progress: ExerciseProgress,
-  id: string
-): SegmentState => {
-  const entry = progress[id];
-  if (entry?.correct) return "correct";
-  if ((entry?.tries ?? 0) > 0) return "wrong";
-  return "untried";
+  item: ExerciseItem | undefined
+): "untried" | "correct" | "wrong" | "pending" => {
+  switch (item?.status) {
+    case "correct":
+      return "correct";
+    case "locked":
+    case "tried":
+      return "wrong";
+    case "pending":
+      return "pending";
+    default:
+      return "untried";
+  }
+};
+
+const segmentLabel = (item: ExerciseItem | undefined): string => {
+  switch (item?.status) {
+    case "correct":
+      return "correct";
+    case "locked":
+      return "locked";
+    case "tried":
+      return "not right yet";
+    case "pending":
+      return "waiting for your teacher";
+    default:
+      return "not attempted";
+  }
 };
 
 /**
@@ -101,69 +113,65 @@ const blankDraft = (task: ExerciseTaskPublic): ExerciseAnswerValue =>
     ? ""
     : [];
 
+/** What the last check said beyond the item's state. Client-side only. */
+type CheckNotes = { hint?: string; answerNotes?: string[] };
+
 export const ExerciseRunner = ({
   guideId,
   onClose,
-  onSummaryChange,
 }: {
   guideId: string;
   onClose: () => void;
-  onSummaryChange?: (summary: ExerciseSummary) => void;
 }) => {
   const [phase, setPhase] = useState<Phase>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [started, setStarted] = useState<StartedExercise | null>(null);
-  const [progress, setProgress] = useState<ExerciseProgress>({});
+  const [exercise, setExercise] = useState<ExercisePublic | null>(null);
+  const [items, setItems] = useState<Record<string, ExerciseItem>>({});
+  const [score, setScore] = useState<ScoreSummary | null>(null);
   const [index, setIndex] = useState(0);
   const [drafts, setDrafts] = useState<Record<string, ExerciseAnswerValue>>({});
-  // Unsent answers survive a reload or a closed tab, per attempt: a new
-  // attempt draws different questions, so its drafts start empty.
+  // Unsent answers survive a reload or a closed tab on this computer. Checked
+  // ones are on the server and come back as `lastAnswer` anywhere.
   const savedDrafts = useFormDraft(
-    started ? `exercise:${guideId}:${started.attemptNumber}` : null,
+    exercise ? `exercise:${guideId}` : null,
     drafts,
     setDrafts
   );
-  const [checking, setChecking] = useState(false);
-  const [feedback, setFeedback] = useState<Record<string, CheckedAnswer>>({});
-  const [result, setResult] = useState<FinishedExercise | null>(null);
-  const [confirmingFinish, setConfirmingFinish] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [notes, setNotes] = useState<Record<string, CheckNotes>>({});
 
   const promptRef = useRef<HTMLHeadingElement>(null);
   const [optionOrder, setOptionOrder] = useState<Record<string, number[]>>({});
 
-  const exercise: ExercisePublic | null = started?.exercise ?? null;
   const tasks = exercise?.tasks ?? [];
   const task: ExerciseTaskPublic | undefined = tasks[index];
-
-  const correctCount = tasks.filter(
-    (t) => segmentState(progress, t.id) === "correct"
-  ).length;
-  const untriedCount = tasks.filter(
-    (t) => segmentState(progress, t.id) === "untried"
-  ).length;
+  const item = task ? items[task.id] : undefined;
 
   // ---- open -------------------------------------------------------------
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const res = await startExercise(guideId);
+      const res = await openExercise(guideId);
       if (cancelled) return;
       if (!res.success) {
         setErrorMessage(res.message);
         setPhase("error");
         return;
       }
-      setStarted(res.data);
-      setProgress(res.data.progress);
-      const firstOpen = res.data.exercise.tasks.findIndex(
-        (t) => !res.data.progress[t.id]?.correct
+      const { exercise: opened, items: openedItems, score: openedScore } =
+        res.data;
+      setExercise(opened);
+      setItems(openedItems);
+      setScore(openedScore);
+      const firstOpen = opened.tasks.findIndex(
+        (t) => openedItems[t.id]?.status !== "correct"
       );
       setIndex(firstOpen === -1 ? 0 : firstOpen);
       // Shuffled after load rather than during render: shuffling while
       // rendering would not match what the server sent.
       const order: Record<string, number[]> = {};
-      for (const t of res.data.exercise.tasks) {
+      for (const t of opened.tasks) {
         if (t.type === ExerciseTaskType.QUIZ) {
           order[t.id] = shuffledIndices(t.options.length);
         }
@@ -184,9 +192,9 @@ export const ExerciseRunner = ({
 
   // ---- answering --------------------------------------------------------
 
-  const draft = task
-    ? drafts[task.id] ?? blankDraft(task)
-    : ([] as ExerciseAnswerValue);
+  const draft: ExerciseAnswerValue = task
+    ? drafts[task.id] ?? item?.lastAnswer ?? blankDraft(task)
+    : [];
 
   const setDraft = (value: ExerciseAnswerValue) => {
     if (!task) return;
@@ -198,46 +206,62 @@ export const ExerciseRunner = ({
       ? Array.isArray(draft) && draft.length > 0
       : typeof draft === "string" && draft.trim().length > 0;
 
-  const current = task ? feedback[task.id] : undefined;
-  const isCorrect = task ? !!progress[task.id]?.correct : false;
+  const answerable =
+    !!item && item.status !== "correct" && item.status !== "locked";
 
   const submitAnswer = async () => {
-    if (!task || checking || !hasDraft || isCorrect) return;
-    setChecking(true);
+    if (!task || busy || !hasDraft || !answerable) return;
+    setBusy(true);
     const res = await checkAnswer({ guideId, taskId: task.id, answer: draft });
-    setChecking(false);
+    setBusy(false);
 
     if (!res.success) {
       setErrorMessage(res.message);
       return;
     }
-
-    setFeedback((prev) => ({ ...prev, [task.id]: res.data }));
-    setProgress((prev) => ({
+    setErrorMessage(null);
+    setItems((prev) => ({ ...prev, [task.id]: res.data.item }));
+    setScore(res.data.score);
+    setNotes((prev) => ({
       ...prev,
-      [task.id]: {
-        tries: res.data.tries,
-        correct: res.data.status === "correct",
-        firstTryCorrect:
-          res.data.status === "correct" && res.data.tries === 1,
-        skipped: false,
-      },
+      [task.id]: { hint: res.data.hint, answerNotes: res.data.answerNotes },
     }));
+    // Saved on the server now; the local draft would only shadow it.
+    setDrafts((prev) => {
+      const { [task.id]: _saved, ...rest } = prev;
+      return rest;
+    });
   };
 
-  const finish = async () => {
-    setChecking(true);
-    const res = await finishExercise(guideId);
-    setChecking(false);
+  const replaceQuestion = async () => {
+    if (!task || busy || item?.status !== "locked") return;
+    setBusy(true);
+    const res = await newQuestion({ guideId, taskId: task.id });
+    setBusy(false);
+
     if (!res.success) {
       setErrorMessage(res.message);
       return;
     }
-    savedDrafts.clear();
-    setResult(res.data);
-    setPhase("finished");
-    const summary = await getExerciseSummary(guideId);
-    if (summary) onSummaryChange?.(summary);
+    setErrorMessage(null);
+    const { replaced, task: next, item: nextItem, score: nextScore } = res.data;
+    setExercise((prev) =>
+      prev
+        ? {
+            ...prev,
+            tasks: prev.tasks.map((t) => (t.id === replaced ? next : t)),
+          }
+        : prev
+    );
+    setItems((prev) => ({ ...prev, [next.id]: nextItem }));
+    setScore(nextScore);
+    if (next.type === ExerciseTaskType.QUIZ) {
+      setOptionOrder((prev) => ({
+        ...prev,
+        [next.id]: shuffledIndices(next.options.length),
+      }));
+    }
+    promptRef.current?.focus();
   };
 
   // ---- render -----------------------------------------------------------
@@ -252,7 +276,7 @@ export const ExerciseRunner = ({
     );
   }
 
-  if (phase === "error") {
+  if (phase === "error" || !exercise || !score) {
     return (
       <RunnerShell>
         <RunnerBody>
@@ -267,136 +291,35 @@ export const ExerciseRunner = ({
     );
   }
 
-  if (phase === "finished" && result) {
-    return (
-      <RunnerShell>
-        <RunnerBody>
-          {result.perfect ? (
-            <PerfectBanner>
-              <Trophy role="img" aria-label="trophy" $animate>
-                🏆
-              </Trophy>
-              <PerfectText>
-                <strong>Perfect score</strong>
-                <span>Every question right, first time. Well done.</span>
-              </PerfectText>
-            </PerfectBanner>
-          ) : (
-            <>
-              <ScoreBig>{result.score}/10</ScoreBig>
-              <TaskMeta>
-                {result.passed ? "Passed" : "Not passed yet"} ·{" "}
-                {result.earnedPoints} of {result.totalPoints} points, scored on
-                first-try answers
-              </TaskMeta>
-            </>
-          )}
+  if (!task || !item) return null;
 
-          {result.goalBreakdown && result.goalBreakdown.length > 0 && (
-            <GoalList aria-label="Score by learning goal">
-              {result.goalBreakdown.map((g) => {
-                const mastered = g.earnedPoints === g.totalPoints;
-                return (
-                  <GoalRow key={g.goal} $mastered={mastered}>
-                    {mastered ? "✓" : "↻"} {g.goal} — {g.earnedPoints}/
-                    {g.totalPoints}
-                    {mastered ? "" : " · worth revisiting"}
-                  </GoalRow>
-                );
-              })}
-            </GoalList>
-          )}
-        </RunnerBody>
-        <RunnerFooter>
-          <Button $styletype="default" type="button" onClick={onClose}>
-            Back to the guide
-          </Button>
-        </RunnerFooter>
-      </RunnerShell>
-    );
-  }
-
-  if (!task) return null;
-
-  /**
-   * Finishing ends the attempt for good: the next one draws a different set of
-   * questions, so there is no coming back to these. That is worth saying
-   * plainly rather than discovering.
-   */
-  if (confirmingFinish) {
-    return (
-      <RunnerShell>
-        <RunnerBody>
-          <Prompt as="h2">Finish this attempt?</Prompt>
-          <TaskMeta>
-            {correctCount} of {tasks.length} correct so far.
-          </TaskMeta>
-          <ConfirmNotice>
-            <strong>This attempt is scored and closed.</strong> You cannot come
-            back to these questions — starting again gives you a different set
-            drawn from the pool, and your best score is the one that counts.
-            {untriedCount > 0 && (
-              <>
-                {" "}
-                <strong>
-                  {untriedCount} question{untriedCount === 1 ? "" : "s"} you have
-                  not attempted
-                </strong>{" "}
-                will score nothing.
-              </>
-            )}
-          </ConfirmNotice>
-        </RunnerBody>
-        <RunnerFooter>
-          <Button
-            $styletype="outlined"
-            type="button"
-            onClick={() => setConfirmingFinish(false)}
-          >
-            ← Keep working
-          </Button>
-          <Spacer />
-          <Button
-            $styletype="default"
-            type="button"
-            disabled={checking}
-            onClick={finish}
-          >
-            {checking ? "Scoring…" : "Finish and see my score"}
-          </Button>
-        </RunnerFooter>
-      </RunnerShell>
-    );
-  }
+  const currentNotes = notes[task.id];
 
   return (
     <RunnerShell>
       <RunnerHeader>
         <SegmentBar aria-label="Questions">
-          {tasks.map((t, i) => {
-            const state = segmentState(progress, t.id);
-            return (
-              <Segment
-                key={t.id}
-                type="button"
-                $state={state}
-                $current={i === index}
-                aria-current={i === index ? "step" : undefined}
-                aria-label={`Question ${i + 1}: ${
-                  state === "correct"
-                    ? "correct"
-                    : state === "wrong"
-                    ? "not right yet"
-                    : "not attempted"
-                }`}
-                onClick={() => setIndex(i)}
-              />
-            );
-          })}
+          {tasks.map((t, i) => (
+            <Segment
+              key={t.id}
+              type="button"
+              $state={segmentState(items[t.id])}
+              $current={i === index}
+              aria-current={i === index ? "step" : undefined}
+              aria-label={`Question ${i + 1}: ${segmentLabel(items[t.id])}`}
+              onClick={() => setIndex(i)}
+            />
+          ))}
         </SegmentBar>
         <ProgressLabel>
-          Question {index + 1} of {tasks.length} · {correctCount} correct
-          {untriedCount > 0 && ` · ${untriedCount} not attempted`}
+          Question {index + 1} of {tasks.length} · Your score{" "}
+          <strong>{score.score}/10</strong> · pass mark{" "}
+          {passMark(exercise.passThreshold)}
+          {score.perfect ? " · 🏆 perfect" : score.passed ? " · passed ✓" : ""}
+        </ProgressLabel>
+        <ProgressLabel>
+          Every answer is saved as you check it — close this any time and carry
+          on later, on any computer.
         </ProgressLabel>
       </RunnerHeader>
 
@@ -414,6 +337,8 @@ export const ExerciseRunner = ({
             <>
               <TaskMeta>
                 {task.allowMultiple ? "Select all that apply" : "Choose one"}
+                {item.status === "open" &&
+                  ` · one guess · worth ${formatPoints(item.worth)}`}
               </TaskMeta>
               <Border>
                 {(
@@ -424,7 +349,7 @@ export const ExerciseRunner = ({
                       type={task.allowMultiple ? "checkbox" : "radio"}
                       name={`${task.id}-option`}
                       checked={Array.isArray(draft) && draft.includes(original)}
-                      disabled={checking || isCorrect}
+                      disabled={busy || !answerable}
                       onChange={() => {
                         const currentDraft = Array.isArray(draft) ? draft : [];
                         setDraft(
@@ -445,13 +370,16 @@ export const ExerciseRunner = ({
 
           {task.type === ExerciseTaskType.SHORT_ANSWER && (
             <>
-              <TaskMeta>Type your answer — as many tries as you like</TaskMeta>
+              <TaskMeta>
+                Type your answer
+                {answerable && ` · worth ${formatPoints(item.worth)}`}
+              </TaskMeta>
               <Border>
                 <ShortAnswerInput
                   type="text"
                   value={typeof draft === "string" ? draft : ""}
                   placeholder={task.placeholder ?? ""}
-                  disabled={checking || isCorrect}
+                  disabled={busy || !answerable}
                   maxLength={MAX_ANSWER_LENGTH}
                   aria-label={task.prompt}
                   onChange={(e) => setDraft(e.target.value)}
@@ -470,23 +398,37 @@ export const ExerciseRunner = ({
             <CodeTaskFields
               task={task}
               value={typeof draft === "string" ? draft : task.starterCode}
-              disabled={checking || isCorrect}
+              disabled={busy || !answerable}
               onChange={(text) => setDraft(text.slice(0, MAX_CODE_LENGTH))}
             />
           )}
 
           <div aria-live="polite">
-            {current && (
-              <Feedback $tone={current.status === "correct" ? "right" : "wrong"}>
-                {current.status === "correct"
-                  ? `Correct${
-                      current.explanation ? ` — ${current.explanation}` : ""
-                    }`
-                  : `Not quite — try again, or move on and come back to it.`}
-              </Feedback>
-            )}
-            {current?.code && <CodeFeedbackView feedback={current.code} />}
+            {errorMessage && <Feedback $tone="wrong">{errorMessage}</Feedback>}
+            <ItemFeedback task={task} item={item} />
+            {item.code && <CodeFeedbackView feedback={item.code} />}
           </div>
+
+          {item.status === "locked" && (
+            <>
+              <Button
+                $styletype="default"
+                type="button"
+                disabled={busy || !item.canReplace}
+                onClick={replaceQuestion}
+              >
+                {item.canReplace
+                  ? `New question — worth ${formatPoints(item.worth)}`
+                  : "No new questions left"}
+              </Button>
+              {item.canReplace && (
+                <TaskMeta>
+                  Each wrong answer halves what the next question on this topic
+                  is worth.
+                </TaskMeta>
+              )}
+            </>
+          )}
         </RunnerBody>
 
         <HelpPanel aria-label="Help with this question">
@@ -512,10 +454,10 @@ export const ExerciseRunner = ({
 
           {/* What they actually chose, explained. Comes before the generic
               hint because it answers the question they really asked. */}
-          {current && current.status !== "correct" && current.answerNotes?.length ? (
+          {item.status !== "correct" && currentNotes?.answerNotes?.length ? (
             <>
               <HelpHeading>About your answer</HelpHeading>
-              {current.answerNotes.map((note, i) => (
+              {currentNotes.answerNotes.map((note, i) => (
                 <HelpBody key={i}>{note}</HelpBody>
               ))}
             </>
@@ -523,10 +465,10 @@ export const ExerciseRunner = ({
 
           {/* The hint arrives once they have actually tried, so it nudges
               rather than answers. */}
-          {current && current.status !== "correct" && current.hint && (
+          {item.status !== "correct" && currentNotes?.hint && (
             <>
               <HelpHeading>Hint</HelpHeading>
-              <HelpBody>{current.hint}</HelpBody>
+              <HelpBody>{currentNotes.hint}</HelpBody>
             </>
           )}
         </HelpPanel>
@@ -546,15 +488,17 @@ export const ExerciseRunner = ({
         <Button
           $styletype="default"
           type="button"
-          disabled={checking || !hasDraft || isCorrect}
+          disabled={busy || !hasDraft || !answerable}
           onClick={submitAnswer}
         >
-          {checking
+          {busy
             ? task.type === ExerciseTaskType.CODE
               ? "Running your code…"
               : "Checking…"
-            : isCorrect
+            : item.status === "correct"
             ? "Correct ✓"
+            : item.status === "locked"
+            ? "Locked"
             : "Check"}
         </Button>
         <Spacer />
@@ -567,17 +511,64 @@ export const ExerciseRunner = ({
         >
           Next →
         </Button>
-
-        <Button
-          $styletype="default"
-          type="button"
-          disabled={checking}
-          onClick={() => setConfirmingFinish(true)}
-        >
-          Finish
-          {untriedCount > 0 ? ` (${untriedCount} left)` : ""}
+        <Button $styletype="outlined" type="button" onClick={onClose}>
+          Close
         </Button>
       </RunnerFooter>
     </RunnerShell>
   );
+};
+
+/** What happened on this question, in words. */
+const ItemFeedback = ({
+  task,
+  item,
+}: {
+  task: ExerciseTaskPublic;
+  item: ExerciseItem;
+}) => {
+  if (item.status === "correct") {
+    return (
+      <Feedback $tone="right">
+        Correct — {formatPoints(item.earned)}
+        {item.explanation ? `. ${item.explanation}` : ""}
+      </Feedback>
+    );
+  }
+
+  if (item.status === "locked" && task.type === ExerciseTaskType.QUIZ) {
+    const answer = (item.reveal?.correctAnswers ?? [])
+      .map((i) => task.options[i])
+      .filter(Boolean)
+      .join(", ");
+    return (
+      <Feedback $tone="wrong">
+        Not quite. The answer was: <strong>{answer}</strong>
+        {item.reveal?.explanation ? ` — ${item.reveal.explanation}` : ""}
+        <br />
+        This question is now locked.
+      </Feedback>
+    );
+  }
+
+  if (item.status === "pending") {
+    return (
+      <Feedback $tone="wrong">
+        Close — your teacher will look at this answer, and it may yet be
+        accepted. You can keep trying meanwhile; your next try is worth{" "}
+        {formatPoints(item.worth)}.
+      </Feedback>
+    );
+  }
+
+  if (item.status === "tried" && task.type === ExerciseTaskType.SHORT_ANSWER) {
+    return (
+      <Feedback $tone="wrong">
+        Not quite — try again. Your next try is worth{" "}
+        {formatPoints(item.worth)}.
+      </Feedback>
+    );
+  }
+
+  return null;
 };

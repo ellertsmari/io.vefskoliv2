@@ -35,7 +35,16 @@ export const getExerciseAnalytics = async (
   }
 
   const attempts = (await ExerciseAttempt.find(
-    { guide: new ObjectId(guideId) },
+    // One document per student: their continuous attempt once they have
+    // answered something, or a finished old attempt not merged yet. Opened
+    // and untouched would read as a student scoring 0.
+    {
+      guide: new ObjectId(guideId),
+      $or: [
+        { status: "active", answeredCount: { $gt: 0 } },
+        { status: "submitted" },
+      ],
+    },
     // codeResults: code tasks are not re-run for stats, so their recorded
     // outcome is what the per-question correct rates are computed from.
     { owner: 1, answers: 1, codeResults: 1, score: 1, passed: 1 }

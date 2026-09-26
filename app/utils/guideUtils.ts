@@ -103,18 +103,29 @@ const bestAttempt = (
 /**
  * Build the extended info for an auto-graded guide. The peer-review pipeline does
  * not apply, so reviews/grades are marked NOT_APPLICABLE and the grade is taken
- * directly from the best exercise attempt.
+ * directly from the student's one continuous attempt.
+ *
+ * Nothing is final — the attempt never closes — so under the pass mark is IN
+ * PROGRESS, never FAILED (docs/exercise-continuous-attempt.md, decision 2).
  */
 const extendAutoGuide = (guide: GuideInfo): ExtendedGuideInfo => {
-  const best = bestAttempt(guide.exerciseAttempts);
+  const attempts = guide.exerciseAttempts ?? [];
+  const active = attempts.find((a) => a.status === "active");
+  // Opened but nothing answered is not started; an old unfinished attempt
+  // never had a score.
+  const counted = active
+    ? active.answeredCount
+      ? active
+      : undefined
+    : bestAttempt(attempts.filter((a) => a.status !== "inProgress"));
 
   let returnStatus: ReturnStatus;
-  if (!best) {
+  if (!counted) {
     returnStatus = ReturnStatus.NOT_RETURNED;
-  } else if (best.passed) {
+  } else if (counted.passed) {
     returnStatus = ReturnStatus.PASSED;
   } else {
-    returnStatus = ReturnStatus.FAILED;
+    returnStatus = ReturnStatus.IN_PROGRESS;
   }
 
   return {
@@ -125,8 +136,8 @@ const extendAutoGuide = (guide: GuideInfo): ExtendedGuideInfo => {
     reviewStatus: ReviewStatus.NOT_APPLICABLE,
     gradesReceivedStatus: GradesReceivedStatus.NOT_APPLICABLE,
     gradesGivenStatus: GradesGivenStatus.NOT_APPLICABLE,
-    // Grade is the best attempt's score; undefined until the student attempts it.
-    grade: best ? best.score : undefined,
+    // The live score; undefined until the student answers something.
+    grade: counted ? counted.score : undefined,
   };
 };
 

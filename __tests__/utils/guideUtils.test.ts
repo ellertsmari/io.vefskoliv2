@@ -496,12 +496,45 @@ describe("status calculations", () => {
       expect(extended.grade).toBe(8.5);
     });
 
-    it("FAILS when attempted but no attempt passed", () => {
+    // The attempt never closes, so under the pass mark is never final.
+    it("is IN PROGRESS, not failed, when under the pass mark", () => {
       const [extended] = extendGuides([
         autoGuideWith({ exerciseAttempts: [attempt(3, false)] }),
       ]);
-      expect(extended.returnStatus).toBe(ReturnStatus.FAILED);
+      expect(extended.returnStatus).toBe(ReturnStatus.IN_PROGRESS);
       expect(extended.grade).toBe(3);
+    });
+
+    const active = (score: number, passed: boolean, answeredCount: number) =>
+      ({
+        _id: new Types.ObjectId(),
+        score,
+        passed,
+        createdAt: new Date(),
+        status: "active",
+        answeredCount,
+      }) as never;
+
+    it("reads the continuous attempt: opened but unanswered is not started", () => {
+      const [extended] = extendGuides([
+        autoGuideWith({ exerciseAttempts: [active(0, false, 0)] }),
+      ]);
+      expect(extended.returnStatus).toBe(ReturnStatus.NOT_RETURNED);
+      expect(extended.grade).toBeUndefined();
+    });
+
+    it("reads the continuous attempt's live score", () => {
+      const [under] = extendGuides([
+        autoGuideWith({ exerciseAttempts: [active(4.2, false, 5)] }),
+      ]);
+      expect(under.returnStatus).toBe(ReturnStatus.IN_PROGRESS);
+      expect(under.grade).toBe(4.2);
+
+      const [over] = extendGuides([
+        autoGuideWith({ exerciseAttempts: [active(7.4, true, 30)] }),
+      ]);
+      expect(over.returnStatus).toBe(ReturnStatus.PASSED);
+      expect(over.grade).toBe(7.4);
     });
 
     it("uses the best (highest-scoring) attempt across retries", () => {

@@ -41,11 +41,11 @@ export const GuideModal = () => {
       </Header>
       {guide.submissionType === "activityLog" ? <Paragraph>Open the activity log to see semester progress, record hours, or review activities.</Paragraph> : guide.gradingMode === GradingMode.AUTO ? (
         // Auto-graded guides have no peer feedback; point the student back to
-        // the exercise to review their result or try again.
+        // the exercise, which never closes.
         <Paragraph>
           This is an auto-graded exercise
           {grade !== undefined ? ` (score ${grade}/10)` : ""}. Open the guide to
-          review your answers or try again.
+          see your answers and carry on where you left off.
         </Paragraph>
       ) : reviewStatus === ReviewStatus.NEED_TO_REVIEW ? (
         // Keyed on the return being reviewed: after "CONTINUE" refreshes the

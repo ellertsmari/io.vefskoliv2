@@ -23,11 +23,12 @@ import { CANVAS_SCORE_MAXIMUM, CanvasScore } from "./types";
  *   submitted, partial -> the interim number, but PendingManual, so the column
  *                         shows progress without claiming to be final.
  *
- * Auto-graded guides come through the same path: `buildAutoGradedInfo` puts the
- * best attempt's score in `grade` and marks the peer-review steps N/A, so a
- * failed attempt carries a real score (4/10, say) rather than `undefined`. Hence
- * `grade ?? 0` on the failure branch instead of a hardcoded zero — it must not
- * overwrite a score the exercise engine actually computed.
+ * Auto-graded guides come through the same path: `extendAutoGuide` puts the
+ * live score of the student's one continuous attempt in `grade` and marks the
+ * peer-review steps N/A. That attempt never closes, so under the pass mark it
+ * is IN PROGRESS — a real score (4/10, say), sent as progress rather than as a
+ * verdict. Hence `grade ?? 0` rather than a hardcoded zero on those branches —
+ * it must not overwrite a score the exercise engine actually computed.
  */
 export const resolveCanvasScore = (guide: ExtendedGuideInfo): CanvasScore => {
   const scoreMaximum = CANVAS_SCORE_MAXIMUM;
@@ -40,6 +41,17 @@ export const resolveCanvasScore = (guide: ExtendedGuideInfo): CanvasScore => {
       scoreMaximum,
       activityProgress: "Initialized",
       gradingProgress: "NotReady",
+    };
+  }
+
+  // An auto-graded exercise under the pass mark: its attempt never closes, so
+  // the score is real but not final — show it without claiming a verdict.
+  if (guide.returnStatus === ReturnStatus.IN_PROGRESS) {
+    return {
+      scoreGiven: guide.grade ?? 0,
+      scoreMaximum,
+      activityProgress: "InProgress",
+      gradingProgress: "Pending",
     };
   }
 

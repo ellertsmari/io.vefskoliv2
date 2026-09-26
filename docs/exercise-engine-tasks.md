@@ -3,6 +3,10 @@
 Design record for extending the auto-graded exercise engine beyond multiple choice.
 Decided with Smári on 2026-08-12, question by question.
 
+> **Scoring superseded 2026-09-26.** First-try scoring and numbered attempts were replaced
+> by one continuous attempt with halving — see `docs/exercise-continuous-attempt.md`. The
+> task types, matching, sandbox and code scoring below still hold.
+
 ## Why
 
 The engine ships one task type: `quiz`, multiple choice (`ExerciseTaskType.QUIZ`).

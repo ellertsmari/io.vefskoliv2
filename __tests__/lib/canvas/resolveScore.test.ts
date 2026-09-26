@@ -62,19 +62,20 @@ describe("resolveCanvasScore", () => {
     expect(score.gradingProgress).toBe("FullyGraded");
   });
 
-  it("keeps a failing auto-graded score instead of flattening it to zero", () => {
-    // Auto-graded guides put the best attempt in `grade`, so a failed attempt
-    // carries a real number. Overwriting it with 0 would lose the student's work.
+  it("sends an auto-graded score under the pass mark as progress, not a verdict", () => {
+    // The exercise attempt never closes, so 4/10 today may be 8/10 next week.
+    // It is a real number — not flattened to 0 — but not a final grade.
     const score = resolveCanvasScore(
       guideWith({
-        returnStatus: ReturnStatus.FAILED,
+        returnStatus: ReturnStatus.IN_PROGRESS,
         gradesReceivedStatus: GradesReceivedStatus.NOT_APPLICABLE,
         grade: 4,
       })
     );
 
     expect(score.scoreGiven).toBe(4);
-    expect(score.gradingProgress).toBe("FullyGraded");
+    expect(score.activityProgress).toBe("InProgress");
+    expect(score.gradingProgress).toBe("Pending");
   });
 
   it("marks an interim grade as provisional while review grades are missing", () => {

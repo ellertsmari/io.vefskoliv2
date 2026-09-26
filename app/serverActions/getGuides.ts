@@ -4,7 +4,9 @@ import { auth } from "../../auth";
 import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { PipelineStage } from "mongoose";
-import { GuideInfo } from "types/guideTypes";
+import { GradingMode, GuideInfo } from "types/guideTypes";
+import type { ServerExercise } from "utils/exerciseUtils";
+import { ensureActiveAttempt, LEGACY_STATUSES } from "../lib/exerciseAttempts";
 import { hasTeacherPermissions } from "utils/userUtils";
 import { ActivityCycleModel } from "models/activityCycle";
 import { ActivityEntryModel } from "models/activityEntry";
@@ -300,11 +302,22 @@ const lookupExerciseAttempts = (userId: ObjectId): PipelineStage => {
               $and: [
                 { $eq: ["$guide", "$$guideId"] },
                 { $eq: ["$owner", userId] },
+                // Old attempts already folded into the active one.
+                { $ne: ["$status", "merged"] },
               ],
             },
           },
         },
-        { $project: { _id: 1, score: 1, passed: 1, createdAt: 1 } },
+        {
+          $project: {
+            _id: 1,
+            score: 1,
+            passed: 1,
+            createdAt: 1,
+            status: 1,
+            answeredCount: 1,
+          },
+        },
       ],
       as: "exerciseAttempts",
     },
@@ -374,6 +387,42 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
  * what they pass. Without this a student could read every classmate's feedback
  * and grades.
  */
+/**
+ * Fold old numbered exercise attempts into the one continuous attempt, so the
+ * grade on /home already includes the merge's amnesty rather than waiting for
+ * the student to open each guide. Runs once per student per guide: afterwards
+ * there are no unmerged attempts left to find.
+ */
+const mergeOldAttempts = async (guides: GuideInfo[], ownerId: string) => {
+  const unmerged = guides.filter(
+    (g) =>
+      g.gradingMode === GradingMode.AUTO &&
+      !g.exerciseAttempts?.some((a) => a.status === "active") &&
+      g.exerciseAttempts?.some((a) => LEGACY_STATUSES.includes(a.status ?? ""))
+  );
+  for (const guide of unmerged) {
+    const found = (await Guide.findById(guide._id)
+      .select("exercise")
+      .lean()) as { exercise?: ServerExercise } | null;
+    if (!found?.exercise) continue;
+    const active = await ensureActiveAttempt(
+      found.exercise,
+      ownerId,
+      String(guide._id)
+    );
+    guide.exerciseAttempts = [
+      {
+        _id: active._id,
+        score: active.score,
+        passed: active.passed,
+        createdAt: active.createdAt as Date,
+        status: "active",
+        answeredCount: active.answeredCount,
+      },
+    ];
+  }
+};
+
 export async function getGuides(
   userIdString?: string
 ): Promise<GuideInfo[] | null> {
@@ -408,6 +457,8 @@ export async function getGuides(
         if (cycle) guide.activityProgress = calculateActivityProgress(entries.filter((e) => String(e.cycle) === String(cycle._id) && String(e.guide) === String(guide._id)).map((e) => ({ id: String(e._id), sessions: e.sessions, status: e.status })), cycle);
       }
     }
+
+    await mergeOldAttempts(serializedResult, targetId);
 
     return serializedResult as GuideInfo[];
   } catch (e) {

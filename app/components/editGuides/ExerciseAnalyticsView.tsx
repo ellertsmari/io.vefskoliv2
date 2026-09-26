@@ -88,7 +88,7 @@ export const ExerciseAnalyticsView = ({
     return (
       <Panel>
         <Title>Exercise analytics</Title>
-        <Summary>No attempts yet — analytics appear once students start taking the quiz.</Summary>
+        <Summary>No answers yet — analytics appear once students start the exercise.</Summary>
       </Panel>
     );
   }
@@ -105,11 +105,9 @@ export const ExerciseAnalyticsView = ({
       <Title>Exercise analytics</Title>
       <Summary>
         {analytics.uniqueStudents} student
-        {analytics.uniqueStudents === 1 ? "" : "s"} ·{" "}
-        {analytics.totalAttempts} attempt
-        {analytics.totalAttempts === 1 ? "" : "s"} · pass rate{" "}
-        {percent(analytics.studentPassRate)} (by best attempt) · average best
-        score {analytics.averageBestScore ?? "—"}/10. Questions sorted hardest
+        {analytics.uniqueStudents === 1 ? "" : "s"} · pass rate{" "}
+        {percent(analytics.studentPassRate)} · average score{" "}
+        {analytics.averageBestScore ?? "—"}/10. Questions sorted hardest
         first — a low correct rate means a hard concept or a confusing
         question; both are worth a look.
       </Summary>

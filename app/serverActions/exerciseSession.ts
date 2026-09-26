@@ -5,32 +5,42 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "../../auth";
 import { Guide } from "../models/guide";
-import { ExerciseAttempt } from "../models/exerciseAttempt";
 import { connectToDatabase } from "./mongoose-connector";
 import {
-  gradeTask,
+  DEFAULT_PASS_THRESHOLD,
   knownTasks,
-  seededRng,
-  selectServedTasks,
+  publicTask,
   sanitizeExerciseForClient,
-  scoreFromProgress,
+  selectServedTasks,
   taskId,
-  type ExerciseProgress,
   type ServerExercise,
   type ServerTask,
-  type TaskProgress,
-  type GoalResult,
-  type CodeResults,
-  type ExerciseAnswers,
 } from "utils/exerciseUtils";
+import {
+  deriveAttempt,
+  pickReplacement,
+  type AttemptState,
+  type DerivedAttempt,
+  type ItemState,
+  type ScoreSummary,
+} from "utils/exerciseAttemptState";
+import {
+  ensureActiveAttempt,
+  findActiveAttempt,
+  hasLegacyAttempts,
+  refreshCachedScore,
+  saveAttempt,
+  stateOf,
+} from "../lib/exerciseAttempts";
 import { runCodeSubmission } from "utils/codeRunner";
 import { MAX_ANSWER_LENGTH, normalizeAnswer } from "utils/shortAnswer";
 import {
   ExerciseTaskType,
   MAX_CODE_LENGTH,
   type CodeFeedback,
+  type ExerciseAnswerValue,
   type ExercisePublic,
-  type TaskStatus,
+  type ExerciseTaskPublic,
 } from "types/guideTypes";
 import {
   failure,
@@ -41,96 +51,86 @@ import {
 } from "utils/errors";
 
 /**
- * An exercise worked through one question at a time.
+ * An exercise worked through at the student's own pace, in ONE attempt that
+ * never closes — see docs/exercise-continuous-attempt.md.
  *
- * The student answers, the answer is checked immediately, and a correct one
- * moves them on. The score is FIRST-TRY accuracy, so the record of how each
- * task went has to live here rather than in the browser: a client reporting its
- * own progress could simply claim everything was right first time.
+ * Answers are checked on the server and recorded as they are given, so the
+ * work is saved on any computer the moment a question is checked. The score is
+ * derived from that record (utils/exerciseAttemptState) and is live: the guide
+ * passes the moment it reaches the pass mark.
  *
- * The question set is drawn from `attemptNumber`, so an attempt keeps its
- * questions from start to finish and a later attempt gets a different set —
- * otherwise "improve your grade" would re-serve the questions whose answers the
- * student was just shown.
+ * - Multiple choice: one guess. A wrong one locks the question and reveals the
+ *   answer; a new question from the pool is worth half as much.
+ * - Short answer: each wrong try halves what the next is worth.
+ * - Code: scored on the final code.
  */
 
 // ---------------------------------------------------------------------------
 
 export type ExerciseStatus =
-  /** never opened it */
+  /** nothing answered yet */
   | "notStarted"
-  /** an attempt is part-finished */
+  /** under the pass mark, with work to do */
   | "inProgress"
-  /** finished at least once, but not everything right first time */
-  | "canImprove"
-  /** finished with every question right first time */
+  /** at or over the pass mark, not everything right */
+  | "passed"
+  /** everything right */
   | "perfect";
 
 export type ExerciseSummary = {
   status: ExerciseStatus;
-  /** best score so far, 0..10, null when never finished */
-  bestScore: number | null;
+  /** 0..10, null before anything is answered */
+  score: number | null;
   passed: boolean;
-  attemptCount: number;
-  /** questions resolved in the attempt in progress */
+  /** fraction of the points needed to pass, 0..1 */
+  passThreshold: number;
+  /** questions with at least one answer */
   answered: number;
-  /** questions in the attempt in progress, or in a fresh one */
   total: number;
 };
 
-export type StartedExercise = {
-  attemptNumber: number;
+/** One question as the student sees it: its state, and what it is worth. */
+export type ExerciseItem = Omit<ItemState, "slot"> & {
+  /** what they last gave, to show it again */
+  lastAnswer?: ExerciseAnswerValue;
+  /** revealed once answered correctly */
+  explanation?: string;
+  /**
+   * Multiple choice, once locked: the right answer and why. The question is
+   * never served to this student again, so revealing it costs nothing.
+   */
+  reveal?: { correctAnswers: number[]; explanation?: string };
+  /** multiple choice, once locked: whether the pool has a question left */
+  canReplace?: boolean;
+  /** code: what the latest run did */
+  code?: CodeFeedback;
+};
+
+export type OpenedExercise = {
+  /** the questions currently on show, in order */
   exercise: ExercisePublic;
-  /** how each served task has gone so far */
-  progress: ExerciseProgress;
+  items: Record<string, ExerciseItem>;
+  score: ScoreSummary;
 };
 
 export type CheckedAnswer = {
-  status: TaskStatus;
-  /** tries spent on this question so far, including this one */
-  tries: number;
-  /** revealed on a correct answer */
-  explanation?: string;
-  /** revealed on a wrong one */
+  item: ExerciseItem;
+  score: ScoreSummary;
+  /** on a wrong short answer or code — a wrong quiz answer reveals instead */
   hint?: string;
   /**
    * Why what the student actually gave is wrong — the options they picked, or
    * the text they typed. Specific to their answer rather than to the question.
    */
   answerNotes?: string[];
-  /** code tasks only */
-  code?: CodeFeedback;
 };
 
-/** One question as it went, for looking back at a finished attempt. */
-export type ReviewedTask = {
-  prompt: string;
-  type: ExerciseTaskType;
-  /** what the student gave, rendered for display */
-  yourAnswer: string;
-  tries: number;
-  outcome: "firstTry" | "gotThere" | "wrong" | "notAttempted";
-  /** only for questions they got right — nothing new is revealed here */
-  explanation?: string;
-  /** code tasks: how many of the tests passed in the end */
-  testsPassed?: number;
-  testsTotal?: number;
-};
-
-export type AttemptReview = {
-  attemptNumber: number;
-  score: number;
-  passed: boolean;
-  tasks: ReviewedTask[];
-};
-
-export type FinishedExercise = {
-  score: number;
-  passed: boolean;
-  earnedPoints: number;
-  totalPoints: number;
-  goalBreakdown?: GoalResult[];
-  perfect: boolean;
+export type NewQuestion = {
+  /** the locked task this replaces */
+  replaced: string;
+  task: ExerciseTaskPublic;
+  item: ExerciseItem;
+  score: ScoreSummary;
 };
 
 // ---------------------------------------------------------------------------
@@ -138,9 +138,8 @@ export type FinishedExercise = {
 /**
  * Revalidation is a cache hint, not part of the outcome.
  *
- * It sits after the attempt has already been saved, so letting it throw would
- * turn a successfully scored attempt into an error for the student — the work
- * is done and recorded either way.
+ * It sits after the answer has already been saved, so letting it throw would
+ * turn a successfully recorded answer into an error for the student.
  */
 const revalidateQuietly = (...paths: string[]) => {
   for (const path of paths) {
@@ -152,13 +151,6 @@ const revalidateQuietly = (...paths: string[]) => {
   }
 };
 
-const emptyProgress = (): TaskProgress => ({
-  tries: 0,
-  correct: false,
-  firstTryCorrect: false,
-  skipped: false,
-});
-
 const loadExercise = async (guideId: string): Promise<ServerExercise | null> => {
   if (!ObjectId.isValid(guideId)) return null;
   await connectToDatabase();
@@ -169,84 +161,134 @@ const loadExercise = async (guideId: string): Promise<ServerExercise | null> => 
   return guide.exercise;
 };
 
-/** The tasks served for a given attempt. Deterministic, so it can be recomputed. */
-const servedFor = (
-  exercise: ServerExercise,
-  ownerId: string,
-  guideId: string,
-  attemptNumber: number
-): ServerTask[] =>
-  selectServedTasks(
-    exercise,
-    seededRng(`${ownerId}:${guideId}:${attemptNumber}`)
-  );
-
 const requireUser = async () => {
   const session = await auth();
   return session?.user?.id ?? null;
 };
 
+const tasksById = (exercise: ServerExercise) =>
+  new Map(knownTasks(exercise).map((task) => [taskId(task), task]));
+
+const statusOf = (summary: ScoreSummary): ExerciseStatus =>
+  summary.answered === 0
+    ? "notStarted"
+    : summary.perfect
+    ? "perfect"
+    : summary.passed
+    ? "passed"
+    : "inProgress";
+
+/** An item as sent to the student: its state plus what they may now see. */
+const clientItem = (
+  exercise: ServerExercise,
+  state: AttemptState,
+  item: ItemState
+): ExerciseItem => {
+  const { slot, ...rest } = item;
+  const task = tasksById(exercise).get(item.taskId);
+  const lastAnswer =
+    slot !== undefined
+      ? state.slots[slot]?.entries.at(-1)?.answer
+      : state.answers[item.taskId];
+
+  const view: ExerciseItem = {
+    ...rest,
+    ...(lastAnswer !== undefined ? { lastAnswer } : {}),
+  };
+  if (item.status === "correct" && task?.explanation) {
+    view.explanation = task.explanation;
+  }
+  if (item.status === "locked" && task?.type === "quiz") {
+    view.reveal = {
+      correctAnswers: task.correctAnswers ?? [],
+      ...(task.explanation ? { explanation: task.explanation } : {}),
+    };
+    // A fixed rng: this only asks whether ANY question is left.
+    view.canReplace =
+      pickReplacement(exercise, state, item.taskId, () => 0) !== null;
+  }
+  if (item.type === ExerciseTaskType.CODE && state.codeResults[item.taskId]) {
+    view.code = state.codeResults[item.taskId];
+  }
+  return view;
+};
+
+const openedFrom = (
+  exercise: ServerExercise,
+  state: AttemptState,
+  derived: DerivedAttempt
+): OpenedExercise => {
+  const byId = tasksById(exercise);
+  const current = derived.items
+    .map((item) => byId.get(item.taskId))
+    .filter((task): task is ServerTask => !!task);
+
+  // Sanitize exactly the tasks on show. They are already drawn, so the
+  // sanitizer must not draw again: pool sizes are cleared.
+  const sanitized = sanitizeExerciseForClient({
+    ...exercise,
+    tasks: current,
+    poolSizes: undefined,
+    poolSize: undefined,
+  })!;
+
+  return {
+    exercise: sanitized,
+    items: Object.fromEntries(
+      derived.items.map((item) => [
+        item.taskId,
+        clientItem(exercise, state, item),
+      ])
+    ),
+    score: derived.summary,
+  };
+};
+
+/** Explain what they actually gave — only notes matching their own answer. */
+const notesFor = (
+  task: ServerTask,
+  answer: ExerciseAnswerValue
+): string[] | undefined => {
+  if (task.type === "quiz" && Array.isArray(answer) && task.optionFeedback?.length) {
+    const correctSet = new Set(task.correctAnswers ?? []);
+    const notes = answer
+      .filter((i) => !correctSet.has(i))
+      .map((i) => task.optionFeedback?.[i])
+      .filter((note): note is string => !!note && note.trim().length > 0);
+    return notes.length > 0 ? notes : undefined;
+  }
+
+  if (
+    task.type === "shortAnswer" &&
+    typeof answer === "string" &&
+    task.answerFeedback?.length
+  ) {
+    const written = normalizeAnswer(answer);
+    const notes = task.answerFeedback
+      .filter((entry) => {
+        if (entry.match && normalizeAnswer(entry.match) === written) return true;
+        if (entry.pattern) {
+          try {
+            return new RegExp(entry.pattern, "i").test(written);
+          } catch {
+            return false;
+          }
+        }
+        return false;
+      })
+      .map((entry) => entry.note);
+    return notes.length > 0 ? notes : undefined;
+  }
+  return undefined;
+};
+
 // ---------------------------------------------------------------------------
 
 /**
- * Bring stored scores up to date with the current rules.
- *
- * `attempt.score` is written when the attempt is finished, so it is a cache of
- * a rule rather than a fact. When the rule changes — as it did when code tasks
- * stopped being scored on first try — every attempt already finished keeps its
- * old number forever. That is not only a stale display: `guideUtils` reads the
- * same field as the student's GRADE for the guide.
- *
- * So attempts are recomputed from what was recorded (their progress, and what
- * their code did) and corrected in place. It converges after one pass: a second
- * run produces the same number and writes nothing.
- *
- * Only progress-based attempts. Ones from the old submit-everything-at-once
- * flow have no taskProgress and are left exactly as they are.
+ * Where the student stands, for the guide page. A student who has never opened
+ * the exercise gets nothing created; one with old numbered attempts has them
+ * merged here, so the grade they see already includes the amnesty.
  */
-const rescoreStoredAttempts = async (
-  exercise: ServerExercise,
-  ownerId: string,
-  guideId: string,
-  attempts: {
-    _id?: unknown;
-    attemptNumber?: number;
-    score: number;
-    passed: boolean;
-    taskProgress?: ExerciseProgress;
-    codeResults?: CodeResults;
-  }[]
-): Promise<void> => {
-  for (const attempt of attempts) {
-    if (!attempt.taskProgress || !attempt._id) continue;
-
-    const served = servedFor(
-      exercise,
-      ownerId,
-      guideId,
-      attempt.attemptNumber ?? 1
-    );
-    const graded = scoreFromProgress(
-      served,
-      attempt.taskProgress,
-      exercise.passThreshold ?? undefined,
-      attempt.codeResults ?? {}
-    );
-
-    if (graded.score === attempt.score && graded.passed === attempt.passed) {
-      continue;
-    }
-
-    attempt.score = graded.score;
-    attempt.passed = graded.passed;
-    await ExerciseAttempt.updateOne(
-      { _id: attempt._id },
-      { $set: { score: graded.score, passed: graded.passed } }
-    );
-  }
-};
-
-/** What the guide page needs to label its button and draw a progress bar. */
 export const getExerciseSummary = async (
   guideId: string
 ): Promise<ExerciseSummary | null> => {
@@ -255,72 +297,38 @@ export const getExerciseSummary = async (
 
   const exercise = await loadExercise(guideId);
   if (!exercise) return null;
+  const passThreshold = exercise.passThreshold ?? DEFAULT_PASS_THRESHOLD;
 
-  const attempts = (await ExerciseAttempt.find({
-    guide: new ObjectId(guideId),
-    owner: new ObjectId(ownerId),
-  })
-    .select("status score passed attemptNumber taskProgress codeResults")
-    .lean()) as unknown as {
-    _id?: unknown;
-    status?: string;
-    score: number;
-    passed: boolean;
-    attemptNumber?: number;
-    taskProgress?: ExerciseProgress;
-    codeResults?: CodeResults;
-  }[];
+  let attempt = await findActiveAttempt(ownerId, guideId);
+  if (!attempt && (await hasLegacyAttempts(ownerId, guideId))) {
+    attempt = await ensureActiveAttempt(exercise, ownerId, guideId);
+  }
+  if (!attempt) {
+    return {
+      status: "notStarted",
+      score: null,
+      passed: false,
+      passThreshold,
+      answered: 0,
+      total: selectServedTasks(exercise, Math.random).length,
+    };
+  }
 
-  const submitted = attempts.filter((a) => a.status !== "inProgress");
-  // Correct anything scored under an older rule before reading the best.
-  await rescoreStoredAttempts(exercise, ownerId, guideId, submitted);
-  const inProgress = attempts.find((a) => a.status === "inProgress");
-
-  const best = submitted.reduce<number | null>(
-    (acc, a) => (acc === null || a.score > acc ? a.score : acc),
-    null
-  );
-
-  const nextAttemptNumber = submitted.length + 1;
-  const served = servedFor(
-    exercise,
-    ownerId,
-    guideId,
-    inProgress?.attemptNumber ?? nextAttemptNumber
-  );
-
-  const progress = inProgress?.taskProgress ?? {};
-  // "Attempted" means they actually tried it, not that a row exists. Opening
-  // the modal creates the attempt, so counting rows told a student they were
-  // "part way through" with nothing answered — and promised their answers were
-  // saved when there were none.
-  const answered = served.filter(
-    (t) => (progress[taskId(t)]?.tries ?? 0) > 0
-  ).length;
-
-  const status: ExerciseStatus =
-    inProgress && answered > 0
-      ? "inProgress"
-      : best === null
-      ? "notStarted"
-      : best >= 10
-      ? "perfect"
-      : "canImprove";
-
+  const { summary } = await refreshCachedScore(attempt, exercise);
   return {
-    status,
-    bestScore: best,
-    passed: submitted.some((a) => a.passed),
-    attemptCount: submitted.length,
-    answered,
-    total: served.length,
+    status: statusOf(summary),
+    score: summary.answered > 0 ? summary.score : null,
+    passed: summary.passed,
+    passThreshold,
+    answered: summary.answered,
+    total: summary.total,
   };
 };
 
-/** Open the exercise: resume the attempt in progress, or begin a new one. */
-export const startExercise = async (
+/** Open the exercise: the student's one attempt, created on first open. */
+export const openExercise = async (
   guideId: string
-): Promise<ActionResult<StartedExercise>> => {
+): Promise<ActionResult<OpenedExercise>> => {
   const ownerId = await requireUser();
   if (!ownerId) return failure(ErrorMessages.NOT_LOGGED_IN);
 
@@ -328,55 +336,14 @@ export const startExercise = async (
     const exercise = await loadExercise(guideId);
     if (!exercise) return failure(ErrorMessages.NOT_FOUND("Exercise"));
 
-    const guide = new ObjectId(guideId);
-    const owner = new ObjectId(ownerId);
-
-    let attempt = await ExerciseAttempt.findOne({
-      guide,
-      owner,
-      status: "inProgress",
-    });
-
-    if (!attempt) {
-      const submittedCount = await ExerciseAttempt.countDocuments({
-        guide,
-        owner,
-        status: { $ne: "inProgress" },
-      });
-      attempt = await ExerciseAttempt.create({
-        guide,
-        owner,
-        answers: {},
-        taskProgress: {},
-        attemptNumber: submittedCount + 1,
-        status: "inProgress",
-        score: 0,
-        passed: false,
-      });
-    }
-
-    const attemptNumber = attempt.attemptNumber ?? 1;
-    const served = servedFor(exercise, ownerId, guideId, attemptNumber);
-
-    // Sanitize the SERVED subset, not the whole exercise, so the client sees
-    // exactly the tasks this attempt is about.
-    const sanitized = sanitizeExerciseForClient({
-      ...exercise,
-      tasks: served,
-      poolSizes: undefined,
-      poolSize: undefined,
-    })!;
-
+    const attempt = await ensureActiveAttempt(exercise, ownerId, guideId);
+    const derived = await refreshCachedScore(attempt, exercise);
     return success(
-      {
-        attemptNumber,
-        exercise: sanitized,
-        progress: (attempt.taskProgress ?? {}) as ExerciseProgress,
-      },
-      "Exercise started"
+      openedFrom(exercise, stateOf(attempt), derived),
+      "Exercise opened"
     );
   } catch (e) {
-    return handleActionError("startExercise", e, "Could not open the exercise");
+    return handleActionError("openExercise", e, "Could not open the exercise");
   }
 };
 
@@ -389,7 +356,7 @@ const CheckSchema = z.object({
   ]),
 });
 
-/** Check one answer, record the try, and say whether to move on. */
+/** Check one answer and record it. */
 export const checkAnswer = async (
   input: z.infer<typeof CheckSchema>
 ): Promise<ActionResult<CheckedAnswer>> => {
@@ -404,37 +371,28 @@ export const checkAnswer = async (
     const exercise = await loadExercise(guideId);
     if (!exercise) return failure(ErrorMessages.NOT_FOUND("Exercise"));
 
-    const attempt = await ExerciseAttempt.findOne({
-      guide: new ObjectId(guideId),
-      owner: new ObjectId(ownerId),
-      status: "inProgress",
-    });
-    if (!attempt) return failure("Start the exercise before answering");
+    const attempt = await findActiveAttempt(ownerId, guideId);
+    if (!attempt) return failure("Open the exercise before answering");
 
-    // The task must be one this attempt actually served. Recomputed from the
-    // seed rather than trusted from the request.
-    const served = servedFor(
-      exercise,
-      ownerId,
-      guideId,
-      attempt.attemptNumber ?? 1
+    const state = stateOf(attempt);
+    // The question must be one ON SHOW in this attempt — derived on the
+    // server, never trusted from the request.
+    const before = deriveAttempt(exercise, state).items.find(
+      (item) => item.taskId === id
     );
-    const task = served.find((t) => taskId(t) === id);
-    if (!task) return failure("That question is not part of this attempt");
-
-    const progress = (attempt.taskProgress ?? {}) as ExerciseProgress;
-    const before = progress[id] ?? emptyProgress();
-
-    // Already right: re-checking changes nothing, and must not cost a try.
-    if (before.correct) {
-      return success(
-        { status: "correct", tries: before.tries, ...(task.explanation ? { explanation: task.explanation } : {}) },
-        "Already answered"
-      );
+    const task = tasksById(exercise).get(id);
+    if (!before || !task) {
+      return failure("That question is not part of your exercise");
+    }
+    if (before.status === "correct") {
+      return failure("You have already answered that one");
+    }
+    if (before.status === "locked") {
+      return failure("That question is locked — ask for a new one");
     }
 
     let code: CodeFeedback | undefined;
-    if (task.type === ExerciseTaskType.CODE) {
+    if (task.type === "code") {
       if (typeof answer !== "string") return failure(ErrorMessages.INVALID_INPUT);
       try {
         code = await runCodeSubmission(
@@ -446,10 +404,8 @@ export const checkAnswer = async (
           answer
         );
       } catch (sandboxError) {
-        // The grader itself failed — a module that would not load, a budget
-        // that ran out. Do not record a try against the student for our
-        // problem; everything they have already answered is safe, because
-        // progress is saved per question.
+        // The grader itself failed. Record nothing against the student for
+        // our problem.
         console.error("[checkAnswer] code grader failed", sandboxError);
         return failure(
           "The code grader could not run just now. This is a problem on our side, not with your code — try again in a moment."
@@ -457,178 +413,54 @@ export const checkAnswer = async (
       }
     }
 
-    const graded = gradeTask(task, answer, code);
-    const tries = before.tries + 1;
-    const isCorrect = graded.status === "correct";
-
-    const after: TaskProgress = {
-      tries,
-      correct: isCorrect,
-      firstTryCorrect: isCorrect && tries === 1,
-      skipped: false,
-      // Kept only for the first try — that is the one the grade depends on.
-      firstAnswer: tries === 1 ? answer : before.firstAnswer,
-    };
-
-    attempt.taskProgress = { ...progress, [id]: after };
-    attempt.answers = { ...(attempt.answers ?? {}), [id]: answer };
-    if (code) {
-      attempt.codeResults = { ...(attempt.codeResults ?? {}), [id]: code };
+    if (task.type === "quiz") {
+      if (!Array.isArray(answer)) return failure(ErrorMessages.INVALID_INPUT);
+      const slot = state.slots[before.slot!];
+      slot.entries[slot.entries.length - 1] = { taskId: id, answer };
+    } else if (task.type === "shortAnswer") {
+      if (typeof answer !== "string") return failure(ErrorMessages.INVALID_INPUT);
+      state.tries = { ...state.tries, [id]: [...(state.tries[id] ?? []), answer] };
+    } else if (code) {
+      state.codeResults = { ...state.codeResults, [id]: code };
     }
-    attempt.markModified("taskProgress");
-    attempt.markModified("answers");
-    if (code) attempt.markModified("codeResults");
-    await attempt.save();
+    state.answers = { ...state.answers, [id]: answer };
 
-    // Explain what they actually gave. Only notes matching their own answer —
-    // anything else would be telling them about options they did not pick.
-    let answerNotes: string[] | undefined;
-    if (!isCorrect) {
-      if (
-        task.type === ExerciseTaskType.QUIZ &&
-        Array.isArray(answer) &&
-        task.optionFeedback?.length
-      ) {
-        const correctSet = new Set(task.correctAnswers ?? []);
-        const notes = answer
-          .filter((i) => !correctSet.has(i))
-          .map((i) => task.optionFeedback?.[i])
-          .filter((note): note is string => !!note && note.trim().length > 0);
-        if (notes.length > 0) answerNotes = notes;
-      }
+    const derived = await saveAttempt(attempt, exercise, state);
+    const after = derived.items.find((item) => item.taskId === id)!;
+    revalidateQuietly("/guides", `/guides/${guideId}`);
 
-      if (
-        task.type === ExerciseTaskType.SHORT_ANSWER &&
-        typeof answer === "string" &&
-        task.answerFeedback?.length
-      ) {
-        const written = normalizeAnswer(answer);
-        const notes = task.answerFeedback
-          .filter((entry) => {
-            if (entry.match && normalizeAnswer(entry.match) === written) {
-              return true;
-            }
-            if (entry.pattern) {
-              try {
-                return new RegExp(entry.pattern, "i").test(written);
-              } catch {
-                return false;
-              }
-            }
-            return false;
-          })
-          .map((entry) => entry.note);
-        if (notes.length > 0) answerNotes = notes;
-      }
-    }
+    const wrong = after.status === "locked" || after.status === "tried";
+    const hint =
+      wrong && task.type !== "quiz" && task.hint ? task.hint : undefined;
+    const answerNotes = wrong ? notesFor(task, answer) : undefined;
 
     return success(
       {
-        status: graded.status,
-        tries,
+        item: clientItem(exercise, state, after),
+        score: derived.summary,
+        ...(hint ? { hint } : {}),
         ...(answerNotes ? { answerNotes } : {}),
-        ...(isCorrect && task.explanation
-          ? { explanation: task.explanation }
-          : {}),
-        ...(!isCorrect && task.hint ? { hint: task.hint } : {}),
-        ...(code ? { code } : {}),
       },
-      isCorrect ? "Correct" : "Not quite"
+      after.status === "correct" ? "Correct" : "Not quite"
     );
   } catch (e) {
     return handleActionError("checkAnswer", e, "Could not check that answer");
   }
 };
 
-/**
- * Look back at the last finished attempt.
- *
- * Only what the student was already shown during the attempt: their own
- * answers, whether each was right, and the explanation for the ones they got
- * right — which they saw at the time. Nothing new is revealed, because the
- * question pool overlaps between attempts and handing over the answers to
- * questions they may meet again would make "improve your grade" meaningless.
- */
-export const getAttemptReview = async (
-  guideId: string
-): Promise<AttemptReview | null> => {
-  const ownerId = await requireUser();
-  if (!ownerId) return null;
+const NewQuestionSchema = z.object({
+  guideId: z.string().trim().min(1),
+  taskId: z.string().trim().min(1),
+});
 
-  const exercise = await loadExercise(guideId);
-  if (!exercise) return null;
+/** Swap a locked multiple-choice question for a new one, worth half. */
+export const newQuestion = async (
+  input: z.infer<typeof NewQuestionSchema>
+): Promise<ActionResult<NewQuestion>> => {
+  const validated = NewQuestionSchema.safeParse(input);
+  if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
+  const { guideId, taskId: id } = validated.data;
 
-  const attempt = (await ExerciseAttempt.findOne({
-    guide: new ObjectId(guideId),
-    owner: new ObjectId(ownerId),
-    status: { $ne: "inProgress" },
-  })
-    .sort({ attemptNumber: -1, createdAt: -1 })
-    .lean()) as unknown as {
-    attemptNumber?: number;
-    score: number;
-    passed: boolean;
-    answers?: ExerciseAnswers;
-    taskProgress?: ExerciseProgress;
-    codeResults?: Record<string, CodeFeedback>;
-  } | null;
-
-  if (!attempt) return null;
-
-  const attemptNumber = attempt.attemptNumber ?? 1;
-  const served = servedFor(exercise, ownerId, guideId, attemptNumber);
-  const progress = attempt.taskProgress ?? {};
-  const answers = attempt.answers ?? {};
-
-  const tasks: ReviewedTask[] = served.map((task) => {
-    const id = taskId(task);
-    const entry = progress[id];
-    const answer = answers[id];
-
-    const outcome: ReviewedTask["outcome"] = !entry || entry.tries === 0
-      ? "notAttempted"
-      : entry.firstTryCorrect
-      ? "firstTry"
-      : entry.correct
-      ? "gotThere"
-      : "wrong";
-
-    let yourAnswer = "—";
-    if (task.type === ExerciseTaskType.QUIZ && Array.isArray(answer)) {
-      yourAnswer =
-        answer.map((i) => task.options?.[i]).filter(Boolean).join(", ") || "—";
-    } else if (typeof answer === "string" && answer.trim()) {
-      yourAnswer = answer;
-    }
-
-    const code = attempt.codeResults?.[id];
-    return {
-      prompt: task.prompt,
-      type: task.type as ExerciseTaskType,
-      yourAnswer,
-      tries: entry?.tries ?? 0,
-      outcome,
-      ...(entry?.correct && task.explanation
-        ? { explanation: task.explanation }
-        : {}),
-      ...(code
-        ? { testsPassed: code.testsPassed, testsTotal: code.testsTotal }
-        : {}),
-    };
-  });
-
-  return {
-    attemptNumber,
-    score: attempt.score,
-    passed: attempt.passed,
-    tasks,
-  };
-};
-
-/** Finish the attempt and score it. */
-export const finishExercise = async (
-  guideId: string
-): Promise<ActionResult<FinishedExercise>> => {
   const ownerId = await requireUser();
   if (!ownerId) return failure(ErrorMessages.NOT_LOGGED_IN);
 
@@ -636,48 +468,36 @@ export const finishExercise = async (
     const exercise = await loadExercise(guideId);
     if (!exercise) return failure(ErrorMessages.NOT_FOUND("Exercise"));
 
-    const attempt = await ExerciseAttempt.findOne({
-      guide: new ObjectId(guideId),
-      owner: new ObjectId(ownerId),
-      status: "inProgress",
-    });
-    if (!attempt) return failure("There is no exercise in progress");
+    const attempt = await findActiveAttempt(ownerId, guideId);
+    if (!attempt) return failure("Open the exercise first");
 
-    const served = servedFor(
-      exercise,
-      ownerId,
-      guideId,
-      attempt.attemptNumber ?? 1
+    const state = stateOf(attempt);
+    const locked = deriveAttempt(exercise, state).items.find(
+      (item) => item.taskId === id
     );
-    const progress = (attempt.taskProgress ?? {}) as ExerciseProgress;
+    if (!locked || locked.status !== "locked" || locked.slot === undefined) {
+      return failure("Only a locked question can be swapped for a new one");
+    }
 
-    const graded = scoreFromProgress(
-      served,
-      progress,
-      exercise.passThreshold ?? undefined,
-      (attempt.codeResults ?? {}) as CodeResults
-    );
+    const next = pickReplacement(exercise, state, id, Math.random);
+    if (!next) return failure("There are no new questions left");
 
-    attempt.score = graded.score;
-    attempt.passed = graded.passed;
-    attempt.status = "submitted";
-    attempt.submittedAt = new Date();
-    await attempt.save();
+    const nextId = taskId(next);
+    state.slots[locked.slot].entries.push({ taskId: nextId });
 
-    revalidateQuietly("/guides", `/guides/${guideId}`);
+    const derived = await saveAttempt(attempt, exercise, state);
+    const item = derived.items.find((i) => i.taskId === nextId)!;
 
     return success(
       {
-        score: graded.score,
-        passed: graded.passed,
-        earnedPoints: graded.earnedPoints,
-        totalPoints: graded.totalPoints,
-        goalBreakdown: graded.goalBreakdown,
-        perfect: graded.earnedPoints === graded.totalPoints,
+        replaced: id,
+        task: publicTask(next),
+        item: clientItem(exercise, state, item),
+        score: derived.summary,
       },
-      "Exercise finished"
+      "New question"
     );
   } catch (e) {
-    return handleActionError("finishExercise", e, "Could not finish the exercise");
+    return handleActionError("newQuestion", e, "Could not get a new question");
   }
 };

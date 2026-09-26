@@ -1,59 +1,90 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ExerciseLauncher } from "../../app/guides/components/exercise/ExerciseLauncher";
-import type { ExerciseSummary } from "serverActions/exerciseSession";
+import {
+  getExerciseSummary,
+  openExercise,
+  type ExerciseSummary,
+} from "serverActions/exerciseSession";
 
 jest.mock("serverActions/exerciseSession", () => ({
-  startExercise: jest.fn(),
+  openExercise: jest.fn(),
   checkAnswer: jest.fn(),
-  finishExercise: jest.fn(),
+  newQuestion: jest.fn(),
   getExerciseSummary: jest.fn(),
-  getAttemptReview: jest.fn(),
 }));
 
 const summary = (over: Partial<ExerciseSummary> = {}): ExerciseSummary => ({
   status: "notStarted",
-  bestScore: null,
+  score: null,
   passed: false,
-  attemptCount: 0,
+  passThreshold: 0.7,
   answered: 0,
   total: 21,
   ...over,
 });
 
 describe("ExerciseLauncher", () => {
-  it("offers a way back to a finished attempt", () => {
+  /**
+   * The pass mark was never shown. A student with 6.4/10 saw "not passed" and,
+   * used to 5 being a pass on peer-reviewed guides, took it for a bug.
+   */
+  it("states the pass mark on the same scale as the score", () => {
     render(
       <ExerciseLauncher
         guideId="g1"
-        summary={summary({ status: "canImprove", bestScore: 5, attemptCount: 2 })}
+        summary={summary({ status: "inProgress", score: 6.4, answered: 12 })}
       />
     );
+    expect(screen.getByText(/you need 7\/10 to pass/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /review your last attempt/i })
+      screen.getByText(/not passed yet — you need 7\/10/i)
     ).toBeInTheDocument();
   });
 
-  it("does not offer a review before anything has been finished", () => {
-    render(<ExerciseLauncher guideId="g1" summary={summary()} />);
+  /** There is one attempt and it never closes: never "try again". */
+  it("only ever offers to start or continue", () => {
+    const { unmount } = render(
+      <ExerciseLauncher guideId="g1" summary={summary()} />
+    );
     expect(
-      screen.queryByRole("button", { name: /review your last attempt/i })
-    ).not.toBeInTheDocument();
-  });
+      screen.getByRole("button", { name: /start the exercise/i })
+    ).toBeInTheDocument();
+    unmount();
 
-  it("offers the review from the perfect state too", () => {
     render(
       <ExerciseLauncher
         guideId="g1"
-        summary={summary({ status: "perfect", bestScore: 10, passed: true, attemptCount: 3 })}
+        summary={summary({ status: "passed", score: 8, passed: true, answered: 20 })}
       />
     );
     expect(
-      screen.getByRole("button", { name: /review your last attempt/i })
+      screen.getByRole("button", { name: /continue the exercise/i })
     ).toBeInTheDocument();
+    expect(screen.queryByText(/new attempt|try again/i)).not.toBeInTheDocument();
   });
 
   /**
-   * The review button shipped invisible: it used the design system's
+   * Closing the exercise part way through left the card saying "Start the
+   * exercise", as if nothing had been saved.
+   */
+  it("shows the saved progress after the exercise is closed", async () => {
+    (openExercise as jest.Mock).mockReturnValue(new Promise(() => {}));
+    (getExerciseSummary as jest.Mock).mockResolvedValue(
+      summary({ status: "inProgress", score: 3, answered: 8 })
+    );
+    render(<ExerciseLauncher guideId="g1" summary={summary()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /start the exercise/i }));
+    fireEvent.click(screen.getByTestId("modal-wrapper"));
+
+    expect(
+      await screen.findByRole("button", { name: /continue the exercise/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/8 of 21 answered/i)).toBeInTheDocument();
+  });
+
+  /**
+   * A launcher button once shipped invisible: it used the design system's
    * `textButton`, which is white text intended for dark backgrounds, on a white
    * card. It rendered, took up space, and could not be seen.
    *
@@ -65,7 +96,7 @@ describe("ExerciseLauncher", () => {
     const { container } = render(
       <ExerciseLauncher
         guideId="g1"
-        summary={summary({ status: "canImprove", bestScore: 5, attemptCount: 1 })}
+        summary={summary({ status: "inProgress", score: 5, answered: 4 })}
       />
     );
 

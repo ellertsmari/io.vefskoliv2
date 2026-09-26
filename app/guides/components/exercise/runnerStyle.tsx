@@ -109,7 +109,7 @@ export const SegmentBar = styled.div`
 `;
 
 export const Segment = styled.button<{
-  $state: "untried" | "correct" | "wrong";
+  $state: "untried" | "correct" | "wrong" | "pending";
   $current: boolean;
 }>`
   flex: 1;
@@ -120,7 +120,13 @@ export const Segment = styled.button<{
   cursor: pointer;
   transition: transform 120ms ease;
   background: ${({ $state }) =>
-    $state === "correct" ? "var(--error-success-100)" : $state === "wrong" ? "var(--error-failure-100)" : "var(--theme-module3-30)"};
+    $state === "correct"
+      ? "var(--error-success-100)"
+      : $state === "wrong"
+      ? "var(--error-failure-100)"
+      : $state === "pending"
+      ? "var(--error-warning-60)"
+      : "var(--theme-module3-30)"};
   /* A ring drawn with box-shadow rather than outline: it follows the border
      radius and stays within the padding above, so nothing is clipped. */
   box-shadow: ${({ $current }) =>
@@ -192,76 +198,4 @@ export const Feedback = styled.p<{ $tone: "right" | "wrong" }>`
   font-size: var(--text-sm);
   color: ${({ $tone }) => ($tone === "right" ? "var(--primary-black-100)" : "var(--primary-black-100)")};
   background: ${({ $tone }) => ($tone === "right" ? "var(--error-success-30)" : "var(--error-failure-30)")};
-`;
-
-export const ScoreBig = styled.p`
-  margin: 0;
-  font-size: var(--text-4xl);
-  font-weight: 700;
-  line-height: 1;
-`;
-
-export const GoalList = styled.ul`
-  list-style: none;
-  margin: 0.5rem 0 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: var(--text-sm);
-`;
-
-export const GoalRow = styled.li<{ $mastered: boolean }>`
-  color: ${({ $mastered }) => ($mastered ? "var(--primary-black-100)" : "var(--primary-black-100)")};
-`;
-
-export const ConfirmNotice = styled.p`
-  margin: 0;
-  padding: 0.9rem 1.1rem;
-  border-radius: var(--radius-md);
-  background: var(--error-warning-30);
-  border: 1px solid var(--error-warning-60);
-  color: var(--primary-black-100);
-  line-height: 1.55;
-`;
-
-export const ReviewRow = styled.div`
-  display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr);
-  gap: 0.75rem;
-  padding: 0.6rem 0;
-  border-top: 1px solid var(--primary-black-10);
-  font-size: var(--text-sm);
-  align-items: start;
-
-  @media (max-width: 36rem) {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.25rem;
-  }
-`;
-
-export const ReviewOutcome = styled.span<{
-  $tone: "good" | "ok" | "bad" | "none";
-}>`
-  font-weight: 600;
-  white-space: nowrap;
-  color: ${({ $tone }) =>
-    $tone === "good"
-      ? "var(--primary-black-100)"
-      : $tone === "ok"
-      ? "var(--primary-black-100)"
-      : $tone === "bad"
-      ? "var(--primary-black-100)"
-      : "var(--primary-black-60)"};
-`;
-
-export const ReviewAnswer = styled.p`
-  margin: 0.15rem 0 0 0;
-  color: var(--primary-black-60);
-  overflow-wrap: anywhere;
-`;
-
-export const ReviewNote = styled.p`
-  margin: 0.25rem 0 0 0;
-  color: var(--primary-black-100);
 `;

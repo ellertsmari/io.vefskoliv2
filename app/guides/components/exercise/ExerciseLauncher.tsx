@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "UIcomponents/modal/modal";
 import { Button } from "globalStyles/buttons/default/style";
-import type { ExerciseSummary } from "serverActions/exerciseSession";
+import {
+  getExerciseSummary,
+  type ExerciseSummary,
+} from "serverActions/exerciseSession";
 import { ExerciseRunner } from "./ExerciseRunner";
-import { AttemptReview } from "./AttemptReview";
+import { passMark } from "./passMark";
 import {
   LauncherCard,
   LauncherHeading,
@@ -23,8 +26,10 @@ import {
  *
  * A wall of questions below the material is intimidating to read past, so the
  * guide now ends with a single button and a progress bar, and the questions
- * live behind it. The label reflects where the student actually is, so they
- * always know whether they are starting, resuming, or improving.
+ * live behind it. The label reflects where the student actually is.
+ *
+ * There is one attempt and it never closes, so the card only ever says
+ * "start" or "continue" — never "try again".
  */
 
 const LABELS: Record<
@@ -34,22 +39,22 @@ const LABELS: Record<
   notStarted: {
     button: "Start the exercise",
     heading: "Ready when you are",
-    note: "One question at a time. Unlimited attempts, and your best score is the one that counts.",
+    note: "Work through it at your own pace. Every answer is saved as you check it, so you can stop and carry on later on any computer.",
   },
   inProgress: {
     button: "Continue the exercise",
     heading: "You're part way through",
-    note: "Pick up where you left off — your answers so far are saved.",
+    note: "Pick up where you left off, on this computer or any other.",
   },
-  canImprove: {
-    button: "Start a new attempt",
-    heading: "Finished — you can do better",
-    note: "A new attempt is the whole exercise again with a different set of questions, and your best score is the one that counts.",
+  passed: {
+    button: "Continue the exercise",
+    heading: "Passed",
+    note: "You've reached the pass mark. Anything more you get right raises your grade.",
   },
   perfect: {
-    button: "Take it again",
+    button: "Open the exercise",
     heading: "Perfect score",
-    note: "Everything right, first time. Nothing left to prove here.",
+    note: "Everything right. Nothing left to prove here.",
   },
 };
 
@@ -61,13 +66,48 @@ export const ExerciseLauncher = ({
   summary: ExerciseSummary;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [current, setCurrent] = useState(summary);
+
+  // Re-read where the student stands whenever the exercise closes, so the
+  // card reflects what was just saved rather than what it said on page load.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (isOpen) {
+      wasOpen.current = true;
+      return;
+    }
+    if (!wasOpen.current) return;
+    wasOpen.current = false;
+    let cancelled = false;
+    getExerciseSummary(guideId).then((fresh) => {
+      if (fresh && !cancelled) setCurrent(fresh);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, guideId]);
 
   const labels = LABELS[current.status];
   const percent =
     current.total > 0 ? (current.answered / current.total) * 100 : 0;
-  const showProgress = current.status === "inProgress" && current.answered > 0;
+
+  const runner = (
+    <Modal
+      size="xl"
+      state={[isOpen, setIsOpen]}
+      modalTrigger={
+        <Button
+          $styletype={current.status === "perfect" ? "outlined" : "default"}
+          type="button"
+        >
+          {labels.button}
+        </Button>
+      }
+      modalContent={
+        <ExerciseRunner guideId={guideId} onClose={() => setIsOpen(false)} />
+      }
+    />
+  );
 
   if (current.status === "perfect") {
     return (
@@ -81,40 +121,7 @@ export const ExerciseLauncher = ({
             <span>{labels.note}</span>
           </PerfectText>
         </PerfectBanner>
-        <Modal
-          size="xl"
-          state={[isOpen, setIsOpen]}
-          modalTrigger={
-            <Button $styletype="outlined" type="button">
-              {labels.button}
-            </Button>
-          }
-          modalContent={
-            <ExerciseRunner
-              guideId={guideId}
-              onClose={() => setIsOpen(false)}
-              onSummaryChange={setCurrent}
-            />
-          }
-        />
-
-      {current.attemptCount > 0 && (
-        <Modal
-          size="lg"
-          state={[isReviewOpen, setIsReviewOpen]}
-          modalTrigger={
-            <Button $styletype="outlined" type="button">
-              Review your last attempt
-            </Button>
-          }
-          modalContent={
-            <AttemptReview
-              guideId={guideId}
-              onClose={() => setIsReviewOpen(false)}
-            />
-          }
-        />
-      )}
+        {runner}
       </LauncherCard>
     );
   }
@@ -123,8 +130,14 @@ export const ExerciseLauncher = ({
     <LauncherCard>
       <LauncherHeading>{labels.heading}</LauncherHeading>
       <LauncherNote>{labels.note}</LauncherNote>
+      <LauncherNote>
+        <strong>You need {passMark(current.passThreshold)} to pass.</strong>{" "}
+        Multiple choice gets one guess: a wrong one locks the question, and a
+        new question is worth half. Each wrong try at a short answer halves what
+        it is worth. Coding tasks score on the code you end up with.
+      </LauncherNote>
 
-      {showProgress && (
+      {current.answered > 0 && (
         <>
           <ProgressTrack
             role="progressbar"
@@ -141,49 +154,16 @@ export const ExerciseLauncher = ({
         </>
       )}
 
-      {current.bestScore !== null && (
+      {current.score !== null && (
         <ProgressLabel>
-          Your best so far: <strong>{current.bestScore}/10</strong>
-          {current.passed ? " (passed)" : " (not passed yet)"} ·{" "}
-          {current.attemptCount} attempt
-          {current.attemptCount === 1 ? "" : "s"}
+          Your score: <strong>{current.score}/10</strong>
+          {current.passed
+            ? " (passed)"
+            : ` (not passed yet — you need ${passMark(current.passThreshold)})`}
         </ProgressLabel>
       )}
 
-      <Modal
-        size="xl"
-        state={[isOpen, setIsOpen]}
-        modalTrigger={
-          <Button $styletype="default" type="button">
-            {labels.button}
-          </Button>
-        }
-        modalContent={
-          <ExerciseRunner
-            guideId={guideId}
-            onClose={() => setIsOpen(false)}
-            onSummaryChange={setCurrent}
-          />
-        }
-      />
-
-      {current.attemptCount > 0 && (
-        <Modal
-          size="lg"
-          state={[isReviewOpen, setIsReviewOpen]}
-          modalTrigger={
-            <Button $styletype="outlined" type="button">
-              Review your last attempt
-            </Button>
-          }
-          modalContent={
-            <AttemptReview
-              guideId={guideId}
-              onClose={() => setIsReviewOpen(false)}
-            />
-          }
-        />
-      )}
+      {runner}
     </LauncherCard>
   );
 };

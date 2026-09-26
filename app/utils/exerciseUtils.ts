@@ -165,12 +165,12 @@ const isKnownTask = (
   task.type === ExerciseTaskType.CODE;
 
 /**
- * Code results computed at submission time, keyed by task id.
+ * Code results computed when the code was checked, keyed by task id.
  *
- * Running a sandbox is asynchronous and expensive, while `gradeExercise` is
- * synchronous and is re-run whenever the answer key changes (analytics,
- * promoting a short answer). So code tasks are executed ONCE, at submission,
- * and their outcome is stored on the attempt and passed back in here.
+ * Running a sandbox is asynchronous and expensive, while scoring is
+ * synchronous and is re-derived whenever the answer key changes (analytics,
+ * promoting a short answer). So code is run ONCE, when checked, and the
+ * outcome is stored on the attempt and passed back in here.
  */
 export type CodeResults = Record<string, CodeFeedback>;
 
@@ -229,10 +229,13 @@ export type GradeResult = {
   pendingCount: number;
 };
 
-/** Thrown when a submission doesn't match the questions that were served. */
+/** Thrown when a task cannot be graded, e.g. a type this build does not know. */
 export class ExerciseGradingError extends Error {}
 
-/** How one task went while the student worked through the exercise. */
+/**
+ * How one task went in an OLD numbered attempt. Read only by the merge into
+ * the continuous attempt (utils/exerciseAttemptState).
+ */
 export type TaskProgress = {
   tries: number;
   /** got there in the end (or was already right) */
@@ -254,74 +257,7 @@ export type TaskProgress = {
 export type ExerciseProgress = Record<string, TaskProgress>;
 
 
-/**
- * The score for a completed attempt: first-try accuracy.
- *
- * Getting a question right on the second try still teaches the student
- * something, which is why they are kept on it, but it earns nothing. Skipped
- * questions likewise. Computed from the SERVER's record of how each task went,
- * never from anything the client reports.
- */
-export const scoreFromProgress = (
-  tasks: ServerTask[],
-  progress: ExerciseProgress,
-  passThreshold = DEFAULT_PASS_THRESHOLD,
-  codeResults: CodeResults = {}
-): Omit<GradeResult, "results"> => {
-  let earnedPoints = 0;
-  let totalPoints = 0;
-  const goalTotals = new Map<string, { earned: number; total: number }>();
-
-  for (const task of tasks) {
-    const points = task.points ?? 1;
-    const id = taskId(task);
-
-    // Code is scored by what it does, not by whether it worked first time.
-    //
-    // "First try" on a coding problem means the very first press of Check, and
-    // almost nobody writes working code first time — one typo and the task was
-    // worth nothing however good the finished solution. Iterating IS how code
-    // gets written, and reading the error to get there is the skill. A first
-    // answer to a QUIZ reveals what the student knew, so first-try still
-    // applies there: a second guess is elimination.
-    const earned =
-      task.type === ExerciseTaskType.CODE
-        ? gradeCodeTask(task, codeResults[id]).pointsEarned
-        : progress[id]?.firstTryCorrect
-        ? points
-        : 0;
-
-    earnedPoints += earned;
-    totalPoints += points;
-
-    if (task.goal) {
-      const entry = goalTotals.get(task.goal) ?? { earned: 0, total: 0 };
-      entry.earned += earned;
-      entry.total += points;
-      goalTotals.set(task.goal, entry);
-    }
-  }
-
-  const fraction = totalPoints > 0 ? earnedPoints / totalPoints : 0;
-
-  return {
-    score: Math.round(fraction * 10 * 10) / 10,
-    passed: fraction >= passThreshold,
-    earnedPoints: round2(earnedPoints),
-    totalPoints,
-    pendingCount: 0,
-    goalBreakdown:
-      goalTotals.size > 0
-        ? [...goalTotals.entries()].map(([goal, { earned, total }]) => ({
-            goal,
-            earnedPoints: round2(earned),
-            totalPoints: total,
-          }))
-        : undefined,
-  };
-};
-
-const DEFAULT_PASS_THRESHOLD = 0.7;
+export const DEFAULT_PASS_THRESHOLD = 0.7;
 
 /** Stable string id for a task, whether it's a mongoose doc or serialized JSON. */
 export const taskId = (task: { _id?: unknown; id?: string }): string =>
@@ -771,7 +707,7 @@ export const sanitizeExerciseForClient = (
  * explicitly here, so a new answer-key field can never reach a student by
  * being spread in accidentally.
  */
-const publicTask = (task: ServerTask): ExerciseTaskPublic => {
+export const publicTask = (task: ServerTask): ExerciseTaskPublic => {
   switch (task.type) {
     case "quiz":
       return {

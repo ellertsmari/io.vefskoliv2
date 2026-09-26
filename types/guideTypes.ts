@@ -236,6 +236,10 @@ export type ExerciseAttemptInfo = {
   score: number;
   passed: boolean;
   createdAt: Date;
+  /** `active` for the one continuous attempt; older values are pre-merge */
+  status?: string;
+  /** active attempts: questions answered, to tell "opened" from "started" */
+  answeredCount?: number;
 };
 
 export type GuideInfo = {

@@ -9,18 +9,14 @@ import { ExerciseAttempt } from "../models/exerciseAttempt";
 import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions } from "utils/userUtils";
 import {
-  gradeExercise,
   knownTasks,
   taskId,
   type ExerciseAnswers,
   type ServerExercise,
   type ServerShortAnswerTask,
-  type CodeResults,
-  type ExerciseProgress,
-  selectServedTasks,
-  seededRng,
-  scoreFromProgress,
 } from "utils/exerciseUtils";
+import type { ExerciseAnswerValue } from "types/guideTypes";
+import { refreshCachedScore } from "../lib/exerciseAttempts";
 import {
   matchShortAnswer,
   normalizeAnswer,
@@ -50,7 +46,7 @@ import {
 export type ReviewableAnswer = {
   /** the answer as the student typed it (first spelling seen) */
   answer: string;
-  /** how many attempts across the cohort used it */
+  /** how many students wrote it */
   count: number;
   status: "pending" | "incorrect";
 };
@@ -90,10 +86,15 @@ export const getShortAnswerReview = async (
   const tasks = shortAnswerTasks(guide.exercise!);
   if (tasks.length === 0) return [];
 
+  // Merged attempts are history already carried into the active one;
+  // reading both would count the same answer twice.
   const attempts = (await ExerciseAttempt.find(
-    { guide: new ObjectId(guideId) },
-    { answers: 1 }
-  ).lean()) as unknown as { answers: ExerciseAnswers }[];
+    { guide: new ObjectId(guideId), status: { $ne: "merged" } },
+    { answers: 1, tries: 1 }
+  ).lean()) as unknown as {
+    answers?: ExerciseAnswers;
+    tries?: Record<string, ExerciseAnswerValue[]>;
+  }[];
 
   return tasks.map((task) => {
     const id = taskId(task);
@@ -102,18 +103,26 @@ export const getShortAnswerReview = async (
     const groups = new Map<string, ReviewableAnswer>();
 
     for (const attempt of attempts) {
-      const raw = attempt.answers?.[id];
-      if (typeof raw !== "string" || !raw.trim()) continue;
+      // Every try, not just the latest: a phrasing someone wrote and then
+      // gave up on is exactly the one the key may be missing.
+      const written = attempt.tries?.[id] ?? [attempt.answers?.[id]];
+      const seen = new Set<string>();
+      for (const raw of written) {
+        if (typeof raw !== "string" || !raw.trim()) continue;
 
-      const { status } = matchShortAnswer(task, raw);
-      if (status === "correct") continue;
+        const { status } = matchShortAnswer(task, raw);
+        if (status === "correct") continue;
 
-      const normalized = normalizeAnswer(raw);
-      const existing = groups.get(normalized);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        groups.set(normalized, { answer: raw.trim(), count: 1, status });
+        const normalized = normalizeAnswer(raw);
+        // Counted once per student, however often they wrote it.
+        if (seen.has(normalized)) continue;
+        seen.add(normalized);
+        const existing = groups.get(normalized);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          groups.set(normalized, { answer: raw.trim(), count: 1, status });
+        }
       }
     }
 
@@ -200,77 +209,21 @@ export const promoteShortAnswer = async (
       ),
     };
 
+    // Only the continuous attempts carry a grade. Old numbered ones are
+    // re-checked against the current key when they are merged, so an
+    // accepted phrasing counts for them then.
     const attempts = await ExerciseAttempt.find({
       guide: new ObjectId(guideId),
-      status: { $ne: "inProgress" },
-    }).select("owner answers codeResults score passed attemptNumber taskProgress status");
+      status: "active",
+    });
 
+    // Every try is kept, so this also credits a student who wrote the
+    // phrasing on a later try — at whatever that try was worth.
     let regradedAttempts = 0;
     for (const attempt of attempts) {
-      let regraded: { score: number; passed: boolean } | null = null;
-
-      if (attempt.taskProgress) {
-        // Worked through one question at a time: the grade is first-try
-        // accuracy, so accepting this phrasing only changes anything for a
-        // student who wrote it on their FIRST try.
-        const progress = { ...(attempt.taskProgress as ExerciseProgress) };
-        const entry = progress[id];
-        if (
-          entry &&
-          !entry.firstTryCorrect &&
-          matchShortAnswer(
-            { acceptedAnswers: [...(task.acceptedAnswers ?? []), normalized] },
-            entry.firstAnswer
-          ).status === "correct"
-        ) {
-          progress[id] = { ...entry, firstTryCorrect: true, correct: true };
-          attempt.taskProgress = progress;
-          attempt.markModified("taskProgress");
-        }
-
-        const served = selectServedTasks(
-          updatedExercise,
-          seededRng(
-            `${String(attempt.owner)}:${guideId}:${attempt.attemptNumber ?? 1}`
-          )
-        );
-        const scored = scoreFromProgress(
-          served,
-          progress,
-          updatedExercise.passThreshold,
-          (attempt.codeResults ?? {}) as CodeResults
-        );
-        regraded = { score: scored.score, passed: scored.passed };
-      } else {
-        // Legacy attempt: everything answered, then submitted in one go.
-        try {
-          const graded = gradeExercise(
-            updatedExercise,
-            attempt.answers as ExerciseAnswers,
-            // Reuse what the code tasks did when they ran; only the
-            // short-answer key changed, and re-running a sandbox here would be
-            // pointless.
-            (attempt.codeResults ?? {}) as CodeResults
-          );
-          regraded = { score: graded.score, passed: graded.passed };
-        } catch {
-          // A pooled attempt whose served subset no longer matches cannot be
-          // re-graded; leave its stored score alone rather than corrupting it.
-          continue;
-        }
-      }
-
-      if (
-        !regraded ||
-        (regraded.score === attempt.score && regraded.passed === attempt.passed)
-      ) {
-        if (attempt.isModified()) await attempt.save();
-        continue;
-      }
-      attempt.score = regraded.score;
-      attempt.passed = regraded.passed;
-      await attempt.save();
-      regradedAttempts += 1;
+      const before = attempt.score;
+      const { summary } = await refreshCachedScore(attempt, updatedExercise);
+      if (summary.score !== before) regradedAttempts += 1;
     }
 
     // Same reasoning as exerciseSession: the re-grade is already persisted.
