@@ -9,9 +9,11 @@ import {
   SearchWrapper,
   FilterControls,
   FilterSelect,
+  GallerySort,
 } from "./styles";
 import { useState } from "react";
 import { FiSearch } from "react-icons/fi";
+import { sortGalleryItems, type GallerySortOrder } from "./sortGalleryItems";
 
 interface GalleryProps {
   items: GalleryItemType[];
@@ -48,6 +50,7 @@ const getCategory = (item: GalleryItemType): CategoryFilter => {
 
 const Gallery = ({ items }: GalleryProps) => {
   const [query, setQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<GallerySortOrder>("recommended");
   const [selectedModule, setSelectedModule] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
   const [selectedYear, setSelectedYear] = useState("all");
@@ -140,6 +143,18 @@ const Gallery = ({ items }: GalleryProps) => {
             </option>
           ))}
         </FilterSelect>
+        <GallerySort>
+          <label htmlFor="gallery-sort">Sort by</label>
+          <FilterSelect
+            id="gallery-sort"
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value as GallerySortOrder)}
+          >
+            <option value="recommended">Most recommended</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+          </FilterSelect>
+        </GallerySort>
       </FilterControls>
 
       {filteredItems.length === 0 ? (
@@ -148,7 +163,7 @@ const Gallery = ({ items }: GalleryProps) => {
         </GalleryEmpty>
       ) : (
         <GalleryGrid>
-          {filteredItems.map((item) => (
+          {sortGalleryItems(filteredItems, sortOrder).map((item) => (
             <GalleryItem key={item.returnId} item={item} />
           ))}
         </GalleryGrid>
