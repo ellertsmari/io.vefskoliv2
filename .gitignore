@@ -29,6 +29,8 @@ yarn-error.log*
 .env*.local
 .env.local*
 .env*
+.env 
+
 # But allow example files for developers
 !.env*.example
 !.env.example
