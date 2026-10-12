@@ -15,6 +15,7 @@ import { FiSearch } from "react-icons/fi";
 
 interface GalleryProps {
   items: GalleryItemType[];
+  showControls?: boolean;
 }
 
 type CategoryFilter = "all" | "design" | "web" | "other";
@@ -46,7 +47,7 @@ const getCategory = (item: GalleryItemType): CategoryFilter => {
   return "other";
 };
 
-const Gallery = ({ items }: GalleryProps) => {
+const Gallery = ({ items, showControls = false }: GalleryProps) => {
   const [query, setQuery] = useState("");
   const [selectedModule, setSelectedModule] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
@@ -69,78 +70,84 @@ const Gallery = ({ items }: GalleryProps) => {
     .sort((a, b) => b - a);
 
   const search = query.trim().toLocaleLowerCase();
-  const filteredItems = items.filter((item) => {
-    const matchesSearch =
-      item.title.toLocaleLowerCase().includes(search) ||
-      item.studentName.toLocaleLowerCase().includes(search) ||
-      item.module.title.toLocaleLowerCase().includes(search);
+  const filteredItems = showControls
+    ? items.filter((item) => {
+        const matchesSearch =
+          item.title.toLocaleLowerCase().includes(search) ||
+          item.studentName.toLocaleLowerCase().includes(search) ||
+          item.module.title.toLocaleLowerCase().includes(search);
 
-    const matchesModule =
-      selectedModule === "all" ||
-      item.module.number === Number(selectedModule);
+        const matchesModule =
+          selectedModule === "all" ||
+          item.module.number === Number(selectedModule);
 
-    const matchesCategory =
-      selectedCategory === "all" ||
-      getCategory(item) === selectedCategory;
+        const matchesCategory =
+          selectedCategory === "all" ||
+          getCategory(item) === selectedCategory;
 
-    const itemYear = new Date(item.createdAt).getFullYear();
-    const matchesYear =
-      selectedYear === "all" ||
-      itemYear === Number(selectedYear);
+        const itemYear = new Date(item.createdAt).getFullYear();
+        const matchesYear =
+          selectedYear === "all" ||
+          itemYear === Number(selectedYear);
 
-    return matchesSearch && matchesModule && matchesCategory && matchesYear;
-  });
+        return matchesSearch && matchesModule && matchesCategory && matchesYear;
+      })
+    : items;
 
   return (
     <>
-      <SearchWrapper>
-        <FiSearch size={18} aria-hidden="true" />
-        <GallerySearch
-          type="search"
-          placeholder="Search by project, student or module"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </SearchWrapper>
+      {showControls && (
+        <>
+          <SearchWrapper>
+            <FiSearch size={18} aria-hidden="true" />
+            <GallerySearch
+              type="search"
+              placeholder="Search by project, student or module"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </SearchWrapper>
 
-      <FilterControls>
-        <FilterSelect
-          aria-label="Filter by module"
-          value={selectedModule}
-          onChange={(e) => setSelectedModule(e.target.value)}
-        >
-          <option value="all">All modules</option>
-          {moduleOptions.map(([moduleNumber, moduleTitle]) => (
-            <option key={moduleNumber} value={moduleNumber}>
-              Module {moduleNumber}: {moduleTitle}
-            </option>
-          ))}
-        </FilterSelect>
+          <FilterControls>
+            <FilterSelect
+              aria-label="Filter by module"
+              value={selectedModule}
+              onChange={(e) => setSelectedModule(e.target.value)}
+            >
+              <option value="all">All modules</option>
+              {moduleOptions.map(([moduleNumber, moduleTitle]) => (
+                <option key={moduleNumber} value={moduleNumber}>
+                  Module {moduleNumber}: {moduleTitle}
+                </option>
+              ))}
+            </FilterSelect>
 
-        <FilterSelect
-          aria-label="Filter by category"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as CategoryFilter)}
-        >
-          <option value="all">All categories</option>
-          <option value="design">Design</option>
-          <option value="web">Web</option>
-          <option value="other">Other</option>
-        </FilterSelect>
+            <FilterSelect
+              aria-label="Filter by category"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value as CategoryFilter)}
+            >
+              <option value="all">All categories</option>
+              <option value="design">Design</option>
+              <option value="web">Web</option>
+              <option value="other">Other</option>
+            </FilterSelect>
 
-        <FilterSelect
-          aria-label="Filter by year"
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-        >
-          <option value="all">All years</option>
-          {yearOptions.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </FilterSelect>
-      </FilterControls>
+            <FilterSelect
+              aria-label="Filter by year"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+            >
+              <option value="all">All years</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </FilterSelect>
+          </FilterControls>
+        </>
+      )}
 
       {filteredItems.length === 0 ? (
         <GalleryEmpty>

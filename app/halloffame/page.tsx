@@ -20,7 +20,7 @@ export default async function HallOfFamePage() {
           Exceptional student projects recommended by peers for their outstanding quality and creativity.
         </PageDescription>
       </PageHeader>
-      <Gallery items={galleryItems} />
+      <Gallery items={galleryItems} showControls />
     </PageContainer>
   );
 }

@@ -66,23 +66,7 @@ export async function verifyCredentials({
     ? await bcrypt.compare(password, user.password)
     : false;
 
-  console.log("DEBUG auth attempt", {
-    email,
-    passwordLength: password.length,
-    userFound: !!user,
-    userStatus: user?.status,
-    userEmail: user?.email,
-    passwordsMatch,
-    ip,
-  });
-
   if (!user || !passwordsMatch) {
-    console.log("DEBUG invalid credentials branch", {
-      email,
-      password,
-      userExists: !!user,
-      passwordsMatch,
-    });
     await Promise.all([
       consume(
         emailKey,

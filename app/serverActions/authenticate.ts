@@ -10,7 +10,6 @@ export async function authenticate(
 ) {
   try {
     const payload = Object.fromEntries(formData);
-    console.log("DEBUG authenticate payload", payload);
     await signIn("credentials", {
       ...payload,
       redirect: false,
