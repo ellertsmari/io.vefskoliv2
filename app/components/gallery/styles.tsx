@@ -117,19 +117,25 @@ export const GalleryItemMeta = styled.div`
   }
 `;
 
-export const GalleryActions = styled.div`
+export const GalleryActions = styled.div<{ $multiple: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: space-between;
   margin-top: 12px;
 `;
 
-export const GalleryActionLink = styled.a<{ $primary: boolean }>`
+export const GalleryActionLink = styled.a<{
+  $primary: boolean;
+  $multiple: boolean;
+}>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 8px 14px;
+  flex: ${({ $multiple }) => ($multiple ? "1 1 0" : "0 1 auto")};
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 20px;
   border: 1px solid
     ${({ $primary }) =>
       $primary ? "var(--theme-module3-100)" : "var(--primary-black-30)"};

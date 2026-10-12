@@ -78,15 +78,17 @@ const getFigmaThumbnailUrl = (fileKey: string): string => {
 
 const GalleryLinks = ({ item }: GalleryItemProps) => {
   if (!item.liveVersion && !item.projectUrl) return null;
+  const hasBothLinks = Boolean(item.liveVersion && item.projectUrl);
 
   return (
-    <GalleryActions>
+    <GalleryActions $multiple={hasBothLinks}>
       {item.liveVersion && (
         <GalleryActionLink
           href={item.liveVersion}
           target="_blank"
           rel="noopener noreferrer"
           $primary={false}
+          $multiple={hasBothLinks}
         >
           {getLinkLabel(item.liveVersion, "liveVersion")}
         </GalleryActionLink>
@@ -97,6 +99,7 @@ const GalleryLinks = ({ item }: GalleryItemProps) => {
           target="_blank"
           rel="noopener noreferrer"
           $primary={false}
+          $multiple={hasBothLinks}
         >
           {getLinkLabel(item.projectUrl, "projectUrl")}
         </GalleryActionLink>
