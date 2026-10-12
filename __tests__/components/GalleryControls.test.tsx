@@ -5,11 +5,15 @@ const sampleItems = [
   {
     returnId: "1",
     title: "Moon Landing",
-    studentName: "Anna Student",
     description: "A small but ambitious web project showcasing a landing page for a moon mission.",
+    studentName: "Anna Student",
     module: { number: 1, title: "Module 1" },
-    createdAt: "2024-01-01T00:00:00.000Z",
+    guideTitle: "Moon mission landing page",
+    recommendationCount: 2,
+    returnImage: null,
+    returnGif: null,
     returnUrl: "https://example.com/project",
+    createdAt: "2024-01-01T00:00:00.000Z",
   },
 ];
 
