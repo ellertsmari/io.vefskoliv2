@@ -37,6 +37,7 @@ export type GalleryItem = {
   projectUrl: string | null;
   liveVersion: string | null;
   topics: string[];
+  createdAt: string;
 };
 
 const buildPipeline = (limit?: number): PipelineStage[] => {
@@ -167,6 +168,7 @@ const mapAggregateToItem = (doc: GalleryAggregateResult): GalleryItem => {
     projectUrl: doc.projectUrl ?? null,
     liveVersion: doc.liveVersion ?? null,
     topics: parseTopics(doc.topicsList),
+    createdAt: doc.createdAt.toISOString(),
   };
 };
 
