@@ -5,7 +5,6 @@ const item = (returnId: string, recommendationCount: number, createdAt?: string)
   returnId, recommendationCount, createdAt: createdAt ?? "", title: returnId, description: "",
   studentName: "Raheel", module: { title: "Design", number: 1 },
   guideTitle: "", returnImage: null, returnGif: null, returnUrl: null,
-  projectUrl: null, liveVersion: null, topics: [],
 });
 const ids = (items: GalleryItem[]) => items.map(value => value.returnId);
 
