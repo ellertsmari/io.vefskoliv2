@@ -65,7 +65,7 @@ export const GalleryItemStudent = styled.p`
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--theme-module3-100);
-  margin: 0;
+  margin: 4px 0 0;
 `;
 
 export const GalleryItemDescription = styled.p`
