@@ -218,7 +218,7 @@ export const FilterControls = styled.div`
   }
 
   @media (min-width: 960px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 `;
 
@@ -341,4 +341,18 @@ export const PreviewBadge = styled.span<{ $type: 'figma' | 'website' }>`
       ? 'linear-gradient(135deg, #f24e1e 0%, #a259ff 100%)'
       : 'linear-gradient(135deg, #059669 0%, #34d399 100%)'
   };
+`;
+
+
+export const GallerySort = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+
+  label {
+    flex-shrink: 0;
+    font-family: "Source Sans 3", sans-serif;
+    font-size: var(--text-base);
+  }
 `;
