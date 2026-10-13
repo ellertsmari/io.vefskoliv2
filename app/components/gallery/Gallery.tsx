@@ -2,6 +2,7 @@
 
 import type { GalleryItem as GalleryItemType } from "app/serverActions/getGallery";
 import GalleryItem from "./GalleryItem";
+import ResetIntroduction from "./ResetIntroduction";
 import {
   GalleryGrid,
   GalleryEmpty,
@@ -10,14 +11,16 @@ import {
   FilterControls,
   FilterSelect,
   GallerySort,
+  GalleryReset,
 } from "./styles";
 import { useState } from "react";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiRotateCcw } from "react-icons/fi";
 import { sortGalleryItems, type GallerySortOrder } from "./sortGalleryItems";
 
 interface GalleryProps {
   items: GalleryItemType[];
   showControls?: boolean;
+  userId?: string;
 }
 
 type CategoryFilter = "all" | "design" | "web" | "other";
@@ -49,7 +52,7 @@ const getCategory = (item: GalleryItemType): CategoryFilter => {
   return "other";
 };
 
-const Gallery = ({ items, showControls = false }: GalleryProps) => {
+const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<GallerySortOrder>("recommended");
   const [selectedModule, setSelectedModule] = useState("all");
@@ -99,6 +102,7 @@ const Gallery = ({ items, showControls = false }: GalleryProps) => {
 
   return (
     <>
+      {showControls && <>
       <SearchWrapper>
         <FiSearch size={18} aria-hidden="true" />
         <GallerySearch
@@ -108,6 +112,7 @@ const Gallery = ({ items, showControls = false }: GalleryProps) => {
           onChange={(e) => setQuery(e.target.value)}
         />
       </SearchWrapper>
+
 
       <FilterControls>
         <FilterSelect
@@ -158,7 +163,23 @@ const Gallery = ({ items, showControls = false }: GalleryProps) => {
             <option value="oldest">Oldest</option>
           </FilterSelect>
         </GallerySort>
+        <ResetIntroduction userId={userId}>
+        <GalleryReset
+          type="button"
+          onClick={() => {
+            setQuery("");
+            setSelectedModule("all");
+            setSelectedCategory("all");
+            setSelectedYear("all");
+            setSortOrder("recommended");
+          }}
+        >
+          <FiRotateCcw aria-hidden="true" />
+          Reset
+        </GalleryReset>
+        </ResetIntroduction>
       </FilterControls>
+      </>}
 
       {filteredItems.length === 0 ? (
         <GalleryEmpty>

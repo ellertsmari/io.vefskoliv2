@@ -226,6 +226,9 @@ export const FilterControls = styled.div`
   @media (min-width: 960px) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  }
 `;
 
 export const FilterSelect = styled.select`
@@ -360,5 +363,44 @@ export const GallerySort = styled.div`
     flex-shrink: 0;
     font-family: "Source Sans 3", sans-serif;
     font-size: var(--text-base);
+  }
+`;
+
+export const GalleryReset = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid rgba(120, 100, 220, 0.35);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px rgba(80, 60, 160, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  color: var(--primary-black-100);
+  font-family: "Source Sans 3", sans-serif;
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, box-shadow 160ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 6px 20px rgba(80, 60, 160, 0.16);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-module3-100);
+    outline-offset: 3px;
+  }
+
+  &:active {
+    background: rgba(230, 225, 255, 0.8);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `;
