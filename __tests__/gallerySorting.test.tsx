@@ -7,8 +7,8 @@ jest.mock("../app/components/gallery/GalleryItem", () => ({
   default: ({ item }: { item: GalleryItem }) => <div data-testid="project">{item.title}</div>,
 }));
 const items: GalleryItem[] = [
-  { returnId: "a", title: "Design old", studentName: "Raheel", description: "", module: { title: "Design", number: 1 }, guideTitle: "", recommendationCount: 10, createdAt: "2025-01-01", returnImage: null, returnGif: null, returnUrl: null, projectUrl: null, liveVersion: null, topics: [] },
-  { returnId: "b", title: "Design new", studentName: "Julia", description: "", module: { title: "Design", number: 1 }, guideTitle: "", recommendationCount: 1, createdAt: "2026-01-01", returnImage: null, returnGif: null, returnUrl: null, projectUrl: null, liveVersion: null, topics: [] },
+  { returnId: "a", title: "Design old", studentName: "Raheel", description: "", module: { title: "Design", number: 1 }, guideTitle: "", recommendationCount: 10, createdAt: "2025-01-01", returnImage: null, returnGif: null, returnUrl: null },
+  { returnId: "b", title: "Design new", studentName: "Julia", description: "", module: { title: "Design", number: 1 }, guideTitle: "", recommendationCount: 1, createdAt: "2026-01-01", returnImage: null, returnGif: null, returnUrl: null },
 ];
 test("sort selection updates cards and continues to work with search", () => {
   render(<Gallery items={items} />);

@@ -52,7 +52,6 @@ export const GalleryItemTitle = styled.h3`
   color: var(--primary-black-100);
   margin: 0;
   line-height: 1.3;
-  text-transform: uppercase;
 
   @media (min-width: 768px) {
     font-size: var(--text-xl);
@@ -63,7 +62,7 @@ export const GalleryItemStudent = styled.p`
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--primary-black-60);
+  color: var(--theme-module3-100);
   margin: 0;
 `;
 
@@ -71,7 +70,7 @@ export const GalleryItemDescription = styled.p`
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-sm);
   font-weight: 400;
-  color: var(--primary-black-100);
+  color: var(--primary-black-60);
   margin: 0;
   line-height: 1.5;
   flex: 1;
@@ -138,13 +137,13 @@ export const GalleryActionLink = styled.a<{
   padding: 10px 20px;
   border: 1px solid
     ${({ $primary }) =>
-      $primary ? "var(--theme-module3-100)" : "var(--primary-black-30)"};
+      $primary ? "var(--primary-black-100)" : "var(--primary-black-30)"};
   border-radius: var(--radius-lg);
   background: ${({ $primary }) =>
-    $primary ? "white" : "var(--primary-black-100)"};
+    $primary ? "var(--primary-black-100)" : "var(--primary-white)"};
   color:
-  ${({ $primary }) =>
-    $primary ? "var(--theme-module3-100)" : "white"};
+    ${({ $primary }) =>
+      $primary ? "var(--primary-white)" : "var(--primary-black-100)"};
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-sm);
   font-weight: 600;
@@ -152,10 +151,17 @@ export const GalleryActionLink = styled.a<{
   text-decoration: none;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 
+  svg {
+    flex: none;
+    margin-right: 8px;
+  }
+
   &:hover {
-    border-color: var(--theme-module3-120);
+    border-color: var(--primary-black-30);
     background: ${({ $primary }) =>
-      $primary ? "var(--theme-module3-120)" : "var(--primary-black-5)"};
+      $primary ? "var(--primary-white)" : "var(--primary-black-100)"};
+    color: ${({ $primary }) =>
+      $primary ? "var(--primary-black-100)" : "var(--primary-white)"};
   }
 
   &:focus-visible {
