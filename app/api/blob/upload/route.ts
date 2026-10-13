@@ -6,15 +6,6 @@ import {
   IMAGE_MAX_UPLOAD_BYTES,
 } from "../../../utils/imageUpload";
 
-// app/api/some-route/route.ts
-import { connectDB } from '@/lib/mongodb';
-
-export async function GET() {
-  await connectDB();
-  // ...query your data
-}
-
-
 /**
  * Issues a short-lived token so the browser can upload an image straight to
  * Vercel Blob.
