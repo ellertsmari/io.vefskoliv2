@@ -24,6 +24,8 @@ describe("getGalleryItems", () => {
     const student = await createDummyUser("user", { name: "Gallery Student" });
     const reviewer = await createDummyUser("user", { name: "Peer Reviewer" });
     const guide = await createDummyGuide();
+    guide.topicsList = "- Flexbox\n- Grid, responsive design";
+    await guide.save();
 
     const projectLiveUrl = "https://example.com/live";
     const projectRepoUrl = "https://github.com/example/project";
@@ -65,7 +67,10 @@ describe("getGalleryItems", () => {
       returnImage: projectImageUrl,
       returnGif: null,
       returnUrl: projectLiveUrl,
+      projectUrl: projectRepoUrl,
+      liveVersion: projectLiveUrl,
       guideTitle: guide.title,
+      topics: ["Flexbox", "Grid", "responsive design"],
     });
 
     expect(item.module).toMatchObject({

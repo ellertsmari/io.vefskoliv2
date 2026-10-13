@@ -19,6 +19,7 @@ type GalleryAggregateResult = {
   pictureUrl?: string;
   projectUrl?: string;
   liveVersion?: string;
+  topicsList?: string;
   createdAt: Date;
 };
 
@@ -33,6 +34,9 @@ export type GalleryItem = {
   returnImage: string | null;
   returnGif: string | null;
   returnUrl: string | null;
+  projectUrl: string | null;
+  liveVersion: string | null;
+  topics: string[];
   createdAt: string;
 };
 
@@ -94,6 +98,7 @@ const buildPipeline = (limit?: number): PipelineStage[] => {
           number: "$guide.module.number",
         },
         guideTitle: "$guide.title",
+        topicsList: "$guide.topicsList",
         recommendationCount: 1,
         pictureUrl: "$pictureUrl",
         projectUrl: "$projectUrl",
@@ -132,6 +137,20 @@ const parseMedia = (url?: string): { image: string | null; gif: string | null } 
     : { image: trimmed, gif: null };
 };
 
+const parseTopics = (topicsList?: string): string[] =>
+  (topicsList ?? "")
+    .split(/[\n,;]+/)
+    .map((topic) =>
+      topic
+        .trim()
+        .replace(/^#{1,6}\s+/, "")
+        .replace(/^(?:[-*+]|\d+[.)])\s+/, "")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/[*_`~]/g, "")
+        .trim()
+    )
+    .filter(Boolean);
+
 const mapAggregateToItem = (doc: GalleryAggregateResult): GalleryItem => {
   const { image, gif } = parseMedia(doc.pictureUrl);
 
@@ -146,6 +165,9 @@ const mapAggregateToItem = (doc: GalleryAggregateResult): GalleryItem => {
     returnImage: image,
     returnGif: gif,
     returnUrl: doc.liveVersion ?? doc.projectUrl ?? null,
+    projectUrl: doc.projectUrl ?? null,
+    liveVersion: doc.liveVersion ?? null,
+    topics: parseTopics(doc.topicsList),
     createdAt: doc.createdAt.toISOString(),
   };
 };

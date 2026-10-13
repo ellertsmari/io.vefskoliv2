@@ -17,6 +17,7 @@ import { sortGalleryItems, type GallerySortOrder } from "./sortGalleryItems";
 
 interface GalleryProps {
   items: GalleryItemType[];
+  showControls?: boolean;
 }
 
 type CategoryFilter = "all" | "design" | "web" | "other";
@@ -48,7 +49,7 @@ const getCategory = (item: GalleryItemType): CategoryFilter => {
   return "other";
 };
 
-const Gallery = ({ items }: GalleryProps) => {
+const Gallery = ({ items, showControls = false }: GalleryProps) => {
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<GallerySortOrder>("recommended");
   const [selectedModule, setSelectedModule] = useState("all");
@@ -72,27 +73,29 @@ const Gallery = ({ items }: GalleryProps) => {
     .sort((a, b) => b - a);
 
   const search = query.trim().toLocaleLowerCase();
-  const filteredItems = items.filter((item) => {
-    const matchesSearch =
-      item.title.toLocaleLowerCase().includes(search) ||
-      item.studentName.toLocaleLowerCase().includes(search) ||
-      item.module.title.toLocaleLowerCase().includes(search);
+  const filteredItems = showControls
+    ? items.filter((item) => {
+        const matchesSearch =
+          item.title.toLocaleLowerCase().includes(search) ||
+          item.studentName.toLocaleLowerCase().includes(search) ||
+          item.module.title.toLocaleLowerCase().includes(search);
 
-    const matchesModule =
-      selectedModule === "all" ||
-      item.module.number === Number(selectedModule);
+        const matchesModule =
+          selectedModule === "all" ||
+          item.module.number === Number(selectedModule);
 
-    const matchesCategory =
-      selectedCategory === "all" ||
-      getCategory(item) === selectedCategory;
+        const matchesCategory =
+          selectedCategory === "all" ||
+          getCategory(item) === selectedCategory;
 
-    const itemYear = new Date(item.createdAt).getFullYear();
-    const matchesYear =
-      selectedYear === "all" ||
-      itemYear === Number(selectedYear);
+        const itemYear = new Date(item.createdAt).getFullYear();
+        const matchesYear =
+          selectedYear === "all" ||
+          itemYear === Number(selectedYear);
 
-    return matchesSearch && matchesModule && matchesCategory && matchesYear;
-  });
+        return matchesSearch && matchesModule && matchesCategory && matchesYear;
+      })
+    : items;
 
   return (
     <>
