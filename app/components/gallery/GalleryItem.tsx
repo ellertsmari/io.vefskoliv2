@@ -1,6 +1,7 @@
 "use client";
 
 import { GalleryItem as GalleryItemType } from "app/serverActions/getGallery";
+import { FaStar } from "react-icons/fa";
 import {
   GalleryItemContainer,
   GalleryItemImage,
@@ -10,9 +11,12 @@ import {
   GalleryItemDescription,
   GalleryTopicTags,
   GalleryTopicTag,
-  GalleryItemMeta,
   GalleryActions,
   GalleryActionLink,
+  GalleryMedia,
+  GalleryItemHeader,
+  RecommendationBadge,
+  ModuleBadge,
   IframePreviewContainer,
   FigmaPreviewContainer,
   PreviewOverlay,
@@ -49,9 +53,9 @@ const getLinkLabel = (
   const hostname = getHostname(url);
   const isFigma = hostname === "figma.com" || hostname?.endsWith(".figma.com");
   const isGitHub = hostname === "github.com" || hostname?.endsWith(".github.com");
+  if (field === "liveVersion") return "View Project";
   if (isGitHub) return "GITHUB";
   if (isFigma) return "FIGMA";
-  if (field === "liveVersion") return "View Project";
   return "Project source";
 };
 
@@ -163,49 +167,63 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
 
   return (
     <GalleryItemContainer>
-      {hasCustomImage && (
-        <GalleryItemImage>
-          <img
-            src={item.returnGif || item.returnImage || ""}
-            alt={`${item.studentName}'s project`}
-            loading="lazy"
-          />
-        </GalleryItemImage>
-      )}
+      <GalleryMedia>
+        <ModuleBadge $module={item.module.number}>
+          Module {item.module.number ?? item.module.title}
+        </ModuleBadge>
+        {hasCustomImage && (
+          <GalleryItemImage>
+            <img
+              src={item.returnGif || item.returnImage || ""}
+              alt={`${item.studentName}'s project`}
+              loading="lazy"
+            />
+          </GalleryItemImage>
+        )}
 
-      {showFigmaPreview && (
-        <FigmaPreviewContainer>
-          <img
-            src={getFigmaThumbnailUrl(figmaFileKey)}
-            alt={`${item.studentName}'s Figma design`}
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-          <PreviewOverlay>
-            <PreviewBadge $type="figma">Figma</PreviewBadge>
-          </PreviewOverlay>
-        </FigmaPreviewContainer>
-      )}
+        {showFigmaPreview && (
+          <FigmaPreviewContainer>
+            <img
+              src={getFigmaThumbnailUrl(figmaFileKey)}
+              alt={`${item.studentName}'s Figma design`}
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <PreviewOverlay>
+              <PreviewBadge $type="figma">Figma</PreviewBadge>
+            </PreviewOverlay>
+          </FigmaPreviewContainer>
+        )}
 
-      {showIframePreview && (
-        <IframePreviewContainer>
-          <iframe
-            src={item.returnUrl!}
-            title={`${item.studentName}'s project preview`}
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin"
-          />
-          <PreviewOverlay>
-            <PreviewBadge $type="website">Live Site</PreviewBadge>
-          </PreviewOverlay>
-        </IframePreviewContainer>
-      )}
+        {showIframePreview && (
+          <IframePreviewContainer>
+            <iframe
+              src={item.returnUrl!}
+              title={`${item.studentName}'s project preview`}
+              loading="lazy"
+              sandbox="allow-scripts allow-same-origin"
+            />
+            <PreviewOverlay>
+              <PreviewBadge $type="website">Live Site</PreviewBadge>
+            </PreviewOverlay>
+          </IframePreviewContainer>
+        )}
+
+      </GalleryMedia>
+
 
       <GalleryItemContent>
-        <GalleryItemTitle>{item.title}</GalleryItemTitle>
-        <GalleryItemStudent>by {item.studentName}</GalleryItemStudent>
+        <GalleryItemHeader>
+          <div>
+            <GalleryItemTitle>{item.title}</GalleryItemTitle>
+            <GalleryItemStudent>by {item.studentName}</GalleryItemStudent>
+          </div>
+          <RecommendationBadge title="Recommended by classmates in peer review">
+            <FaStar aria-hidden="true" /> {item.recommendationCount}
+          </RecommendationBadge>
+        </GalleryItemHeader>
         <GalleryItemDescription>
           {item.description.length > 150
             ? `${item.description.substring(0, 150)}...`
@@ -219,10 +237,6 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
             ))}
           </GalleryTopicTags>
         )}
-        <GalleryItemMeta>
-          <span>Module {item.module.number}: {item.module.title}</span>
-          <span>{item.recommendationCount} recommendation{item.recommendationCount !== 1 ? 's' : ''}</span>
-        </GalleryItemMeta>
         <GalleryLinks item={item} />
       </GalleryItemContent>
     </GalleryItemContainer>
