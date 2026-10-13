@@ -8,7 +8,11 @@ import {
   GalleryItemTitle,
   GalleryItemStudent,
   GalleryItemDescription,
+  GalleryTopicTags,
+  GalleryTopicTag,
   GalleryItemMeta,
+  GalleryActions,
+  GalleryActionLink,
   IframePreviewContainer,
   FigmaPreviewContainer,
   PreviewOverlay,
@@ -30,9 +34,25 @@ const getFigmaFileKey = (url: string): string | null => {
   return match ? match[1] : null;
 };
 
-// Check if URL is a Figma URL
-const isFigmaUrl = (url: string): boolean => {
-  return url.includes('figma.com/file') || url.includes('figma.com/design') || url.includes('figma.com/proto');
+const getHostname = (url: string): string | null => {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+};
+
+const getLinkLabel = (
+  url: string,
+  field: "projectUrl" | "liveVersion"
+): string => {
+  const hostname = getHostname(url);
+  const isFigma = hostname === "figma.com" || hostname?.endsWith(".figma.com");
+  const isGitHub = hostname === "github.com" || hostname?.endsWith(".github.com");
+  if (isGitHub) return "GITHUB";
+  if (isFigma) return "FIGMA";
+  if (field === "liveVersion") return "View Project";
+  return "Project source";
 };
 
 // Check if URL is a website (not GitHub, not Figma)
@@ -56,6 +76,38 @@ const getFigmaThumbnailUrl = (fileKey: string): string => {
   return `https://www.figma.com/file/${fileKey}/thumbnail`;
 };
 
+const GalleryLinks = ({ item }: GalleryItemProps) => {
+  if (!item.liveVersion && !item.projectUrl) return null;
+  const hasBothLinks = Boolean(item.liveVersion && item.projectUrl);
+
+  return (
+    <GalleryActions $multiple={hasBothLinks}>
+      {item.liveVersion && (
+        <GalleryActionLink
+          href={item.liveVersion}
+          target="_blank"
+          rel="noopener noreferrer"
+          $primary={false}
+          $multiple={hasBothLinks}
+        >
+          {getLinkLabel(item.liveVersion, "liveVersion")}
+        </GalleryActionLink>
+      )}
+      {item.projectUrl && (
+        <GalleryActionLink
+          href={item.projectUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          $primary={false}
+          $multiple={hasBothLinks}
+        >
+          {getLinkLabel(item.projectUrl, "projectUrl")}
+        </GalleryActionLink>
+      )}
+    </GalleryActions>
+  );
+};
+
 const GalleryItem = ({ item }: GalleryItemProps) => {
   const hasCustomImage = item.returnImage || item.returnGif;
   const figmaFileKey = item.returnUrl ? getFigmaFileKey(item.returnUrl) : null;
@@ -64,26 +116,16 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
 
   return (
     <GalleryItemContainer>
-      {/* Priority 1: Custom uploaded image/gif */}
       {hasCustomImage && (
         <GalleryItemImage>
-          {item.returnGif ? (
-            <img
-              src={item.returnGif}
-              alt={`${item.studentName}'s project`}
-              loading="lazy"
-            />
-          ) : (
-            <img
-              src={item.returnImage!}
-              alt={`${item.studentName}'s project`}
-              loading="lazy"
-            />
-          )}
+          <img
+            src={item.returnGif || item.returnImage || ""}
+            alt={`${item.studentName}'s project`}
+            loading="lazy"
+          />
         </GalleryItemImage>
       )}
 
-      {/* Priority 2: Figma thumbnail */}
       {showFigmaPreview && (
         <FigmaPreviewContainer>
           <img
@@ -91,8 +133,7 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
             alt={`${item.studentName}'s Figma design`}
             loading="lazy"
             onError={(e) => {
-              // Hide the image container if thumbnail fails to load
-              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).style.display = "none";
             }}
           />
           <PreviewOverlay>
@@ -101,7 +142,6 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
         </FigmaPreviewContainer>
       )}
 
-      {/* Priority 3: Website iframe preview */}
       {showIframePreview && (
         <IframePreviewContainer>
           <iframe
@@ -125,26 +165,18 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
             : item.description
           }
         </GalleryItemDescription>
+        {item.topics.length > 0 && (
+          <GalleryTopicTags aria-label="Guide topics">
+            {item.topics.map((topic) => (
+              <GalleryTopicTag key={topic}>{topic}</GalleryTopicTag>
+            ))}
+          </GalleryTopicTags>
+        )}
         <GalleryItemMeta>
           <span>Module {item.module.number}: {item.module.title}</span>
           <span>{item.recommendationCount} recommendation{item.recommendationCount !== 1 ? 's' : ''}</span>
         </GalleryItemMeta>
-        {item.returnUrl && (
-          <a
-            href={item.returnUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-block',
-              marginTop: '12px',
-              color: 'var(--theme-module3-100)',
-              textDecoration: 'none',
-              fontWeight: '600'
-            }}
-          >
-            View Project →
-          </a>
-        )}
+        <GalleryLinks item={item} />
       </GalleryItemContent>
     </GalleryItemContainer>
   );

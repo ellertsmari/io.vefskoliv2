@@ -13,6 +13,9 @@ const sampleItems = [
     returnImage: null,
     returnGif: null,
     returnUrl: "https://example.com/project",
+    projectUrl: null,
+    liveVersion: "https://example.com/project",
+    topics: [],
     createdAt: "2024-01-01T00:00:00.000Z",
   },
 ];

@@ -52,6 +52,7 @@ export const GalleryItemTitle = styled.h3`
   color: var(--primary-black-100);
   margin: 0;
   line-height: 1.3;
+  text-transform: uppercase;
 
   @media (min-width: 768px) {
     font-size: var(--text-xl);
@@ -62,7 +63,7 @@ export const GalleryItemStudent = styled.p`
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--theme-module3-100);
+  color: var(--primary-black-60);
   margin: 0;
 `;
 
@@ -70,10 +71,30 @@ export const GalleryItemDescription = styled.p`
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-sm);
   font-weight: 400;
-  color: var(--primary-black-60);
+  color: var(--primary-black-100);
   margin: 0;
   line-height: 1.5;
   flex: 1;
+`;
+
+export const GalleryTopicTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+`;
+
+export const GalleryTopicTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--primary-black-5);
+  color: var(--primary-black-100);
+  font-family: "Source Sans 3", sans-serif;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.2;
 `;
 
 export const GalleryItemMeta = styled.div`
@@ -93,6 +114,53 @@ export const GalleryItemMeta = styled.div`
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+`;
+
+export const GalleryActions = styled.div<{ $multiple: boolean }>`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  margin-top: 12px;
+`;
+
+export const GalleryActionLink = styled.a<{
+  $primary: boolean;
+  $multiple: boolean;
+}>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: ${({ $multiple }) => ($multiple ? "1 1 0" : "0 1 auto")};
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid
+    ${({ $primary }) =>
+      $primary ? "var(--theme-module3-100)" : "var(--primary-black-30)"};
+  border-radius: var(--radius-lg);
+  background: ${({ $primary }) =>
+    $primary ? "white" : "var(--primary-black-100)"};
+  color:
+  ${({ $primary }) =>
+    $primary ? "var(--theme-module3-100)" : "white"};
+  font-family: "Source Sans 3", sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    border-color: var(--theme-module3-120);
+    background: ${({ $primary }) =>
+      $primary ? "var(--theme-module3-120)" : "var(--primary-black-5)"};
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--theme-module3-60);
+    outline-offset: 2px;
   }
 `;
 
@@ -274,4 +342,3 @@ export const PreviewBadge = styled.span<{ $type: 'figma' | 'website' }>`
       : 'linear-gradient(135deg, #059669 0%, #34d399 100%)'
   };
 `;
-
