@@ -1,4 +1,6 @@
 "use client";
+import { Background } from "globalStyles/layoutStyles";
+import { i } from "node_modules/@vercel/blob/dist/create-folder-BM6BTlko";
 import styled from "styled-components";
 
 export const GalleryItemContainer = styled.div`
@@ -96,32 +98,13 @@ export const GalleryTopicTag = styled.span`
   line-height: 1.2;
 `;
 
-export const GalleryItemMeta = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-
-  span {
-    font-family: "Source Sans 3", sans-serif;
-    font-size: var(--text-xs);
-    font-weight: 500;
-    color: var(--primary-black-60);
-  }
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-`;
-
 export const GalleryActions = styled.div<{ $multiple: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: space-between;
-  margin-top: 12px;
+  margin-top: auto;
+  padding-top: 12px;
 `;
 
 export const GalleryActionLink = styled.a<{
@@ -135,15 +118,20 @@ export const GalleryActionLink = styled.a<{
   min-width: 0;
   min-height: 44px;
   padding: 10px 20px;
+
+  @media (min-width: 768px) {
+    min-height: 36px;
+    padding: 6px 16px;
+  }
   border: 1px solid
     ${({ $primary }) =>
-      $primary ? "var(--primary-black-100)" : "var(--primary-black-30)"};
+    $primary ? "var(--primary-black-100)" : "var(--primary-black-30)"};
   border-radius: var(--radius-lg);
   background: ${({ $primary }) =>
     $primary ? "var(--primary-black-100)" : "var(--primary-white)"};
   color:
     ${({ $primary }) =>
-      $primary ? "var(--primary-white)" : "var(--primary-black-100)"};
+    $primary ? "var(--primary-white)" : "var(--primary-black-100)"};
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-sm);
   font-weight: 600;
@@ -159,9 +147,9 @@ export const GalleryActionLink = styled.a<{
   &:hover {
     border-color: var(--primary-black-30);
     background: ${({ $primary }) =>
-      $primary ? "var(--primary-white)" : "var(--primary-black-100)"};
+    $primary ? "var(--primary-white)" : "var(--primary-black-100)"};
     color: ${({ $primary }) =>
-      $primary ? "var(--primary-black-100)" : "var(--primary-white)"};
+    $primary ? "var(--primary-black-100)" : "var(--primary-white)"};
   }
 
   &:focus-visible {
@@ -352,6 +340,47 @@ export const PreviewBadge = styled.span<{ $type: 'figma' | 'website' }>`
   };
 `;
 
+export const GalleryMedia = styled.div`
+  position: relative;
+`;
+
+// 
+
+const MODULE_COLORS = ["#3a6ea5", "#b5562a", "#6a4c93", "#2f7d5b", "#a63d6b"];
+
+export const ModuleBadge = styled.span<{ $module?: number }>`
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: ${({ $module }) =>
+    $module ? MODULE_COLORS[($module - 1) % MODULE_COLORS.length] : "var(--theme-module3-100)"};
+  color: white;
+  font-size: var(--text-xs);
+  font-weight: 700;
+`;
+
+export const GalleryItemHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+`;
+
+export const RecommendationBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--primary-black-10);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  flex-shrink: 0;
+  svg { color: #e0a100; }
+`;
 
 export const GallerySort = styled.div`
   display: flex;
