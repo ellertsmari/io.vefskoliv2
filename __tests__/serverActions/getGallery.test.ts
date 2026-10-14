@@ -60,6 +60,7 @@ describe("getGalleryItems", () => {
     expect(item).toMatchObject({
       returnId: userReturn._id.toString(),
       title: "Responsive Portfolio",
+      createdAt: "2024-01-01T00:00:00.000Z",
       description: "A responsive single page portfolio built with Next.js.",
       studentName: "Gallery Student",
       recommendationCount: 1,

@@ -212,7 +212,7 @@ export const FilterControls = styled.div`
   }
 
   @media (min-width: 960px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 `;
 
@@ -377,4 +377,17 @@ export const RecommendationBadge = styled.span`
   font-weight: 700;
   flex-shrink: 0;
   svg { color: #e0a100; }
+`;
+
+export const GallerySort = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+
+  label {
+    flex-shrink: 0;
+    font-family: "Source Sans 3", sans-serif;
+    font-size: var(--text-base);
+  }
 `;

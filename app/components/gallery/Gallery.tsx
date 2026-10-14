@@ -9,9 +9,11 @@ import {
   SearchWrapper,
   FilterControls,
   FilterSelect,
+  GallerySort,
 } from "./styles";
 import { useState } from "react";
 import { FiSearch } from "react-icons/fi";
+import { sortGalleryItems, type GallerySortOrder } from "./sortGalleryItems";
 
 interface GalleryProps {
   items: GalleryItemType[];
@@ -49,6 +51,7 @@ const getCategory = (item: GalleryItemType): CategoryFilter => {
 
 const Gallery = ({ items, showControls = false }: GalleryProps) => {
   const [query, setQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<GallerySortOrder>("recommended");
   const [selectedModule, setSelectedModule] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
   const [selectedYear, setSelectedYear] = useState("all");
@@ -96,58 +99,66 @@ const Gallery = ({ items, showControls = false }: GalleryProps) => {
 
   return (
     <>
-      {showControls && (
-        <>
-          <SearchWrapper>
-            <FiSearch size={18} aria-hidden="true" />
-            <GallerySearch
-              type="search"
-              placeholder="Search by project, student or module"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </SearchWrapper>
+      <SearchWrapper>
+        <FiSearch size={18} aria-hidden="true" />
+        <GallerySearch
+          type="search"
+          placeholder="Search by project, student or module"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </SearchWrapper>
 
-          <FilterControls>
-            <FilterSelect
-              aria-label="Filter by module"
-              value={selectedModule}
-              onChange={(e) => setSelectedModule(e.target.value)}
-            >
-              <option value="all">All modules</option>
-              {moduleOptions.map(([moduleNumber, moduleTitle]) => (
-                <option key={moduleNumber} value={moduleNumber}>
-                  Module {moduleNumber}: {moduleTitle}
-                </option>
-              ))}
-            </FilterSelect>
+      <FilterControls>
+        <FilterSelect
+          aria-label="Filter by module"
+          value={selectedModule}
+          onChange={(e) => setSelectedModule(e.target.value)}
+        >
+          <option value="all">All modules</option>
+          {moduleOptions.map(([moduleNumber, moduleTitle]) => (
+            <option key={moduleNumber} value={moduleNumber}>
+              Module {moduleNumber}: {moduleTitle}
+            </option>
+          ))}
+        </FilterSelect>
 
-            <FilterSelect
-              aria-label="Filter by category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as CategoryFilter)}
-            >
-              <option value="all">All categories</option>
-              <option value="design">Design</option>
-              <option value="web">Web</option>
-              <option value="other">Other</option>
-            </FilterSelect>
+        <FilterSelect
+          aria-label="Filter by category"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value as CategoryFilter)}
+        >
+          <option value="all">All categories</option>
+          <option value="design">Design</option>
+          <option value="web">Web</option>
+          <option value="other">Other</option>
+        </FilterSelect>
 
-            <FilterSelect
-              aria-label="Filter by year"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-            >
-              <option value="all">All years</option>
-              {yearOptions.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </FilterSelect>
-          </FilterControls>
-        </>
-      )}
+        <FilterSelect
+          aria-label="Filter by year"
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(e.target.value)}
+        >
+          <option value="all">All years</option>
+          {yearOptions.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </FilterSelect>
+        <GallerySort>
+          <label htmlFor="gallery-sort">Sort by</label>
+          <FilterSelect
+            id="gallery-sort"
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value as GallerySortOrder)}
+          >
+            <option value="recommended">Most recommended</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+          </FilterSelect>
+        </GallerySort>
+      </FilterControls>
 
       {filteredItems.length === 0 ? (
         <GalleryEmpty>
@@ -155,7 +166,7 @@ const Gallery = ({ items, showControls = false }: GalleryProps) => {
         </GalleryEmpty>
       ) : (
         <GalleryGrid>
-          {filteredItems.map((item) => (
+          {sortGalleryItems(filteredItems, sortOrder).map((item) => (
             <GalleryItem key={item.returnId} item={item} />
           ))}
         </GalleryGrid>
