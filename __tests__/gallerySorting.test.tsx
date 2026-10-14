@@ -51,7 +51,7 @@ test("Reset restores search, every filter and recommendation sorting", () => {
   fireEvent.change(screen.getByLabelText("Filter by category"), { target: { value: "other" } });
   fireEvent.change(screen.getByLabelText("Filter by year"), { target: { value: "2026" } });
   fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "newest" } });
-  fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+  fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
   expect(screen.getByPlaceholderText("Search by project, student or module")).toHaveValue("");
   expect(screen.getByLabelText("Filter by module")).toHaveValue("all");
   expect(screen.getByLabelText("Filter by category")).toHaveValue("all");
@@ -63,14 +63,14 @@ test("Reset restores search, every filter and recommendation sorting", () => {
 test("Reset explanation closes with X and is remembered separately for each user", () => {
   localStorage.clear();
   const view = render(<Gallery showControls items={items} userId="first-user" />);
-  expect(screen.getByRole("note", { name: "How Reset works" })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Close Reset explanation" }));
+  expect(screen.getByRole("note", { name: "How Clear all works" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Close Clear all explanation" }));
   expect(screen.queryByRole("note")).not.toBeInTheDocument();
   view.unmount();
   const secondView = render(<Gallery showControls items={items} userId="first-user" />);
   expect(screen.queryByRole("note")).not.toBeInTheDocument();
   secondView.unmount();
   render(<Gallery showControls items={items} userId="second-user" />);
-  expect(screen.getByRole("note", { name: "How Reset works" })).toBeInTheDocument();
+  expect(screen.getByRole("note", { name: "How Clear all works" })).toBeInTheDocument();
   localStorage.clear();
 });

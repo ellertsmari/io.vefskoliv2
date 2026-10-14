@@ -80,11 +80,11 @@ export default function ResetIntroduction({
     <Anchor>
       {children}
       {visible && (
-        <Explanation role="note" aria-label="How Reset works">
-          <Close type="button" aria-label="Close Reset explanation" onClick={dismiss}>
+        <Explanation role="note" aria-label="How Clear all works">
+          <Close type="button" aria-label="Close Clear all explanation" onClick={dismiss}>
             <FiX size={16} aria-hidden="true" />
           </Close>
-          <strong>Reset your gallery</strong>
+          <strong>Clear all gallery controls</strong>
           <p>Clears search and all filters, and restores Most recommended sorting.</p>
         </Explanation>
       )}

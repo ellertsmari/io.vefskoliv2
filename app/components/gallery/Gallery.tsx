@@ -14,7 +14,7 @@ import {
   GalleryReset,
 } from "./styles";
 import { useState } from "react";
-import { FiSearch, FiRotateCcw } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 import { sortGalleryItems, type GallerySortOrder } from "./sortGalleryItems";
 
 interface GalleryProps {
@@ -174,8 +174,7 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
             setSortOrder("recommended");
           }}
         >
-          <FiRotateCcw aria-hidden="true" />
-          Reset
+          Clear all
         </GalleryReset>
         </ResetIntroduction>
       </FilterControls>
