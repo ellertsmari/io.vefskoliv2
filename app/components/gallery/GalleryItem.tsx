@@ -11,6 +11,8 @@ import {
   GalleryItemDescription,
   GalleryTopicTags,
   GalleryTopicTag,
+  GalleryTopicMore,
+  GalleryTopicPopover,
   GalleryActions,
   GalleryActionLink,
   GalleryMedia,
@@ -157,11 +159,15 @@ const GalleryLinks = ({ item }: GalleryItemProps) => {
   );
 };
 
+const MAX_VISIBLE_TOPICS = 2;
+
 const GalleryItem = ({ item }: GalleryItemProps) => {
   const hasCustomImage = item.returnImage || item.returnGif;
   const figmaFileKey = item.returnUrl ? getFigmaFileKey(item.returnUrl) : null;
   const showFigmaPreview = !hasCustomImage && figmaFileKey;
   const showIframePreview = !hasCustomImage && !figmaFileKey && item.returnUrl && isWebsiteUrl(item.returnUrl);
+  const visibleTopics = item.topics.slice(0, MAX_VISIBLE_TOPICS);
+  const hiddenTopics = item.topics.slice(MAX_VISIBLE_TOPICS);
 
   return (
     <GalleryItemContainer>
@@ -222,11 +228,24 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
             : item.description
           }
         </GalleryItemDescription>
-        {item.topics.length > 0 && (
+        {visibleTopics.length > 0 && (
           <GalleryTopicTags aria-label="Guide topics">
-            {item.topics.map((topic) => (
+            {visibleTopics.map((topic) => (
               <GalleryTopicTag key={topic}>#{topic}</GalleryTopicTag>
             ))}
+            {hiddenTopics.length > 0 && (
+              <GalleryTopicMore
+                tabIndex={0}
+                aria-label={`${hiddenTopics.length} more topics: ${hiddenTopics.join(", ")}`}
+              >
+                +{hiddenTopics.length}
+                <GalleryTopicPopover aria-hidden="true">
+                  {hiddenTopics.map((topic) => (
+                    <GalleryTopicTag key={topic}>#{topic}</GalleryTopicTag>
+                  ))}
+                </GalleryTopicPopover>
+              </GalleryTopicMore>
+            )}
           </GalleryTopicTags>
         )}
         <GalleryLinks item={item} />

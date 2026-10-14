@@ -79,15 +79,19 @@ export const GalleryItemDescription = styled.p`
 `;
 
 export const GalleryTopicTags = styled.div`
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  gap: 8px;
 `;
 
+/**
+ * Block, not flex: `text-overflow: ellipsis` only works on a block's own text.
+ * `min-width: 0` lets a tag shrink below its text width so the row stays on one line.
+ */
 export const GalleryTopicTag = styled.span`
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
+  display: block;
+  min-width: 0;
   padding: 4px 9px;
   border-radius: 999px;
   background: var(--primary-black-5);
@@ -95,7 +99,49 @@ export const GalleryTopicTag = styled.span`
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-xs);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+/**
+ * The hidden topics, shown as the same chips in a small card above the tag row.
+ * Anchored to the whole row (not the "+N" chip) so it never sticks out of the
+ * card, which clips with `overflow: hidden`.
+ */
+export const GalleryTopicPopover = styled.span`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+`;
+
+/** The "+N" chip: never shrinks, and reveals the popover on hover or keyboard focus. */
+export const GalleryTopicMore = styled(GalleryTopicTag)`
+  position: static;
+  flex-shrink: 0;
+  overflow: visible;
+  cursor: default;
+
+  &:hover ${GalleryTopicPopover},
+  &:focus-visible ${GalleryTopicPopover} {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
 export const GalleryActions = styled.div<{ $multiple: boolean }>`
