@@ -153,6 +153,11 @@ export const GalleryActions = styled.div<{ $multiple: boolean }>`
   padding-top: 12px;
 `;
 
+// A flex item drops its own leading space, so the gap before the arrow is a margin.
+export const GalleryActionArrow = styled.span`
+  margin-left: 6px;
+`;
+
 export const GalleryActionLink = styled.a<{
   $primary: boolean;
   $multiple: boolean;
@@ -360,6 +365,10 @@ export const GalleryMedia = styled.div`
 
 const MODULE_COLORS = ["#3a6ea5", "#b5562a", "#6a4c93", "#2f7d5b", "#a63d6b"];
 
+/** Each module number gets its own colour, cycling through the palette; no number falls back to the theme colour. */
+const moduleColor = (module?: number): string =>
+  module ? MODULE_COLORS[(module - 1) % MODULE_COLORS.length] : "var(--theme-module3-100)";
+
 export const ModuleBadge = styled.span<{ $module?: number }>`
   position: absolute;
   top: 12px;
@@ -367,11 +376,20 @@ export const ModuleBadge = styled.span<{ $module?: number }>`
   z-index: 1;
   padding: 4px 12px;
   border-radius: 999px;
-  background: ${({ $module }) =>
-    $module ? MODULE_COLORS[($module - 1) % MODULE_COLORS.length] : "var(--theme-module3-100)"};
+  background: ${({ $module }) => moduleColor($module)};
   color: white;
   font-size: var(--text-xs);
   font-weight: 700;
+`;
+
+/** Shown when a project has no image and no preview: same size as an image, in the module's colour. */
+export const GalleryItemPlaceholder = styled(GalleryItemImage)<{ $module?: number }>`
+  background: ${({ $module }) =>
+    `linear-gradient(135deg, ${moduleColor($module)} 0%, color-mix(in srgb, ${moduleColor($module)} 60%, black) 100%)`};
+
+  svg {
+    color: rgba(255, 255, 255, 0.7);
+  }
 `;
 
 export const GalleryItemHeader = styled.div`

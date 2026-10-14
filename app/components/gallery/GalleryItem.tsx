@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { GalleryItem as GalleryItemType } from "app/serverActions/getGallery";
 import { FaStar } from "react-icons/fa";
+import { FiMonitor, FiPenTool } from "react-icons/fi";
 import {
   GalleryItemContainer,
   GalleryItemImage,
@@ -15,6 +17,8 @@ import {
   GalleryTopicPopover,
   GalleryActions,
   GalleryActionLink,
+  GalleryActionArrow,
+  GalleryItemPlaceholder,
   GalleryMedia,
   GalleryItemHeader,
   RecommendationBadge,
@@ -139,7 +143,7 @@ const GalleryLinks = ({ item }: GalleryItemProps) => {
           <PlatformIcon label={liveVersionLabel ?? ""} />
           {liveVersionLabel}
           {liveVersionLabel === "View Project" && (
-            <span aria-hidden="true"> →</span>
+            <GalleryActionArrow aria-hidden="true">→</GalleryActionArrow>
           )}
         </GalleryActionLink>
       )}
@@ -166,6 +170,12 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
   const figmaFileKey = item.returnUrl ? getFigmaFileKey(item.returnUrl) : null;
   const showFigmaPreview = !hasCustomImage && figmaFileKey;
   const showIframePreview = !hasCustomImage && !figmaFileKey && item.returnUrl && isWebsiteUrl(item.returnUrl);
+  // A Figma thumbnail that fails to load falls back to the placeholder instead of an empty block.
+  const [figmaFailed, setFigmaFailed] = useState(false);
+  const hasPreview = hasCustomImage || (showFigmaPreview && !figmaFailed) || showIframePreview;
+  const isDesignProject = item.projectUrl
+    ? getLinkLabel(item.projectUrl, "projectUrl") === "FIGMA"
+    : false;
   const visibleTopics = item.topics.slice(0, MAX_VISIBLE_TOPICS);
   const hiddenTopics = item.topics.slice(MAX_VISIBLE_TOPICS);
 
@@ -185,15 +195,13 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
           </GalleryItemImage>
         )}
 
-        {showFigmaPreview && (
+        {showFigmaPreview && !figmaFailed && (
           <FigmaPreviewContainer>
             <img
               src={getFigmaThumbnailUrl(figmaFileKey)}
               alt={`${item.studentName}'s Figma design`}
               loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
+              onError={() => setFigmaFailed(true)}
             />
           </FigmaPreviewContainer>
         )}
@@ -207,6 +215,12 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
               sandbox="allow-scripts allow-same-origin"
             />
           </IframePreviewContainer>
+        )}
+
+        {!hasPreview && (
+          <GalleryItemPlaceholder $module={item.module.number} aria-hidden="true">
+            {isDesignProject ? <FiPenTool size={56} /> : <FiMonitor size={56} />}
+          </GalleryItemPlaceholder>
         )}
 
       </GalleryMedia>
