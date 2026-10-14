@@ -1,6 +1,7 @@
 "use client";
 
 import { GalleryItem as GalleryItemType } from "app/serverActions/getGallery";
+import { FaStar } from "react-icons/fa";
 import {
   GalleryItemContainer,
   GalleryItemImage,
@@ -10,9 +11,12 @@ import {
   GalleryItemDescription,
   GalleryTopicTags,
   GalleryTopicTag,
-  GalleryItemMeta,
   GalleryActions,
   GalleryActionLink,
+  GalleryMedia,
+  GalleryItemHeader,
+  RecommendationBadge,
+  ModuleBadge,
   IframePreviewContainer,
   FigmaPreviewContainer,
   PreviewOverlay,
@@ -49,9 +53,9 @@ const getLinkLabel = (
   const hostname = getHostname(url);
   const isFigma = hostname === "figma.com" || hostname?.endsWith(".figma.com");
   const isGitHub = hostname === "github.com" || hostname?.endsWith(".github.com");
+  if (field === "liveVersion") return "View Project";
   if (isGitHub) return "GITHUB";
   if (isFigma) return "FIGMA";
-  if (field === "liveVersion") return "View Project";
   return "Project source";
 };
 
@@ -76,9 +80,51 @@ const getFigmaThumbnailUrl = (fileKey: string): string => {
   return `https://www.figma.com/file/${fileKey}/thumbnail`;
 };
 
+const PlatformIcon = ({ label }: { label: string }) => {
+  if (label === "GITHUB") {
+    return (
+      <svg
+        aria-hidden="true"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+      >
+        <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.08c-3.1.68-3.76-1.32-3.76-1.32-.5-1.3-1.24-1.65-1.24-1.65-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.11-1.45 3.05-1.15 3.05-1.15.61 1.54.23 2.68.11 2.96.72.78 1.15 1.78 1.15 3 0 4.29-2.62 5.24-5.11 5.52.4.35.76 1.03.76 2.08v3.07c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z" />
+      </svg>
+    );
+  }
+
+  if (label === "FIGMA") {
+    return (
+      <svg
+        aria-hidden="true"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path fill="#F24E1E" d="M8 0h4v8H8a4 4 0 0 1 0-8Z" />
+        <path fill="#FF7262" d="M12 0h4a4 4 0 0 1 0 8h-4V0Z" />
+        <path fill="#A259FF" d="M8 8h4v8H8a4 4 0 0 1 0-8Z" />
+        <path fill="#1ABCFE" d="M12 8h4a4 4 0 0 1 0 8h-4V8Z" />
+        <path fill="#0ACF83" d="M8 16h4v4a4 4 0 1 1-4-4Z" />
+      </svg>
+    );
+  }
+
+  return null;
+};
+
 const GalleryLinks = ({ item }: GalleryItemProps) => {
   if (!item.liveVersion && !item.projectUrl) return null;
   const hasBothLinks = Boolean(item.liveVersion && item.projectUrl);
+  const liveVersionLabel = item.liveVersion
+    ? getLinkLabel(item.liveVersion, "liveVersion")
+    : null;
+  const projectUrlLabel = item.projectUrl
+    ? getLinkLabel(item.projectUrl, "projectUrl")
+    : null;
 
   return (
     <GalleryActions $multiple={hasBothLinks}>
@@ -87,10 +133,14 @@ const GalleryLinks = ({ item }: GalleryItemProps) => {
           href={item.liveVersion}
           target="_blank"
           rel="noopener noreferrer"
-          $primary={false}
+          $primary
           $multiple={hasBothLinks}
         >
-          {getLinkLabel(item.liveVersion, "liveVersion")}
+          <PlatformIcon label={liveVersionLabel ?? ""} />
+          {liveVersionLabel}
+          {liveVersionLabel === "View Project" && (
+            <span aria-hidden="true"> →</span>
+          )}
         </GalleryActionLink>
       )}
       {item.projectUrl && (
@@ -101,7 +151,8 @@ const GalleryLinks = ({ item }: GalleryItemProps) => {
           $primary={false}
           $multiple={hasBothLinks}
         >
-          {getLinkLabel(item.projectUrl, "projectUrl")}
+          <PlatformIcon label={projectUrlLabel ?? ""} />
+          {projectUrlLabel}
         </GalleryActionLink>
       )}
     </GalleryActions>
@@ -116,49 +167,63 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
 
   return (
     <GalleryItemContainer>
-      {hasCustomImage && (
-        <GalleryItemImage>
-          <img
-            src={item.returnGif || item.returnImage || ""}
-            alt={`${item.studentName}'s project`}
-            loading="lazy"
-          />
-        </GalleryItemImage>
-      )}
+      <GalleryMedia>
+        <ModuleBadge $module={item.module.number}>
+          Module {item.module.number ?? item.module.title}
+        </ModuleBadge>
+        {hasCustomImage && (
+          <GalleryItemImage>
+            <img
+              src={item.returnGif || item.returnImage || ""}
+              alt={`${item.studentName}'s project`}
+              loading="lazy"
+            />
+          </GalleryItemImage>
+        )}
 
-      {showFigmaPreview && (
-        <FigmaPreviewContainer>
-          <img
-            src={getFigmaThumbnailUrl(figmaFileKey)}
-            alt={`${item.studentName}'s Figma design`}
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-          <PreviewOverlay>
-            <PreviewBadge $type="figma">Figma</PreviewBadge>
-          </PreviewOverlay>
-        </FigmaPreviewContainer>
-      )}
+        {showFigmaPreview && (
+          <FigmaPreviewContainer>
+            <img
+              src={getFigmaThumbnailUrl(figmaFileKey)}
+              alt={`${item.studentName}'s Figma design`}
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <PreviewOverlay>
+              <PreviewBadge $type="figma">Figma</PreviewBadge>
+            </PreviewOverlay>
+          </FigmaPreviewContainer>
+        )}
 
-      {showIframePreview && (
-        <IframePreviewContainer>
-          <iframe
-            src={item.returnUrl!}
-            title={`${item.studentName}'s project preview`}
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin"
-          />
-          <PreviewOverlay>
-            <PreviewBadge $type="website">Live Site</PreviewBadge>
-          </PreviewOverlay>
-        </IframePreviewContainer>
-      )}
+        {showIframePreview && (
+          <IframePreviewContainer>
+            <iframe
+              src={item.returnUrl!}
+              title={`${item.studentName}'s project preview`}
+              loading="lazy"
+              sandbox="allow-scripts allow-same-origin"
+            />
+            <PreviewOverlay>
+              <PreviewBadge $type="website">Live Site</PreviewBadge>
+            </PreviewOverlay>
+          </IframePreviewContainer>
+        )}
+
+      </GalleryMedia>
+
 
       <GalleryItemContent>
-        <GalleryItemTitle>{item.title}</GalleryItemTitle>
-        <GalleryItemStudent>by {item.studentName}</GalleryItemStudent>
+        <GalleryItemHeader>
+          <div>
+            <GalleryItemTitle>{item.title}</GalleryItemTitle>
+            <GalleryItemStudent>by {item.studentName}</GalleryItemStudent>
+          </div>
+          <RecommendationBadge title="Recommended by classmates in peer review">
+            <FaStar aria-hidden="true" /> {item.recommendationCount}
+          </RecommendationBadge>
+        </GalleryItemHeader>
         <GalleryItemDescription>
           {item.description.length > 150
             ? `${item.description.substring(0, 150)}...`
@@ -168,14 +233,10 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
         {item.topics.length > 0 && (
           <GalleryTopicTags aria-label="Guide topics">
             {item.topics.map((topic) => (
-              <GalleryTopicTag key={topic}>{topic}</GalleryTopicTag>
+              <GalleryTopicTag key={topic}>#{topic}</GalleryTopicTag>
             ))}
           </GalleryTopicTags>
         )}
-        <GalleryItemMeta>
-          <span>Module {item.module.number}: {item.module.title}</span>
-          <span>{item.recommendationCount} recommendation{item.recommendationCount !== 1 ? 's' : ''}</span>
-        </GalleryItemMeta>
         <GalleryLinks item={item} />
       </GalleryItemContent>
     </GalleryItemContainer>
