@@ -308,40 +308,9 @@ export const FigmaPreviewContainer = styled.div`
   }
 `;
 
-// Overlay for preview badges
-export const PreviewOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-`;
-
-// Badge to indicate preview type
-export const PreviewBadge = styled.span<{ $type: 'figma' | 'website' }>`
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: white;
-  background: ${({ $type }) =>
-    $type === 'figma'
-      ? 'linear-gradient(135deg, #f24e1e 0%, #a259ff 100%)'
-      : 'linear-gradient(135deg, #059669 0%, #34d399 100%)'
-  };
-`;
-
 export const GalleryMedia = styled.div`
   position: relative;
 `;
-
-// 
 
 const MODULE_COLORS = ["#3a6ea5", "#b5562a", "#6a4c93", "#2f7d5b", "#a63d6b"];
 

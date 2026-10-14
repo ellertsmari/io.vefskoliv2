@@ -19,8 +19,6 @@ import {
   ModuleBadge,
   IframePreviewContainer,
   FigmaPreviewContainer,
-  PreviewOverlay,
-  PreviewBadge,
 } from "./styles";
 
 interface GalleryItemProps {
@@ -191,9 +189,6 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
             />
-            <PreviewOverlay>
-              <PreviewBadge $type="figma">Figma</PreviewBadge>
-            </PreviewOverlay>
           </FigmaPreviewContainer>
         )}
 
@@ -205,9 +200,6 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
               loading="lazy"
               sandbox="allow-scripts allow-same-origin"
             />
-            <PreviewOverlay>
-              <PreviewBadge $type="website">Live Site</PreviewBadge>
-            </PreviewOverlay>
           </IframePreviewContainer>
         )}
 
