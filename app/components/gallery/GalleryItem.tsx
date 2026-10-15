@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { GalleryItem as GalleryItemType } from "app/serverActions/getGallery";
 import { FaStar } from "react-icons/fa";
+import { FiMonitor, FiPenTool } from "react-icons/fi";
 import {
   GalleryItemContainer,
   GalleryItemImage,
@@ -11,16 +13,18 @@ import {
   GalleryItemDescription,
   GalleryTopicTags,
   GalleryTopicTag,
+  GalleryTopicMore,
+  GalleryTopicPopover,
   GalleryActions,
   GalleryActionLink,
+  GalleryActionArrow,
+  GalleryItemPlaceholder,
   GalleryMedia,
   GalleryItemHeader,
   RecommendationBadge,
   ModuleBadge,
   IframePreviewContainer,
   FigmaPreviewContainer,
-  PreviewOverlay,
-  PreviewBadge,
 } from "./styles";
 
 interface GalleryItemProps {
@@ -139,7 +143,7 @@ const GalleryLinks = ({ item }: GalleryItemProps) => {
           <PlatformIcon label={liveVersionLabel ?? ""} />
           {liveVersionLabel}
           {liveVersionLabel === "View Project" && (
-            <span aria-hidden="true"> →</span>
+            <GalleryActionArrow aria-hidden="true">→</GalleryActionArrow>
           )}
         </GalleryActionLink>
       )}
@@ -159,11 +163,21 @@ const GalleryLinks = ({ item }: GalleryItemProps) => {
   );
 };
 
+const MAX_VISIBLE_TOPICS = 2;
+
 const GalleryItem = ({ item }: GalleryItemProps) => {
   const hasCustomImage = item.returnImage || item.returnGif;
   const figmaFileKey = item.returnUrl ? getFigmaFileKey(item.returnUrl) : null;
   const showFigmaPreview = !hasCustomImage && figmaFileKey;
   const showIframePreview = !hasCustomImage && !figmaFileKey && item.returnUrl && isWebsiteUrl(item.returnUrl);
+  // A Figma thumbnail that fails to load falls back to the placeholder instead of an empty block.
+  const [figmaFailed, setFigmaFailed] = useState(false);
+  const hasPreview = hasCustomImage || (showFigmaPreview && !figmaFailed) || showIframePreview;
+  const isDesignProject = item.projectUrl
+    ? getLinkLabel(item.projectUrl, "projectUrl") === "FIGMA"
+    : false;
+  const visibleTopics = item.topics.slice(0, MAX_VISIBLE_TOPICS);
+  const hiddenTopics = item.topics.slice(MAX_VISIBLE_TOPICS);
 
   return (
     <GalleryItemContainer>
@@ -181,19 +195,14 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
           </GalleryItemImage>
         )}
 
-        {showFigmaPreview && (
+        {showFigmaPreview && !figmaFailed && (
           <FigmaPreviewContainer>
             <img
               src={getFigmaThumbnailUrl(figmaFileKey)}
               alt={`${item.studentName}'s Figma design`}
               loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
+              onError={() => setFigmaFailed(true)}
             />
-            <PreviewOverlay>
-              <PreviewBadge $type="figma">Figma</PreviewBadge>
-            </PreviewOverlay>
           </FigmaPreviewContainer>
         )}
 
@@ -205,10 +214,13 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
               loading="lazy"
               sandbox="allow-scripts allow-same-origin"
             />
-            <PreviewOverlay>
-              <PreviewBadge $type="website">Live Site</PreviewBadge>
-            </PreviewOverlay>
           </IframePreviewContainer>
+        )}
+
+        {!hasPreview && (
+          <GalleryItemPlaceholder $module={item.module.number} aria-hidden="true">
+            {isDesignProject ? <FiPenTool size={56} /> : <FiMonitor size={56} />}
+          </GalleryItemPlaceholder>
         )}
 
       </GalleryMedia>
@@ -230,11 +242,24 @@ const GalleryItem = ({ item }: GalleryItemProps) => {
             : item.description
           }
         </GalleryItemDescription>
-        {item.topics.length > 0 && (
+        {visibleTopics.length > 0 && (
           <GalleryTopicTags aria-label="Guide topics">
-            {item.topics.map((topic) => (
+            {visibleTopics.map((topic) => (
               <GalleryTopicTag key={topic}>#{topic}</GalleryTopicTag>
             ))}
+            {hiddenTopics.length > 0 && (
+              <GalleryTopicMore
+                tabIndex={0}
+                aria-label={`${hiddenTopics.length} more topics: ${hiddenTopics.join(", ")}`}
+              >
+                +{hiddenTopics.length}
+                <GalleryTopicPopover aria-hidden="true">
+                  {hiddenTopics.map((topic) => (
+                    <GalleryTopicTag key={topic}>#{topic}</GalleryTopicTag>
+                  ))}
+                </GalleryTopicPopover>
+              </GalleryTopicMore>
+            )}
           </GalleryTopicTags>
         )}
         <GalleryLinks item={item} />

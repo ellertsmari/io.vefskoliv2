@@ -11,7 +11,7 @@ const items: GalleryItem[] = [
   { returnId: "b", title: "Design new", studentName: "Julia", description: "", module: { title: "Design", number: 1 }, guideTitle: "", recommendationCount: 1, createdAt: "2026-01-01", returnImage: null, returnGif: null, returnUrl: null, projectUrl: null, liveVersion: null, topics: [] },
 ];
 test("sort selection updates cards and continues to work with search", () => {
-  render(<Gallery items={items} />);
+  render(<Gallery items={items} showControls />);
   const titles = () => screen.getAllByTestId("project").map(node => node.textContent);
   expect(titles()).toEqual(["Design old", "Design new"]);
   fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "newest" } });
@@ -32,7 +32,7 @@ test("sorting preserves combined module, category and year filters", () => {
     { ...items[1], returnId: "c", title: "Another module", module: { title: "Code", number: 2 }, returnUrl: "https://example.com/code" },
     { ...items[1], returnId: "d", title: "Figma design", returnUrl: "https://figma.com/design/demo" },
   ];
-  render(<Gallery items={projects} />);
+  render(<Gallery items={projects} showControls />);
   fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "newest" } });
   fireEvent.change(screen.getByLabelText("Filter by module"), { target: { value: "1" } });
   fireEvent.change(screen.getByLabelText("Filter by category"), { target: { value: "web" } });

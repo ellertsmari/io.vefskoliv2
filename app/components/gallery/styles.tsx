@@ -65,7 +65,7 @@ export const GalleryItemStudent = styled.p`
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--theme-module3-100);
-  margin: 0;
+  margin: 4px 0 0;
 `;
 
 export const GalleryItemDescription = styled.p`
@@ -79,15 +79,19 @@ export const GalleryItemDescription = styled.p`
 `;
 
 export const GalleryTopicTags = styled.div`
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  gap: 8px;
 `;
 
+/**
+ * Block, not flex: `text-overflow: ellipsis` only works on a block's own text.
+ * `min-width: 0` lets a tag shrink below its text width so the row stays on one line.
+ */
 export const GalleryTopicTag = styled.span`
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
+  display: block;
+  min-width: 0;
   padding: 4px 9px;
   border-radius: 999px;
   background: var(--primary-black-5);
@@ -95,7 +99,49 @@ export const GalleryTopicTag = styled.span`
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-xs);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+/**
+ * The hidden topics, shown as the same chips in a small card above the tag row.
+ * Anchored to the whole row (not the "+N" chip) so it never sticks out of the
+ * card, which clips with `overflow: hidden`.
+ */
+export const GalleryTopicPopover = styled.span`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+`;
+
+/** The "+N" chip: never shrinks, and reveals the popover on hover or keyboard focus. */
+export const GalleryTopicMore = styled(GalleryTopicTag)`
+  position: static;
+  flex-shrink: 0;
+  overflow: visible;
+  cursor: default;
+
+  &:hover ${GalleryTopicPopover},
+  &:focus-visible ${GalleryTopicPopover} {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
 export const GalleryActions = styled.div<{ $multiple: boolean }>`
@@ -105,6 +151,11 @@ export const GalleryActions = styled.div<{ $multiple: boolean }>`
   justify-content: space-between;
   margin-top: auto;
   padding-top: 12px;
+`;
+
+// A flex item drops its own leading space, so the gap before the arrow is a margin.
+export const GalleryActionArrow = styled.span`
+  margin-left: 6px;
 `;
 
 export const GalleryActionLink = styled.a<{
@@ -308,42 +359,15 @@ export const FigmaPreviewContainer = styled.div`
   }
 `;
 
-// Overlay for preview badges
-export const PreviewOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-`;
-
-// Badge to indicate preview type
-export const PreviewBadge = styled.span<{ $type: 'figma' | 'website' }>`
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: white;
-  background: ${({ $type }) =>
-    $type === 'figma'
-      ? 'linear-gradient(135deg, #f24e1e 0%, #a259ff 100%)'
-      : 'linear-gradient(135deg, #059669 0%, #34d399 100%)'
-  };
-`;
-
 export const GalleryMedia = styled.div`
   position: relative;
 `;
 
-// 
-
 const MODULE_COLORS = ["#3a6ea5", "#b5562a", "#6a4c93", "#2f7d5b", "#a63d6b"];
+
+/** Each module number gets its own colour, cycling through the palette; no number falls back to the theme colour. */
+const moduleColor = (module?: number): string =>
+  module ? MODULE_COLORS[(module - 1) % MODULE_COLORS.length] : "var(--theme-module3-100)";
 
 export const ModuleBadge = styled.span<{ $module?: number }>`
   position: absolute;
@@ -352,11 +376,20 @@ export const ModuleBadge = styled.span<{ $module?: number }>`
   z-index: 1;
   padding: 4px 12px;
   border-radius: 999px;
-  background: ${({ $module }) =>
-    $module ? MODULE_COLORS[($module - 1) % MODULE_COLORS.length] : "var(--theme-module3-100)"};
+  background: ${({ $module }) => moduleColor($module)};
   color: white;
   font-size: var(--text-xs);
   font-weight: 700;
+`;
+
+/** Shown when a project has no image and no preview: same size as an image, in the module's colour. */
+export const GalleryItemPlaceholder = styled(GalleryItemImage)<{ $module?: number }>`
+  background: ${({ $module }) =>
+    `linear-gradient(135deg, ${moduleColor($module)} 0%, color-mix(in srgb, ${moduleColor($module)} 60%, black) 100%)`};
+
+  svg {
+    color: rgba(255, 255, 255, 0.7);
+  }
 `;
 
 export const GalleryItemHeader = styled.div`
