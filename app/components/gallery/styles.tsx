@@ -262,7 +262,7 @@ export const FilterControls = styled.div`
   margin-bottom: 24px;
   align-items: center;
 
-  /* Clear all: own right-aligned row on narrow screens, beside Sort on desktop. */
+  /* Clear all: own right-aligned row on narrow screens, right of Sort from 640px up. */
   > :nth-child(5) {
     grid-column: 1 / -1;
     justify-self: end;
@@ -271,6 +271,15 @@ export const FilterControls = styled.div`
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    /* The extra column exists only while Clear all does, so Sort shifts left to make room. */
+    &[data-clear-visible="true"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    }
+
+    > :nth-child(5) {
+      grid-column: auto;
+    }
   }
 `;
 export const FilterSelect = styled.select`

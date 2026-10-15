@@ -81,6 +81,7 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
   const modules = new Set(selectedModule);
   const categories = new Set(selectedCategory);
   const years = new Set(selectedYear);
+  const hasActiveControls = selectedModule.length > 0 || selectedCategory.length > 0 || selectedYear.length > 0 || sortOrder !== "recommended";
   const search = query.trim().toLocaleLowerCase();
   const filteredItems = showControls
     ? items.filter((item) => {
@@ -121,7 +122,7 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
       </SearchWrapper>
 
 
-      <FilterControls data-gallery-layout="filters">
+      <FilterControls data-gallery-layout="filters" data-clear-visible={hasActiveControls}>
         <GalleryMultiFilter label="Filter by module" allLabel="All modules"
           options={moduleOptions.map(([number, title]) => ({ value: String(number), label: "Module " + number + ": " + title }))}
           selected={selectedModule} onChange={setSelectedModule} />
@@ -143,7 +144,7 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
             <option value="oldest">Oldest</option>
           </FilterSelect>
         </GallerySort>
-        {(selectedModule.length > 0 || selectedCategory.length > 0 || selectedYear.length > 0 || sortOrder !== "recommended") && <ResetIntroduction userId={userId}>
+        {hasActiveControls && <ResetIntroduction userId={userId}>
         <GalleryReset
           type="button"
           onClick={() => {

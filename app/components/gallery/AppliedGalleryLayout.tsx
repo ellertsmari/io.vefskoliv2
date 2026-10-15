@@ -27,9 +27,12 @@ export const AppliedGalleryLayout = styled.div<{ $enabled: boolean }>`
         transform: translate(-1.75px, 1px);
       }
       [data-gallery-layout="sort"] > select { height: 100%; box-sizing: border-box; }
-      /* Clear all sits directly left of Sort (252px + 12px gap), ending where the search ends. */
+      /* Clear all takes its own column right of Sort, so Sort shifts left and the row still ends where the search ends. */
+      [data-gallery-layout="filters"][data-clear-visible="true"] {
+        grid-template-columns: repeat(3, 158.75px) minmax(0, 1fr) auto;
+      }
       [data-gallery-layout="filters"] > [data-gallery-layout="clear"] {
-        position: absolute; top: 1px; right: 264px; height: 45px;
+        grid-column: auto; height: 45px; transform: translateY(1px);
       }
       [data-gallery-layout="clear"] > button { height: 100%; box-sizing: border-box; }
       [data-gallery-layout="count"] {
