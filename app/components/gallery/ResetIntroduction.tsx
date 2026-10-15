@@ -77,7 +77,7 @@ export default function ResetIntroduction({
   };
 
   return (
-    <Anchor>
+    <Anchor data-gallery-layout="clear">
       {children}
       {visible && (
         <Explanation role="note" aria-label="How Clear all works">

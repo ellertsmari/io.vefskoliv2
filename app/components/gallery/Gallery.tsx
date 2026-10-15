@@ -1,7 +1,10 @@
 'use client';
+import { AppliedGalleryLayout } from "./AppliedGalleryLayout";
+import GalleryDevTools from "./GalleryDevTools";
 
 import type { GalleryItem as GalleryItemType } from "app/serverActions/getGallery";
 import GalleryItem from "./GalleryItem";
+import GalleryMultiFilter from "./GalleryMultiFilter";
 import ResetIntroduction from "./ResetIntroduction";
 import {
   GalleryGrid,
@@ -55,9 +58,9 @@ const getCategory = (item: GalleryItemType): CategoryFilter => {
 const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<GallerySortOrder>("recommended");
-  const [selectedModule, setSelectedModule] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
-  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedModule, setSelectedModule] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string[]>([]);
 
   if (!items || items.length === 0) {
     return (
@@ -75,6 +78,9 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
     .filter((year) => Number.isFinite(year))
     .sort((a, b) => b - a);
 
+  const modules = new Set(selectedModule);
+  const categories = new Set(selectedCategory);
+  const years = new Set(selectedYear);
   const search = query.trim().toLocaleLowerCase();
   const filteredItems = showControls
     ? items.filter((item) => {
@@ -84,26 +90,27 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
           item.module.title.toLocaleLowerCase().includes(search);
 
         const matchesModule =
-          selectedModule === "all" ||
-          item.module.number === Number(selectedModule);
+          selectedModule.length === 0 ||
+          modules.has(String(item.module.number));
 
         const matchesCategory =
-          selectedCategory === "all" ||
-          getCategory(item) === selectedCategory;
+          selectedCategory.length === 0 ||
+          categories.has(getCategory(item));
 
         const itemYear = new Date(item.createdAt).getFullYear();
         const matchesYear =
-          selectedYear === "all" ||
-          itemYear === Number(selectedYear);
+          selectedYear.length === 0 ||
+          years.has(String(itemYear));
 
         return matchesSearch && matchesModule && matchesCategory && matchesYear;
       })
     : items;
 
   return (
-    <>
+    <AppliedGalleryLayout $enabled={showControls}>
       {showControls && <>
-      <SearchWrapper>
+      <GalleryDevTools />
+      <SearchWrapper data-gallery-layout="search">
         <FiSearch size={18} aria-hidden="true" />
         <GallerySearch
           type="search"
@@ -114,44 +121,17 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
       </SearchWrapper>
 
 
-      <FilterControls>
-        <FilterSelect
-          aria-label="Filter by module"
-          value={selectedModule}
-          onChange={(e) => setSelectedModule(e.target.value)}
-        >
-          <option value="all">All modules</option>
-          {moduleOptions.map(([moduleNumber, moduleTitle]) => (
-            <option key={moduleNumber} value={moduleNumber}>
-              Module {moduleNumber}: {moduleTitle}
-            </option>
-          ))}
-        </FilterSelect>
-
-        <FilterSelect
-          aria-label="Filter by category"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as CategoryFilter)}
-        >
-          <option value="all">All categories</option>
-          <option value="design">Design</option>
-          <option value="web">Web</option>
-          <option value="other">Other</option>
-        </FilterSelect>
-
-        <FilterSelect
-          aria-label="Filter by year"
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-        >
-          <option value="all">All years</option>
-          {yearOptions.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </FilterSelect>
-        <GallerySort>
+      <FilterControls data-gallery-layout="filters">
+        <GalleryMultiFilter label="Filter by module" allLabel="All modules"
+          options={moduleOptions.map(([number, title]) => ({ value: String(number), label: "Module " + number + ": " + title }))}
+          selected={selectedModule} onChange={setSelectedModule} />
+        <GalleryMultiFilter label="Filter by category" allLabel="All categories"
+          options={[{value: "design", label: "Design"}, {value: "web", label: "Web"}, {value: "other", label: "Other"}]}
+          selected={selectedCategory} onChange={setSelectedCategory} />
+        <GalleryMultiFilter label="Filter by year" allLabel="All years"
+          options={yearOptions.map(year => ({value: String(year), label: String(year)}))}
+          selected={selectedYear} onChange={setSelectedYear} />
+        <GallerySort data-gallery-layout="sort">
           <label htmlFor="gallery-sort">Sort by</label>
           <FilterSelect
             id="gallery-sort"
@@ -163,35 +143,37 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
             <option value="oldest">Oldest</option>
           </FilterSelect>
         </GallerySort>
-        <ResetIntroduction userId={userId}>
+        {(selectedModule.length > 0 || selectedCategory.length > 0 || selectedYear.length > 0 || sortOrder !== "recommended") && <ResetIntroduction userId={userId}>
         <GalleryReset
           type="button"
           onClick={() => {
             setQuery("");
-            setSelectedModule("all");
-            setSelectedCategory("all");
-            setSelectedYear("all");
+            setSelectedModule([]);
+            setSelectedCategory([]);
+            setSelectedYear([]);
             setSortOrder("recommended");
           }}
         >
           Clear all
         </GalleryReset>
-        </ResetIntroduction>
+        </ResetIntroduction>}
       </FilterControls>
       </>}
+
+      {showControls && <p data-gallery-layout="count" aria-live="polite">{filteredItems.length} {filteredItems.length === 1 ? "project" : "projects"}</p>}
 
       {filteredItems.length === 0 ? (
         <GalleryEmpty>
           <p>No projects match your current filters.</p>
         </GalleryEmpty>
       ) : (
-        <GalleryGrid>
+        <GalleryGrid data-gallery-layout="cards">
           {sortGalleryItems(filteredItems, sortOrder).map((item) => (
             <GalleryItem key={item.returnId} item={item} />
           ))}
         </GalleryGrid>
       )}
-    </>
+    </AppliedGalleryLayout>
   );
 };
 

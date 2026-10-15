@@ -202,40 +202,45 @@ export const SearchWrapper = styled.div`
 `;
 
 export const FilterControls = styled.div`
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  width: 100%;
+  max-width: 800px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin-bottom: 24px;
+  align-items: center;
+
+  /* Clear all: own right-aligned row on narrow screens, beside Sort on desktop. */
+  > :nth-child(5) {
+    grid-column: 1 / -1;
+    justify-self: end;
+    white-space: nowrap;
+  }
 
   @media (min-width: 640px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @media (min-width: 960px) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
-  }
 `;
-
 export const FilterSelect = styled.select`
   width: 100%;
-  padding: 12px 44px 12px 14px;
+  padding: 10px 30px 10px 10px;
+  min-height: 44px;
+  min-width: 0;
   border: 1px solid var(--primary-black-30);
   border-radius: var(--radius-lg);
   background-color: var(--primary-white);
   /* Custom arrow lets us control exact right spacing across browsers. */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 16px center;
+  background-position: right 10px center;
   background-size: 12px 8px;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   color: var(--primary-black-100);
   font-family: "Source Sans 3", sans-serif;
-  font-size: var(--text-base);
+  font-size: 14px;
 
   &:focus {
     outline: none;
@@ -262,7 +267,7 @@ export const GalleryEmpty = styled.div`
 
   p {
     font-family: "Source Sans 3", sans-serif;
-    font-size: var(--text-base);
+    font-size: 14px;
     margin: 0;
   }
 `;
@@ -385,13 +390,13 @@ export const RecommendationBadge = styled.span`
 export const GallerySort = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   min-width: 0;
 
   label {
     flex-shrink: 0;
     font-family: "Source Sans 3", sans-serif;
-    font-size: var(--text-base);
+    font-size: 14px;
   }
 `;
 
