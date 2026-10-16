@@ -24,6 +24,26 @@ jest.mock("serverActions/returnGuide", () => ({
   returnGuide: jest.fn(),
 }));
 
+// The real field uploads a file to blob storage; a plain input stands in for it.
+jest.mock("UIcomponents/imageUpload/ImageUploadField", () => ({
+  ImageUploadField: ({
+    id,
+    label,
+    value,
+    onChange,
+  }: {
+    id: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+  }) => (
+    <>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} value={value} onChange={(e) => onChange(e.target.value)} />
+    </>
+  ),
+}));
+
 const mockRefresh = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mockRefresh }),
@@ -40,6 +60,7 @@ describe("ReturnForm", () => {
   afterAll(async () => await closeDatabase());
 
   const guideId = "123456";
+  const pictureUrl = "https://store.public.blob.vercel-storage.com/project.png";
 
   it("renders", async () => {
     const { getByLabelText, getByText } = render(
@@ -94,6 +115,10 @@ describe("ReturnForm", () => {
       target: { value: comment },
     });
 
+    fireEvent.change(getByLabelText("Image that suits your project (required)"), {
+      target: { value: pictureUrl },
+    });
+
     fireEvent.click(getByText("SUBMIT"));
 
     // Verify the server action was called with correct data
@@ -104,9 +129,52 @@ describe("ReturnForm", () => {
         liveVersion: "https://my-site.netlify.app",
         projectName,
         comment,
+        pictureUrl,
         guideId,
       })
     );
+  });
+
+  it("warns and does not submit without an image", async () => {
+    const { getByLabelText, getByText, queryByRole } = render(
+      <ReturnForm guideId={guideId} />
+    );
+
+    fireEvent.click(getByText("RETURN"));
+
+    await waitFor(() => {
+      expect(getByLabelText("GitHub repository")).toBeDefined();
+    });
+
+    // Fill the required text fields so only the image is missing
+    fireEvent.change(getByLabelText("GitHub repository"), {
+      target: { value: "https://github.com/me/project" },
+    });
+    fireEvent.change(getByLabelText("Live page"), {
+      target: { value: "https://me.github.io/project" },
+    });
+    fireEvent.change(getByLabelText("Project title"), {
+      target: { value: "My project" },
+    });
+    fireEvent.change(getByLabelText("Short project description"), {
+      target: { value: "What I built" },
+    });
+
+    // No warning before the first try
+    expect(queryByRole("alert")).toBeNull();
+
+    fireEvent.click(getByText("SUBMIT"));
+
+    expect(queryByRole("alert")).toHaveTextContent(
+      "Please add a screenshot of your project before submitting."
+    );
+    expect(returnGuide).not.toHaveBeenCalled();
+
+    // The warning goes away once an image is added
+    fireEvent.change(getByLabelText("Image that suits your project (required)"), {
+      target: { value: pictureUrl },
+    });
+    expect(queryByRole("alert")).toBeNull();
   });
 
   it("renders all form fields correctly", async () => {
@@ -127,7 +195,7 @@ describe("ReturnForm", () => {
     expect(getByLabelText("Live page")).toBeDefined();
     expect(getByLabelText("Project title")).toBeDefined();
     expect(getByLabelText("Short project description")).toBeDefined();
-    expect(getByLabelText("Image that suits your project (optional)")).toBeDefined();
+    expect(getByLabelText("Image that suits your project (required)")).toBeDefined();
     expect(getByRole("button", { name: "SUBMIT" })).toBeDefined();
   });
 });
