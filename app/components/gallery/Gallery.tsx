@@ -144,7 +144,7 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
             <option value="oldest">Oldest</option>
           </FilterSelect>
         </GallerySort>
-        {hasActiveControls && <ResetIntroduction userId={userId}>
+        {hasActiveControls && <ResetIntroduction>
         <GalleryReset
           type="button"
           onClick={() => {
