@@ -13,10 +13,15 @@ const Dropdown = styled.details`
     gap: 8px;
     min-height: 44px;
     box-sizing: border-box;
-    padding: 10px;
+    padding: 10px 30px 10px 10px;
     border: 1px solid var(--primary-black-30);
     border-radius: var(--radius-lg);
-    background: var(--primary-white);
+    background-color: var(--primary-white);
+    /* Same chevron and spacing as FilterSelect, so these match the Sort by dropdown. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px 8px;
     color: var(--primary-black-100);
     font-family: "Source Sans 3", sans-serif;
     font-size: 14px;
@@ -25,8 +30,11 @@ const Dropdown = styled.details`
   }
   summary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: "⌄"; }
-  summary:focus-visible { outline: 2px solid var(--theme-module3-100); outline-offset: 2px; }
+  summary:focus-visible, &[open] > summary {
+    outline: none;
+    border-color: var(--theme-module3-100);
+    box-shadow: 0 0 0 3px var(--theme-module3-60);
+  }
 `;
 
 const Options = styled.div`
