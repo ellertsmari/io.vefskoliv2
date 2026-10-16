@@ -4,8 +4,7 @@ import type { GalleryItem } from "../app/serverActions/getGallery";
 const item = (returnId: string, recommendationCount: number, createdAt?: string): GalleryItem => ({
   returnId, recommendationCount, createdAt: createdAt ?? "", title: returnId, description: "",
   studentName: "Raheel", module: { title: "Design", number: 1 },
-  guideTitle: "", returnImage: null, returnGif: null, returnUrl: null,
-  projectUrl: null, liveVersion: null, topics: [],
+  guideTitle: "", returnImage: null, returnGif: null, returnUrl: null, projectUrl: null, liveVersion: null, topics: [],
 });
 const ids = (items: GalleryItem[]) => items.map(value => value.returnId);
 

@@ -223,8 +223,10 @@ export const GalleryGrid = styled.div`
 `;
 
 export const GallerySearch = styled.input`
-  padding: 12px 16px 12px 38px;
+  padding: 10px 16px 10px 38px;
   width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
   border: 1px solid var(--primary-black-30);
   border-radius: var(--radius-lg);
   font-family: "Source Sans 3", sans-serif;
@@ -253,37 +255,64 @@ export const SearchWrapper = styled.div`
 `;
 
 export const FilterControls = styled.div`
+  position: relative;
+  /* Above the cards, so an open dropdown is never painted behind them. */
+  z-index: 10;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin-bottom: 24px;
+  width: 100%;
+  max-width: 800px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+
+  /* Two columns: the right-hand dropdown opens leftwards so it stays on screen. */
+  @media (max-width: 639px) {
+    > details:nth-child(2n) > div {
+      left: auto;
+      right: 0;
+    }
+  }
+
+  /* Clear all: own right-aligned row on narrow screens, right of Sort from 640px up. */
+  > :nth-child(5) {
+    grid-column: 1 / -1;
+    justify-self: end;
+    white-space: nowrap;
+  }
 
   @media (min-width: 640px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @media (min-width: 960px) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    /* The extra column exists only while Clear all does, so Sort shifts left to make room. */
+    &[data-clear-visible="true"] {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    }
+
+    > :nth-child(5) {
+      grid-column: auto;
+    }
   }
 `;
-
 export const FilterSelect = styled.select`
   width: 100%;
-  padding: 12px 44px 12px 14px;
+  padding: 10px 30px 10px 10px;
+  min-height: 44px;
+  min-width: 0;
   border: 1px solid var(--primary-black-30);
   border-radius: var(--radius-lg);
   background-color: var(--primary-white);
   /* Custom arrow lets us control exact right spacing across browsers. */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 16px center;
+  background-position: right 10px center;
   background-size: 12px 8px;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   color: var(--primary-black-100);
   font-family: "Source Sans 3", sans-serif;
-  font-size: var(--text-base);
+  font-size: 14px;
 
   &:focus {
     outline: none;
@@ -310,7 +339,7 @@ export const GalleryEmpty = styled.div`
 
   p {
     font-family: "Source Sans 3", sans-serif;
-    font-size: var(--text-base);
+    font-size: 14px;
     margin: 0;
   }
 `;
@@ -415,12 +444,51 @@ export const RecommendationBadge = styled.span`
 export const GallerySort = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   min-width: 0;
 
   label {
     flex-shrink: 0;
     font-family: "Source Sans 3", sans-serif;
-    font-size: var(--text-base);
+    font-size: 14px;
+  }
+`;
+
+export const GalleryReset = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid rgba(120, 100, 220, 0.35);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px rgba(80, 60, 160, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  color: var(--primary-black-100);
+  font-family: "Source Sans 3", sans-serif;
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, box-shadow 160ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 6px 20px rgba(80, 60, 160, 0.16);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-module3-100);
+    outline-offset: 3px;
+  }
+
+  &:active {
+    background: rgba(230, 225, 255, 0.8);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `;

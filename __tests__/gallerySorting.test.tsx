@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import Gallery from "../app/components/gallery/Gallery";
 import type { GalleryItem } from "../app/serverActions/getGallery";
 
@@ -6,40 +6,76 @@ jest.mock("../app/components/gallery/GalleryItem", () => ({
   __esModule: true,
   default: ({ item }: { item: GalleryItem }) => <div data-testid="project">{item.title}</div>,
 }));
-const items: GalleryItem[] = [
-  { returnId: "a", title: "Design old", studentName: "Raheel", description: "", module: { title: "Design", number: 1 }, guideTitle: "", recommendationCount: 10, createdAt: "2025-01-01", returnImage: null, returnGif: null, returnUrl: null, projectUrl: null, liveVersion: null, topics: [] },
-  { returnId: "b", title: "Design new", studentName: "Julia", description: "", module: { title: "Design", number: 1 }, guideTitle: "", recommendationCount: 1, createdAt: "2026-01-01", returnImage: null, returnGif: null, returnUrl: null, projectUrl: null, liveVersion: null, topics: [] },
+const item = (returnId: string, title: string, year: string, module: number, url: string, votes: number): GalleryItem => ({
+  returnId, title, studentName: "Raheel", description: "", module: {title: "Module " + module, number: module},
+  guideTitle: "", recommendationCount: votes, createdAt: year + "-01-01", returnImage: null, returnGif: null,
+  returnUrl: url, projectUrl: null, liveVersion: null, topics: [],
+});
+const items = [
+  item("a", "Old web", "2025", 1, "https://example.com/old", 10),
+  item("b", "New design", "2026", 2, "https://figma.com/design/demo", 1),
+  item("c", "New web", "2026", 3, "https://example.com/new", 5),
 ];
-test("sort selection updates cards and continues to work with search", () => {
-  render(<Gallery items={items} showControls />);
-  const titles = () => screen.getAllByTestId("project").map(node => node.textContent);
-  expect(titles()).toEqual(["Design old", "Design new"]);
-  fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "newest" } });
-  expect(titles()).toEqual(["Design new", "Design old"]);
-  const search = screen.getByPlaceholderText("Search by project, student or module");
-  fireEvent.change(search, { target: { value: "Raheel" } });
-  expect(titles()).toEqual(["Design old"]);
-  fireEvent.change(search, { target: { value: "" } });
-  expect(titles()).toEqual(["Design new", "Design old"]);
-  fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "oldest" } });
-  expect(titles()).toEqual(["Design old", "Design new"]);
+const titles = () => screen.getAllByTestId("project").map(node => node.textContent);
+const choose = (filter: string, option: string) => {
+  fireEvent.click(screen.getByLabelText("Filter by " + filter));
+  fireEvent.click(within(screen.getByRole("group", {name: "Filter by " + filter + " options"})).getByLabelText(option));
+};
+beforeEach(() => localStorage.clear());
+
+test("Clear all is hidden by default and for search alone, but appears for sorting", () => {
+  render(<Gallery showControls items={items} />);
+  expect(screen.queryByRole("button", {name: "Clear all"})).not.toBeInTheDocument();
+  fireEvent.change(screen.getByPlaceholderText("Search by project, student or module"), {target: {value: "web"}});
+  expect(screen.queryByRole("button", {name: "Clear all"})).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Sort by"), {target: {value: "newest"}});
+  expect(titles()).toEqual(["New web", "Old web"]);
+  fireEvent.click(screen.getByRole("button", {name: "Clear all"}));
+  expect(titles()).toEqual(["Old web", "New web", "New design"]);
+  expect(screen.queryByRole("button", {name: "Clear all"})).not.toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Search by project, student or module")).toHaveValue("");
 });
 
-test("sorting preserves combined module, category and year filters", () => {
-  const projects = [
-    { ...items[0], returnUrl: "https://example.com/old" },
-    { ...items[1], returnUrl: "https://example.com/new" },
-    { ...items[1], returnId: "c", title: "Another module", module: { title: "Code", number: 2 }, returnUrl: "https://example.com/code" },
-    { ...items[1], returnId: "d", title: "Figma design", returnUrl: "https://figma.com/design/demo" },
-  ];
-  render(<Gallery items={projects} showControls />);
-  fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "newest" } });
-  fireEvent.change(screen.getByLabelText("Filter by module"), { target: { value: "1" } });
-  fireEvent.change(screen.getByLabelText("Filter by category"), { target: { value: "web" } });
-  fireEvent.change(screen.getByLabelText("Filter by year"), { target: { value: "2026" } });
-  expect(screen.getAllByTestId("project").map(node => node.textContent)).toEqual(["Design new"]);
-  fireEvent.change(screen.getByLabelText("Filter by year"), { target: { value: "all" } });
-  expect(screen.getAllByTestId("project").map(node => node.textContent)).toEqual(["Design new", "Design old"]);
-  fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "oldest" } });
-  expect(screen.getAllByTestId("project").map(node => node.textContent)).toEqual(["Design old", "Design new"]);
+test("multiple values within each filter are combined with OR, and filter groups with AND", () => {
+  render(<Gallery showControls items={items} />);
+  choose("module", "Module 1: Module 1");
+  choose("module", "Module 2: Module 2");
+  expect(titles()).toEqual(["Old web", "New design"]);
+  choose("category", "Web");
+  expect(titles()).toEqual(["Old web"]);
+  choose("category", "Design");
+  choose("year", "2025");
+  expect(titles()).toEqual(["Old web"]);
+  choose("year", "2026");
+  expect(titles()).toEqual(["Old web", "New design"]);
+  fireEvent.change(screen.getByLabelText("Sort by"), {target: {value: "newest"}});
+  expect(titles()).toEqual(["New design", "Old web"]);
+  fireEvent.click(screen.getByRole("button", {name: "Clear all"}));
+  expect(titles()).toEqual(["Old web", "New web", "New design"]);
+  expect(screen.queryByRole("button", {name: "Clear all"})).not.toBeInTheDocument();
+});
+
+test("All modules removes selections and hides Clear all when sorting is default", () => {
+  render(<Gallery showControls items={items} />);
+  choose("module", "Module 1: Module 1");
+  expect(screen.getByRole("button", {name: "Clear all"})).toBeInTheDocument();
+  choose("module", "All modules");
+  expect(titles()).toHaveLength(3);
+  expect(screen.queryByRole("button", {name: "Clear all"})).not.toBeInTheDocument();
+});
+
+test("explanation appears with Clear all and dismissal is remembered per user", () => {
+  const view = render(<Gallery showControls items={items} userId="one" />);
+  expect(screen.queryByRole("note")).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Sort by"), {target: {value: "newest"}});
+  expect(screen.getByRole("note")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", {name: "Close Clear all explanation"}));
+  view.unmount();
+  const next = render(<Gallery showControls items={items} userId="one" />);
+  fireEvent.change(screen.getByLabelText("Sort by"), {target: {value: "newest"}});
+  expect(screen.queryByRole("note")).not.toBeInTheDocument();
+  next.unmount();
+  render(<Gallery showControls items={items} userId="two" />);
+  fireEvent.change(screen.getByLabelText("Sort by"), {target: {value: "newest"}});
+  expect(screen.getByRole("note")).toBeInTheDocument();
 });
