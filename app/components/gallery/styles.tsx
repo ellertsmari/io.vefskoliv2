@@ -223,8 +223,10 @@ export const GalleryGrid = styled.div`
 `;
 
 export const GallerySearch = styled.input`
-  padding: 12px 16px 12px 38px;
+  padding: 10px 16px 10px 38px;
   width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
   border: 1px solid var(--primary-black-30);
   border-radius: var(--radius-lg);
   font-family: "Source Sans 3", sans-serif;
@@ -254,13 +256,23 @@ export const SearchWrapper = styled.div`
 
 export const FilterControls = styled.div`
   position: relative;
+  /* Above the cards, so an open dropdown is never painted behind them. */
+  z-index: 10;
   display: grid;
   width: 100%;
   max-width: 800px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   align-items: center;
+
+  /* Two columns: the right-hand dropdown opens leftwards so it stays on screen. */
+  @media (max-width: 639px) {
+    > details:nth-child(2n) > div {
+      left: auto;
+      right: 0;
+    }
+  }
 
   /* Clear all: own right-aligned row on narrow screens, right of Sort from 640px up. */
   > :nth-child(5) {

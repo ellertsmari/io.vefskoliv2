@@ -41,7 +41,11 @@ const Options = styled.div`
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  right: 0;
+  /* Wide enough for long module names; never wider than the screen. */
+  min-width: 100%;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 48px));
+  box-sizing: border-box;
   z-index: 25;
   max-height: 280px;
   overflow-y: auto;
