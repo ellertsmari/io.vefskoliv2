@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { ReturnFormData, returnGuide } from "serverActions/returnGuide";
 import { Form } from "globalStyles/globalStyles";
 import { Input } from "UIcomponents/input/Input";
-import { ErrorMessage } from "UIcomponents/input/style";
 import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import { useLocalState } from "utils/hooks/useStorage";
 import { LoadingSpinner } from "UIcomponents/states/States";
@@ -83,8 +82,6 @@ const FormContent = ({
     null
   );
   const [state, formAction, isPending] = useActionState(returnGuide, undefined);
-  // Set when SUBMIT is pressed without an image, so the warning only appears after a try.
-  const [missingImage, setMissingImage] = useState(false);
   const router = useRouter();
   const fields = RETURN_FIELDS[discipline];
 
@@ -131,10 +128,6 @@ const FormContent = ({
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!formData?.pictureUrl) {
-      setMissingImage(true);
-      return;
-    }
     // Normalize URL fields (and reflect it in the form so the student sees
     // exactly what was submitted).
     const normalized = {
@@ -205,8 +198,8 @@ const FormContent = ({
         <ImageUploadField
           id={"pictureUrl"}
           prefix="return-picture"
-          label={"Image that suits your project (required)"}
-          description={"A screenshot of your page or design. It is shown in the gallery."}
+          label={"Image that suits your project (recommended)"}
+          description={"Projects with an image stand out in the gallery. A screenshot of your page or design is enough."}
           value={formData?.pictureUrl || ""}
           onChange={(value) =>
             setFormData({ ...formData, projectName, pictureUrl: value })
@@ -247,11 +240,6 @@ const FormContent = ({
             errors?.comment && !isPending ? errors.comment[0] : undefined
           }
         />
-      {missingImage && !formData?.pictureUrl && (
-        <ErrorMessage role="alert">
-          Please add a screenshot of your project before submitting.
-        </ErrorMessage>
-      )}
       <Button style="default" type="submit">
         {isPending ? "SUBMITTING…" : "SUBMIT"}
       </Button>
