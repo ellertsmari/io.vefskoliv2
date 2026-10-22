@@ -18,6 +18,7 @@
     <nav class="topbar__nav" aria-label="Sections">
       <a href="#why">Why</a>
       <a href="#map">Where things live</a>
+      <a href="#flows">Push or fetch?</a>
       <a href="#setup">Set up team/</a>
       <a href="#pr">Every PR</a>
       <a href="#practice">Practice</a>
@@ -166,8 +167,93 @@
       </div>
     </section>
 
+    <!-- PUSH, FETCH OR PR -->
+    <section class="section" id="flows">
+      <div class="container">
+        <p class="kicker">Who talks to whom</p>
+        <h2 class="section-title reveal">Push, fetch or pull request?</h2>
+        <p class="section-lead reveal">
+          You'll do three different things with these repos, and each one only goes in certain directions.
+          Get these right and the rest of this page follows.
+        </p>
+
+        <div class="rules reveal">
+          <div class="rule rule--push">
+            <p class="rule__name"><span class="rule__arrow" aria-hidden="true">↑</span> Push</p>
+            <p><strong>Uploads</strong> your commits. Goes to your fork, or to the team repo when you're inside <code>team/</code>.</p>
+            <p class="rule__never">Never to vefskoliv2.</p>
+          </div>
+          <div class="rule rule--fetch">
+            <p class="rule__name"><span class="rule__arrow" aria-hidden="true">↓</span> Fetch / pull</p>
+            <p><strong>Downloads</strong> commits. From vefskoliv2 you only ever fetch: to start a PR branch, and to catch up after a merge.</p>
+          </div>
+          <div class="rule rule--pr">
+            <p class="rule__name"><span class="rule__arrow" aria-hidden="true">→</span> Pull request</p>
+            <p><strong>Not an upload.</strong> It asks vefskoliv2 to take a branch from your fork. The code arrives there only when it's reviewed and merged.</p>
+          </div>
+        </div>
+
+        <h3 class="sub-title reveal">The folder you're in decides where a push goes</h3>
+        <p class="reveal">
+          The project folder and <code>team/</code> are two separate repos, and each has its own list of remotes, the places it can push to and fetch from.
+          <code>git remote -v</code> shows that list. After setup, this is what you should see:
+        </p>
+        <div class="remotes reveal">
+          <div class="remote-card">
+            <p class="remote-card__where">📁 In the project folder</p>
+            <pre class="term"><span class="t-name t-origin">origin</span>    https://github.com/monika-hyperisland/tomonika-hyperisland.git (fetch)
+<span class="t-name t-origin">origin</span>    https://github.com/monika-hyperisland/tomonika-hyperisland.git (push)
+<span class="t-name t-up">upstream</span>  https://github.com/ellertsmari/io.vefskoliv2.git (fetch)
+<span class="t-name t-up">upstream</span>  no-pushing-here (push)</pre>
+            <ul class="remote-card__notes">
+              <li><span class="t-origin">origin</span> is your fork. You push and fetch here all the time.</li>
+              <li><span class="t-up">upstream</span> is vefskoliv2, there only so you can <strong>fetch</strong> its <code>main</code>. Its push address is deliberately broken, so an accidental push fails instead of trying.</li>
+            </ul>
+          </div>
+          <div class="remote-card remote-card--team">
+            <p class="remote-card__where">📁 Inside <code>team/</code></p>
+            <pre class="term"><span class="t-name t-team">origin</span>  https://github.com/monika-hyperisland/hyperisland-team.git (fetch)
+<span class="t-name t-team">origin</span>  https://github.com/monika-hyperisland/hyperisland-team.git (push)</pre>
+            <ul class="remote-card__notes">
+              <li>Here <span class="t-team">origin</span> means the team repo. Same word, different folder, different place.</li>
+              <li>So a <code>git push</code> inside <code>team/</code> can only ever reach the team repo.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="sub-title reveal">What are you doing?</h3>
+        <p class="reveal">Pick a situation. The diagram shows where it goes, and the commands are below it.</p>
+        <div class="flow reveal">
+          <div class="flow__picker" role="group" aria-label="Situations" id="flow-picker"></div>
+          <div class="flow__stage">
+            <div class="flow__svgwrap"><svg class="flow__svg" id="flow-svg" viewBox="0 0 600 380" role="img" aria-labelledby="flow-svg-title">
+              <title id="flow-svg-title">Diagram: the team repo, your fork and vefskoliv2 on GitHub, and your laptop with the project folder and team/ inside it.</title>
+              <text class="f-zone" x="10" y="14">GITHUB</text>
+              <g class="f-node" data-node="team"><rect x="10" y="24" width="160" height="76" rx="12" /><text x="90" y="56" class="f-name">hyperisland-team</text><text x="90" y="78" class="f-sub">team repo</text></g>
+              <g class="f-node" data-node="fork"><rect x="220" y="24" width="160" height="76" rx="12" /><text x="300" y="56" class="f-name">tomonika-hyperisland</text><text x="300" y="78" class="f-sub">your fork · origin</text></g>
+              <g class="f-node" data-node="upstream"><rect x="430" y="24" width="160" height="76" rx="12" /><text x="510" y="56" class="f-name">io.vefskoliv2</text><text x="510" y="78" class="f-sub">vefskoliv2 · upstream</text></g>
+
+              <rect class="f-laptop" x="10" y="190" width="580" height="180" rx="14" />
+              <text class="f-zone" x="164" y="212">YOUR LAPTOP</text>
+              <g class="f-folder" data-folder="project"><rect x="30" y="226" width="540" height="130" rx="10" /><text x="550" y="252" class="f-name f-end">📁 project folder</text><text x="550" y="274" class="f-sub f-end">app/, __tests__/, …</text></g>
+              <g class="f-folder f-folder--team" data-folder="team"><rect x="50" y="262" width="150" height="78" rx="8" /><text x="125" y="296" class="f-name">📁 team/</text><text x="125" y="318" class="f-sub">its own repo</text></g>
+
+              <g class="f-arrow f-push" data-arrow="team-push"><path d="M105 260 V110" /><polygon points="99,112 111,112 105,101" /><text x="98" y="182" text-anchor="end">push</text></g>
+              <g class="f-arrow f-fetch" data-arrow="team-pull"><path d="M145 102 V250" /><polygon points="139,250 151,250 145,261" /><text x="152" y="182">pull</text></g>
+              <g class="f-arrow f-push" data-arrow="fork-push"><path d="M280 224 V110" /><polygon points="274,112 286,112 280,101" /><text x="273" y="166" text-anchor="end">push</text></g>
+              <g class="f-arrow f-fetch" data-arrow="fork-pull"><path d="M320 102 V214" /><polygon points="314,214 326,214 320,225" /><text x="327" y="166">pull</text></g>
+              <g class="f-arrow f-fetch" data-arrow="upstream-fetch"><path d="M545 102 V214" /><polygon points="539,214 551,214 545,225" /><text x="552" y="166">fetch</text></g>
+              <g class="f-arrow f-never" data-arrow="upstream-push"><path d="M480 224 V110" /><polygon points="474,112 486,112 480,101" /><text x="472" y="166" text-anchor="end">push</text><path class="f-x" d="M466 130 l28 28 M494 130 l-28 28" /></g>
+              <g class="f-arrow f-pr" data-arrow="pr"><path d="M382 62 H418" /><polygon points="418,56 418,68 429,62" /><text x="405" y="48">PR</text></g>
+            </svg></div>
+            <div class="flow__detail" id="flow-detail" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- PART 1 -->
-    <section class="section" id="setup">
+    <section class="section section--tint" id="setup">
       <div class="container">
         <p class="kicker"><span class="badge badge-team">Part 1</span> Once</p>
         <h2 class="section-title reveal">Give the team its own <code>team/</code> folder</h2>
@@ -256,7 +342,7 @@ git pull</code></pre>
     </section>
 
     <!-- PART 2 -->
-    <section class="section section--tint" id="pr">
+    <section class="section" id="pr">
       <div class="container">
         <p class="kicker"><span class="badge badge-pr">Part 2</span> Every time</p>
         <h2 class="section-title reveal">Open every PR from a clean branch</h2>
@@ -271,6 +357,8 @@ git pull</code></pre>
             <pre class="code"><code>git remote -v</code></pre>
             <p>If no <code>upstream</code> line shows up:</p>
             <pre class="code"><code>git remote add upstream https://github.com/ellertsmari/io.vefskoliv2.git</code></pre>
+            <p>Then make pushing to it impossible. You only ever fetch from vefskoliv2, so this costs nothing:</p>
+            <pre class="code"><code>git remote set-url --push upstream no-pushing-here</code></pre>
           </li>
           <li class="step reveal" data-step="p2">
             <div class="step__head"><span class="step__num"></span><h3>Start from vefskoliv2's newest <code>main</code></h3><label class="done"><input type="checkbox" /> Done</label></div>
@@ -325,7 +413,7 @@ npm test</code></pre>
     </section>
 
     <!-- PRACTICE -->
-    <section class="section" id="practice">
+    <section class="section section--tint" id="practice">
       <div class="container">
         <p class="kicker">Try it</p>
         <h2 class="section-title reveal">Sort the files from #122</h2>
@@ -363,7 +451,7 @@ npm test</code></pre>
     </section>
 
     <!-- CHECKLIST -->
-    <section class="section section--tint" id="checklist">
+    <section class="section" id="checklist">
       <div class="container container--narrow">
         <p class="kicker">Every time</p>
         <h2 class="section-title reveal">Before you click "Create pull request"</h2>
@@ -391,7 +479,7 @@ npm test</code></pre>
     </section>
 
     <!-- FAQ -->
-    <section class="section" id="faq">
+    <section class="section section--tint" id="faq">
       <div class="container container--narrow">
         <p class="kicker">Questions</p>
         <h2 class="section-title reveal">Things you might wonder</h2>

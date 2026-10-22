@@ -167,7 +167,7 @@ nodes.forEach((n) => n.addEventListener("click", () => showNode(n.dataset.node))
 showNode("laptop");
 
 /* ---------- Copy buttons ---------- */
-document.querySelectorAll("pre.code").forEach((pre) => {
+function addCopyButton(pre) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "copy-btn";
@@ -193,7 +193,136 @@ document.querySelectorAll("pre.code").forEach((pre) => {
     }, 1600);
   });
   pre.appendChild(btn);
+}
+document.querySelectorAll("pre.code").forEach(addCopyButton);
+
+/* ---------- Push, fetch or pull request ---------- */
+// folder: where the commands run. arrows: which lines in the diagram light up.
+// moves: the kinds of traffic involved, shown as badges.
+const FLOWS = [
+  {
+    label: "Push my feature branch",
+    folder: "project",
+    arrows: ["fork-push"],
+    nodes: ["fork"],
+    moves: ["push"],
+    cmd: "git push -u origin feature/gallery-search",
+    text: "It goes to your fork. Your teammates can now see it and open a PR into dev-hyperisland inside the fork, the way you do now.",
+  },
+  {
+    label: "Get my teammates' code",
+    folder: "project",
+    arrows: ["fork-pull"],
+    nodes: ["fork"],
+    moves: ["fetch"],
+    cmd: "git switch dev-hyperisland\ngit pull",
+    text: "Downloads the shared branch from your fork.",
+  },
+  {
+    label: "Save notes, the seed script or docker-compose",
+    folder: "team",
+    arrows: ["team-push"],
+    nodes: ["team"],
+    moves: ["push"],
+    cmd: 'cd team\ngit add .\ngit commit -m "Update handoff notes"\ngit push\ncd ..',
+    text: "You're inside team/, so git uses team/'s own origin: the push goes to hyperisland-team and nowhere else. Your fork never sees it, so it can't end up in a PR.",
+  },
+  {
+    label: "Get the team's latest notes",
+    folder: "team",
+    arrows: ["team-pull"],
+    nodes: ["team"],
+    moves: ["fetch"],
+    cmd: "cd team\ngit pull\ncd ..",
+    text: "The same in reverse: downloads only from hyperisland-team.",
+  },
+  {
+    label: "Send a feature to vefskoliv2",
+    folder: "project",
+    arrows: ["upstream-fetch", "fork-push", "pr"],
+    nodes: ["upstream", "fork"],
+    moves: ["fetch", "push", "pr"],
+    cmd: 'git fetch upstream\ngit switch -c pr/gallery-controls upstream/main\ngit checkout origin/dev-hyperisland -- app/components/gallery\ngit commit -m "feat(gallery): search, filters and sort"\ngit push -u origin pr/gallery-controls',
+    text: "Three moves. You fetch vefskoliv2's main to start from. You push the clean branch to your own fork. Then you open the pull request on GitHub, which asks vefskoliv2 to take that branch. Nothing is uploaded to vefskoliv2: the code arrives there only when the PR is reviewed and merged.",
+  },
+  {
+    label: "Our PR was merged",
+    folder: "project",
+    arrows: ["upstream-fetch", "fork-push"],
+    nodes: ["upstream", "fork"],
+    moves: ["fetch", "push"],
+    cmd: "git fetch upstream\ngit switch dev-hyperisland\ngit merge upstream/main\ngit push",
+    text: "Fetch vefskoliv2's main, which now includes your feature. Merge it into the team branch and push that to your fork. That keeps dev-hyperisland from drifting away from vefskoliv2.",
+  },
+  {
+    label: "Push straight to vefskoliv2?",
+    folder: "project",
+    arrows: ["upstream-push"],
+    nodes: ["upstream"],
+    moves: ["never"],
+    never: true,
+    cmd: "git remote set-url --push upstream no-pushing-here",
+    text: "Never. Code only gets into vefskoliv2 through a pull request that's reviewed and merged. upstream is there so you can fetch from it. Run the command above once and an accidental push fails with an error instead of trying.",
+  },
+];
+const MOVE_LABELS = { push: "↑ push", fetch: "↓ fetch / pull", pr: "→ pull request", never: "✕ never" };
+
+const flowPicker = document.getElementById("flow-picker");
+const flowDetail = document.getElementById("flow-detail");
+const flowSvg = document.getElementById("flow-svg");
+
+function showFlow(index) {
+  const flow = FLOWS[index];
+  flowPicker.querySelectorAll(".flow-btn").forEach((b, i) => b.setAttribute("aria-pressed", String(i === index)));
+  flowSvg.querySelectorAll("[data-arrow]").forEach((g) => g.classList.toggle("is-on", flow.arrows.includes(g.dataset.arrow)));
+  flowSvg.querySelectorAll("[data-node]").forEach((g) => g.classList.toggle("is-lit", flow.nodes.includes(g.dataset.node)));
+  flowSvg.querySelectorAll("[data-folder]").forEach((g) => g.classList.toggle("is-here", g.dataset.folder === flow.folder));
+
+  // On narrow screens the diagram scrolls sideways; bring the lit arrows into view.
+  const wrap = flowSvg.parentElement;
+  if (wrap.scrollWidth > wrap.clientWidth) {
+    const lit = [...flowSvg.querySelectorAll("[data-arrow].is-on")].map((g) => g.getBBox());
+    const center = lit.reduce((sum, box) => sum + box.x + box.width / 2, 0) / lit.length;
+    const scale = flowSvg.clientWidth / 600;
+    wrap.scrollTo({ left: center * scale - wrap.clientWidth / 2, behavior: "smooth" });
+  }
+
+  flowDetail.innerHTML = "";
+  const where = document.createElement("div");
+  where.className = "flow__where";
+  const badge = document.createElement("span");
+  badge.className = "where-badge" + (flow.folder === "team" ? " where-badge--team" : "");
+  badge.textContent = flow.folder === "team" ? "📁 Run in team/" : "📁 Run in the project folder";
+  where.append(badge);
+  flow.moves.forEach((m) => {
+    const tag = document.createElement("span");
+    tag.className = "move move--" + m;
+    tag.textContent = MOVE_LABELS[m];
+    where.append(tag);
+  });
+  const pre = document.createElement("pre");
+  pre.className = "code";
+  const code = document.createElement("code");
+  code.textContent = flow.cmd;
+  pre.append(code);
+  addCopyButton(pre);
+  const p = document.createElement("p");
+  p.textContent = flow.text;
+  flowDetail.append(where, pre, p);
+  flowDetail.classList.remove("swap");
+  void flowDetail.offsetWidth;
+  flowDetail.classList.add("swap");
+}
+
+FLOWS.forEach((flow, i) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "flow-btn" + (flow.never ? " flow-btn--never" : "");
+  b.textContent = flow.label;
+  b.addEventListener("click", () => showFlow(i));
+  flowPicker.append(b);
 });
+showFlow(4);
 
 /* ---------- Setup tabs ---------- */
 const tabButtons = document.querySelectorAll("[data-tab]");
