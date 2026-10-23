@@ -10,6 +10,9 @@ jest.mock("serverActions/getUngradedReviews", () => ({
 jest.mock("serverActions/returnGrade", () => ({
   returnGrade: jest.fn(),
 }));
+jest.mock("serverActions/getAnalyticsHeadline", () => ({
+  getAnalyticsHeadline: jest.fn().mockResolvedValue(null),
+}));
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), refresh: jest.fn() }),
 }));
@@ -24,6 +27,7 @@ jest.mock("UIcomponents/markdown/reader", () => ({
 
 import { getUngradedReviews } from "serverActions/getUngradedReviews";
 import { returnGrade } from "serverActions/returnGrade";
+import { getAnalyticsHeadline } from "serverActions/getAnalyticsHeadline";
 
 const ungradedReview = (id: string, reviewer: string) => ({
   _id: id,
@@ -104,5 +108,51 @@ describe("TeacherHomePage grading queue", () => {
     render(<TeacherHomePage />);
 
     await screen.findByText("Everything is graded — nothing waiting");
+  });
+});
+
+describe("TeacherHomePage analytics card", () => {
+  beforeEach(() => {
+    (getUngradedReviews as jest.Mock).mockResolvedValue([]);
+  });
+  afterEach(() => jest.clearAllMocks());
+
+  it("links to the dashboard with last week's numbers", async () => {
+    (getAnalyticsHeadline as jest.Mock).mockResolvedValue({
+      days: 7,
+      visitors: 1284,
+      views: 1,
+      collectingSince: "2026-10-01",
+    });
+
+    render(<TeacherHomePage />);
+
+    const line = await screen.findByText("1,284 visitors, 1 view in the last 7 days");
+    expect(line.closest("a")).toHaveAttribute("href", "/LMS/analytics");
+  });
+
+  it("says so before the first visit is recorded", async () => {
+    (getAnalyticsHeadline as jest.Mock).mockResolvedValue({
+      days: 7,
+      visitors: 0,
+      views: 0,
+      collectingSince: null,
+    });
+
+    render(<TeacherHomePage />);
+
+    await screen.findByText("No public visits recorded yet");
+  });
+
+  it("keeps a working link when the numbers can't be read", async () => {
+    (getAnalyticsHeadline as jest.Mock).mockRejectedValue(new Error("db down"));
+
+    render(<TeacherHomePage />);
+
+    await screen.findByText("Everything is graded — nothing waiting");
+    expect(screen.getByText("Public visitors and crawlers").closest("a")).toHaveAttribute(
+      "href",
+      "/LMS/analytics"
+    );
   });
 });

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { clientIpFrom } from "utils/analytics";
 
 /**
  * The address the current request came from, as Vercel reports it.
@@ -9,8 +10,5 @@ import { headers } from "next/headers";
  * bare `next dev`.
  */
 export async function getClientIp(): Promise<string> {
-  const requestHeaders = await headers();
-  const forwarded = requestHeaders.get("x-forwarded-for");
-  const first = forwarded?.split(",")[0]?.trim();
-  return first || requestHeaders.get("x-real-ip")?.trim() || "unknown";
+  return clientIpFrom(await headers());
 }

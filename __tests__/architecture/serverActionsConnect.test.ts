@@ -35,6 +35,9 @@ const MODEL_NAMES = [
   "CalendarEvent",
   "Semester",
   "BookingWindow",
+  "Pageview",
+  "DailyStat",
+  "AnalyticsSalt",
 ];
 
 const QUERY_METHODS = [
