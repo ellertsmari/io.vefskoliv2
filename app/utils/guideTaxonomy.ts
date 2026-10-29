@@ -71,3 +71,20 @@ export const getIsSpecialty = (guide: GuideLike): boolean =>
 /** Convenience for call sites that only have a legacy `category` string. */
 export const isCodeCategory = (category?: string | null): boolean =>
   categoryToAxes(category).discipline === "code";
+
+/**
+ * How a guide is completed: an activity log, an auto-graded exercise, or a
+ * peer-reviewed project. An activity log wins over gradingMode, and a guide
+ * with no gradingMode (every guide that predates it) is peer reviewed.
+ */
+export type CompletionKind = "activityLog" | "auto" | "peerReview";
+
+export const getCompletionKind = (guide: {
+  submissionType?: string | null;
+  gradingMode?: string | null;
+}): CompletionKind =>
+  guide.submissionType === "activityLog"
+    ? "activityLog"
+    : guide.gradingMode === "auto"
+      ? "auto"
+      : "peerReview";

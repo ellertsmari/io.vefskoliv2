@@ -1,6 +1,10 @@
 import type { GuideType } from "../../models/guide";
 import { extractModuleNumber } from "../../utils/moduleUtils";
-import { axesToCategory, type Discipline } from "../../utils/guideTaxonomy";
+import {
+  axesToCategory,
+  type CompletionKind,
+  type Discipline,
+} from "../../utils/guideTaxonomy";
 import type { ExerciseForm, QuizTaskForm } from "./ExerciseEditor";
 
 /**
@@ -27,7 +31,7 @@ export type GuideForm = {
   references: ReferenceItem[];
 };
 
-export type GradingMode = "peerReview" | "auto" | "activityLog";
+export type GradingMode = CompletionKind;
 
 export const formFromGuide = (guide: GuideType): GuideForm => ({
   title: guide.title || "",

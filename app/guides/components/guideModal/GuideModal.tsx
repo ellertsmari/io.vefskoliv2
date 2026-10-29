@@ -1,7 +1,8 @@
 import { Paragraph, Heading1 } from "globalStyles/text";
 import { useGuide } from "providers/GuideProvider";
-import { ReviewStatus, GradingMode } from "types/guideTypes";
+import { ReviewStatus } from "types/guideTypes";
 import { calculateReturnStyle } from "./calculateReturnStyle";
+import { getCompletionKind } from "utils/guideTaxonomy";
 import { Button } from "globalStyles/buttons/default/style";
 import { FeedbackOverview } from "../feedback/feedbackOverview/FeedbackOverview";
 import { GiveFeedbackView } from "../feedback/giveFeedbackView/GiveFeedbackView";
@@ -39,7 +40,7 @@ export const GuideModal = () => {
           </StatusRow>
         </TitleContainer>
       </Header>
-      {guide.submissionType === "activityLog" ? <Paragraph>Open the activity log to see semester progress, record hours, or review activities.</Paragraph> : guide.gradingMode === GradingMode.AUTO ? (
+      {getCompletionKind(guide) === "activityLog" ? <Paragraph>Open the activity log to see semester progress, record hours, or review activities.</Paragraph> : getCompletionKind(guide) === "auto" ? (
         // Auto-graded guides have no peer feedback; point the student back to
         // the exercise, which never closes.
         <Paragraph>

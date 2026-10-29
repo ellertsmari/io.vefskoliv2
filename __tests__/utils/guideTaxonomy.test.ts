@@ -4,6 +4,7 @@ import {
   getDiscipline,
   getIsSpecialty,
   isCodeCategory,
+  getCompletionKind,
 } from "utils/guideTaxonomy";
 
 describe("categoryToAxes", () => {
@@ -58,5 +59,22 @@ describe("isCodeCategory (regression for the 'speciality code' bug)", () => {
   it("treats design and designSpeciality as not code", () => {
     expect(isCodeCategory("design")).toBe(false);
     expect(isCodeCategory("designSpeciality")).toBe(false);
+  });
+});
+
+describe("getCompletionKind", () => {
+  it("lets an activity log win over its gradingMode", () => {
+    expect(
+      getCompletionKind({ submissionType: "activityLog", gradingMode: "auto" })
+    ).toBe("activityLog");
+  });
+
+  it("reads auto-graded guides", () => {
+    expect(getCompletionKind({ gradingMode: "auto" })).toBe("auto");
+  });
+
+  it("treats a guide without a gradingMode as peer reviewed", () => {
+    expect(getCompletionKind({})).toBe("peerReview");
+    expect(getCompletionKind({ gradingMode: null })).toBe("peerReview");
   });
 });
