@@ -52,6 +52,7 @@ import {
 import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
 import { Suspense, lazy, useMemo } from "react";
 import { extractModuleNumber } from "utils/moduleUtils";
+import { countsTowardProgress, isHandedIn } from "utils/guideUtils";
 import type { GroupProjectListItem } from "types/groupTypes";
 import { GroupWorkWidget, groupWorkItems } from "./GroupWorkWidget";
 import Modal from "UIcomponents/modal/modal";
@@ -83,13 +84,9 @@ export const StudentHomePage = ({
 }: StudentHomePageProps) => {
   // Organize guides by priority
   const organizedGuides = useMemo(() => {
-    // A guide counts as "returned" once the student has submitted it. We only
-    // surface review-related prompts for guides the student is actively in.
+    // Review-related prompts only for guides the student has handed in.
     const isReturned = (guide: ExtendedGuideInfo) =>
-      guide.returnStatus === ReturnStatus.PASSED ||
-      guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-      guide.returnStatus === ReturnStatus.FAILED ||
-      guide.returnStatus === ReturnStatus.AWAITING_REVIEWS;
+      isHandedIn(guide.returnStatus);
 
     // 1. Guides that need review (only for guides you've already returned)
     const guidesNeedingReview = extendedGuides.filter(guide =>
@@ -130,9 +127,7 @@ export const StudentHomePage = ({
           extractModuleNumber(guide.module.title) === module.number && !isSpecialtyGuide(guide)
         );
         const completedGuides = moduleGuides.filter(guide =>
-          guide.returnStatus === ReturnStatus.PASSED ||
-          guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-          guide.returnStatus === ReturnStatus.AWAITING_REVIEWS
+          countsTowardProgress(guide.returnStatus)
         );
         const progress = moduleGuides.length > 0 ? (completedGuides.length / moduleGuides.length) * 100 : 0;
 
@@ -153,9 +148,7 @@ export const StudentHomePage = ({
     });
     const totalGuides = relevantGuides.length;
     const completedGuides = relevantGuides.filter(guide =>
-      guide.returnStatus === ReturnStatus.PASSED ||
-      guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-      guide.returnStatus === ReturnStatus.AWAITING_REVIEWS
+      countsTowardProgress(guide.returnStatus)
     ).length;
     return totalGuides > 0 ? Math.round((completedGuides / totalGuides) * 100) : 0;
   }, [extendedGuides]);
@@ -205,8 +198,8 @@ export const StudentHomePage = ({
     const hallOfFame = extendedGuides.filter(
       (guide) => guide.returnStatus === ReturnStatus.HALL_OF_FAME
     ).length;
-    const returned = extendedGuides.filter(
-      (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED
+    const returned = extendedGuides.filter((guide) =>
+      isHandedIn(guide.returnStatus)
     ).length;
 
     return { passed, hallOfFame, returned };
@@ -517,11 +510,12 @@ function getNextGuidesToReturn(
   guides: ExtendedGuideInfo[],
   limit: number,
 ): ExtendedGuideInfo[] {
-  const completedGuides = guides.filter(
-    (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED && guide.returnStatus !== ReturnStatus.IN_PROGRESS,
+  // A failed guide still has to be redone, so it is offered again.
+  const completedGuides = guides.filter((guide) =>
+    countsTowardProgress(guide.returnStatus),
   );
   const unreturnedGuides = guides.filter(
-    (guide) => guide.returnStatus === ReturnStatus.NOT_RETURNED || guide.returnStatus === ReturnStatus.IN_PROGRESS,
+    (guide) => !countsTowardProgress(guide.returnStatus),
   );
   if (unreturnedGuides.length === 0) return [];
 
@@ -581,12 +575,8 @@ function getGuideDisplayOrder(
   allGuides: ExtendedGuideInfo[],
   queueIndex: number,
 ): number {
-  const completedGuides = allGuides.filter(
-    (g) =>
-      g.returnStatus === ReturnStatus.PASSED ||
-      g.returnStatus === ReturnStatus.HALL_OF_FAME ||
-      g.returnStatus === ReturnStatus.FAILED ||
-      g.returnStatus === ReturnStatus.AWAITING_REVIEWS,
+  const completedGuides = allGuides.filter((g) =>
+    countsTowardProgress(g.returnStatus),
   );
 
   return completedGuides.length + 1 + queueIndex;

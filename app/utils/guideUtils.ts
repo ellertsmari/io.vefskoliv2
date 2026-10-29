@@ -132,6 +132,25 @@ const extendAutoGuide = (guide: GuideInfo): ExtendedGuideInfo => {
   };
 };
 
+/**
+ * Handed in: the student has submitted the guide and it is in peer review or
+ * through it, whatever the verdict. A started exercise or activity log (IN
+ * PROGRESS) is not handed in.
+ */
+export const isHandedIn = (status: ReturnStatus): boolean =>
+  status === ReturnStatus.AWAITING_REVIEWS ||
+  status === ReturnStatus.PASSED ||
+  status === ReturnStatus.HALL_OF_FAME ||
+  status === ReturnStatus.FAILED;
+
+/**
+ * Counts toward the progress bars: handed in and not failed. A failed guide
+ * still has to be redone, so it is not progress and it is offered again as
+ * work to do.
+ */
+export const countsTowardProgress = (status: ReturnStatus): boolean =>
+  isHandedIn(status) && status !== ReturnStatus.FAILED;
+
 export const calculateReturnStatus = (
   returnsSubmitted: ReturnDocument[],
   reviewsReceived: ReviewDocument[]

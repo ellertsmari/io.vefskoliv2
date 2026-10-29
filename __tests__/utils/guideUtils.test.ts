@@ -16,6 +16,8 @@ import {
   hasExceededReviewGracePeriod,
   isGradingMonth,
   extendGuides,
+  isHandedIn,
+  countsTowardProgress,
 } from "utils/guideUtils";
 import { REVIEW_GRACE_PERIOD_DAYS } from "constants/peerReview";
 import { ReturnDocument } from "models/return";
@@ -542,4 +544,19 @@ describe("status calculations", () => {
     });
   });
 
+  describe("isHandedIn / countsTowardProgress", () => {
+    it.each([
+      [ReturnStatus.NOT_RETURNED, false, false],
+      // A started exercise or activity log has not been handed in
+      [ReturnStatus.IN_PROGRESS, false, false],
+      [ReturnStatus.AWAITING_REVIEWS, true, true],
+      [ReturnStatus.PASSED, true, true],
+      [ReturnStatus.HALL_OF_FAME, true, true],
+      // Handed in, but it has to be redone, so it is not progress
+      [ReturnStatus.FAILED, true, false],
+    ])("%s: handed in %s, progress %s", (status, handedIn, progress) => {
+      expect(isHandedIn(status)).toBe(handedIn);
+      expect(countsTowardProgress(status)).toBe(progress);
+    });
+  });
 });

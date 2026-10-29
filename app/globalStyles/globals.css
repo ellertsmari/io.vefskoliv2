@@ -67,6 +67,13 @@ h1 {
   --error-warning-30: #ffe5ce; /* 30% */
   --error-warning-10: #fff7ef; /* 10% */
 
+  /* Handed in, not passed yet: still open, but not on the student right now.
+     Yellow so it reads apart from the orange "act now" warning. */
+  --error-pending-100: #f2c230; /* 100% */
+  --error-pending-60: #f7da83; /* 60% */
+  --error-pending-30: #fbedc1; /* 30% */
+  --error-pending-10: #fefaeb; /* 10% */
+
   /* Corner radius scale */
   --radius-sm: 4px; /* inputs, chips, small tags */
   --radius-md: 8px; /* default: buttons, cards, panels */

@@ -38,8 +38,12 @@ export const StatusLegend = () => (
       Action needed — review a classmate
     </LegendItem>
     <LegendItem>
+      <Swatch $color="var(--error-pending-100)" />
+      Handed in — waiting for reviews
+    </LegendItem>
+    <LegendItem>
       <Swatch $color="var(--error-success-100)" />
-      Returned / passed
+      Passed
     </LegendItem>
     <LegendItem>
       <Swatch $color="var(--error-failure-100)" />

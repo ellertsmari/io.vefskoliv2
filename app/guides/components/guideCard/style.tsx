@@ -16,8 +16,9 @@ export type CardStatus =
   | "hallOfFame";
 
 /**
- * Border colours are the ones the StatusLegend explains, so they stay exactly
- * as they were. What is new is the tint behind them: a bare coloured outline
+ * Border colours are the ones the StatusLegend explains; keep the two in step.
+ * Handed-in work waiting for reviews is yellow, not passed-green, because it
+ * is not done yet. Each border has a tint behind it: a bare coloured outline
  * read as an alert next to the app's other cards, which are all a filled
  * surface. Hall of fame gets an extra inner ring instead of a thicker border,
  * because under border-box a 3px border eats 4px of the content width and
@@ -36,8 +37,8 @@ const STATUS_SURFACE: Record<
     background: "var(--error-warning-10)",
   },
   awaitingReviews: {
-    border: "var(--error-success-100)",
-    background: "var(--error-success-10)",
+    border: "var(--error-pending-100)",
+    background: "var(--error-pending-10)",
   },
   passed: {
     border: "var(--error-success-100)",
