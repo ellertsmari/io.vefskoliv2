@@ -24,10 +24,14 @@ export const IMAGE_JPEG_QUALITY = 0.85;
 /** Legacy bound: only data URLs stored before the move to Blob are this long. */
 const IMAGE_MAX_DATA_URL_LENGTH = 900_000;
 
+// GIFs are uploaded as-is rather than re-encoded (see utils/imageUploadClient),
+// because a canvas only keeps the first frame. The Figma animations guide asks
+// students to return an exported Motion animation as a GIF.
 export const IMAGE_ALLOWED_CONTENT_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/gif",
 ] as const;
 
 /** The route that mints client upload tokens (app/api/blob/upload). */
