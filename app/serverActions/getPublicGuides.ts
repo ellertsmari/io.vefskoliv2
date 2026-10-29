@@ -20,18 +20,11 @@ export async function getPublicGuides(): Promise<GuideType[] | null> {
         isSpecialty: 1,
         order: 1,
         module: 1,
-        references: 1,
-        knowledge: 1,
-        skills: 1,
-        resources: 1,
-        themeIdea: 1,
-        topicsList: 1,
-        classes: 1,
         createdAt: 1,
         updatedAt: 1,
       })
       .sort({ order: 1 })
-      .exec();
+      .lean<GuideType[]>();
 
     // Serialize MongoDB documents to plain objects for client components
     return safeSerialize(guides);

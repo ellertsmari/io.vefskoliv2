@@ -38,6 +38,7 @@ import {
   handleActionError,
   ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "../utils/errors";
 
 const CALENDAR_PATH = "/LMS/calendar";
@@ -89,10 +90,7 @@ export async function saveBookingWindow(
 
   const validated = BookingWindowInputSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
 
   try {
@@ -259,10 +257,7 @@ export async function bookMeeting(
 
   const validated = BookMeetingInputSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { date, startTime, topic, withTeam } = validated.data;
 

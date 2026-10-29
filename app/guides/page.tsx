@@ -1,10 +1,10 @@
 import { auth } from "../../auth";
 import { Guides } from "./components/guides/Guides";
-import { Module, ReturnStatus, ReviewStatus, GradesReceivedStatus, GradesGivenStatus } from "types/guideTypes";
+import { Module, ReturnStatus, ReviewStatus, GradesReceivedStatus } from "types/guideTypes";
 import { getGuides } from "serverActions/getGuides";
 import { getPublicGuides } from "serverActions/getPublicGuides";
 import { extendGuides, fetchModules } from "utils/guideUtils";
-import { createPublicGuideInfo, fetchPublicModules } from "utils/publicGuideUtils";
+import { createPublicGuideInfo } from "utils/publicGuideUtils";
 import { safeSerialize } from "utils/serialization";
 import { EmptyState, ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
@@ -16,7 +16,7 @@ const GuidesPage = async () => {
     // Authenticated user - show personalized guides with status
     try {
       const fetchedGuides = (await getGuides(session.user.id)) || [];
-      const extendedGuides = await extendGuides(fetchedGuides);
+      const extendedGuides = extendGuides(fetchedGuides);
 
       // An empty collection is a state, not an error.
       if (extendedGuides.length < 1) {
@@ -28,13 +28,12 @@ const GuidesPage = async () => {
         );
       }
 
-      const modules: Module[] = await fetchModules(extendedGuides);
+      const modules: Module[] = fetchModules(extendedGuides);
 
       // Serialize the data before passing to client component
       const serializedGuides = safeSerialize(extendedGuides);
-      const serializedModules = safeSerialize(modules);
 
-      return <Guides extendedGuides={serializedGuides} modules={serializedModules} />;
+      return <Guides extendedGuides={serializedGuides} modules={modules} />;
     } catch (error) {
       console.error("Error in authenticated guides view:", error);
       return (
@@ -71,16 +70,14 @@ const GuidesPage = async () => {
         reviewStatus: ReviewStatus.AWAITING_PROJECTS,
         gradesReceivedStatus: GradesReceivedStatus.AWAITING_GRADES,
         grade: undefined,
-        gradesGivenStatus: GradesGivenStatus.AWAITING_REVIEWS,
       }));
 
-      const modules: Module[] = await fetchPublicModules(publicGuides);
+      const modules: Module[] = fetchModules(publicGuides);
 
       // Serialize the data before passing to client component to prevent circular reference issues
       const serializedGuides = safeSerialize(guidesWithLinks);
-      const serializedModules = safeSerialize(modules);
 
-      return <Guides extendedGuides={serializedGuides} modules={serializedModules} />;
+      return <Guides extendedGuides={serializedGuides} modules={modules} />;
     } catch (error) {
       console.error("Error in public guides view:", error);
       return (

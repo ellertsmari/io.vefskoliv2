@@ -3,7 +3,7 @@ import { useGuide } from "providers/GuideProvider";
 import { FeedbackOverview } from "../../app/guides/components/feedback/feedbackOverview/FeedbackOverview";
 import { FeedbackDocumentWithReturn } from "types/guideTypes";
 import { ReturnDocument } from "models/return";
-import { FeedbackDocument } from "models/review";
+import { ReviewDocument } from "models/review";
 import { Types } from "mongoose";
 
 jest.mock("serverActions/returnGuide", () => ({
@@ -24,7 +24,7 @@ jest.mock("../../auth", () => ({
 function createMockFeedbacks(
   count: number,
   givenOrReceived: "given" | "received" = "given"
-): FeedbackDocument[] {
+): ReviewDocument[] {
   if (count < 1) {
     return [];
   }
@@ -35,7 +35,7 @@ function createMockFeedbacks(
       grade: i,
       comment: `Feedback ${givenOrReceived} comment${i}`,
       _id: new Types.ObjectId(),
-    } as FeedbackDocument;
+    } as ReviewDocument;
 
     feedbacks.push(feedback);
   }

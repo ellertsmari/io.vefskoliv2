@@ -7,6 +7,7 @@ import {
   DEFAULT_PASS_THRESHOLD,
   gradeTask,
   knownTasks,
+  round2,
   selectServedTasks,
   taskId,
   type CodeResults,
@@ -98,7 +99,6 @@ export type ScoreSummary = {
 
 export type DerivedAttempt = { items: ItemState[]; summary: ScoreSummary };
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
 const halved = (points: number, wrongs: number) => points * 0.5 ** wrongs;
 
 const tasksById = (exercise: ServerExercise) => {

@@ -112,11 +112,3 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     throw new Error("Failed to connect to database");
   }
 }
-
-export async function disconnectFromDatabase(): Promise<void> {
-  if (cache.conn) {
-    await cache.conn.disconnect();
-  }
-  cache.conn = null;
-  cache.promise = null;
-}

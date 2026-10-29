@@ -1,5 +1,4 @@
 "use server";
-import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
 import { Team } from "models/team";
@@ -12,7 +11,7 @@ import {
   handleActionError,
   successNoData,
 } from "utils/errors";
-import { objectIdSchema, isTeacher, requireSession } from "./helpers";
+import { objectIdSchema, isTeacher, requireSession, isTeamMember } from "./helpers";
 
 const SetShowcaseQuotesSchema = z.object({
   teamId: objectIdSchema,
@@ -53,9 +52,7 @@ export async function setShowcaseQuotes(
     const team = await Team.findById(teamId);
     if (!team) return failure(ErrorMessages.NOT_FOUND("Team"));
 
-    const isMember = team.members.some(
-      (member: ObjectId) => member.toString() === session.user.id
-    );
+    const isMember = isTeamMember(team, session.user.id);
     if (!isMember && !isTeacher(session)) {
       return failure(ErrorMessages.NOT_AUTHORIZED);
     }

@@ -4,6 +4,7 @@
  * This module provides consistent error handling patterns for server actions.
  * All server actions should use these utilities for consistent error responses.
  */
+import type { ZodError } from "zod";
 
 /**
  * Standard response type for server actions that can fail
@@ -34,6 +35,16 @@ export function failure(
   errors?: Record<string, string[]>
 ): ActionResult<never> {
   return { success: false, message, errors };
+}
+
+/**
+ * The failed result for input that did not pass its zod schema
+ */
+export function invalidInput(error: ZodError): ActionResult<never> {
+  return failure(
+    ErrorMessages.INVALID_INPUT,
+    error.flatten().fieldErrors as Record<string, string[]>
+  );
 }
 
 /**

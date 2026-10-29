@@ -14,6 +14,7 @@ import {
   handleActionError,
   logError,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { applyLifecycle } from "./lifecycle";
 import { objectIdSchema, serializeProject, serializeTeam } from "./helpers";
@@ -94,10 +95,7 @@ export async function submitJudgeEvaluation(
 ): Promise<ActionResult<void>> {
   const validated = SubmitJudgeEvaluationSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { token, teamId, entries, overallComment } = validated.data;
 

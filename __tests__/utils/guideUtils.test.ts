@@ -5,14 +5,12 @@
 import {
   ReviewStatus,
   ReturnStatus,
-  GradesGivenStatus,
   GradesReceivedStatus,
   GradingMode,
 } from "types/guideTypes";
 import {
   calculateReviewStatus,
   calculateReturnStatus,
-  calculateGradesGivenStatus,
   calculateGradesReceivedStatus,
   calculateGrade,
   hasExceededReviewGracePeriod,
@@ -342,7 +340,6 @@ describe("status calculations", () => {
         reviewsGiven: [],
         gradesReceived: [],
         gradesGiven: [],
-        availableToGrade: [],
         ...overrides,
       }) as unknown as GuideInfo;
 
@@ -422,7 +419,6 @@ describe("status calculations", () => {
         reviewsGiven: [],
         gradesReceived: [],
         gradesGiven: [],
-        availableToGrade: [],
         ...overrides,
       }) as unknown as GuideInfo;
 
@@ -464,7 +460,6 @@ describe("status calculations", () => {
         reviewsGiven: [],
         gradesReceived: [],
         gradesGiven: [],
-        availableToGrade: [],
         exerciseAttempts: [],
         ...overrides,
       }) as unknown as GuideInfo;
@@ -485,7 +480,6 @@ describe("status calculations", () => {
       expect(extended.gradesReceivedStatus).toBe(
         GradesReceivedStatus.NOT_APPLICABLE
       );
-      expect(extended.gradesGivenStatus).toBe(GradesGivenStatus.NOT_APPLICABLE);
     });
 
     it("PASSES and takes the grade from a passing attempt", () => {
@@ -548,40 +542,4 @@ describe("status calculations", () => {
     });
   });
 
-  describe("calculateGradesGivenStatus", () => {
-    afterEach(async () => await clearDatabase());
-
-    it("should return AWAITING_REVIEWS if no grades are given and no reviews are available", () => {
-      const result = calculateGradesGivenStatus([], []);
-      expect(result).toBe(GradesGivenStatus.AWAITING_REVIEWS);
-    });
-
-    it("should return NEED_TO_GRADE if no grades are given and reviews are available", async () => {
-      const review1 = await createDummyReview();
-      const result = calculateGradesGivenStatus([], [review1]);
-      expect(result).toBe(GradesGivenStatus.NEED_TO_GRADE);
-    });
-
-    it("should return GRADES_GIVEN if at least 2 grades are given even if reviews are available", async () => {
-      const grade1 = await createDummyGrade();
-      const grade2 = await createDummyGrade();
-      const review1 = await createDummyReview();
-
-      const result = calculateGradesGivenStatus(
-        [grade1, grade2],
-        [review1]
-      );
-
-      // Once 2 grades have been given, status is GRADES_GIVEN regardless of available reviews
-      expect(result).toBe(GradesGivenStatus.GRADES_GIVEN);
-    });
-    it("should return GRADES_GIVEN if at least 2 grades are given", async () => {
-      const grade1 = await createDummyGrade();
-      const grade2 = await createDummyGrade();
-
-      const result = calculateGradesGivenStatus([grade1, grade2], []);
-
-      expect(result).toBe(GradesGivenStatus.GRADES_GIVEN);
-    });
-  });
 });

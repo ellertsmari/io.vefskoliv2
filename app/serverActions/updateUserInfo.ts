@@ -12,6 +12,7 @@ import {
   logError,
   ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "../utils/errors";
 
 export const updateUserInfo = async (
@@ -25,10 +26,7 @@ export const updateUserInfo = async (
 
   const validated = ProfileSchema.safeParse(updatedUserInfo);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
 
   try {

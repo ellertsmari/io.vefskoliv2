@@ -14,6 +14,7 @@ import {
   handleActionError,
   ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "../utils/errors";
 
 /** The active semester, or the built-in default until a teacher saves one. */
@@ -51,10 +52,7 @@ export async function saveSemester(
 
   const validated = SemesterInputSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { label, startDate, endDate, spann2Start } = validated.data;
 

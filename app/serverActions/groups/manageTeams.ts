@@ -10,6 +10,7 @@ import {
   handleActionError,
   success,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { objectIdSchema, isTeacher, requireSession } from "./helpers";
 
@@ -102,10 +103,7 @@ export async function saveAssignments(
 
   const validated = SaveAssignmentsSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { projectId, changes } = validated.data;
 

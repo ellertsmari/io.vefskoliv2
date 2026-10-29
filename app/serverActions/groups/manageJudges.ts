@@ -16,6 +16,7 @@ import {
   logError,
   success,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { objectIdSchema, isTeacher, requireSession } from "./helpers";
 
@@ -36,10 +37,7 @@ export async function createJudgeInvitation(
 
   const validated = CreateJudgeSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
 
   try {

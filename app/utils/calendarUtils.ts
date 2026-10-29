@@ -150,7 +150,7 @@ export const normalizeEventInput = (input: ParsedCalendarEventInput) => ({
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-const toDateKey = (d: Date): string =>
+export const toDateKey = (d: Date): string =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 export const todayKey = (): string => toDateKey(new Date());
@@ -313,7 +313,7 @@ export const normalizeTime = (raw: string): string => {
 };
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTH_LONG = [
+export const MONTH_LONG = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
