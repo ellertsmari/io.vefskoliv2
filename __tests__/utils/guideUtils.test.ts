@@ -18,10 +18,11 @@ import {
   extendGuides,
   isHandedIn,
   countsTowardProgress,
+  calculateModuleGrades,
 } from "utils/guideUtils";
 import { REVIEW_GRACE_PERIOD_DAYS } from "constants/peerReview";
 import { ReturnDocument } from "models/return";
-import { GuideInfo } from "types/guideTypes";
+import { ExtendedGuideInfo, GuideInfo } from "types/guideTypes";
 import { Types } from "mongoose";
 import {
   clearDatabase,
@@ -557,6 +558,48 @@ describe("status calculations", () => {
     ])("%s: handed in %s, progress %s", (status, handedIn, progress) => {
       expect(isHandedIn(status)).toBe(handedIn);
       expect(countsTowardProgress(status)).toBe(progress);
+    });
+  });
+
+  describe("calculateModuleGrades", () => {
+    const graded = (
+      moduleNumber: number,
+      discipline: "code" | "design",
+      grade: number | undefined,
+      isSpecialty = false
+    ) =>
+      ({
+        module: { title: `${moduleNumber} - M`, number: moduleNumber },
+        discipline,
+        isSpecialty,
+        grade,
+      }) as unknown as ExtendedGuideInfo;
+    const modules = [0, 1, 2, 3].map((number) => ({ title: `${number} - M`, number }));
+
+    it("leaves out modules 0 and 2", () => {
+      expect(calculateModuleGrades([], modules).map((m) => m.module.number)).toEqual([1, 3]);
+    });
+
+    it("counts an unfinished required guide as 0", () => {
+      const [m1] = calculateModuleGrades(
+        [graded(1, "code", 8), graded(1, "code", undefined)],
+        modules
+      );
+      expect(m1.codingAverage).toBe(4);
+      expect(m1.designAverage).toBeNull();
+    });
+
+    it("lets a specialty guide replace the lowest grade it beats, never lower one", () => {
+      const [m1] = calculateModuleGrades(
+        [
+          graded(1, "design", 6),
+          graded(1, "design", 10),
+          graded(1, "design", 9, true), // replaces the 6
+          graded(1, "design", 2, true), // beats nothing
+        ],
+        modules
+      );
+      expect(m1.designAverage).toBe(9.5);
     });
   });
 });

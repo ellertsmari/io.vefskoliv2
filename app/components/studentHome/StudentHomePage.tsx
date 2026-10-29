@@ -1,7 +1,7 @@
 "use client";
 
 import { ExtendedGuideInfo, Module, ReviewStatus, ReturnStatus } from "types/guideTypes";
-import { getDiscipline, getIsSpecialty } from "utils/guideTaxonomy";
+import { getIsSpecialty } from "utils/guideTaxonomy";
 import GuideCard from "../../guides/components/guideCard/GuideCard";
 import {
   HomeContainer,
@@ -51,7 +51,12 @@ import {
 } from "./icons";
 import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
 import { Suspense, lazy, useMemo } from "react";
-import { countsTowardProgress, isHandedIn } from "utils/guideUtils";
+import {
+  calculateModuleGrades,
+  countsTowardProgress,
+  isCountedModule,
+  isHandedIn,
+} from "utils/guideUtils";
 import type { GroupProjectListItem } from "types/groupTypes";
 import { GroupWorkWidget, groupWorkItems } from "./GroupWorkWidget";
 import Modal from "UIcomponents/modal/modal";
@@ -117,10 +122,10 @@ export const StudentHomePage = ({
   // falling back to deriving from the legacy category — see utils/guideTaxonomy).
   const isSpecialtyGuide = (guide: ExtendedGuideInfo) => getIsSpecialty(guide);
 
-  // Calculate progress for each module (exclude modules 0, 2 and specialty guides)
+  // Calculate progress for each module (counted modules, no specialty guides)
   const moduleProgress = useMemo(() => {
     return modules
-      .filter(module => module.number !== 0 && module.number !== 2)
+      .filter(module => isCountedModule(module.number))
       .map(module => {
         const moduleGuides = extendedGuides.filter(guide =>
           guide.module.number === module.number && !isSpecialtyGuide(guide)
@@ -139,12 +144,11 @@ export const StudentHomePage = ({
       });
   }, [extendedGuides, modules]);
 
-  // Calculate overall course progress (exclude modules 0, 2 and specialty guides)
+  // Calculate overall course progress (counted modules, no specialty guides)
   const overallProgress = useMemo(() => {
-    const relevantGuides = extendedGuides.filter(guide => {
-      const moduleNumber = guide.module.number;
-      return moduleNumber !== 0 && moduleNumber !== 2 && !isSpecialtyGuide(guide);
-    });
+    const relevantGuides = extendedGuides.filter(
+      guide => isCountedModule(guide.module.number) && !isSpecialtyGuide(guide)
+    );
     const totalGuides = relevantGuides.length;
     const completedGuides = relevantGuides.filter(guide =>
       countsTowardProgress(guide.returnStatus)
@@ -152,38 +156,10 @@ export const StudentHomePage = ({
     return totalGuides > 0 ? Math.round((completedGuides / totalGuides) * 100) : 0;
   }, [extendedGuides]);
 
-  // Calculate average grades by module and category with specialty guide logic
-  const moduleGrades = useMemo(() => {
-    return modules
-      .filter(module => module.number !== 0 && module.number !== 2) // Exclude modules 0 and 2
-      .map(module => {
-        const moduleGuides = extendedGuides.filter(guide =>
-          guide.module.number === module.number
-        );
-        
-        // Separate regular and specialty guides by discipline.
-        const isCoding = (g: ExtendedGuideInfo) => getDiscipline(g) === 'code';
-        const isDesign = (g: ExtendedGuideInfo) => getDiscipline(g) === 'design';
-        const regularCodingGuides = moduleGuides.filter(g => isCoding(g) && !getIsSpecialty(g));
-        const specialtyCodingGuides = moduleGuides.filter(g => isCoding(g) && getIsSpecialty(g));
-        const regularDesignGuides = moduleGuides.filter(g => isDesign(g) && !getIsSpecialty(g));
-        const specialtyDesignGuides = moduleGuides.filter(g => isDesign(g) && getIsSpecialty(g));
-        
-        // Calculate final coding grades with specialty logic
-        const finalCodingGrades = calculateFinalGrades(regularCodingGuides, specialtyCodingGuides);
-        const finalDesignGrades = calculateFinalGrades(regularDesignGuides, specialtyDesignGuides);
-        
-        return {
-          module,
-          codingAverage: finalCodingGrades.length > 0 
-            ? Math.round(finalCodingGrades.reduce((a, b) => a + b, 0) / finalCodingGrades.length * 10) / 10
-            : null,
-          designAverage: finalDesignGrades.length > 0 
-            ? Math.round(finalDesignGrades.reduce((a, b) => a + b, 0) / finalDesignGrades.length * 10) / 10
-            : null
-        };
-      });
-  }, [extendedGuides, modules]);
+  const moduleGrades = useMemo(
+    () => calculateModuleGrades(extendedGuides, modules),
+    [extendedGuides, modules]
+  );
 
   // Only what the returned guides actually tell us. No derived "points" — the
   // scoring rules aren't decided, and a placeholder number that changed once
@@ -468,34 +444,6 @@ export const StudentHomePage = ({
     </HomeContainer>
   );
 };
-
-// Helper function to calculate final grades with specialty guide replacement logic.
-// Regular guides are required: unfinished ones count as 0 so the denominator is the
-// full set of required guides. Specialty guides are extra — they can only raise the
-// score by replacing the lowest current grade, never lower it, and are not counted
-// in the denominator themselves.
-function calculateFinalGrades(regularGuides: ExtendedGuideInfo[], specialtyGuides: ExtendedGuideInfo[]): number[] {
-  const finalGrades = regularGuides.map(guide => guide.grade ?? 0);
-
-  const specialtyGrades = specialtyGuides
-    .filter(guide => guide.grade !== undefined)
-    .map(guide => guide.grade!);
-
-  for (const specialtyGrade of specialtyGrades) {
-    if (finalGrades.length === 0) break;
-
-    const lowestIndex = finalGrades.reduce(
-      (minIndex, current, index, array) => current < array[minIndex] ? index : minIndex,
-      0
-    );
-
-    if (specialtyGrade > finalGrades[lowestIndex]) {
-      finalGrades[lowestIndex] = specialtyGrade;
-    }
-  }
-
-  return finalGrades;
-}
 
 /**
  * The next few guides to work on, best first.
