@@ -6,6 +6,24 @@ Line numbers are as of `2ad6b50` and will drift.
 
 ## 1. Guide loading and the guide data boundary (do this together with SEO Phase 1)
 
+**Done on this branch (2026-10-29):**
+- One loader, `serverActions/guideBoard.ts`: `loadStudentGuideBoard` and `loadPublicGuideBoard`. The dashboard, `/guides` and `getStudentGuides` all use it. Visitors get `extendGuides`' default statuses instead of hand-built ones.
+- `module.number` is set from the title once, in the board. The views read `guide.module.number`.
+- `getCompletionKind(guide)` in `utils/guideTaxonomy.ts` replaces the three-way switch in the editor, the editor list and the guide modal.
+- On the student home page:
+  - `isHandedIn` and `countsTowardProgress` replace three definitions of "returned". Failed guides are offered again in "Continue learning".
+  - Handed-in cards that are waiting for reviews are yellow.
+  - `isCountedModule` and `calculateModuleGrades` moved to `utils/guideUtils.ts` unchanged.
+
+**Corrected:** the review said the dashboard ships review data it never reads. It does read it: dashboard cards open `GuideModal`, which uses `availableForReview`, `reviewsReceived` and the returns. Don't slim that payload.
+
+**Still open:**
+- Server code that reads guides straight from the database still parses the title: `canvas/routing.ts`, `editGuideActions.ts:83`, `api/guides/[id]/route.ts:177,263`. `getGallery.ts:93` reads the stored number. Fixing these needs the Compass backfill of `module.number` and `order`. The backfill would also let `makeRoomForOrder` stop loading every guide.
+- On the public board, older guides embed the whole module document (long HTML descriptions, research-module references) in `module`. Project `module.title` / `module.number` in `getPublicGuides`. That shrinks the `/guides` page crawlers fetch, so it fits SEO Phase 1.
+- `Serialized<T>` for `safeSerialize` (see below), after making `mergeOldAttempts` write plain values.
+
+Original findings, for reference:
+
 The guide data reaches the UI through three copies of the same pipeline, and each consumer repairs the data again.
 
 - **One loader.** `LMS/dashboard/page.tsx:35-54`, `guides/page.tsx:18-35` and `serverActions/getStudentGuides.ts:20-37` each do getGuides → extendGuides → fetchModules → safeSerialize. Replace them with one loader returning `{ guides, modules }`.
