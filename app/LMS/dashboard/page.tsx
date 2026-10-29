@@ -1,11 +1,8 @@
 import { auth } from "../../../auth";
 import { StudentHomePage } from "../../components/studentHome/StudentHomePage";
 import { TeacherHomePage } from "../../components/teacherHome/TeacherHomePage";
-import { Module } from "../../../types/guideTypes";
-import { getGuides } from "../../serverActions/getGuides";
+import { loadStudentGuideBoard } from "../../serverActions/guideBoard";
 import { getGroupProjects } from "../../serverActions/groups/getGroupProjects";
-import { extendGuides, fetchModules } from "../../utils/guideUtils";
-import { safeSerialize } from "../../utils/serialization";
 import { EmptyState, ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
 import { redirect } from 'next/navigation';
@@ -32,13 +29,12 @@ const Dashboard = async () => {
 
   // Authenticated user - show personalized home page based on role
   try {
-    const [fetchedGuides, groupProjects] = await Promise.all([
-      getGuides(session.user.id).then((guides) => guides || []),
+    const [{ guides, modules }, groupProjects] = await Promise.all([
+      loadStudentGuideBoard(),
       getGroupProjects(),
     ]);
-    const extendedGuides = extendGuides(fetchedGuides);
 
-    if (extendedGuides.length < 1) {
+    if (guides.length < 1) {
       return (
         <EmptyState
           title="Welcome!"
@@ -47,14 +43,9 @@ const Dashboard = async () => {
       );
     }
 
-    const modules: Module[] = fetchModules(extendedGuides);
-
-    // Serialize the data before passing to client component
-    const serializedGuides = safeSerialize(extendedGuides);
-
     return (
       <StudentHomePage
-        extendedGuides={serializedGuides}
+        extendedGuides={guides}
         modules={modules}
         groupProjects={groupProjects}
       />

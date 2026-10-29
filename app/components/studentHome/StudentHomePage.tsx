@@ -51,7 +51,6 @@ import {
 } from "./icons";
 import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
 import { Suspense, lazy, useMemo } from "react";
-import { extractModuleNumber } from "utils/moduleUtils";
 import { countsTowardProgress, isHandedIn } from "utils/guideUtils";
 import type { GroupProjectListItem } from "types/groupTypes";
 import { GroupWorkWidget, groupWorkItems } from "./GroupWorkWidget";
@@ -124,7 +123,7 @@ export const StudentHomePage = ({
       .filter(module => module.number !== 0 && module.number !== 2)
       .map(module => {
         const moduleGuides = extendedGuides.filter(guide =>
-          extractModuleNumber(guide.module.title) === module.number && !isSpecialtyGuide(guide)
+          guide.module.number === module.number && !isSpecialtyGuide(guide)
         );
         const completedGuides = moduleGuides.filter(guide =>
           countsTowardProgress(guide.returnStatus)
@@ -143,7 +142,7 @@ export const StudentHomePage = ({
   // Calculate overall course progress (exclude modules 0, 2 and specialty guides)
   const overallProgress = useMemo(() => {
     const relevantGuides = extendedGuides.filter(guide => {
-      const moduleNumber = extractModuleNumber(guide.module.title);
+      const moduleNumber = guide.module.number;
       return moduleNumber !== 0 && moduleNumber !== 2 && !isSpecialtyGuide(guide);
     });
     const totalGuides = relevantGuides.length;
@@ -159,7 +158,7 @@ export const StudentHomePage = ({
       .filter(module => module.number !== 0 && module.number !== 2) // Exclude modules 0 and 2
       .map(module => {
         const moduleGuides = extendedGuides.filter(guide =>
-          extractModuleNumber(guide.module.title) === module.number
+          guide.module.number === module.number
         );
         
         // Separate regular and specialty guides by discipline.

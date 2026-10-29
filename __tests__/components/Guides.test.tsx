@@ -132,24 +132,24 @@ describe("filterGuides", () => {
   it("should return the correct guides", () => {
     const selectedModule = 1;
     const fetchedGuides = [
-      { module: { title: "1 Module" }, link: "link1" },
-      { module: { title: "2 Module" }, link: "link2" },
-      { module: { title: "1 Module" }, link: "link3" },
+      { module: { title: "1 Module", number: 1 }, link: "link1" },
+      { module: { title: "2 Module", number: 2 }, link: "link2" },
+      { module: { title: "1 Module", number: 1 }, link: "link3" },
     ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule, fetchedGuides);
 
     expect(result).toEqual([
-      { module: { title: "1 Module" }, link: "link1" },
-      { module: { title: "1 Module" }, link: "link3" },
+      { module: { title: "1 Module", number: 1 }, link: "link1" },
+      { module: { title: "1 Module", number: 1 }, link: "link3" },
     ]);
   });
 
   it("should return all guides when selectedModule is null", () => {
     const selectedModule = null;
     const fetchedGuides = [
-      { module: { title: "1 Module" }, link: "link1" },
-      { module: { title: "2 Module" }, link: "link2" },
+      { module: { title: "1 Module", number: 1 }, link: "link1" },
+      { module: { title: "2 Module", number: 2 }, link: "link2" },
     ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule, fetchedGuides);
@@ -160,8 +160,8 @@ describe("filterGuides", () => {
   it("should return an empty array when no guides match the selected module", () => {
     const selectedModule = 3;
     const fetchedGuides = [
-      { module: { title: "1 Module" }, link: "link1" },
-      { module: { title: "2 Module" }, link: "link2" },
+      { module: { title: "1 Module", number: 1 }, link: "link1" },
+      { module: { title: "2 Module", number: 2 }, link: "link2" },
     ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule, fetchedGuides);
@@ -172,25 +172,13 @@ describe("filterGuides", () => {
   it("should return an empty array when selectedModule is not a number", () => {
     const selectedModule = "not a number";
     const fetchedGuides = [
-      { module: { title: "1 Module" }, link: "link1" },
-      { module: { title: "2 Module" }, link: "link2" },
+      { module: { title: "1 Module", number: 1 }, link: "link1" },
+      { module: { title: "2 Module", number: 2 }, link: "link2" },
     ] as ExtendedGuideInfo[];
 
     const result = filterGuides(selectedModule as any, fetchedGuides);
 
     expect(result).toEqual([]);
-  });
-
-  it("should not return a module when the number is not the first character", () => {
-    const selectedModule = 2;
-    const fetchedGuides = [
-      { module: { title: "Module 2" }, link: "link1" },
-      { module: { title: "2 Module" }, link: "link2" },
-    ] as ExtendedGuideInfo[];
-
-    const result = filterGuides(selectedModule, fetchedGuides);
-
-    expect(result).toEqual([{ module: { title: "2 Module" }, link: "link2" }]);
   });
 });
 

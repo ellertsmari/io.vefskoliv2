@@ -1,11 +1,9 @@
 import { auth } from "../../auth";
 import { Guides } from "./components/guides/Guides";
-import { Module, ReturnStatus, ReviewStatus, GradesReceivedStatus } from "types/guideTypes";
-import { getGuides } from "serverActions/getGuides";
-import { getPublicGuides } from "serverActions/getPublicGuides";
-import { extendGuides, fetchModules } from "utils/guideUtils";
-import { createPublicGuideInfo } from "utils/publicGuideUtils";
-import { safeSerialize } from "utils/serialization";
+import {
+  loadPublicGuideBoard,
+  loadStudentGuideBoard,
+} from "serverActions/guideBoard";
 import { EmptyState, ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
 
@@ -15,11 +13,10 @@ const GuidesPage = async () => {
   if (session?.user?.id) {
     // Authenticated user - show personalized guides with status
     try {
-      const fetchedGuides = (await getGuides(session.user.id)) || [];
-      const extendedGuides = extendGuides(fetchedGuides);
+      const { guides, modules } = await loadStudentGuideBoard();
 
       // An empty collection is a state, not an error.
-      if (extendedGuides.length < 1) {
+      if (guides.length < 1) {
         return (
           <EmptyState
             title="No guides yet"
@@ -28,12 +25,7 @@ const GuidesPage = async () => {
         );
       }
 
-      const modules: Module[] = fetchModules(extendedGuides);
-
-      // Serialize the data before passing to client component
-      const serializedGuides = safeSerialize(extendedGuides);
-
-      return <Guides extendedGuides={serializedGuides} modules={modules} />;
+      return <Guides extendedGuides={guides} modules={modules} />;
     } catch (error) {
       console.error("Error in authenticated guides view:", error);
       return (
@@ -41,55 +33,24 @@ const GuidesPage = async () => {
       );
     }
   } else {
-    // Public access - fetch guides without user-specific data
-    try {
-      const publicGuides = await getPublicGuides();
-      if (publicGuides === null) {
-        return (
-          <ErrorState message="We couldn't load the guides. Please refresh the page and try again." />
-        );
-      }
-      if (publicGuides.length < 1) {
-        return (
-          <EmptyState
-            title="No guides yet"
-            message="Guides will show up here once they're published — check back soon."
-          />
-        );
-      }
-
-      // Convert to the format expected by the Guides component
-      const publicGuideInfos = publicGuides.map(createPublicGuideInfo);
-      
-      // Add the link property and status properties with default values for public access
-      const guidesWithLinks = publicGuideInfos.map(guide => ({
-        ...guide,
-        link: `/guides/${guide._id}`,
-        // Add status properties with default values (no status needed for public view)
-        returnStatus: ReturnStatus.NOT_RETURNED,
-        reviewStatus: ReviewStatus.AWAITING_PROJECTS,
-        gradesReceivedStatus: GradesReceivedStatus.AWAITING_GRADES,
-        grade: undefined,
-      }));
-
-      const modules: Module[] = fetchModules(publicGuides);
-
-      // Serialize the data before passing to client component to prevent circular reference issues
-      const serializedGuides = safeSerialize(guidesWithLinks);
-
-      return <Guides extendedGuides={serializedGuides} modules={modules} />;
-    } catch (error) {
-      console.error("Error in public guides view:", error);
+    // Public access - every guide, without user-specific statuses
+    const board = await loadPublicGuideBoard();
+    if (board === null) {
       return (
         <ErrorState message="We couldn't load the guides. Please refresh the page and try again." />
       );
     }
+    if (board.guides.length < 1) {
+      return (
+        <EmptyState
+          title="No guides yet"
+          message="Guides will show up here once they're published — check back soon."
+        />
+      );
+    }
+
+    return <Guides extendedGuides={board.guides} modules={board.modules} />;
   }
 };
 
 export default GuidesPage;
-
-
-
-
-

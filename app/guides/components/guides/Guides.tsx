@@ -10,7 +10,6 @@ import {
 import { ModuleOptions, type Option } from "UIcomponents/dropdown/Dropdown";
 import { ExtendedGuideInfo, Module, ReturnStatus } from "types/guideTypes";
 import { useLocalState } from "utils/hooks/useStorage";
-import { extractModuleNumber } from "utils/moduleUtils";
 import { GuidesClient } from "../guidesClient/GuidesClient";
 import { StatusLegend } from "./StatusLegend";
 import { LoadingSpinner } from "UIcomponents/states/States";
@@ -127,7 +126,7 @@ const filterGuides = (
 ) => {
   if (selectedModule === null) return extendedGuides;
   return extendedGuides.filter(
-    (guide) => extractModuleNumber(guide.module.title) === selectedModule
+    (guide) => guide.module.number === selectedModule
   );
 };
 

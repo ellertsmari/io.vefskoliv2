@@ -4,7 +4,6 @@ import { ExtendedGuideInfo } from "types/guideTypes";
 import { ReviewDocument, GradedReviewDocument } from "models/review";
 import { returnGrade } from "serverActions/returnGrade";
 import { reviewGradeMeaning } from "constants/peerReview";
-import { extractModuleNumber } from "utils/moduleUtils";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import {
   ModalWrapper,
@@ -166,7 +165,7 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
   return (
     <ModalWrapper>
       <ModalHeader>
-        <ModuleBadge>Module {extractModuleNumber(guide.module.title)}</ModuleBadge>
+        <ModuleBadge>Module {guide.module.number}</ModuleBadge>
         <ModalTitle>{guide.title}</ModalTitle>
         <p style={{ margin: 0, color: 'var(--primary-black-60)' }}>
           Review details for {studentName}
