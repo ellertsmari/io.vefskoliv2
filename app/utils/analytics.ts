@@ -8,7 +8,8 @@
  * app/lib/analytics/recordPageview.ts, reading in app/lib/analytics/stats.ts.
  *
  * What makes this need no consent banner is what it does NOT keep: no cookie,
- * no IP address, no user agent string. A visitor is a hash of their IP and
+ * no IP address, no user agent string (a bot we can't name keeps the name it
+ * gives itself, never a browser's). A visitor is a hash of their IP and
  * user agent with a salt that is thrown away at the end of the day, so the
  * same person on two days is two unrelated visitors and nobody — us included —
  * can turn a stored hash back into an address. That is the Plausible/Umami
@@ -73,7 +74,18 @@ export const clientIpFrom = (headers: Pick<Headers, "get">): string => {
 
 // ---------------------------------------------------------------- crawlers
 
-export type CrawlerKind = "search" | "ai" | "social" | "seo" | "other";
+export type CrawlerKind =
+  | "search"
+  | "ai"
+  | "social"
+  | "seo"
+  | "monitor"
+  | "scanner"
+  | "script"
+  | "other"
+  | "undeclared";
+
+type Crawler = { label: string; kind: CrawlerKind; pattern: RegExp };
 
 /**
  * Known crawlers, first match wins, so the specific patterns come before the
@@ -85,7 +97,7 @@ export type CrawlerKind = "search" | "ai" | "social" | "seo" | "other";
  * PerplexityBot do not run JavaScript, so whether they fetched /guides/* at
  * all is the before/after measurement for server-rendering the guide list.
  */
-const CRAWLERS: Array<{ label: string; kind: CrawlerKind; pattern: RegExp }> = [
+const CRAWLERS: Crawler[] = [
   { label: "GPTBot", kind: "ai", pattern: /GPTBot/i },
   { label: "OAI-SearchBot", kind: "ai", pattern: /OAI-SearchBot/i },
   { label: "ChatGPT-User", kind: "ai", pattern: /ChatGPT-User/i },
@@ -126,18 +138,39 @@ const CRAWLERS: Array<{ label: string; kind: CrawlerKind; pattern: RegExp }> = [
   { label: "Lighthouse", kind: "seo", pattern: /Chrome-Lighthouse|PageSpeed/i },
 ];
 
-const CRAWLER_KIND = new Map(CRAWLERS.map((c) => [c.label, c.kind]));
+export const OTHER_BOT = "Other bot";
 
 /**
- * Anything automated that the list above doesn't name: scripts, monitors,
- * headless browsers, link checkers. Deliberately broad — a person is never
- * hurt by being filed as a bot here, but a bot filed as a person inflates
- * the visitor count, which is the number the dashboard leads with.
+ * A browser user agent without the Accept-Language header every real browser
+ * sends: an automated tool dressed as a browser.
  */
-const GENERIC_BOT =
-  /\bbot\b|bot[/;]|crawl|spider|slurp|scrap|fetch|monitor|uptime|preview|headless|phantom|puppeteer|playwright|selenium|curl|wget|httpie|python|aiohttp|httpx|axios|node-fetch|undici|go-http-client|java\/|okhttp|libwww|perl|ruby|php|scrapy|vercel-|^mozilla\/5\.0$/i;
+export const UNDECLARED_BOT = "Undeclared bot";
 
-export const OTHER_BOT = "Other bot";
+/**
+ * Anything automated that the list above doesn't name, sorted into broad
+ * groups. Deliberately broad — a person is never hurt by being filed as a bot
+ * here, but a bot filed as a person inflates the visitor count, which is the
+ * number the dashboard leads with. What these bots call themselves is kept
+ * separately (agentName), so the common ones can be promoted to CRAWLERS.
+ *
+ * Self-declared crawlers come before scripts because a crawler's user agent
+ * often links to a .php or .html page that a script pattern would match.
+ */
+const UNNAMED: Crawler[] = [
+  { label: "Scanner", kind: "scanner", pattern: /CensysInspect|Expanse|zgrab|Nuclei|masscan|Nmap|l9explore|l9tcpid|LeakIX|InternetMeasurement|ModatScanner|NetcraftSurveyAgent|WPScan|sqlmap|Nikto|scanner/i },
+  { label: "Monitor", kind: "monitor", pattern: /monitor|uptime|pingdom|statuscake|checkly|site24x7|freshping|hetrix|vercel-/i },
+  { label: "Headless browser", kind: "script", pattern: /headless|phantom|puppeteer|playwright|selenium/i },
+  { label: OTHER_BOT, kind: "other", pattern: /\bbot\b|bot[/;]|crawl|spider|slurp/i },
+  { label: "Script", kind: "script", pattern: /curl|wget|httpie|python|aiohttp|httpx|axios|node-fetch|undici|go-http-client|java\/|okhttp|libwww|perl|ruby|php|scrapy|^mozilla\/5\.0$/i },
+  { label: OTHER_BOT, kind: "other", pattern: /scrap|fetch|preview/i },
+];
+
+const CRAWLER_KIND = new Map<string, CrawlerKind>([
+  ...[...CRAWLERS, ...UNNAMED].map((c): [string, CrawlerKind] => [c.label, c.kind]),
+  [UNDECLARED_BOT, "undeclared"],
+]);
+
+const NAMED_LABELS = new Set(CRAWLERS.map((c) => c.label));
 
 /**
  * Which crawler sent this user agent, or null for what looks like a person.
@@ -145,14 +178,57 @@ export const OTHER_BOT = "Other bot";
  */
 export const classifyBot = (userAgent: string | null | undefined): string | null => {
   const ua = userAgent?.trim() ?? "";
-  if (!ua) return OTHER_BOT;
-  const known = CRAWLERS.find((c) => c.pattern.test(ua));
-  if (known) return known.label;
-  return GENERIC_BOT.test(ua) ? OTHER_BOT : null;
+  if (!ua) return "Script";
+  return (
+    CRAWLERS.find((c) => c.pattern.test(ua))?.label ??
+    UNNAMED.find((c) => c.pattern.test(ua))?.label ??
+    null
+  );
 };
+
+/**
+ * classifyBot, plus browsers that are not browsers: anything that sends no
+ * Accept-Language is filed as UNDECLARED_BOT rather than counted as a visitor.
+ */
+export const classifyRequest = (
+  userAgent: string | null | undefined,
+  hasAcceptLanguage: boolean
+): string | null =>
+  classifyBot(userAgent) ?? (hasAcceptLanguage ? null : UNDECLARED_BOT);
 
 export const crawlerKind = (label: string): CrawlerKind =>
   CRAWLER_KIND.get(label) ?? "other";
+
+/** Product tokens every browser user agent carries; never a bot's name. */
+const BROWSER_TOKEN = /^(mozilla|applewebkit|chrome|chromium|safari|version|mobile|gecko|firefox|edg|opr)$/i;
+
+/**
+ * What an unnamed bot calls itself, e.g. "Barkrowler", "python-requests" or
+ * "HeadlessChrome", so "Other bot" can be broken down and the frequent ones
+ * given a CRAWLERS entry. Only ever called for bots that classifyBot did not
+ * name and that declared themselves (see agentFor), so it never sees a
+ * person's browser. Versions, URLs and e-mail addresses are dropped.
+ */
+export const agentName = (userAgent: string): string | null => {
+  const ua = userAgent.replace(/\+?https?:\/\/\S*|\S+@\S+/g, " ").trim();
+  const compatible = /compatible;\s*([^;/()]+)/i.exec(ua)?.[1]?.trim() || undefined;
+  const selfNamed = /[A-Za-z][\w.-]*(bot|crawl|spider|scan|fetch|monitor|check)[\w.-]*/i.exec(ua)?.[0];
+  const products = [...ua.matchAll(/([A-Za-z][\w.-]*)\/[\w.]+/g)].map((m) => m[1]);
+  const name =
+    compatible ??
+    selfNamed ??
+    products.find((p) => !BROWSER_TOKEN.test(p)) ??
+    products[0] ??
+    ua.split(/[\s/;(]/)[0];
+  const clean = name?.replace(/[^\w .-]/g, "").trim().slice(0, 40);
+  return clean || null;
+};
+
+/** The agent name worth storing for a hit: unnamed, self-declared bots only. */
+export const agentFor = (bot: string | null, userAgent: string): string | null =>
+  bot && !NAMED_LABELS.has(bot) && bot !== UNDECLARED_BOT
+    ? agentName(userAgent)
+    : null;
 
 // ---------------------------------------------------------------- devices
 
@@ -303,7 +379,11 @@ export const shouldRecordHit = ({
 
   // Crawlers are recorded for any tracked path, robots.txt included: when
   // and what they fetched is the whole point of the crawler panel.
-  if (classifyBot(headers.get("user-agent")) !== null) return true;
+  const bot = classifyRequest(
+    headers.get("user-agent"),
+    headers.has("accept-language")
+  );
+  if (bot !== null) return true;
 
   if (CRAWLER_FILES.has(pathname)) return false;
   const isNavigation = headers.get("rsc") === "1";
@@ -325,9 +405,14 @@ export type PageviewSnapshot = {
   /** The page's own query string, for campaign tags. Nothing else is kept. */
   search: string;
   host: string;
-  /** userAgent and ip only feed the visitor hash; neither is stored. */
+  /**
+   * userAgent and ip feed the visitor hash and are not stored. For a bot that
+   * declares itself but isn't one we name, its short name is (agentName).
+   */
   userAgent: string;
   ip: string;
+  /** Real browsers always send Accept-Language; its absence marks a bot. */
+  hasAcceptLanguage: boolean;
   referrer: string | null;
   country: string | null;
   city: string | null;
@@ -345,6 +430,7 @@ export const snapshotRequest = (
   host: headers.get("host") ?? url.host,
   userAgent: headers.get("user-agent") ?? "",
   ip: clientIpFrom(headers),
+  hasAcceptLanguage: headers.has("accept-language"),
   referrer: headers.get("referer"),
   ...geoFrom(headers),
 });

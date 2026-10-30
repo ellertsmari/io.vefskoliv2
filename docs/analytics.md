@@ -19,7 +19,7 @@ A navigation served entirely from the client router cache sends no request, so t
 
 ## What is stored
 
-`pageviews` holds one row per hit: day (UTC, which is Iceland's local time), path, campaign tag (`?utm_source=` or `?ref=`), referrer *host* (internal clicks are dropped), country and city from Vercel's geo headers, device class, crawler label and anonymous visitor id. Nothing else is kept: no IP address, no user agent string, no cookie, no query string beyond the campaign tag. Rows expire after 90 days through a TTL index on `at`.
+`pageviews` holds one row per hit: day (UTC, which is Iceland's local time), path, campaign tag (`?utm_source=` or `?ref=`), referrer *host* (internal clicks are dropped), country and city from Vercel's geo headers, device class, crawler label and anonymous visitor id. Nothing else is kept: no IP address, no user agent string, no cookie, no query string beyond the campaign tag. The one exception is `agent`: for a bot that declares itself but isn't on the named list, the short name it gives itself ("Barkrowler", "python-requests"), without version, links or e-mail addresses. It is never stored for people or for named crawlers. Rows expire after 90 days through a TTL index on `at`.
 
 The visitor id is `sha256(dailySalt + ip + ua)`, truncated to 64 bits. The salt is random, one per day, in `analyticssalts`, and a TTL index deletes it when the day ends. It has to be stored somewhere shared, because two requests from one visitor can land on different Vercel instances and must hash alike. Once the salt is deleted, that day's ids can't be linked back to an address. That is the Plausible/Umami method, and it is why no consent banner is needed. One consequence: "visitors" over a range is the sum of each day's visitors, since nothing can link the same person across days.
 
@@ -30,7 +30,19 @@ All three collections and their indexes are created by mongoose on first use. No
 ## Changing things
 
 - **Retention**: `RETENTION_DAYS` in `app/utils/analytics.ts`. MongoDB keeps an existing TTL index's `expireAfterSeconds` until it is changed with `collMod` (in Compass: Indexes, then edit `at_1`).
-- **A new crawler**: add an entry to `CRAWLERS`. Labels are what is stored, so add new ones; renaming an old label splits its history.
+- **A new crawler**: add an entry to `CRAWLERS`. Labels are what is stored, so add new ones; renaming an old label splits its history. The names listed under the unnamed groups in the crawler panel are the candidates.
+
+## Crawler groups
+
+Crawlers we name (`CRAWLERS`) are AI, Search, Link preview or SEO tool. Everything else automated is sorted into a group (`UNNAMED`), first match wins:
+
+- **Scanner**: security and internet-wide scanners (Censys, Expanse, zgrab, Nuclei…).
+- **Monitor**: uptime checks and Vercel's own fetchers.
+- **Headless browser** and **Script**: automation libraries and command-line tools (curl, python-requests, Go-http-client…). An empty user agent is a script.
+- **Other bot**: anything else that calls itself a bot, crawler or spider.
+- **Undeclared bot**: a browser user agent without the `Accept-Language` header that every real browser sends. These used to count as visitors.
+
+Until 2026-10-30 all of the first four were stored as "Other bot", so older rows can't be split.
 - **Turning it off**: set `ANALYTICS_DISABLED=1` in Vercel. No code change needed.
 
 ## Checking it after a deploy

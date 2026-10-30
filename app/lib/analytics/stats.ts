@@ -7,6 +7,7 @@ import type {
   AnalyticsDashboard,
   AnalyticsHeadline,
   BreakdownRow,
+  CrawlerAgent,
   CrawlerFetch,
   CrawlerRow,
   DailyPoint,
@@ -183,33 +184,58 @@ const breakdown = (
 
 const GUIDE_PATH = "^/guides/[0-9a-fA-F]{24}$";
 
-const crawlerRows = async (from: string, to: string): Promise<CrawlerRow[]> => {
+/** How many names to list under an unnamed crawler group. */
+const AGENTS_SHOWN = 5;
+
+/** What the unnamed bots called themselves, most frequent first, per label. */
+const agentsByBot = async (from: string, to: string) => {
   const rows = await Pageview.aggregate<{
-    _id: string;
+    _id: { bot: string; agent: string };
     hits: number;
-    guides: string[];
-    robots: boolean;
-    lastSeen: Date;
   }>([
-    { $match: { day: { $gte: from, $lte: to }, bot: { $ne: null } } },
-    {
-      $group: {
-        _id: "$bot",
-        hits: { $sum: 1 },
-        lastSeen: { $max: "$at" },
-        robots: { $max: { $eq: ["$path", "/robots.txt"] } },
-        guides: {
-          $addToSet: {
-            $cond: [
-              { $regexMatch: { input: "$path", regex: GUIDE_PATH } },
-              "$path",
-              "$$REMOVE",
-            ],
+    { $match: { day: { $gte: from, $lte: to }, agent: { $type: "string" } } },
+    { $group: { _id: { bot: "$bot", agent: "$agent" }, hits: { $sum: 1 } } },
+    { $sort: { hits: -1, "_id.agent": 1 } },
+  ]);
+  const byBot = new Map<string, CrawlerAgent[]>();
+  for (const { _id, hits } of rows) {
+    const list = byBot.get(_id.bot) ?? [];
+    if (list.length < AGENTS_SHOWN) list.push({ name: _id.agent, hits });
+    byBot.set(_id.bot, list);
+  }
+  return byBot;
+};
+
+const crawlerRows = async (from: string, to: string): Promise<CrawlerRow[]> => {
+  const [rows, agents] = await Promise.all([
+    Pageview.aggregate<{
+      _id: string;
+      hits: number;
+      guides: string[];
+      robots: boolean;
+      lastSeen: Date;
+    }>([
+      { $match: { day: { $gte: from, $lte: to }, bot: { $ne: null } } },
+      {
+        $group: {
+          _id: "$bot",
+          hits: { $sum: 1 },
+          lastSeen: { $max: "$at" },
+          robots: { $max: { $eq: ["$path", "/robots.txt"] } },
+          guides: {
+            $addToSet: {
+              $cond: [
+                { $regexMatch: { input: "$path", regex: GUIDE_PATH } },
+                "$path",
+                "$$REMOVE",
+              ],
+            },
           },
         },
       },
-    },
-    { $sort: { hits: -1, _id: 1 } },
+      { $sort: { hits: -1, _id: 1 } },
+    ]),
+    agentsByBot(from, to),
   ]);
 
   return rows.map((row) => ({
@@ -219,6 +245,7 @@ const crawlerRows = async (from: string, to: string): Promise<CrawlerRow[]> => {
     guidePages: row.guides.length,
     fetchedRobots: row.robots,
     lastSeen: row.lastSeen.toISOString(),
+    agents: agents.get(row._id) ?? [],
   }));
 };
 
@@ -226,7 +253,7 @@ const recentCrawls = async (from: string, to: string) =>
   Pageview.find({ day: { $gte: from, $lte: to }, bot: { $ne: null } })
     .sort({ at: -1 })
     .limit(30)
-    .select({ _id: 0, at: 1, bot: 1, path: 1 })
+    .select({ _id: 0, at: 1, bot: 1, agent: 1, path: 1 })
     .lean();
 
 /** Guide titles for the guide paths in view, so lists read as guides, not ids. */
@@ -341,6 +368,7 @@ export async function getAnalyticsDashboard(
       (c): CrawlerFetch => ({
         at: new Date(c.at).toISOString(),
         bot: c.bot ?? "",
+        ...(c.agent ? { agent: c.agent } : {}),
         path: c.path,
         ...(titles.has(c.path) ? { label: titles.get(c.path) } : {}),
       })

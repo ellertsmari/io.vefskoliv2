@@ -35,8 +35,9 @@ const dashboard = (overrides: Partial<AnalyticsDashboard> = {}): AnalyticsDashbo
   countries: [{ key: "IS", label: "Iceland", views: 1400, visitors: 1100 }],
   devices: [{ key: "mobile", label: "Mobile", views: 900, visitors: 800 }],
   crawlers: [
-    { bot: "Googlebot", kind: "search", hits: 30, guidePages: 20, fetchedRobots: true, lastSeen: "2026-10-23T08:00:00.000Z" },
-    { bot: "GPTBot", kind: "ai", hits: 10, guidePages: 3, fetchedRobots: false, lastSeen: "2026-10-22T14:05:00.000Z" },
+    { bot: "Googlebot", kind: "search", hits: 30, guidePages: 20, fetchedRobots: true, lastSeen: "2026-10-23T08:00:00.000Z", agents: [] },
+    { bot: "GPTBot", kind: "ai", hits: 10, guidePages: 3, fetchedRobots: false, lastSeen: "2026-10-22T14:05:00.000Z", agents: [] },
+    { bot: "Other bot", kind: "other", hits: 4, guidePages: 0, fetchedRobots: true, lastSeen: "2026-10-22T10:00:00.000Z", agents: [{ name: "Barkrowler", hits: 3 }, { name: "SomeCrawler", hits: 1 }] },
   ],
   recentCrawls: [
     { at: "2026-10-23T08:00:00.000Z", bot: "Googlebot", path: "/guides/5f13205ab279dc27c467ca56", label: "HTML & CSS" },
@@ -78,6 +79,14 @@ describe("AnalyticsPage", () => {
     expect(within(rows[0]).getByText("GPTBot")).toBeInTheDocument();
     expect(within(rows[0]).getByText("3 of 42")).toBeInTheDocument();
     expect(within(rows[1]).getByText("Googlebot")).toBeInTheDocument();
+  });
+
+  it("lists what the unnamed bots call themselves", () => {
+    render(<AnalyticsPage dashboard={dashboard()} />);
+    const table = screen.getByRole("table", { name: "Crawlers that fetched public pages" });
+    const rows = within(table).getAllByRole("row").slice(1);
+    expect(within(rows[2]).getByText("Other bot")).toBeInTheDocument();
+    expect(within(rows[2]).getByText("Barkrowler (3), SomeCrawler (1)")).toBeInTheDocument();
   });
 
   it("has every daily number in a table, not only in the chart", () => {
