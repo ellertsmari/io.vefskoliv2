@@ -19,11 +19,25 @@ const KIND_LABELS: Record<CrawlerKind, string> = {
   search: "Search",
   social: "Link preview",
   seo: "SEO tool",
+  monitor: "Monitor",
+  scanner: "Scanner",
+  script: "Script",
   other: "Other",
+  undeclared: "Undeclared",
 };
 
 /** AI and search first: they are what the guides are trying to be found by. */
-const KIND_ORDER: CrawlerKind[] = ["ai", "search", "social", "seo", "other"];
+const KIND_ORDER: CrawlerKind[] = [
+  "ai",
+  "search",
+  "social",
+  "seo",
+  "monitor",
+  "scanner",
+  "script",
+  "other",
+  "undeclared",
+];
 
 export const CrawlerTable = ({
   crawlers,
@@ -60,6 +74,13 @@ export const CrawlerTable = ({
               <td>
                 <RowLabel>
                   <span className="label">{crawler.bot}</span>
+                  {crawler.agents.length > 0 && (
+                    <RowDetail>
+                      {crawler.agents
+                        .map((a) => `${a.name} (${formatCount(a.hits)})`)
+                        .join(", ")}
+                    </RowDetail>
+                  )}
                 </RowLabel>
               </td>
               <td>
@@ -98,7 +119,12 @@ export const RecentCrawls = ({ crawls }: { crawls: CrawlerFetch[] }) => {
             {crawls.map((crawl, i) => (
               <tr key={`${crawl.at}-${crawl.bot}-${i}`}>
                 <td style={{ whiteSpace: "nowrap" }}>{formatDateTime(crawl.at)}</td>
-                <td>{crawl.bot}</td>
+                <td>
+                  <RowLabel>
+                    <span className="label">{crawl.bot}</span>
+                    {crawl.agent && <RowDetail>{crawl.agent}</RowDetail>}
+                  </RowLabel>
+                </td>
                 <td>
                   <RowLabel>
                     <span className="label">{crawl.label ?? crawl.path}</span>

@@ -4,7 +4,8 @@ import { Pageview } from "models/pageview";
 import { connectToDatabase } from "serverActions/mongoose-connector";
 import {
   campaignSource,
-  classifyBot,
+  agentFor,
+  classifyRequest,
   dayKey,
   deviceClass,
   endOfDay,
@@ -77,7 +78,7 @@ export async function getDailySalt(day: string): Promise<string> {
 /** Turns a snapshot into the row that is stored. Exported for tests. */
 export async function toPageview(hit: PageviewSnapshot) {
   const day = dayKey(hit.at);
-  const bot = classifyBot(hit.userAgent);
+  const bot = classifyRequest(hit.userAgent, hit.hasAcceptLanguage);
   return {
     at: hit.at,
     day,
@@ -88,6 +89,7 @@ export async function toPageview(hit: PageviewSnapshot) {
     city: hit.city,
     device: bot ? null : deviceClass(hit.userAgent),
     bot,
+    agent: agentFor(bot, hit.userAgent),
     visitor: bot
       ? null
       : visitorHash(await getDailySalt(day), hit.ip, hit.userAgent),

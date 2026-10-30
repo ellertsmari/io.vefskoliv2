@@ -33,11 +33,18 @@ export type CrawlerRow = {
   /** Whether it asked for /robots.txt in the range. */
   fetchedRobots: boolean;
   lastSeen: string;
+  /** For unnamed groups ("Other bot", "Script"…): the names behind them. */
+  agents: CrawlerAgent[];
 };
+
+/** What an unnamed bot called itself, and how often it came. */
+export type CrawlerAgent = { name: string; hits: number };
 
 export type CrawlerFetch = {
   at: string;
   bot: string;
+  /** The bot's own name, when it is one we don't name. */
+  agent?: string;
   path: string;
   /** Guide title when the path is a guide. */
   label?: string;

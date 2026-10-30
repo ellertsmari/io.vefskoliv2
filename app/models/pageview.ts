@@ -12,9 +12,9 @@ import { RETENTION_DAYS } from "utils/analytics";
  *
  * Written by the proxy for logged-out traffic only (see
  * app/lib/analytics/recordPageview.ts). There is no IP address and no user
- * agent in here: `visitor` is a hash keyed by a salt that is deleted when the
- * day ends, so rows from different days cannot be linked to each other or to
- * anyone.
+ * agent string in here (only an unnamed bot's own name, in `agent`):
+ * `visitor` is a hash keyed by a salt that is deleted when the day ends, so
+ * rows from different days cannot be linked to each other or to anyone.
  *
  * Rows expire after RETENTION_DAYS. Totals per day outlive them in
  * `dailystats`. Changing RETENTION_DAYS does NOT change the TTL index of an
@@ -37,6 +37,11 @@ const pageviewSchema = new Schema({
   device: { type: Schema.Types.String, default: null },
   /** Crawler label (see utils/analytics CRAWLERS); null for people. */
   bot: { type: Schema.Types.String, default: null },
+  /**
+   * What a bot we don't name calls itself ("Barkrowler", "python-requests"),
+   * so "Other bot" can be broken down. Null for people and named crawlers.
+   */
+  agent: { type: Schema.Types.String, default: null },
   /** Anonymous per-day visitor id; null for crawlers, which are not visitors. */
   visitor: { type: Schema.Types.String, default: null },
 });

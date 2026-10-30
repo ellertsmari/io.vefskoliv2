@@ -37,7 +37,7 @@ const request = (
 ) =>
   Object.assign(
     new NextRequest(`https://io.vefskoli.is${path}`, {
-      headers: { accept: "text/html", "user-agent": BROWSER, ...headers },
+      headers: { accept: "text/html", "accept-language": "is", "user-agent": BROWSER, ...headers },
     }),
     { auth }
   ) as ProxyRequest;

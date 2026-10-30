@@ -36,6 +36,7 @@ const hit = (overrides: Partial<PageviewSnapshot> = {}): PageviewSnapshot => ({
   host: "io.vefskoli.is",
   userAgent: BROWSER,
   ip: "203.0.113.7",
+  hasAcceptLanguage: true,
   referrer: null,
   country: "IS",
   city: "Reykjavík",
@@ -134,7 +135,22 @@ describe("analytics", () => {
     it("labels crawlers and gives them no visitor id", async () => {
       await recordPageview(hit({ userAgent: GPTBOT, path: "/robots.txt" }));
       const row = await Pageview.findOne().lean();
-      expect(row).toMatchObject({ bot: "GPTBot", visitor: null, device: null });
+      expect(row).toMatchObject({ bot: "GPTBot", agent: null, visitor: null, device: null });
+    });
+
+    it("keeps the name an unnamed bot gives itself, and nothing more", async () => {
+      await recordPageview(
+        hit({ userAgent: "Mozilla/5.0 (compatible; Barkrowler/0.9; +https://babbar.tech/crawler)" })
+      );
+      const row = await Pageview.findOne().lean();
+      expect(row).toMatchObject({ bot: "Other bot", agent: "Barkrowler", visitor: null });
+      expect(JSON.stringify(row)).not.toContain("babbar.tech");
+    });
+
+    it("does not count a browser that sends no Accept-Language as a visitor", async () => {
+      await recordPageview(hit({ hasAcceptLanguage: false }));
+      const row = await Pageview.findOne().lean();
+      expect(row).toMatchObject({ bot: "Undeclared bot", agent: null, visitor: null });
     });
 
     it("expires raw rows after the retention period", async () => {
@@ -180,6 +196,9 @@ describe("analytics", () => {
       await record({ path: guidePath, ip: "198.51.100.2", userAgent: PHONE, referrer: "https://tskoli.is/x" });
       await record({ path: guidePath, userAgent: GPTBOT });
       await record({ path: "/robots.txt", userAgent: GPTBOT });
+      await record({ path: "/robots.txt", userAgent: "curl/8.5.0" });
+      await record({ path: "/robots.txt", userAgent: "curl/8.6.0" });
+      await record({ path: "/", userAgent: "python-requests/2.32.3" });
 
       // Yesterday: the first visitor again — a new day, a new id.
       const yesterday = new Date("2026-10-22T09:00:00Z");
@@ -190,9 +209,9 @@ describe("analytics", () => {
       expect(dashboard.from).toBe("2026-10-17");
       expect(dashboard.to).toBe("2026-10-23");
       expect(dashboard.series).toHaveLength(7);
-      expect(dashboard.series.at(-1)).toEqual({ day: "2026-10-23", views: 3, visitors: 2, crawlerHits: 2 });
+      expect(dashboard.series.at(-1)).toEqual({ day: "2026-10-23", views: 3, visitors: 2, crawlerHits: 5 });
       expect(dashboard.series.at(-2)).toEqual({ day: "2026-10-22", views: 1, visitors: 1, crawlerHits: 0 });
-      expect(dashboard.totals).toEqual({ views: 4, visitors: 3, crawlerHits: 2 });
+      expect(dashboard.totals).toEqual({ views: 4, visitors: 3, crawlerHits: 5 });
       // Recording started inside this range: nothing honest to compare with.
       expect(dashboard.previous).toBeNull();
       expect(dashboard.collectingSince).toBe("2026-10-22");
@@ -218,9 +237,15 @@ describe("analytics", () => {
       expect(dashboard.devices.map((d) => d.label).sort()).toEqual(["Desktop", "Mobile"]);
 
       expect(dashboard.crawlers).toEqual([
-        expect.objectContaining({ bot: "GPTBot", kind: "ai", hits: 2, guidePages: 1, fetchedRobots: true }),
+        expect.objectContaining({ bot: "Script", kind: "script", hits: 3, guidePages: 0, fetchedRobots: true }),
+        expect.objectContaining({ bot: "GPTBot", kind: "ai", hits: 2, guidePages: 1, fetchedRobots: true, agents: [] }),
       ]);
-      expect(dashboard.recentCrawls[0]).toMatchObject({ bot: "GPTBot" });
+      expect(dashboard.crawlers[0].agents).toEqual([
+        { name: "curl", hits: 2 },
+        { name: "python-requests", hits: 1 },
+      ]);
+      expect(dashboard.recentCrawls.find((c) => c.bot === "GPTBot")).not.toHaveProperty("agent");
+      expect(dashboard.recentCrawls.find((c) => c.bot === "Script")?.agent).toBeDefined();
       expect(dashboard.recentCrawls.find((c) => c.path === guidePath)?.label).toBe(guide.title);
       expect(dashboard.guideCount).toBe(1);
     });

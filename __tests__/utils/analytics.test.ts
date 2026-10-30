@@ -3,8 +3,12 @@
  */
 import {
   OTHER_BOT,
+  UNDECLARED_BOT,
+  agentFor,
+  agentName,
   campaignSource,
   classifyBot,
+  classifyRequest,
   clientIpFrom,
   crawlerKind,
   dayKey,
@@ -51,19 +55,25 @@ describe("classifyBot", () => {
   });
 
   it.each([
-    "curl/8.5.0",
-    "python-requests/2.32.3",
-    "Go-http-client/1.1",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.0.0 Safari/537.36",
-    "SomeNewCrawler/1.0 (+https://example.com/bot)",
-    "",
-  ])("files unknown automation as a bot: %p", (ua) => {
-    expect(classifyBot(ua)).toBe(OTHER_BOT);
+    ["curl/8.5.0", "Script"],
+    ["python-requests/2.32.3", "Script"],
+    ["Go-http-client/1.1", "Script"],
+    ["Mozilla/5.0", "Script"],
+    ["", "Script"],
+    ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.0.0 Safari/537.36", "Headless browser"],
+    ["Mozilla/5.0 (compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)", "Monitor"],
+    ["Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)", "Scanner"],
+    ["Expanse, a Palo Alto Networks company, searches across the global IPv4 space", "Scanner"],
+    ["SomeNewCrawler/1.0 (+https://example.com/bot)", OTHER_BOT],
+    // A crawler linking to a .php page is still a crawler, not a script.
+    ["Mozilla/5.0 (compatible; Barkrowler/0.9; +https://babbar.tech/crawler.php)", OTHER_BOT],
+  ])("sorts unknown automation into a group: %p", (ua, label) => {
+    expect(classifyBot(ua)).toBe(label);
   });
 
   it("treats a missing user agent as a script", () => {
-    expect(classifyBot(null)).toBe(OTHER_BOT);
-    expect(classifyBot(undefined)).toBe(OTHER_BOT);
+    expect(classifyBot(null)).toBe("Script");
+    expect(classifyBot(undefined)).toBe("Script");
   });
 
   it.each([CHROME_DESKTOP, SAFARI_IPHONE, ANDROID_TABLET, ANDROID_PHONE])(
@@ -79,6 +89,51 @@ describe("classifyBot", () => {
     expect(crawlerKind("Googlebot")).toBe("search");
     expect(crawlerKind("LinkedInBot")).toBe("social");
     expect(crawlerKind(OTHER_BOT)).toBe("other");
+    expect(crawlerKind("Script")).toBe("script");
+    expect(crawlerKind("Headless browser")).toBe("script");
+    expect(crawlerKind("Monitor")).toBe("monitor");
+    expect(crawlerKind("Scanner")).toBe("scanner");
+    expect(crawlerKind(UNDECLARED_BOT)).toBe("undeclared");
+  });
+});
+
+describe("classifyRequest", () => {
+  it("files a browser that sends no Accept-Language as an undeclared bot", () => {
+    expect(classifyRequest(CHROME_DESKTOP, false)).toBe(UNDECLARED_BOT);
+    expect(classifyRequest(CHROME_DESKTOP, true)).toBeNull();
+  });
+
+  it("keeps a crawler's own label either way", () => {
+    expect(classifyRequest("Mozilla/5.0 (compatible; Googlebot/2.1)", false)).toBe("Googlebot");
+    expect(classifyRequest("curl/8.5.0", true)).toBe("Script");
+  });
+});
+
+describe("agentName", () => {
+  it.each([
+    ["Mozilla/5.0 (compatible; Barkrowler/0.9; +https://babbar.tech/crawler)", "Barkrowler"],
+    ["SomeNewCrawler/1.0 (+https://example.com/bot)", "SomeNewCrawler"],
+    ["python-requests/2.32.3", "python-requests"],
+    ["curl/8.5.0", "curl"],
+    ["Go-http-client/1.1", "Go-http-client"],
+    ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.0.0 Safari/537.36", "HeadlessChrome"],
+    ["Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)", "Yahoo Slurp"],
+    ["Expanse, a Palo Alto Networks company, searches across the global IPv4 space", "Expanse"],
+    ["Mozilla/5.0", "Mozilla"],
+  ])("names %p", (ua, name) => {
+    expect(agentName(ua)).toBe(name);
+  });
+
+  it("keeps no address, link or version", () => {
+    const name = agentName("MyFetcher/2.3 (+https://example.com/about; ops@example.com)");
+    expect(name).toBe("MyFetcher");
+  });
+
+  it("is never kept for people, named crawlers or browsers in disguise", () => {
+    expect(agentFor(null, CHROME_DESKTOP)).toBeNull();
+    expect(agentFor("Googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1)")).toBeNull();
+    expect(agentFor(UNDECLARED_BOT, CHROME_DESKTOP)).toBeNull();
+    expect(agentFor(OTHER_BOT, "SomeNewCrawler/1.0")).toBe("SomeNewCrawler");
   });
 });
 
@@ -199,7 +254,11 @@ describe("which paths are measured", () => {
 });
 
 describe("shouldRecordHit", () => {
-  const html = { accept: "text/html,application/xhtml+xml", "user-agent": CHROME_DESKTOP };
+  const html = {
+    accept: "text/html,application/xhtml+xml",
+    "accept-language": "is,en;q=0.8",
+    "user-agent": CHROME_DESKTOP,
+  };
   const hit = (
     overrides: Partial<{ method: string; pathname: string; isLoggedIn: boolean }> = {},
     headers: Record<string, string> = html
@@ -222,12 +281,12 @@ describe("shouldRecordHit", () => {
   });
 
   it("records a client-side navigation", () => {
-    expect(hit({}, { rsc: "1", accept: "*/*", "user-agent": CHROME_DESKTOP })).toBe(true);
+    expect(hit({}, { rsc: "1", accept: "*/*", "accept-language": "is", "user-agent": CHROME_DESKTOP })).toBe(true);
   });
 
   it("skips prefetches, which nobody has looked at yet", () => {
-    expect(hit({}, { rsc: "1", "next-router-prefetch": "1", "user-agent": CHROME_DESKTOP })).toBe(false);
-    expect(hit({}, { rsc: "1", "next-router-segment-prefetch": "/_tree", "user-agent": CHROME_DESKTOP })).toBe(false);
+    expect(hit({}, { rsc: "1", "next-router-prefetch": "1", "accept-language": "is", "user-agent": CHROME_DESKTOP })).toBe(false);
+    expect(hit({}, { rsc: "1", "next-router-segment-prefetch": "/_tree", "accept-language": "is", "user-agent": CHROME_DESKTOP })).toBe(false);
     expect(hit({}, { ...html, "sec-purpose": "prefetch;prerender" })).toBe(false);
     expect(hit({}, { ...html, purpose: "prefetch" })).toBe(false);
   });
@@ -235,7 +294,7 @@ describe("shouldRecordHit", () => {
   it("skips non-GET requests and non-page fetches", () => {
     expect(hit({ method: "HEAD" })).toBe(false);
     expect(hit({ method: "POST" })).toBe(false);
-    expect(hit({}, { accept: "image/avif,image/webp", "user-agent": CHROME_DESKTOP })).toBe(false);
+    expect(hit({}, { accept: "image/avif,image/webp", "accept-language": "is", "user-agent": CHROME_DESKTOP })).toBe(false);
   });
 
   it("skips paths that are not measured", () => {
@@ -248,6 +307,11 @@ describe("shouldRecordHit", () => {
     expect(hit({}, gpt)).toBe(true);
     expect(hit({ pathname: "/robots.txt" }, gpt)).toBe(true);
     expect(hit({ pathname: "/robots.txt" }, html)).toBe(false);
+  });
+
+  it("records a browser without Accept-Language as a bot, robots.txt included", () => {
+    const disguised = { accept: "*/*", "user-agent": CHROME_DESKTOP };
+    expect(hit({ pathname: "/robots.txt" }, disguised)).toBe(true);
   });
 });
 
@@ -273,6 +337,7 @@ describe("snapshotRequest", () => {
       host: "io.vefskoli.is",
       userAgent: CHROME_DESKTOP,
       ip: "203.0.113.7",
+      hasAcceptLanguage: false,
       referrer: "https://tskoli.is/",
       country: "IS",
       city: null,
