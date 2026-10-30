@@ -1,33 +1,63 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { cache } from "react";
 import { auth } from "../../../auth";
 import { getGuide } from "serverActions/getGuide";
 import { getReturnSummary } from "serverActions/getReturnSummary";
 import { GuideOverview, type GuideViewer } from "../components/guideOverview/GuideOverview";
 import { ClientGuide, GradingMode } from "types/guideTypes";
 import { getExerciseSummary } from "serverActions/exerciseSession";
-import { ErrorState } from "UIcomponents/states/States";
 import { isActingAsTeacher } from "utils/userUtils";
 import { Session } from "next-auth";
 import { getActivityLog } from "serverActions/activityLog";
 import { ActivityLogView } from "../components/activityLog/ActivityLogView";
+import { guidePageTitle, isDraftGuide, plainExcerpt } from "utils/guideSeo";
+import { SITE_NAME } from "constants/site";
 
 type ParamsType = Promise<{ id: string }>;
+
+// getGuide is sanitized by default: the exercise answer key is stripped
+// server-side and the result is already client-serializable. Cached per
+// request, so the metadata and the page share one database read.
+const loadGuide = cache(
+  async (id: string): Promise<ClientGuide | null> => getGuide(id)
+);
+
+/**
+ * One title, description and canonical address per guide, so a search result
+ * or a shared link says which guide it is. Every guide used to share the
+ * section's "Guides - Vefskólinn LMS".
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: ParamsType;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const guide = await loadGuide(id);
+  if (!guide) return { title: `Guide not found · ${SITE_NAME}` };
+
+  const title = guidePageTitle(guide);
+  const description = plainExcerpt(guide.description ?? "") || undefined;
+  const url = `/guides/${id}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: "article", siteName: SITE_NAME },
+    ...(isDraftGuide(guide) ? { robots: { index: false } } : {}),
+  };
+}
 
 const GuidePage = async ({ params }: { params: ParamsType }) => {
   const { id } = await params;
   const session: Session | null = await auth();
-  // getGuide is sanitized by default: the exercise answer key is stripped
-  // server-side and the result is already client-serializable.
-  const guide: ClientGuide | null = await getGuide(id);
+  const guide = await loadGuide(id);
 
-  if (!guide) {
-    return (
-      <ErrorState
-        title="Guide not found"
-        message="This guide may have been moved or removed."
-        backLink="/guides"
-      />
-    );
-  }
+  // A real 404, not a "not found" message on a 200 page, which search
+  // engines would index as a guide. Nothing above this streams, so the
+  // status is still ours to set.
+  if (!guide) notFound();
 
   // A teacher viewing as a student is a student here, like everywhere else.
   const viewer: GuideViewer = !session?.user?.id

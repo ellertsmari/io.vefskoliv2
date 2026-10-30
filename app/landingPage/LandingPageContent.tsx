@@ -39,6 +39,9 @@ import { useState, useEffect, useRef } from "react";
 import aboutVefskolinn from "./aboutVefskolinn";
 import Link from "next/link";
 
+/** Tækniskólinn's application form for the programme. */
+const APPLY_URL = "https://umsokn.inna.is/#!/login/id/1102/23560";
+
 // Landing page content
 interface LandingPageContentProps {
   galleryItems?: GalleryItemType[];
@@ -108,11 +111,6 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // Redirect to a url
-  const handleRedirect = (url: string) => {
-    window.location.href = url;
-  }
-
   // Smooth scroll to a section
   const handleSmoothScroll = (sectiontId: string) => {
     const section = document.getElementById(sectiontId);
@@ -133,8 +131,8 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
             <Button onClick={() => { handleSmoothScroll("about-us"); }} $styletype="textButton">ABOUT US</Button>
             <Button onClick={() => { handleSmoothScroll("the-program"); }} $styletype="textButton">THE PROGRAM</Button>
             <Button onClick={() => { handleSmoothScroll("gallery-of-projects"); }} $styletype="textButton">GALLERY</Button>
-            <Button onClick={() => { handleRedirect("/signin") }} $styletype="textButton">LOG IN</Button>
-            <Button onClick={() => { handleRedirect("https://umsokn.inna.is/#!/login/id/1102/23560") }} $styletype="defaultWhite">APPLY</Button>
+            <Button as={Link} href="/signin" $styletype="textButton">LOG IN</Button>
+            <Button as="a" href={APPLY_URL} $styletype="defaultWhite">APPLY</Button>
           </NavBarButtons>
           <MobileMenuButton onClick={toggleMobileMenu}>
             ☰
@@ -147,8 +145,8 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
           <Button onClick={() => { handleSmoothScroll("about-us"); setIsMobileMenuOpen(false); }} $styletype="textButton">ABOUT US</Button>
           <Button onClick={() => { handleSmoothScroll("the-program"); setIsMobileMenuOpen(false); }} $styletype="textButton">THE PROGRAM</Button>
           <Button onClick={() => { handleSmoothScroll("gallery-of-projects"); setIsMobileMenuOpen(false); }} $styletype="textButton">GALLERY</Button>
-          <Button onClick={() => { handleRedirect("/signin"); setIsMobileMenuOpen(false); }} $styletype="textButton">LOG IN</Button>
-          <Button onClick={() => { handleRedirect("https://umsokn.inna.is/#!/login/id/1102/23560"); setIsMobileMenuOpen(false); }} $styletype="defaultWhite">APPLY</Button>
+          <Button as={Link} href="/signin" onClick={() => setIsMobileMenuOpen(false)} $styletype="textButton">LOG IN</Button>
+          <Button as="a" href={APPLY_URL} onClick={() => setIsMobileMenuOpen(false)} $styletype="defaultWhite">APPLY</Button>
         </MobileMenu>
         <StyledVideo
           ref={videoRef}
@@ -186,7 +184,9 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
           <SectionTitle>THE PROGRAM</SectionTitle>
           <p>{aboutVefskolinn.theProgram}</p>
         </TheProgramText>
-        <Button onClick={() => { handleRedirect("/guides") }} $styletype="default">CLICK HERE TO VIEW THE ASSIGNMENTS</Button>
+        {/* A real link, not a button with a click handler: crawlers follow
+            hrefs, and this is the landing page's only way into the guides. */}
+        <Button as={Link} href="/guides" $styletype="default">CLICK HERE TO VIEW THE ASSIGNMENTS</Button>
       </Section>
       <Section id="gallery-of-projects">
         <SectionTitle>GALLERY OF PROJECTS</SectionTitle>

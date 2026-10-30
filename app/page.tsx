@@ -3,11 +3,17 @@ import { auth } from "auth";
 import { redirect } from "next/navigation";
 import LandingPageContent from "./landingPage/LandingPageContent";
 import { getGalleryItems } from "./serverActions/getGallery";
+import {
+  PROGRAMME_NAME,
+  PROGRAMME_NAME_EN,
+  SCHOOL_NAME,
+  SITE_NAME,
+} from "constants/site";
 
 export const metadata: Metadata = {
-  title: "Vefskólinn LMS",
-  description:
-    "A page for students of Vefskólinn to learn web development.",
+  title: `${SITE_NAME} · ${PROGRAMME_NAME} · ${SCHOOL_NAME}`,
+  description: `${SITE_NAME} (${PROGRAMME_NAME}, the ${PROGRAMME_NAME_EN}) teaches web development and UI/UX design at ${SCHOOL_NAME}: HTML, CSS, JavaScript, React and TypeScript through hands-on projects.`,
+  alternates: { canonical: "/" },
 };
 
 const HomePage = async () => {

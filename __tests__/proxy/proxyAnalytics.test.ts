@@ -74,11 +74,11 @@ describe("proxy analytics", () => {
     expect(after).not.toHaveBeenCalled();
   });
 
-  it("records a crawler asking for robots.txt even while it redirects to sign-in", () => {
+  it("serves robots.txt to a crawler and records the fetch", () => {
     const response = run(
       request("/robots.txt", { headers: { "user-agent": "ClaudeBot/1.0", accept: "*/*" } })
     );
-    expect(response.status).toBe(307);
+    expect(response.status).toBe(200);
     expect(after).toHaveBeenCalledTimes(1);
   });
 

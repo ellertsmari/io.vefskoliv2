@@ -3,6 +3,7 @@ import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { GuideType } from "models/guide";
 import { safeSerialize } from "utils/serialization";
+import { isDraftGuide } from "utils/guideSeo";
 
 export async function getPublicGuides(): Promise<GuideType[] | null> {
   try {
@@ -26,8 +27,9 @@ export async function getPublicGuides(): Promise<GuideType[] | null> {
       .sort({ order: 1 })
       .lean<GuideType[]>();
 
+    // Drafts are a teacher's work in progress, not part of the course yet.
     // Serialize MongoDB documents to plain objects for client components
-    return safeSerialize(guides);
+    return safeSerialize(guides.filter((guide) => !isDraftGuide(guide)));
   } catch (e) {
     // Null, not a stand-in list: a visitor during an outage used to be shown
     // two invented guides, which read as the real course.

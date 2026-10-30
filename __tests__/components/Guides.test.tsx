@@ -6,15 +6,9 @@ import {
   closeDatabase,
   connect,
   createDummyExtendedGuides,
-  createDummyModules,
   createDummyUser,
 } from "../__mocks__/mongoHandler";
 import { fetchModules } from "utils/guideUtils";
-
-// Mocking custom useStorage hooks as they are not needed for this test
-jest.mock("utils/hooks/useStorage", () => ({
-  useLocalState: jest.fn(() => [null, jest.fn(), false]),
-}));
 
 jest.mock("../../app/guides/components/guidesClient/GuidesClient", () => ({
   GuidesClient: ({ guides }: { guides: ExtendedGuideInfo[] }) =>
@@ -23,10 +17,23 @@ jest.mock("../../app/guides/components/guidesClient/GuidesClient", () => ({
 
 const { filterGuides, createOptions, currentOptionName } = exportedForTesting;
 
+/**
+ * Dummy guides get random module numbers that don't match their titles, and
+ * two can share one. Give each its own module so filtering is checkable.
+ */
+const inOwnModules = (guides: ExtendedGuideInfo[]) => {
+  const extendedGuides = guides.map((guide, i) => ({
+    ...guide,
+    module: { title: `${i + 1} - Module title ${i + 1}`, number: i + 1 },
+  }));
+  return { extendedGuides, modules: fetchModules(extendedGuides) };
+};
+
 describe("Guides", () => {
   beforeAll(async () => await connect());
   beforeEach(() => {
     localStorage.clear();
+    document.cookie = "guides-module=; path=/; max-age=0";
   });
   afterEach(async () => {
     await clearDatabase();
@@ -36,32 +43,76 @@ describe("Guides", () => {
 
   test("changes guides shown based on dropdown selection", async () => {
     const user = await createDummyUser();
-    const extendedGuides = await createDummyExtendedGuides(user, 3);
-    const modules = createDummyModules(10);
-
-    const { queryByText, getByText } = render(
-      <Guides
-        extendedGuides={extendedGuides}
-        modules={modules}
-      />
+    const { extendedGuides, modules } = inOwnModules(
+      await createDummyExtendedGuides(user, 3)
     );
 
-    // Initially guides are shown
-    await waitFor(() => {
-      expect(queryByText(extendedGuides[0].module.title)).toBeDefined();
-      expect(queryByText(extendedGuides[1].module.title)).toBeDefined();
-      expect(queryByText(extendedGuides[2].module.title)).toBeDefined();
-    });
+    const { queryByText, getByText } = render(
+      <Guides extendedGuides={extendedGuides} modules={modules} />
+    );
+
+    // All modules to begin with
+    for (const guide of extendedGuides) {
+      expect(queryByText(guide.module.title)).not.toBeNull();
+    }
 
     // Capsules are labelled by module number, with an "All modules" option first
     expect(getByText("All modules")).toBeDefined();
-    const moduleNumber = parseInt(extendedGuides[1].module.title[0]);
-    fireEvent.click(getByText(`Module ${modules[moduleNumber].number}`));
+    fireEvent.click(getByText("Module 2"));
 
-    // Check that the filtered guide is shown
+    expect(getByText(extendedGuides[1].module.title)).toBeDefined();
+    expect(queryByText(extendedGuides[0].module.title)).toBeNull();
+  });
+
+  test("renders the remembered module at once, with no loading state", async () => {
+    const user = await createDummyUser();
+    const { extendedGuides, modules } = inOwnModules(
+      await createDummyExtendedGuides(user, 3)
+    );
+    const chosen = extendedGuides[1].module.number;
+
+    const { queryByText, getByText } = render(
+      <Guides extendedGuides={extendedGuides} modules={modules} initialModule={chosen} />
+    );
+
+    expect(queryByText("Loading guides…")).toBeNull();
+    expect(getByText(extendedGuides[1].module.title)).toBeDefined();
+    expect(queryByText(extendedGuides[0].module.title)).toBeNull();
+  });
+
+  test("remembers a chosen module in a cookie the server can read", async () => {
+    const user = await createDummyUser();
+    const { extendedGuides, modules } = inOwnModules(
+      await createDummyExtendedGuides(user, 3)
+    );
+
+    const { getByText } = render(
+      <Guides extendedGuides={extendedGuides} modules={modules} />
+    );
+    fireEvent.click(getByText("Module 3"));
+    expect(document.cookie).toContain("guides-module=3");
+    fireEvent.click(getByText("All modules"));
+    expect(document.cookie).toContain("guides-module=all");
+  });
+
+  test("carries a choice over from localStorage once", async () => {
+    const user = await createDummyUser();
+    const { extendedGuides, modules } = inOwnModules(
+      await createDummyExtendedGuides(user, 3)
+    );
+    const chosen = extendedGuides[2].module.number;
+    localStorage.setItem("selectedModule", JSON.stringify(chosen));
+
+    const { queryByText } = render(
+      <Guides extendedGuides={extendedGuides} modules={modules} />
+    );
+
     await waitFor(() => {
-      expect(getByText(extendedGuides[1].module.title)).toBeDefined();
+      expect(queryByText(extendedGuides[0].module.title)).toBeNull();
     });
+    expect(queryByText(extendedGuides[2].module.title)).not.toBeNull();
+    expect(document.cookie).toContain(`guides-module=${chosen}`);
+    expect(localStorage.getItem("selectedModule")).toBeNull();
   });
 
   test("renders correctly when no guides are provided", async () => {

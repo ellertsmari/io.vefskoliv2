@@ -5,8 +5,17 @@ import type { NextAuthConfig } from "next-auth";
 // - /showcase is the public project showcase students link from CVs
 // - /handouts/ holds static pages in public/handouts, shared by unlisted link
 //   with people who have no account (e.g. the Hyper Island team's git guide)
+// - /robots.txt and /sitemap.xml are for crawlers, which never log in
 // '/' must match exactly — with startsWith it would make every route public.
-const PUBLIC_ROUTES = ["/guides", "/signin", "/judge", "/showcase", "/handouts/"];
+const PUBLIC_ROUTES = [
+  "/guides",
+  "/signin",
+  "/judge",
+  "/showcase",
+  "/handouts/",
+  "/robots.txt",
+  "/sitemap.xml",
+];
 
 export const isPublicPathname = (pathname: string): boolean =>
   pathname === "/" ||

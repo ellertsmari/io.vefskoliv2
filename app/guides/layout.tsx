@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SCHOOL_NAME, SITE_NAME } from "constants/site";
 import BackgroundImg from "app/assets/Background.svg"
 import {
   LayoutGrid,
@@ -9,8 +10,8 @@ import {
 import TopBar from "../components/navigation/TopBar";
 
 export const metadata: Metadata = {
-  title: "Guides - Vefskólinn LMS",
-  description: "Browse our learning guides and resources.",
+  title: `Guides · ${SITE_NAME} · ${SCHOOL_NAME}`,
+  description: `Every assignment in the ${SITE_NAME} web development programme at ${SCHOOL_NAME}, module by module: HTML, CSS, JavaScript, React, TypeScript, back-end and UI/UX design.`,
 };
 
 export default function GuidesLayout({

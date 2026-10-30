@@ -37,6 +37,8 @@ export const Button = styled.button<{ $styletype: "default" | "outlined" | "defa
   padding: 6px 12px;
   font-size: var(--text-xs);
   cursor: pointer;
+  /* Also rendered as a link (as={Link}), which would otherwise underline. */
+  text-decoration: none;
   display: flex;
   justify-content: center;
   align-items: center;

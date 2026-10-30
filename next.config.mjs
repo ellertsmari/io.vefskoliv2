@@ -49,6 +49,18 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
+  // Bots that get <title>, description and canonical in <head> instead of
+  // streamed into <body> later, for crawlers that read only the head and run
+  // no JavaScript. Setting this REPLACES Next's default list
+  // (next/dist/shared/lib/router/utils/html-bots.js), so the first line is that
+  // list as of Next 16.3; the second adds the AI crawlers it leaves out.
+  htmlLimitedBots: new RegExp(
+    [
+      "[\\w-]+-Google|Google-[\\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight",
+      "GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-SearchBot|Claude-User|anthropic-ai|PerplexityBot|Perplexity-User|Amazonbot|meta-external(agent|fetcher)|Bytespider|CCBot|PetalBot|DuckAssistBot|MistralAI-User",
+    ].join("|"),
+    "i"
+  ),
   // Kept out of the bundle and required at runtime instead. The QuickJS
   // single-file variant embeds its WebAssembly as one very large string
   // literal, which the bundler mangles into invalid output ("octal escape
