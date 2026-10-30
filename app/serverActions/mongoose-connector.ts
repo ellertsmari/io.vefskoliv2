@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+const MONGODB_URI = process.env.MONGODB_CONNECTION;
+
 /**
  * Connection cache for a serverless runtime.
  *
@@ -41,9 +43,7 @@ const logger = {
 };
 
 export async function connectToDatabase(): Promise<typeof mongoose> {
-  const mongodbUri = process.env.MONGODB_CONNECTION;
-
-  if (!mongodbUri) {
+  if (!MONGODB_URI) {
     logger.error("MONGODB_CONNECTION environment variable is missing");
     throw new Error(
       "Please define the MONGODB_CONNECTION environment variable inside .env.local"
@@ -52,22 +52,12 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
 
   const state = mongoose.connection.readyState;
 
-  if (state === CONNECTED) {
-    cache.conn ??= mongoose;
+  if (cache.conn && state === CONNECTED) {
     return cache.conn;
   }
 
   // Mid-connect: join the attempt already running rather than starting another.
-  if (state === CONNECTING) {
-    if (!cache.promise) {
-      cache.promise = (mongoose.connection.asPromise
-        ? mongoose.connection.asPromise()
-        : Promise.resolve(mongoose)
-      ).then(() => {
-        cache.conn = mongoose;
-        return mongoose;
-      });
-    }
+  if (state === CONNECTING && cache.promise) {
     return cache.promise;
   }
 
@@ -81,7 +71,7 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
   }
 
   cache.promise ??= mongoose
-    .connect(mongodbUri, {
+    .connect(MONGODB_URI, {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
@@ -95,7 +85,6 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     })
     .then((connection) => {
       logger.info("MongoDB connected successfully");
-      cache.conn = connection;
 
       connection.connection.on("error", (error) => {
         logger.error("MongoDB connection error", error);

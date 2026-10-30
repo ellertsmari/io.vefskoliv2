@@ -1,6 +1,5 @@
 'use client';
 import { AppliedGalleryLayout } from "./AppliedGalleryLayout";
-import GalleryDevTools from "./GalleryDevTools";
 
 import type { GalleryItem as GalleryItemType } from "app/serverActions/getGallery";
 import GalleryItem from "./GalleryItem";
@@ -116,7 +115,6 @@ const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
   return (
     <AppliedGalleryLayout $enabled={showControls}>
       {showControls && <>
-      <GalleryDevTools />
       <SearchWrapper data-gallery-layout="search">
         <FiSearch size={18} aria-hidden="true" />
         <GallerySearch
