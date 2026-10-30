@@ -14,6 +14,11 @@ describe("isPublicPathname", () => {
     expect(isPublicPathname("/handoutsecret")).toBe(false);
   });
 
+  it("lets crawlers read robots.txt and the sitemap", () => {
+    expect(isPublicPathname("/robots.txt")).toBe(true);
+    expect(isPublicPathname("/sitemap.xml")).toBe(true);
+  });
+
   it("keeps the LMS behind sign-in", () => {
     expect(isPublicPathname("/LMS/dashboard")).toBe(false);
     expect(isPublicPathname("/")).toBe(true);

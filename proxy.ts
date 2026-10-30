@@ -21,8 +21,8 @@ export default auth(function proxy(request) {
 
   // Public traffic analytics (teachers read it at /LMS/analytics). Logged-in
   // requests are never recorded, so no student is ever measured. Checked
-  // before the sign-in redirect so a crawler's request for robots.txt is
-  // counted even while that file still redirects. The recorder is imported
+  // before the sign-in redirect, so a request that gets redirected is still
+  // counted. The recorder is imported
   // lazily and runs after the response is sent, so it adds nothing to the
   // page's time and keeps mongoose out of requests that don't record.
   const path = normalizePath(pathname);

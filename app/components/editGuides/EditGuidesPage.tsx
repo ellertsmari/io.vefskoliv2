@@ -6,6 +6,7 @@ import { useLocalState } from "utils/hooks/useStorage";
 import { LoadingSpinner } from "UIcomponents/states/States";
 import type { EditorGuideRow } from "serverActions/editGuideActions";
 import { deleteGuide } from "serverActions/editGuideActions";
+import { getCompletionKind, type CompletionKind } from "utils/guideTaxonomy";
 import {
   PageContainer,
   Header,
@@ -32,6 +33,12 @@ import {
   EmptyNote,
   ClearFiltersButton,
 } from "./styles.EditGuidesPage";
+
+const COMPLETION_LABEL: Record<CompletionKind, string> = {
+  activityLog: "Activity log",
+  auto: "Auto-graded",
+  peerReview: "Peer review",
+};
 
 // Strip markdown formatting for plain text preview
 const stripMarkdown = (text: string, maxLength: number = 160): string => {
@@ -216,7 +223,7 @@ export const EditGuidesPage = ({ guides }: { guides: EditorGuideRow[] }) => {
                     </Pill>
                     {guide.isSpecialty && <Pill $tone="muted">Speciality</Pill>}
                     <Pill $tone="muted">
-                      {guide.submissionType === "activityLog" ? "Activity log" : guide.gradingMode === "auto" ? "Auto-graded" : "Peer review"}
+                      {COMPLETION_LABEL[getCompletionKind(guide)]}
                     </Pill>
                   </Pills>
                   {guide.description && (

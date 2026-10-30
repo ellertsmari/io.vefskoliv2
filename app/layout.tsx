@@ -14,13 +14,15 @@ import { auth } from "../auth";
 import { NavBar } from "./components/navigation/NavBar/NavBar";
 import TopBar from "./components/navigation/TopBar";
 import { headers } from "next/headers";
+import { PROGRAMME_NAME, SCHOOL_NAME, SITE_NAME, SITE_URL } from "constants/site";
 
 const SourceSans3 = Source_Sans_3({ weight: "400", style: "normal", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Vefskólinn LMS",
-  description:
-    "This is a page for students of Vefskólinn to learn web development.",
+  // Lets every page give relative canonical and Open Graph URLs.
+  metadataBase: new URL(SITE_URL),
+  title: SITE_NAME,
+  description: `${SITE_NAME} (${PROGRAMME_NAME}) is the web development programme at ${SCHOOL_NAME} in Reykjavík.`,
 };
 
 export default async function RootLayout({

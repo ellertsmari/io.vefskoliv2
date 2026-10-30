@@ -9,28 +9,36 @@ import {
 } from "./style";
 import { ModuleOptions, type Option } from "UIcomponents/dropdown/Dropdown";
 import { ExtendedGuideInfo, Module, ReturnStatus } from "types/guideTypes";
-import { useLocalState } from "utils/hooks/useStorage";
-import { extractModuleNumber } from "utils/moduleUtils";
 import { GuidesClient } from "../guidesClient/GuidesClient";
 import { StatusLegend } from "./StatusLegend";
-import { LoadingSpinner } from "UIcomponents/states/States";
-
-const LOCAL_STORAGE_KEY = "selectedModule";
+import { useCallback, useEffect, useState } from "react";
+import {
+  LEGACY_STORAGE_KEY,
+  MODULE_COOKIE,
+  moduleCookie,
+  parseModuleChoice,
+} from "./moduleFilter";
 
 export const Guides = ({
   extendedGuides,
   modules,
+  initialModule = null,
 }: {
   extendedGuides: ExtendedGuideInfo[];
   modules: Module[];
+  /** The remembered filter, read from its cookie by the server. */
+  initialModule?: number | null;
 }) => {
-  // null = "All modules". JSON (de)serialization handles null natively, and
-  // previously-stored plain numbers ("3") parse unchanged.
-  const [selectedModule, setSelectedModule, loading] =
-    useLocalState<number | null>(LOCAL_STORAGE_KEY, null);
+  // null = "All modules". Rendered on the server straight away, with no
+  // loading state: the list is in the HTML for people and crawlers alike.
+  const [selectedModule, setSelected] = useState<number | null>(initialModule);
+  const setSelectedModule = useCallback((module: number | null) => {
+    setSelected(module);
+    document.cookie = moduleCookie(module);
+  }, []);
+  useCarryOverLegacyChoice(setSelectedModule);
 
   if (!extendedGuides || !modules) return null;
-  if (loading) return <LoadingSpinner label="Loading guides…" />;
 
   const filteredGuides = filterGuides(selectedModule, extendedGuides);
 
@@ -74,6 +82,27 @@ export const Guides = ({
       <GuidesClient guides={filteredGuides} useGuideOrder={selectedModule !== null} />
     </Container>
   );
+};
+
+/**
+ * Students' choice used to live in localStorage. Carry it over to the cookie
+ * once, so nobody's filter resets with this change; later visits have the
+ * cookie and skip this.
+ */
+const useCarryOverLegacyChoice = (
+  setSelectedModule: (module: number | null) => void
+) => {
+  useEffect(() => {
+    if (document.cookie.includes(`${MODULE_COOKIE}=`)) return;
+    try {
+      const stored = localStorage.getItem(LEGACY_STORAGE_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      const module = parseModuleChoice(stored);
+      if (module !== null) setSelectedModule(module);
+    } catch {
+      // Storage blocked: there is nothing to carry over.
+    }
+  }, [setSelectedModule]);
 };
 
 const ALL_MODULES = "All modules";
@@ -127,7 +156,7 @@ const filterGuides = (
 ) => {
   if (selectedModule === null) return extendedGuides;
   return extendedGuides.filter(
-    (guide) => extractModuleNumber(guide.module.title) === selectedModule
+    (guide) => guide.module.number === selectedModule
   );
 };
 

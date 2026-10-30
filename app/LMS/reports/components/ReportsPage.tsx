@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ExtendedGuideInfo } from "types/guideTypes";
 import { getStudentGuides } from "serverActions/getStudentGuides";
-import { extractModuleNumber } from "utils/moduleUtils";
 import { formatActivityTime } from "utils/activityLog";
 import Modal from "UIcomponents/modal/modal";
 import { ReviewDetailsModal } from "./ReviewDetailsModal";
@@ -117,7 +116,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
     });
 
     return Array.from(guidesMap.values()).sort((a, b) =>
-      extractModuleNumber(a.module.title) - extractModuleNumber(b.module.title)
+      a.module.number - b.module.number
     );
   };
 
@@ -165,7 +164,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
                 <GuideGrid>
                   {combinedGuides.map((guide) => (
                     guide.submissionType === "activityLog" ? <GuideCard as="a" href={guide.link} key={guide._id.toString()}>
-                      <ModuleBadge>Module {extractModuleNumber(guide.module.title)}</ModuleBadge>
+                      <ModuleBadge>Module {guide.module.number}</ModuleBadge>
                       <GuideTitle>{guide.title}</GuideTitle>
                       <GuideStatus status={guide.returnStatus}>{guide.returnStatus}</GuideStatus>
                       <GuideDetails>
@@ -178,7 +177,7 @@ export const ReportsPage = ({ students }: ReportsPageProps) => {
                       key={guide._id.toString()}
                       modalTrigger={
                         <GuideCard>
-                          <ModuleBadge>Module {extractModuleNumber(guide.module.title)}</ModuleBadge>
+                          <ModuleBadge>Module {guide.module.number}</ModuleBadge>
                           <GuideTitle>{guide.title}</GuideTitle>
                           
                           {guide.hasReturned && (

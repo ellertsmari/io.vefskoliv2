@@ -1,7 +1,7 @@
 "use client";
 
 import { ExtendedGuideInfo, Module, ReviewStatus, ReturnStatus } from "types/guideTypes";
-import { getDiscipline, getIsSpecialty } from "utils/guideTaxonomy";
+import { getIsSpecialty } from "utils/guideTaxonomy";
 import GuideCard from "../../guides/components/guideCard/GuideCard";
 import {
   HomeContainer,
@@ -51,7 +51,12 @@ import {
 } from "./icons";
 import { PageTitle, PageSubtitle, TitleBlock } from "globalStyles/pageStyles";
 import { Suspense, lazy, useMemo } from "react";
-import { extractModuleNumber } from "utils/moduleUtils";
+import {
+  calculateModuleGrades,
+  countsTowardProgress,
+  isCountedModule,
+  isHandedIn,
+} from "utils/guideUtils";
 import type { GroupProjectListItem } from "types/groupTypes";
 import { GroupWorkWidget, groupWorkItems } from "./GroupWorkWidget";
 import Modal from "UIcomponents/modal/modal";
@@ -83,13 +88,9 @@ export const StudentHomePage = ({
 }: StudentHomePageProps) => {
   // Organize guides by priority
   const organizedGuides = useMemo(() => {
-    // A guide counts as "returned" once the student has submitted it. We only
-    // surface review-related prompts for guides the student is actively in.
+    // Review-related prompts only for guides the student has handed in.
     const isReturned = (guide: ExtendedGuideInfo) =>
-      guide.returnStatus === ReturnStatus.PASSED ||
-      guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-      guide.returnStatus === ReturnStatus.FAILED ||
-      guide.returnStatus === ReturnStatus.AWAITING_REVIEWS;
+      isHandedIn(guide.returnStatus);
 
     // 1. Guides that need review (only for guides you've already returned)
     const guidesNeedingReview = extendedGuides.filter(guide =>
@@ -121,18 +122,16 @@ export const StudentHomePage = ({
   // falling back to deriving from the legacy category — see utils/guideTaxonomy).
   const isSpecialtyGuide = (guide: ExtendedGuideInfo) => getIsSpecialty(guide);
 
-  // Calculate progress for each module (exclude modules 0, 2 and specialty guides)
+  // Calculate progress for each module (counted modules, no specialty guides)
   const moduleProgress = useMemo(() => {
     return modules
-      .filter(module => module.number !== 0 && module.number !== 2)
+      .filter(module => isCountedModule(module.number))
       .map(module => {
         const moduleGuides = extendedGuides.filter(guide =>
-          extractModuleNumber(guide.module.title) === module.number && !isSpecialtyGuide(guide)
+          guide.module.number === module.number && !isSpecialtyGuide(guide)
         );
         const completedGuides = moduleGuides.filter(guide =>
-          guide.returnStatus === ReturnStatus.PASSED ||
-          guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-          guide.returnStatus === ReturnStatus.AWAITING_REVIEWS
+          countsTowardProgress(guide.returnStatus)
         );
         const progress = moduleGuides.length > 0 ? (completedGuides.length / moduleGuides.length) * 100 : 0;
 
@@ -145,53 +144,22 @@ export const StudentHomePage = ({
       });
   }, [extendedGuides, modules]);
 
-  // Calculate overall course progress (exclude modules 0, 2 and specialty guides)
+  // Calculate overall course progress (counted modules, no specialty guides)
   const overallProgress = useMemo(() => {
-    const relevantGuides = extendedGuides.filter(guide => {
-      const moduleNumber = extractModuleNumber(guide.module.title);
-      return moduleNumber !== 0 && moduleNumber !== 2 && !isSpecialtyGuide(guide);
-    });
+    const relevantGuides = extendedGuides.filter(
+      guide => isCountedModule(guide.module.number) && !isSpecialtyGuide(guide)
+    );
     const totalGuides = relevantGuides.length;
     const completedGuides = relevantGuides.filter(guide =>
-      guide.returnStatus === ReturnStatus.PASSED ||
-      guide.returnStatus === ReturnStatus.HALL_OF_FAME ||
-      guide.returnStatus === ReturnStatus.AWAITING_REVIEWS
+      countsTowardProgress(guide.returnStatus)
     ).length;
     return totalGuides > 0 ? Math.round((completedGuides / totalGuides) * 100) : 0;
   }, [extendedGuides]);
 
-  // Calculate average grades by module and category with specialty guide logic
-  const moduleGrades = useMemo(() => {
-    return modules
-      .filter(module => module.number !== 0 && module.number !== 2) // Exclude modules 0 and 2
-      .map(module => {
-        const moduleGuides = extendedGuides.filter(guide =>
-          extractModuleNumber(guide.module.title) === module.number
-        );
-        
-        // Separate regular and specialty guides by discipline.
-        const isCoding = (g: ExtendedGuideInfo) => getDiscipline(g) === 'code';
-        const isDesign = (g: ExtendedGuideInfo) => getDiscipline(g) === 'design';
-        const regularCodingGuides = moduleGuides.filter(g => isCoding(g) && !getIsSpecialty(g));
-        const specialtyCodingGuides = moduleGuides.filter(g => isCoding(g) && getIsSpecialty(g));
-        const regularDesignGuides = moduleGuides.filter(g => isDesign(g) && !getIsSpecialty(g));
-        const specialtyDesignGuides = moduleGuides.filter(g => isDesign(g) && getIsSpecialty(g));
-        
-        // Calculate final coding grades with specialty logic
-        const finalCodingGrades = calculateFinalGrades(regularCodingGuides, specialtyCodingGuides);
-        const finalDesignGrades = calculateFinalGrades(regularDesignGuides, specialtyDesignGuides);
-        
-        return {
-          module,
-          codingAverage: finalCodingGrades.length > 0 
-            ? Math.round(finalCodingGrades.reduce((a, b) => a + b, 0) / finalCodingGrades.length * 10) / 10
-            : null,
-          designAverage: finalDesignGrades.length > 0 
-            ? Math.round(finalDesignGrades.reduce((a, b) => a + b, 0) / finalDesignGrades.length * 10) / 10
-            : null
-        };
-      });
-  }, [extendedGuides, modules]);
+  const moduleGrades = useMemo(
+    () => calculateModuleGrades(extendedGuides, modules),
+    [extendedGuides, modules]
+  );
 
   // Only what the returned guides actually tell us. No derived "points" — the
   // scoring rules aren't decided, and a placeholder number that changed once
@@ -205,8 +173,8 @@ export const StudentHomePage = ({
     const hallOfFame = extendedGuides.filter(
       (guide) => guide.returnStatus === ReturnStatus.HALL_OF_FAME
     ).length;
-    const returned = extendedGuides.filter(
-      (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED
+    const returned = extendedGuides.filter((guide) =>
+      isHandedIn(guide.returnStatus)
     ).length;
 
     return { passed, hallOfFame, returned };
@@ -477,34 +445,6 @@ export const StudentHomePage = ({
   );
 };
 
-// Helper function to calculate final grades with specialty guide replacement logic.
-// Regular guides are required: unfinished ones count as 0 so the denominator is the
-// full set of required guides. Specialty guides are extra — they can only raise the
-// score by replacing the lowest current grade, never lower it, and are not counted
-// in the denominator themselves.
-function calculateFinalGrades(regularGuides: ExtendedGuideInfo[], specialtyGuides: ExtendedGuideInfo[]): number[] {
-  const finalGrades = regularGuides.map(guide => guide.grade ?? 0);
-
-  const specialtyGrades = specialtyGuides
-    .filter(guide => guide.grade !== undefined)
-    .map(guide => guide.grade!);
-
-  for (const specialtyGrade of specialtyGrades) {
-    if (finalGrades.length === 0) break;
-
-    const lowestIndex = finalGrades.reduce(
-      (minIndex, current, index, array) => current < array[minIndex] ? index : minIndex,
-      0
-    );
-
-    if (specialtyGrade > finalGrades[lowestIndex]) {
-      finalGrades[lowestIndex] = specialtyGrade;
-    }
-  }
-
-  return finalGrades;
-}
-
 /**
  * The next few guides to work on, best first.
  *
@@ -517,11 +457,12 @@ function getNextGuidesToReturn(
   guides: ExtendedGuideInfo[],
   limit: number,
 ): ExtendedGuideInfo[] {
-  const completedGuides = guides.filter(
-    (guide) => guide.returnStatus !== ReturnStatus.NOT_RETURNED && guide.returnStatus !== ReturnStatus.IN_PROGRESS,
+  // A failed guide still has to be redone, so it is offered again.
+  const completedGuides = guides.filter((guide) =>
+    countsTowardProgress(guide.returnStatus),
   );
   const unreturnedGuides = guides.filter(
-    (guide) => guide.returnStatus === ReturnStatus.NOT_RETURNED || guide.returnStatus === ReturnStatus.IN_PROGRESS,
+    (guide) => !countsTowardProgress(guide.returnStatus),
   );
   if (unreturnedGuides.length === 0) return [];
 
@@ -581,12 +522,8 @@ function getGuideDisplayOrder(
   allGuides: ExtendedGuideInfo[],
   queueIndex: number,
 ): number {
-  const completedGuides = allGuides.filter(
-    (g) =>
-      g.returnStatus === ReturnStatus.PASSED ||
-      g.returnStatus === ReturnStatus.HALL_OF_FAME ||
-      g.returnStatus === ReturnStatus.FAILED ||
-      g.returnStatus === ReturnStatus.AWAITING_REVIEWS,
+  const completedGuides = allGuides.filter((g) =>
+    countsTowardProgress(g.returnStatus),
   );
 
   return completedGuides.length + 1 + queueIndex;

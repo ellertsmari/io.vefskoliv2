@@ -27,7 +27,12 @@ import {
 } from "UIcomponents/guideTiles/icons";
 import { GuideType } from "../../models/guide";
 import { MODULE_TITLES } from "../../constants/moduleTitles";
-import { getDiscipline, getIsSpecialty, type Discipline } from "../../utils/guideTaxonomy";
+import {
+  getCompletionKind,
+  getDiscipline,
+  getIsSpecialty,
+  type Discipline,
+} from "../../utils/guideTaxonomy";
 import { ExerciseEditor, type ExerciseForm } from "./ExerciseEditor";
 import { FocusMode } from "./FocusMode";
 import {
@@ -113,7 +118,7 @@ export const EditGuideForm = ({ guide }: EditGuideFormProps) => {
   const [form, setForm] = useState<GuideForm>(() => formFromGuide(guide));
   const [exercise, setExercise] = useState<ExerciseForm>(() => exerciseFromGuide(guide));
   const [gradingMode, setGradingMode] = useState<GradingMode>(
-    guide.submissionType === "activityLog" ? "activityLog" : guide.gradingMode === "auto" ? "auto" : "peerReview"
+    getCompletionKind(guide)
   );
   const [discipline, setDiscipline] = useState<Discipline>(getDiscipline(guide));
   const [isSpecialty, setIsSpecialty] = useState<boolean>(getIsSpecialty(guide));

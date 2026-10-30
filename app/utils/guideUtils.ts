@@ -19,6 +19,7 @@ import {
   GRADING_MONTHS,
 } from "constants/peerReview";
 import { extractModuleNumber } from "utils/moduleUtils";
+import { getDiscipline, getIsSpecialty } from "utils/guideTaxonomy";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -131,6 +132,25 @@ const extendAutoGuide = (guide: GuideInfo): ExtendedGuideInfo => {
     grade: counted ? counted.score : undefined,
   };
 };
+
+/**
+ * Handed in: the student has submitted the guide and it is in peer review or
+ * through it, whatever the verdict. A started exercise or activity log (IN
+ * PROGRESS) is not handed in.
+ */
+export const isHandedIn = (status: ReturnStatus): boolean =>
+  status === ReturnStatus.AWAITING_REVIEWS ||
+  status === ReturnStatus.PASSED ||
+  status === ReturnStatus.HALL_OF_FAME ||
+  status === ReturnStatus.FAILED;
+
+/**
+ * Counts toward the progress bars: handed in and not failed. A failed guide
+ * still has to be redone, so it is not progress and it is offered again as
+ * work to do.
+ */
+export const countsTowardProgress = (status: ReturnStatus): boolean =>
+  isHandedIn(status) && status !== ReturnStatus.FAILED;
 
 export const calculateReturnStatus = (
   returnsSubmitted: ReturnDocument[],
@@ -304,3 +324,75 @@ export const fetchModules = (
     }, [] as { title: string; number: number }[])
     .sort((a, b) => a.number - b.number);
 };
+
+/** Modules 0 and 2 are left out of the progress bars and the module grades. */
+export const isCountedModule = (moduleNumber: number): boolean =>
+  moduleNumber !== 0 && moduleNumber !== 2;
+
+// Regular guides are required: unfinished ones count as 0 so the denominator is the
+// full set of required guides. Specialty guides are extra — they can only raise the
+// score by replacing the lowest current grade, never lower it, and are not counted
+// in the denominator themselves.
+const calculateFinalGrades = (
+  regularGuides: ExtendedGuideInfo[],
+  specialtyGuides: ExtendedGuideInfo[]
+): number[] => {
+  const finalGrades = regularGuides.map(guide => guide.grade ?? 0);
+
+  const specialtyGrades = specialtyGuides
+    .filter(guide => guide.grade !== undefined)
+    .map(guide => guide.grade!);
+
+  for (const specialtyGrade of specialtyGrades) {
+    if (finalGrades.length === 0) break;
+
+    const lowestIndex = finalGrades.reduce(
+      (minIndex, current, index, array) => current < array[minIndex] ? index : minIndex,
+      0
+    );
+
+    if (specialtyGrade > finalGrades[lowestIndex]) {
+      finalGrades[lowestIndex] = specialtyGrade;
+    }
+  }
+
+  return finalGrades;
+};
+
+/** Mean to one decimal, or null when there is nothing to average. */
+const averageOf = (grades: number[]): number | null =>
+  grades.length > 0
+    ? Math.round((grades.reduce((a, b) => a + b, 0) / grades.length) * 10) / 10
+    : null;
+
+export type ModuleGrade = {
+  module: Module;
+  codingAverage: number | null;
+  designAverage: number | null;
+};
+
+/**
+ * Each counted module's code and design grade: the average over its required
+ * guides, with specialty guides replacing the lowest grades they beat.
+ */
+export const calculateModuleGrades = (
+  guides: ExtendedGuideInfo[],
+  modules: Module[]
+): ModuleGrade[] =>
+  modules
+    .filter(module => isCountedModule(module.number))
+    .map(module => {
+      const moduleGuides = guides.filter(guide => guide.module.number === module.number);
+      const finalGradesFor = (discipline: "code" | "design") => {
+        const ofDiscipline = moduleGuides.filter(g => getDiscipline(g) === discipline);
+        return calculateFinalGrades(
+          ofDiscipline.filter(g => !getIsSpecialty(g)),
+          ofDiscipline.filter(g => getIsSpecialty(g))
+        );
+      };
+      return {
+        module,
+        codingAverage: averageOf(finalGradesFor("code")),
+        designAverage: averageOf(finalGradesFor("design")),
+      };
+    });

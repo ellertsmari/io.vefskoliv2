@@ -5,7 +5,6 @@ import {
   ReturnStatus,
 } from "types/guideTypes";
 import { GuideProvider } from "providers/GuideProvider";
-import { extractModuleNumber } from "utils/moduleUtils";
 import { GuideCardOverview } from "../guideCardOverview/GuideCardOverview";
 import { CardWrapper, InfoWrapper, type CardStatus } from "./style";
 import { NotificationIconContainer } from "UIcomponents/toggle/style";
@@ -36,7 +35,7 @@ const GuideCard = ({
         <InfoWrapper $status={cardStatusOf(returnStatus, reviewStatus)}>
           {link ? (
             <GuideCardOverview
-              moduleTitle={extractModuleNumber(guide.module.title).toString()}
+              moduleTitle={String(guide.module.number)}
               guideTitle={guide.title}
               link={link}
               order={order}
@@ -54,7 +53,7 @@ const GuideCard = ({
                 size="xl"
                 modalTrigger={
                   <GuideCardOverview
-                    moduleTitle={extractModuleNumber(guide.module.title).toString()}
+                    moduleTitle={String(guide.module.number)}
                     guideTitle={guide.title}
                     order={order}
                     returnStatus={returnStatus}
