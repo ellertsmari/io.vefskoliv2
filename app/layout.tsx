@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: SITE_NAME,
   description: `${SITE_NAME} (${PROGRAMME_NAME}) is the web development programme at ${SCHOOL_NAME} in Reykjavík.`,
+  // Proves ownership of the https://io.vefskoli.is/ property in Google Search
+  // Console. Removing it un-verifies the property.
+  verification: {
+    google: "4IznnxC7Afu07GBUVvYoB-EnHmGWQRwYVeBST3KiQNI",
+  },
 };
 
 export default async function RootLayout({
