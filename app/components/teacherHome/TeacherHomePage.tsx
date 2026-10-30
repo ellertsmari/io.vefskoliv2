@@ -8,6 +8,8 @@ import Modal from "UIcomponents/modal/modal";
 import MarkdownReader from "UIcomponents/markdown/reader";
 import { getUngradedReviews, UngradedReviewWithDetails } from "serverActions/getUngradedReviews";
 import { returnGrade } from "serverActions/returnGrade";
+import { getAnalyticsHeadline } from "serverActions/getAnalyticsHeadline";
+import type { AnalyticsHeadline } from "types/analyticsTypes";
 import { MeetingsPanel } from "./MeetingsPanel";
 import {
   ActionGrid,
@@ -54,6 +56,7 @@ import {
   CalendarIcon,
   GroupsIcon,
   PencilIcon,
+  TrendIcon,
 } from "./icons";
 
 /**
@@ -86,7 +89,26 @@ const SHORTCUTS = [
     description: "Lectures, deadlines and events",
     icon: <CalendarIcon />,
   },
+  {
+    href: "/LMS/analytics",
+    title: "Site analytics",
+    description: "Public visitors and crawlers",
+    icon: <TrendIcon />,
+  },
 ] as const;
+
+/**
+ * The analytics card's live line. Falls back to the static description while
+ * loading, and when the numbers can't be read — the link still works.
+ */
+const analyticsLine = (headline: AnalyticsHeadline | null) => {
+  if (!headline) return null;
+  if (!headline.collectingSince) return "No public visits recorded yet";
+  const { visitors, views, days } = headline;
+  const count = (n: number, noun: string) =>
+    `${n.toLocaleString("en-GB")} ${noun}${n === 1 ? "" : "s"}`;
+  return `${count(visitors, "visitor")}, ${count(views, "view")} in the last ${days} days`;
+};
 
 // Calculate suggested grade based on review comment length
 const calculateSuggestedGrade = (comment: string): number => {
@@ -235,6 +257,7 @@ const GradingModal = ({
 
 export const TeacherHomePage = () => {
   const [ungradedCount, setUngradedCount] = useState<number | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsHeadline | null>(null);
   const [creatingGuide, setCreatingGuide] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const router = useRouter();
@@ -245,7 +268,16 @@ export const TeacherHomePage = () => {
       setUngradedCount(reviews.length);
     };
     fetchCount();
+    // Separate from the count: a slow or failing analytics read must never
+    // hold up or break the grading queue.
+    getAnalyticsHeadline()
+      .then(setAnalytics)
+      .catch(() => setAnalytics(null));
   }, []);
+
+  const liveDescriptions: Partial<Record<string, string | null>> = {
+    "/LMS/analytics": analyticsLine(analytics),
+  };
 
   // Create a draft guide, then open it in the edit form to fill in.
   const handleCreateGuide = async () => {
@@ -329,7 +361,9 @@ export const TeacherHomePage = () => {
             <ActionIcon>{shortcut.icon}</ActionIcon>
             <ActionText>
               <ActionTitle>{shortcut.title}</ActionTitle>
-              <ActionDescription>{shortcut.description}</ActionDescription>
+              <ActionDescription>
+                {liveDescriptions[shortcut.href] ?? shortcut.description}
+              </ActionDescription>
             </ActionText>
           </ShortcutLink>
         ))}

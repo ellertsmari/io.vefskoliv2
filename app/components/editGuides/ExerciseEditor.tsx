@@ -16,6 +16,7 @@ import {
   RemoveButtonSmall,
   AddButton,
 } from "./styles.EditGuideForm";
+import { emptyTask } from "./editGuidePayload";
 
 /**
  * Authoring shape of a quiz task. `correctAnswers` holds the indices into
@@ -61,18 +62,6 @@ export type ExerciseForm = {
   otherPools?: Partial<Record<"shortAnswer" | "code", number>>;
   tasks: TaskForm[];
 };
-
-const emptyTask = (): QuizTaskForm => ({
-  kind: "quiz",
-  prompt: "",
-  options: ["", ""],
-  correctAnswers: [],
-  allowMultiple: false,
-  points: 1,
-  explanation: "",
-  hint: "",
-  goal: "",
-});
 
 export const ExerciseEditor = ({
   value,

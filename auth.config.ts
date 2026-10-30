@@ -3,8 +3,10 @@ import type { NextAuthConfig } from "next-auth";
 // Routes that don't require authentication:
 // - /judge/<token> is for external judges — the token is the credential
 // - /showcase is the public project showcase students link from CVs
+// - /handouts/ holds static pages in public/handouts, shared by unlisted link
+//   with people who have no account (e.g. the Hyper Island team's git guide)
 // '/' must match exactly — with startsWith it would make every route public.
-const PUBLIC_ROUTES = ["/guides", "/signin", "/judge", "/showcase"];
+const PUBLIC_ROUTES = ["/guides", "/signin", "/judge", "/showcase", "/handouts/"];
 
 export const isPublicPathname = (pathname: string): boolean =>
   pathname === "/" ||

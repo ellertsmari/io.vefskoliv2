@@ -31,9 +31,11 @@ export default async function CalendarPage() {
   // While a teacher views as a student, the calendar behaves as that student.
   const isTeacher = isActingAsTeacher(session);
 
-  const semester = await getSemester();
-  const [events, groupProjectEvents, teamName, people, windows, slots] =
+  // Only the meeting slots need the semester, so it doesn't hold up the rest.
+  const semesterRequest = getSemester();
+  const [semester, events, groupProjectEvents, teamName, people, windows, slots] =
     await Promise.all([
+      semesterRequest,
       getCalendarEvents(),
       getGroupCalendarEvents(),
       isTeacher ? Promise.resolve(null) : getViewerTeamName(),
@@ -41,7 +43,7 @@ export default async function CalendarPage() {
       isTeacher ? getBookingWindows() : Promise.resolve([]),
       isTeacher
         ? Promise.resolve([])
-        : getMeetingSlots(semester.startDate, semester.endDate),
+        : semesterRequest.then((s) => getMeetingSlots(s.startDate, s.endDate)),
     ]);
 
   // Group projects are managed on their own pages; here they are read-only.

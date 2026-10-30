@@ -12,10 +12,12 @@ const PeoplePage = async () => {
   const session = await auth();
   if (!session?.user) redirect("/signin");
 
-  const teachers = await getUsers({ role: "teacher" });
-  const students = await getUsers({ role: "user" });
-  // Only teachers see who is waiting to be let in.
-  const pending = hasTeacherPermissions(session) ? await getPendingUsers() : [];
+  const [teachers, students, pending] = await Promise.all([
+    getUsers({ role: "teacher" }),
+    getUsers({ role: "user" }),
+    // Only teachers see who is waiting to be let in.
+    hasTeacherPermissions(session) ? getPendingUsers() : Promise.resolve([]),
+  ]);
 
   return (
     <PeopleOverview teachers={teachers} students={students} pending={pending} />

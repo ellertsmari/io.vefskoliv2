@@ -4,7 +4,6 @@ import {
   ReturnStatus,
   ReviewStatus,
   GradesReceivedStatus,
-  GradesGivenStatus,
   ExtendedGuideInfo,
   GuideInfo,
   Module,
@@ -36,7 +35,6 @@ export const extendGuides = (
         returnStatus: complete ? ReturnStatus.PASSED : started ? ReturnStatus.IN_PROGRESS : ReturnStatus.NOT_RETURNED,
         reviewStatus: ReviewStatus.NOT_APPLICABLE,
         gradesReceivedStatus: GradesReceivedStatus.NOT_APPLICABLE,
-        gradesGivenStatus: GradesGivenStatus.NOT_APPLICABLE,
         grade: complete ? 10 : undefined,
       };
     }
@@ -72,11 +70,6 @@ export const extendGuides = (
       returnStatus,
       gradePartialReviews
     );
-    const gradesGivenStatus = calculateGradesGivenStatus(
-      guide.gradesGiven,
-      guide.availableToGrade
-    );
-
     return {
       ...guide,
       link: `/guides/${guide._id}`,
@@ -84,7 +77,6 @@ export const extendGuides = (
       reviewStatus,
       gradesReceivedStatus,
       grade,
-      gradesGivenStatus,
     };
   });
 };
@@ -135,7 +127,6 @@ const extendAutoGuide = (guide: GuideInfo): ExtendedGuideInfo => {
     // No peer-review steps for auto-graded guides.
     reviewStatus: ReviewStatus.NOT_APPLICABLE,
     gradesReceivedStatus: GradesReceivedStatus.NOT_APPLICABLE,
-    gradesGivenStatus: GradesGivenStatus.NOT_APPLICABLE,
     // The live score; undefined until the student answers something.
     grade: counted ? counted.score : undefined,
   };
@@ -297,21 +288,10 @@ export const calculateGrade = (
   return Math.round((returnPoints + reviewPoints) * 10) / 10;
 };
 
-export const calculateGradesGivenStatus = (
-  gradesGiven: GradedReviewDocument[],
-  availableToGrade: ReviewDocument[]
-): GradesGivenStatus => {
-  if (gradesGiven.length < REQUIRED_GRADES_COUNT && availableToGrade.length)
-    return GradesGivenStatus.NEED_TO_GRADE;
-
-  if (gradesGiven.length < REQUIRED_GRADES_COUNT)
-    return GradesGivenStatus.AWAITING_REVIEWS;
-
-  return GradesGivenStatus.GRADES_GIVEN;
-};
-
-export const fetchModules = (extendedGuides: ExtendedGuideInfo[]): Module[] => {
-  return extendedGuides
+export const fetchModules = (
+  guides: { module: { title: string } }[]
+): Module[] => {
+  return guides
     .reduce((acc: Module[], guideToCheck) => {
       const moduleNumber = extractModuleNumber(guideToCheck.module.title);
       if (!acc.some((existingGuide) => moduleNumber === existingGuide.number)) {

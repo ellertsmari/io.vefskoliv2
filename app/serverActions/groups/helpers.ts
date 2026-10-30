@@ -27,6 +27,14 @@ export function isTeacher(session: Session): boolean {
   return session.user.role === "teacher";
 }
 
+/** Is this user one of the team's members? */
+export function isTeamMember(
+  team: { members: unknown[] },
+  userId: string
+): boolean {
+  return team.members.some((member) => String(member) === userId);
+}
+
 /**
  * Students only interact with one upcoming project at a time: the forming
  * project with the earliest start date. Later formation projects stay hidden

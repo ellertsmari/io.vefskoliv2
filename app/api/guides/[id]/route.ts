@@ -291,36 +291,3 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const session = await auth();
-
-    if (!session?.user?.id || session.user.role !== "teacher") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (!Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Guide not found" }, { status: 404 });
-    }
-
-    await connectToDatabase();
-
-    const deletedGuide = await Guide.findByIdAndDelete(id);
-
-    if (!deletedGuide) {
-      return NextResponse.json({ error: "Guide not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ message: "Guide deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting guide:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}

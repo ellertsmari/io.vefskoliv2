@@ -1,5 +1,4 @@
 "use server";
-import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
@@ -10,9 +9,10 @@ import {
   failure,
   handleActionError,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { applyLifecycle } from "./lifecycle";
-import { objectIdSchema, isTeacher, requireSession } from "./helpers";
+import { objectIdSchema, isTeacher, requireSession, isTeamMember } from "./helpers";
 import {
   overallCommentSchema,
   teamEvalEntriesSchema,
@@ -39,10 +39,7 @@ export async function submitTeamEvaluation(
 
   const validated = SubmitTeamEvaluationSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { projectId, teamId, entries, overallComment } = validated.data;
 
@@ -69,9 +66,7 @@ export async function submitTeamEvaluation(
       if (!project.teamEvalOpen) {
         return failure("Team evaluation is not open for this project");
       }
-      const isOwnTeam = team.members.some(
-        (member: ObjectId) => member.toString() === session.user.id
-      );
+      const isOwnTeam = isTeamMember(team, session.user.id);
       if (isOwnTeam) {
         return failure("You cannot evaluate your own team");
       }

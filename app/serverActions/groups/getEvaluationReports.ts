@@ -24,7 +24,7 @@ import {
   aggregatePeerEvaluations,
   unbalancedEvaluators,
 } from "./peerEvalShared";
-import { summarizeTeamEvaluations } from "./teamEvalShared";
+import { summarizeTeamEvaluations, toTeamEvalRow } from "./teamEvalShared";
 
 export async function getEvaluationReports(
   projectId: string
@@ -155,14 +155,7 @@ export async function getEvaluationReports(
       ])
     );
     const summaries = summarizeTeamEvaluations(
-      (teamEvals as any[]).map((evaluation) => ({
-        team: evaluation.team,
-        category: evaluation.category,
-        score: evaluation.score,
-        isPanel:
-          !!evaluation.judge || evaluation.evaluator?.role === "teacher",
-        judgeFocus: evaluation.judge?.focus ?? null,
-      })),
+      (teamEvals as any[]).map(toTeamEvalRow),
       { rubric: project?.rubric, panelWeight: project?.panelWeight }
     );
     for (const [teamId, categories] of Object.entries(summaries)) {

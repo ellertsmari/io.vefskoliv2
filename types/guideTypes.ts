@@ -273,7 +273,6 @@ export type GuideInfo = {
 
   // grading others' reviews
   gradesGiven: GradedReviewDocument[];
-  availableToGrade: ReviewDocument[];
 
   // auto-graded guides only: this user's attempts at the exercise
   exerciseAttempts?: ExerciseAttemptInfo[];
@@ -295,7 +294,6 @@ export type ExtendedGuideInfo = GuideWithLink & {
   reviewStatus: ReviewStatus;
   gradesReceivedStatus: GradesReceivedStatus;
   grade: number | undefined;
-  gradesGivenStatus: GradesGivenStatus;
 };
 
 export enum ReturnStatus {
@@ -312,14 +310,6 @@ export enum ReviewStatus {
   NEED_TO_REVIEW = "GIVE REVIEW",
   REVIEWS_GIVEN = "Reviews given",
   /** Auto-graded guides have no peer-review step. */
-  NOT_APPLICABLE = "Not applicable",
-}
-
-export enum GradesGivenStatus {
-  AWAITING_REVIEWS = "Awaiting reviews to grade",
-  NEED_TO_GRADE = "GIVE GRADE",
-  GRADES_GIVEN = "Grades given",
-  /** Auto-graded guides have no peer-grading step. */
   NOT_APPLICABLE = "Not applicable",
 }
 

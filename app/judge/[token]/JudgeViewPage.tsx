@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import styled from "styled-components";
+import Modal from "UIcomponents/modal/modal";
+import MarkdownReader from "UIcomponents/markdown/reader";
 import { JudgeView } from "types/groupTypes";
 import {
   JUDGE_FOCUS_LABELS,
@@ -25,6 +27,7 @@ import {
   LinksRow,
   Pill,
   Message,
+  SecondaryButton,
 } from "../../LMS/groups/styles";
 import { TeamEvalForm } from "../../LMS/groups/[id]/components/TeamEvalForm";
 
@@ -95,6 +98,19 @@ export const JudgeViewPage = ({
               grades.
             </MutedText>
           </div>
+          {/* The brief the students worked from — judges score against it, so
+              it is one click away rather than taking up the scoring page. */}
+          {project.description && (
+            <Modal
+              size="lg"
+              modalTrigger={
+                <SecondaryButton type="button">Project brief</SecondaryButton>
+              }
+              modalContent={
+                <MarkdownReader>{project.description}</MarkdownReader>
+              }
+            />
+          )}
         </PageHeader>
 
         <ConsentCard>

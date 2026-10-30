@@ -1,7 +1,7 @@
 import type { GuideType } from "../../models/guide";
 import { extractModuleNumber } from "../../utils/moduleUtils";
 import { axesToCategory, type Discipline } from "../../utils/guideTaxonomy";
-import type { ExerciseForm } from "./ExerciseEditor";
+import type { ExerciseForm, QuizTaskForm } from "./ExerciseEditor";
 
 /**
  * What the editor holds and what it sends. Kept apart from the component so
@@ -57,6 +57,19 @@ export const formFromGuide = (guide: GuideType): GuideForm => ({
     [],
 });
 
+/** A blank quiz question, as the editor adds it. */
+export const emptyTask = (): QuizTaskForm => ({
+  kind: "quiz",
+  prompt: "",
+  options: ["", ""],
+  correctAnswers: [],
+  allowMultiple: false,
+  points: 1,
+  explanation: "",
+  hint: "",
+  goal: "",
+});
+
 /** The authoring copy of an exercise, including the answer key. */
 export const exerciseFromGuide = (guide: GuideType): ExerciseForm => {
   const ex = guide.exercise;
@@ -98,19 +111,7 @@ export const exerciseFromGuide = (guide: GuideType): ExerciseForm => {
   return {
     passThreshold: 0.7,
     poolSize: 0,
-    tasks: [
-      {
-        kind: "quiz",
-        prompt: "",
-        options: ["", ""],
-        correctAnswers: [],
-        allowMultiple: false,
-        points: 1,
-        explanation: "",
-        hint: "",
-        goal: "",
-      },
-    ],
+    tasks: [emptyTask()],
   };
 };
 

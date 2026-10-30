@@ -1,6 +1,11 @@
 import NextAuth from "next-auth";
 import { authConfig, isPublicPathname } from "./auth.config";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import {
+  normalizePath,
+  shouldRecordHit,
+  snapshotRequest,
+} from "./app/utils/analytics";
 
 const { auth } = NextAuth(authConfig);
 
@@ -13,6 +18,30 @@ const { auth } = NextAuth(authConfig);
 // return value is NOT enforced automatically — the redirect must happen here.
 export default auth(function proxy(request) {
   const { pathname } = request.nextUrl;
+
+  // Public traffic analytics (teachers read it at /LMS/analytics). Logged-in
+  // requests are never recorded, so no student is ever measured. Checked
+  // before the sign-in redirect so a crawler's request for robots.txt is
+  // counted even while that file still redirects. The recorder is imported
+  // lazily and runs after the response is sent, so it adds nothing to the
+  // page's time and keeps mongoose out of requests that don't record.
+  const path = normalizePath(pathname);
+  if (
+    shouldRecordHit({
+      method: request.method,
+      pathname: path,
+      headers: request.headers,
+      isLoggedIn: Boolean(request.auth?.user),
+    })
+  ) {
+    const hit = snapshotRequest(path, request.nextUrl, request.headers);
+    after(async () => {
+      const { recordPageview } = await import(
+        "./app/lib/analytics/recordPageview"
+      );
+      await recordPageview(hit);
+    });
+  }
 
   if (!isPublicPathname(pathname) && !request.auth?.user) {
     const signIn = new URL("/signin", request.nextUrl);

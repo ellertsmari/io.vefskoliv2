@@ -28,6 +28,7 @@ import {
   handleActionError,
   ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "utils/errors";
 
 /**
@@ -161,10 +162,7 @@ export const promoteShortAnswer = async (
 ): Promise<ActionResult<PromoteResult>> => {
   const validated = PromoteSchema.safeParse(input);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { guideId, taskId: id, answer } = validated.data;
 

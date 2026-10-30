@@ -1,7 +1,7 @@
 import React, { useState, useActionState, startTransition } from "react";
 import { returnFieldsFor } from "utils/returnFields";
 import { ExtendedGuideInfo } from "types/guideTypes";
-import { FeedbackDocument, GradedFeedbackDocument } from "models/review";
+import { ReviewDocument, GradedReviewDocument } from "models/review";
 import { returnGrade } from "serverActions/returnGrade";
 import { reviewGradeMeaning } from "constants/peerReview";
 import { extractModuleNumber } from "utils/moduleUtils";
@@ -13,7 +13,6 @@ import {
   RightColumn,
   ModalHeader,
   ModalTitle,
-  ModuleBadge,
   Section,
   SectionTitle,
   ReviewCard,
@@ -44,9 +43,10 @@ import {
   SaveGradeButton,
   EditButton,
 } from "./styles.ReviewDetailsModal";
+import { ModuleBadge } from "./styles.ReportsPage";
 
 interface GradeAdjustmentProps {
-  review: FeedbackDocument;
+  review: ReviewDocument;
   currentGrade?: number | null;
   onGradeUpdated?: (reviewId: string, newGrade: number) => void;
 }
@@ -179,7 +179,7 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
           <Section>
             <SectionTitle>Reviews Received ({reviewsReceived.length})</SectionTitle>
             {reviewsReceived.length > 0 ? (
-              reviewsReceived.map((review: FeedbackDocument, index: number) => (
+              reviewsReceived.map((review: ReviewDocument, index: number) => (
                 <ReviewCard key={review._id.toString()}>
                   <ReviewHeader>
                     <VoteBadge vote={review.vote}>{review.vote}</VoteBadge>
@@ -203,14 +203,14 @@ export const ReviewDetailsModal = ({ guide, studentName }: ReviewDetailsModalPro
           <Section>
             <SectionTitle>Reviews Given ({reviewsGiven.length})</SectionTitle>
             {reviewsGiven.length > 0 ? (
-              reviewsGiven.map((review: FeedbackDocument, index: number) => {
+              reviewsGiven.map((review: ReviewDocument, index: number) => {
                 // Find corresponding grade given by this student
-                const gradeGiven = gradesGiven.find((grade: GradedFeedbackDocument) => 
+                const gradeGiven = gradesGiven.find((grade: GradedReviewDocument) => 
                   grade._id.toString() === review._id.toString()
                 );
                 
                 // Find corresponding grade received for this feedback
-                const gradeReceived = guide.gradesReceived.find((grade: GradedFeedbackDocument) => 
+                const gradeReceived = guide.gradesReceived.find((grade: GradedReviewDocument) => 
                   grade._id.toString() === review._id.toString()
                 );
                 

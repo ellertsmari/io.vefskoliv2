@@ -16,6 +16,7 @@ import {
   handleActionError,
   success,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { objectIdSchema, isTeacher, requireSession } from "./helpers";
 
@@ -96,10 +97,7 @@ export async function createGroupProject(
 
   const validated = CreateProjectSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   if (validated.data.endDate < validated.data.startDate) {
     return failure("End date must be after the start date");
@@ -158,10 +156,7 @@ export async function updateGroupProject(
 
   const validated = UpdateProjectSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
 
   const { projectId, ...updates } = validated.data;

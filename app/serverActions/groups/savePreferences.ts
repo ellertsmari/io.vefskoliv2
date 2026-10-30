@@ -17,6 +17,7 @@ import {
   failure,
   handleActionError,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { applyLifecycle } from "./lifecycle";
 import {
@@ -46,10 +47,7 @@ export async function savePreferences(
 
   const validated = SavePreferencesSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { projectId, ...preferences } = validated.data;
 

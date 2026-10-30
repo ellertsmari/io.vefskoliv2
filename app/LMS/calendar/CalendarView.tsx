@@ -12,6 +12,8 @@ import {
   initialMonthIndex,
   semesterMonths,
   todayKey,
+  toDateKey,
+  MONTH_LONG,
 } from "utils/calendarUtils";
 import type {
   CalendarEvent,
@@ -74,24 +76,7 @@ import {
 } from "./style";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
 const pad = (n: number) => String(n).padStart(2, "0");
-const toKey = (d: Date) =>
-  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 /** Monday-first weekday index (0 = Mon … 6 = Sun). */
 const mondayIndex = (d: Date) => (d.getDay() + 6) % 7;
@@ -131,7 +116,7 @@ function buildWeeks(year: number, month: number): Date[][] {
 
 const formatLongDate = (key: string) => {
   const [y, m, d] = key.split("-").map(Number);
-  return `${WEEKDAYS[mondayIndex(new Date(y, m - 1, d))]} ${d} ${MONTH_NAMES[m - 1]}`;
+  return `${WEEKDAYS[mondayIndex(new Date(y, m - 1, d))]} ${d} ${MONTH_LONG[m - 1]}`;
 };
 
 const isMine = (event: CalendarEvent) =>
@@ -225,8 +210,8 @@ export default function CalendarView({
       const [y, m, d] = event.date.split("-").map(Number);
       const cursor = new Date(y, m - 1, d);
       // hard cap guards against a malformed endDate looping forever
-      for (let i = 0; i < 370 && toKey(cursor) <= event.endDate!; i++) {
-        const key = toKey(cursor);
+      for (let i = 0; i < 370 && toDateKey(cursor) <= event.endDate!; i++) {
+        const key = toDateKey(cursor);
         const list = map.get(key);
         if (list) list.push(event);
         else map.set(key, [event]);
@@ -261,7 +246,7 @@ export default function CalendarView({
   const monthEventCount = useMemo(() => {
     const prefix = `${year}-${pad(month + 1)}`;
     const monthStart = `${prefix}-01`;
-    const monthEnd = toKey(new Date(year, month + 1, 0));
+    const monthEnd = toDateKey(new Date(year, month + 1, 0));
     const singles = singleDayEvents.filter((e) =>
       e.date.startsWith(prefix),
     ).length;
@@ -317,7 +302,7 @@ export default function CalendarView({
               ‹
             </NavButton>
             <MonthLabel>
-              {MONTH_NAMES[month]} {year}
+              {MONTH_LONG[month]} {year}
             </MonthLabel>
             <NavButton
               type="button"
@@ -376,10 +361,10 @@ export default function CalendarView({
             ))}
 
             {weeks.map((week) => (
-              <Fragment key={toKey(week[0])}>
+              <Fragment key={toDateKey(week[0])}>
                 <WeekNumCell>V{isoWeek(week[0])}</WeekNumCell>
                 {week.map((day) => {
-                  const key = toKey(day);
+                  const key = toDateKey(day);
                   const inMonth = day.getMonth() === month;
                   const weekendDay = mondayIndex(day) >= 5;
                   const daySpans = inMonth ? spansOnDay(key) : [];
@@ -616,7 +601,7 @@ export default function CalendarView({
           ) : (
             <>
               <PanelDate>
-                {MONTH_NAMES[month]} {year}
+                {MONTH_LONG[month]} {year}
               </PanelDate>
               <PanelHint>
                 {monthEventCount} event{monthEventCount === 1 ? "" : "s"} this
