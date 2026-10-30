@@ -11,6 +11,7 @@ import {
   failure,
   handleActionError,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { validatePeerEvaluationSubmission } from "constants/groupWork";
 import { applyLifecycle } from "./lifecycle";
@@ -53,10 +54,7 @@ export async function submitPeerEvaluations(
 
   const validated = SubmitPeerEvaluationsSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { projectId, evaluations } = validated.data;
 

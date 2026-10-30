@@ -52,6 +52,7 @@ const FEATURES: Array<[prefix: string, feature: string]> = [
   ["app/LMS/reports", "reports"],
   ["app/LMS/resources", "resources"],
   ["app/LMS/docs", "lms-docs"],
+  ["app/LMS/analytics", "analytics"],
 
   ["app/lti", "lti"],
   ["app/api/lti", "lti"],

@@ -36,7 +36,6 @@ function isGuideInfo(obj: any): obj is GuideInfo {
     Array.isArray(obj.reviewsGiven) &&
     Array.isArray(obj.gradesReceived) &&
     Array.isArray(obj.gradesGiven) &&
-    Array.isArray(obj.availableToGrade) &&
     typeof obj._id === "string" // After JSON serialization, _id is a string
   );
 }
@@ -439,63 +438,6 @@ describe("getGuides", () => {
         serialize(Return1.toObject()),
         serialize(Return2.toObject()),
       ]);
-    });
-  });
-
-  describe("availableToGrade", () => {
-    it("returns all feedback that the user is able to grade", async () => {
-      const user1 = await createDummyUser();
-      const user2 = await createDummyUser();
-      const user3 = await createDummyUser();
-
-      const guide = await createDummyGuide();
-
-      // User1's own return - feedback on this should NOT be available to grade by user1
-      const userReturn = await createDummyReturn(user1, guide);
-
-      // Other users' returns - feedback on these SHOULD be available to grade by user1
-      const otherUserReturn = await createDummyReturn(user2, guide);
-      const otherUserReturn2 = await createDummyReturn(user3, guide);
-
-      // Feedback on other users' returns (not owned by user1) - should be available to grade
-      const feedbackOnOtherReturn = await createDummyFeedbackWithReturn(
-        user2, // owner of feedback
-        guide,
-        otherUserReturn // return owned by user2
-      );
-      const feedbackOnOtherReturn2 = await createDummyFeedbackWithReturn(
-        user3, // owner of feedback
-        guide,
-        otherUserReturn2 // return owned by user3
-      );
-
-      // Feedback by user1 - should NOT be available (can't grade own feedback)
-      const feedbackByUser1 = await createDummyFeedbackWithReturn(
-        user1,
-        guide,
-        otherUserReturn
-      );
-
-      // Graded feedback - should NOT be available (already graded)
-      const gradedFeedback = await createDummyGrade(
-        user3,
-        guide,
-        otherUserReturn
-      );
-
-      const guides = await getGuides(user1._id.toString());
-      const gottenGuide = findGuideById(guides, guide._id);
-
-      if (!gottenGuide) throw new Error("gottenGuide is null");
-
-      const actual = gottenGuide.availableToGrade;
-      // Should contain feedbackOnOtherReturn and feedbackOnOtherReturn2
-      // (ungraded feedback on returns not owned by user1, not created by user1)
-      const expected = expect.arrayContaining([
-        serialize(feedbackOnOtherReturn),
-        serialize(feedbackOnOtherReturn2),
-      ]);
-      expect(actual).toEqual(expected);
     });
   });
 

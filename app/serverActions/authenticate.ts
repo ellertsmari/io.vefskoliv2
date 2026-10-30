@@ -9,8 +9,9 @@ export async function authenticate(
   formData: FormData
 ) {
   try {
+    const payload = Object.fromEntries(formData);
     await signIn("credentials", {
-      ...Object.fromEntries(formData),
+      ...payload,
       redirect: false,
     });
   } catch (error) {

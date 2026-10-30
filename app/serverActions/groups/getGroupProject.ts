@@ -27,6 +27,7 @@ import {
   groupEvaluationEntriesByTeam,
   LeanEvaluationRow,
   summarizeTeamEvaluations,
+  toTeamEvalRow,
 } from "./teamEvalShared";
 import {
   canReadDescription,
@@ -194,13 +195,7 @@ export async function getGroupProject(
         // means sending either input would hand them the other by division.
         if (details.project.gradesReleased) {
           const summaries = summarizeTeamEvaluations(
-            (feedback as any[]).map((entry) => ({
-              team: entry.team,
-              category: entry.category,
-              score: entry.score,
-              isPanel: !!entry.judge || entry.evaluator?.role === "teacher",
-              judgeFocus: entry.judge?.focus ?? null,
-            })),
+            (feedback as any[]).map(toTeamEvalRow),
             { rubric: project.rubric, panelWeight: details.project.panelWeight }
           );
           const teamScores = summaries[myTeam._id] ?? {};
@@ -287,13 +282,7 @@ export async function getGroupProject(
       // Panel = teachers + external judges; their scores outweigh students'.
       details.teamEvalSummaries = summarizeTeamEvaluations(
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        (teamEvals as any[]).map((entry) => ({
-          team: entry.team,
-          category: entry.category,
-          score: entry.score,
-          isPanel: !!entry.judge || entry.evaluator?.role === "teacher",
-          judgeFocus: entry.judge?.focus ?? null,
-        })),
+        (teamEvals as any[]).map(toTeamEvalRow),
         { rubric: project.rubric, panelWeight: details.project.panelWeight }
       );
 

@@ -10,8 +10,8 @@ import {
   failure,
   successNoData,
   handleActionError,
-  ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "../utils/errors";
 import { optionalStoredImageSchema } from "../utils/imageUpload";
 import { isActingAsTeacher } from "../utils/userUtils";
@@ -38,10 +38,7 @@ export async function returnGuide(
   const validatedFields = ReturnFormSchema.safeParse(data);
 
   if (!validatedFields.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validatedFields.error.flatten().fieldErrors
-    );
+    return invalidInput(validatedFields.error);
   }
 
   const {

@@ -12,6 +12,7 @@ import {
   canReadDescription,
   isPreferenceComplete,
   isTeacher,
+  isTeamMember,
   requireSession,
   serializeProject,
 } from "./helpers";
@@ -56,9 +57,7 @@ export async function getGroupProjects(): Promise<GroupProjectListItem[]> {
             user: userId,
           }).lean(),
         ]);
-        const myTeam = teams.find((team) =>
-          team.members.some((member) => String(member) === userId)
-        );
+        const myTeam = teams.find((team) => isTeamMember(team, userId));
         const serialized = serializeProject(project, {
           // Cards don't render the description, but it would still ship in
           // the payload — withhold it on the same terms as the detail page.

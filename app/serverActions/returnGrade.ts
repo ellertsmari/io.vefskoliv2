@@ -13,6 +13,7 @@ import {
   handleActionError,
   ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "../utils/errors";
 
 export type GradeDataType = {
@@ -32,10 +33,7 @@ export async function returnGrade(
   });
 
   if (!validatedFields.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validatedFields.error.flatten().fieldErrors
-    );
+    return invalidInput(validatedFields.error);
   }
 
   const { grade, reviewId } = validatedFields.data;
@@ -58,25 +56,15 @@ export async function returnGrade(
   try {
     await connectToDatabase();
 
-    // Fetch the review to validate it exists
-    const review = await Review.findById(new ObjectId(reviewId));
-
-    if (!review) {
-      return failure(ErrorMessages.NOT_FOUND("Review"));
-    }
-
     // Teachers can grade and re-grade any review. Record the grade and grader.
-    await Review.updateOne(
-      { _id: new ObjectId(reviewId) },
-      { grade, gradedBy: userId }
-    );
-
-    const gradedDocument = (await Review.findById(
-      new ObjectId(reviewId)
-    )) as GradedReviewDocument;
+    const gradedDocument = (await Review.findByIdAndUpdate(
+      new ObjectId(reviewId),
+      { grade, gradedBy: userId },
+      { new: true }
+    )) as GradedReviewDocument | null;
 
     if (!gradedDocument) {
-      return failure("Failed to submit grade");
+      return failure(ErrorMessages.NOT_FOUND("Review"));
     }
 
     return success(

@@ -4,7 +4,6 @@
 import { Types } from "mongoose";
 import {
   ExtendedGuideInfo,
-  GradesGivenStatus,
   GradesReceivedStatus,
   ReturnStatus,
   ReviewStatus,
@@ -31,11 +30,9 @@ const guideWith = (
     reviewsGiven: [],
     gradesReceived: [],
     gradesGiven: [],
-    availableToGrade: [],
     returnStatus: ReturnStatus.NOT_RETURNED,
     reviewStatus: ReviewStatus.NEED_TO_REVIEW,
     gradesReceivedStatus: GradesReceivedStatus.AWAITING_GRADES,
-    gradesGivenStatus: GradesGivenStatus.AWAITING_REVIEWS,
     grade: undefined,
     ...overrides,
   }) as ExtendedGuideInfo;

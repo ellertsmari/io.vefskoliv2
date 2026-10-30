@@ -59,14 +59,3 @@ export type GradedReviewDocument = GradedReviewType & Document;
 export const Review =
   models?.Review || model<ReviewDocument>("Review", reviewSchema);
 
-// Legacy type aliases for backwards compatibility during migration
-/** @deprecated Use ReviewType instead */
-export type FeedbackType = ReviewType;
-/** @deprecated Use ReviewTypeWithId instead */
-export type FeedbackTypeWithId = ReviewTypeWithId;
-/** @deprecated Use GradedReviewType instead */
-export type GradedFeedbackType = GradedReviewType;
-/** @deprecated Use ReviewDocument instead */
-export type FeedbackDocument = ReviewDocument;
-/** @deprecated Use GradedReviewDocument instead */
-export type GradedFeedbackDocument = GradedReviewDocument;

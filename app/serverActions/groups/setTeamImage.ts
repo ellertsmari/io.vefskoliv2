@@ -1,5 +1,4 @@
 "use server";
-import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { connectToDatabase } from "../mongoose-connector";
 import { Team } from "models/team";
@@ -11,8 +10,9 @@ import {
   failure,
   handleActionError,
   successNoData,
+  invalidInput,
 } from "utils/errors";
-import { objectIdSchema, isTeacher, requireSession } from "./helpers";
+import { objectIdSchema, isTeacher, requireSession, isTeamMember } from "./helpers";
 import { deleteReplacedImages } from "../blobCleanup";
 
 /** Only the image fields — never an arbitrary path into the document. */
@@ -49,10 +49,7 @@ export async function setTeamImage(
 
   const validated = SetTeamImageSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { teamId, field, value } = validated.data;
 
@@ -62,9 +59,7 @@ export async function setTeamImage(
     if (!team) return failure(ErrorMessages.NOT_FOUND("Team"));
 
     if (!isTeacher(session)) {
-      const isMember = team.members.some(
-        (member: ObjectId) => member.toString() === session.user.id
-      );
+      const isMember = isTeamMember(team, session.user.id);
       if (!isMember) return failure(ErrorMessages.NOT_AUTHORIZED);
 
       if (value !== "") {

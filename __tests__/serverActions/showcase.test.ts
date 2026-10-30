@@ -14,7 +14,6 @@ import { TeamEvaluation } from "models/teamEvaluation";
 import { JudgeInvitation } from "models/judgeInvitation";
 import { getShowcase, getShowcaseTeam } from "serverActions/groups/getShowcase";
 import { setShowcaseConsent } from "serverActions/groups/setShowcaseConsent";
-import { removeTeamImage } from "serverActions/groups/removeTeamImage";
 import { setTeamImage } from "serverActions/groups/setTeamImage";
 import { UserDocument } from "models/user";
 
@@ -202,9 +201,10 @@ describe("public showcase", () => {
 
       // b removes it without a's agreement and without giving a reason.
       loginAs(b);
-      const result = await removeTeamImage({
+      const result = await setTeamImage({
         teamId: team._id.toString(),
         field: "teamPhoto",
+        value: "",
       });
 
       expect(result.success).toBe(true);
@@ -221,9 +221,10 @@ describe("public showcase", () => {
       const team = await createTeamWith(project._id, [student]);
 
       loginAs(student);
-      const result = await removeTeamImage({
+      const result = await setTeamImage({
         teamId: team._id.toString(),
         field: "teamPhoto",
+        value: "",
       });
 
       expect(result.success).toBe(true);
@@ -239,9 +240,10 @@ describe("public showcase", () => {
       const team = await createTeamWith(project._id, [member]);
 
       loginAs(outsider);
-      const result = await removeTeamImage({
+      const result = await setTeamImage({
         teamId: team._id.toString(),
         field: "teamPhoto",
+        value: "",
       });
 
       expect(result.success).toBe(false);
@@ -255,10 +257,11 @@ describe("public showcase", () => {
       const team = await createTeamWith(project._id, [member]);
 
       loginAs(member);
-      const result = await removeTeamImage({
+      const result = await setTeamImage({
         teamId: team._id.toString(),
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- deliberate abuse */
         field: "projectName" as any,
+        value: "",
       });
 
       expect(result.success).toBe(false);

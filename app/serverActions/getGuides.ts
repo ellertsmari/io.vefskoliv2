@@ -80,7 +80,6 @@ const addGradesReceived = (): PipelineStage => {
           cond: { $ne: [{ $ifNull: ["$$review.grade", null] }, null] }, // Filter where grade is not null
         },
       },
-      as: "gradesReceived",
     },
   };
 };
@@ -163,6 +162,9 @@ const lookupAvailableForReview = (userId: ObjectId): PipelineStage => {
             _id: 1, // Tertiary: by _id for absolute consistency
           },
         },
+        // The UI only reads the first return and whether another one is
+        // waiting, so don't ship every classmate's return for every guide.
+        { $limit: 2 },
       ],
       as: "availableForReview", // Store the filtered returns in this field
     },
@@ -176,7 +178,17 @@ const lookupReviewsReceived = (userId: ObjectId): PipelineStage => {
       from: "reviews",
       let: { guideId: "$_id" },
       pipeline: [
-        // First, perform a lookup on the Return collection
+        // Narrow to this guide before joining, so only its reviews are joined
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$guide", "$$guideId"] },
+                { $ne: ["$owner", userId] },
+              ],
+            },
+          },
+        },
         {
           $lookup: {
             from: "returns",
@@ -189,16 +201,10 @@ const lookupReviewsReceived = (userId: ObjectId): PipelineStage => {
         {
           $unwind: "$associatedReturn",
         },
-        // Filter by guide and owner
+        // Only reviews on this user's own returns
         {
           $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$guide", "$$guideId"] },
-                { $ne: ["$owner", userId] },
-                { $eq: ["$associatedReturn.owner", userId] },
-              ],
-            },
+            $expr: { $eq: ["$associatedReturn.owner", userId] },
           },
         },
 
@@ -209,57 +215,6 @@ const lookupReviewsReceived = (userId: ObjectId): PipelineStage => {
         },
       ],
       as: "reviewsReceived",
-    },
-  };
-};
-
-// LEGACY: from when students graded each other's reviews. Grading is now
-// teacher-only (see returnGrade.ts), so this per-user "available to grade" pool
-// is no longer used to drive student grading. Kept for shape compatibility.
-// grab reviews available for grading by user (reviews on OTHER users' returns)
-const addAvailableToGrade = (userId: ObjectId): PipelineStage => {
-  return {
-    $lookup: {
-      from: "reviews",
-      let: { userId: userId, guideId: "$_id" },
-      pipeline: [
-        // Find reviews on this guide that haven't been graded yet
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$guide", "$$guideId"] }, // For this specific guide
-                { $eq: [{ $ifNull: ["$grade", null] }, null] }, // No grade given yet
-                { $ne: ["$owner", "$$userId"] }, // Not the user's own review (they didn't write it)
-              ],
-            },
-          },
-        },
-        // Join with returns to get project info
-        {
-          $lookup: {
-            from: "returns",
-            localField: "return",
-            foreignField: "_id",
-            as: "associatedReturn",
-          },
-        },
-        { $unwind: "$associatedReturn" },
-        // Only include reviews on OTHER users' projects (not reviews on the user's own returns)
-        // (Legacy neutrality rule from student-grading; grading is now teacher-only.)
-        {
-          $match: {
-            $expr: {
-              $ne: ["$associatedReturn.owner", "$$userId"],
-            },
-          },
-        },
-        // Sort by creation date (oldest first) for fairness
-        { $sort: { createdAt: 1 } },
-        // Limit to prevent overwhelming the user
-        { $limit: 10 },
-      ],
-      as: "availableToGrade",
     },
   };
 };
@@ -353,7 +308,6 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
 
       // grading others' reviews
       gradesGiven: 1,
-      availableToGrade: 1,
 
       // auto-graded guides only
       exerciseAttempts: 1,
@@ -365,7 +319,6 @@ const getGuidesPipelines = (userId: ObjectId): PipelineStage[] => {
     addGradesReceived(),
     lookupReviewsReceived(userId),
     lookupGradesGiven(userId),
-    addAvailableToGrade(userId),
     lookupAvailableForReview(userId),
     lookupExerciseAttempts(userId),
     defineProject,

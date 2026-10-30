@@ -29,7 +29,7 @@ export const getStudentGuides = async (
       return [];
     }
 
-    const extended = await extendGuides(fetchedGuides);
+    const extended = extendGuides(fetchedGuides);
     
     // Properly serialize all the data before returning to client
     const serialized = safeSerialize(extended);

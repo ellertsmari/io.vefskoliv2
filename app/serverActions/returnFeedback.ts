@@ -13,6 +13,7 @@ import {
   handleActionError,
   ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "../utils/errors";
 
 type ReviewDataType = {
@@ -36,10 +37,7 @@ export async function returnReview(
   });
 
   if (!validatedFields.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validatedFields.error.flatten().fieldErrors
-    );
+    return invalidInput(validatedFields.error);
   }
 
   const { vote, comment, returnId, guideId } = validatedFields.data;

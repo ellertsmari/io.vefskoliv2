@@ -101,6 +101,19 @@ export function groupEvaluationEntriesByTeam(
 }
 
 /**
+ * A stored team evaluation, populated with its judge and evaluator, as the row
+ * summarizeTeamEvaluations scores. The panel is teachers plus external judges.
+ */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- populated lean() docs are untyped */
+export const toTeamEvalRow = (entry: any) => ({
+  team: entry.team,
+  category: entry.category,
+  score: entry.score,
+  isPanel: !!entry.judge || entry.evaluator?.role === "teacher",
+  judgeFocus: (entry.judge?.focus ?? null) as JudgeFocus | null,
+});
+
+/**
  * Per-team, per-category score summaries.
  *
  * Panel entries (teachers and invited judges) weigh alike and carry

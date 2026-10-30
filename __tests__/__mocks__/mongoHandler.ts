@@ -239,10 +239,6 @@ export const createDummyFetchedGuides = async (
         Math.random() > 0.5 ? [await createDummyGrade(user, guide)] : [],
       gradesGiven:
         Math.random() > 0.5 ? [await createDummyGrade(undefined, guide)] : [],
-      availableToGrade:
-        Math.random() > 0.5
-          ? [await createDummyReview(undefined, guide)]
-          : [],
     };
     guides.push(fetchedGuide);
   }
@@ -266,7 +262,6 @@ export const createDummyFetchedGuidedWithNoReturn = async (
     reviewsGiven: [],
     gradesReceived: [],
     gradesGiven: [],
-    availableToGrade: [],
   };
   const extendedGuide = await extendGuides([fetchedGuide]);
   return extendedGuide[0];
@@ -278,7 +273,6 @@ type dummyGuideDetails = {
   reviewsGiven?: number;
   gradesReceived?: number;
   gradesGiven?: number;
-  availableToGrade?: number;
 };
 
 export const createDummyFetchedGuideWithControl = async (
@@ -295,7 +289,6 @@ export const createDummyFetchedGuideWithControl = async (
     reviewsGiven,
     gradesReceived,
     gradesGiven,
-    availableToGrade,
   } = dummyGuideDetails;
 
   const reviewsReceivedPromises = Array.from({
@@ -318,10 +311,6 @@ export const createDummyFetchedGuideWithControl = async (
     length: gradesGiven ?? 0,
   }).map(() => createDummyGrade(undefined, guide));
 
-  const availableToGradePromises = Array.from({
-    length: availableToGrade ?? 0,
-  }).map(() => createDummyReview(undefined, guide));
-
   const fetchedGuide: GuideInfo = {
     _id: guide._id,
     title: guide.title,
@@ -335,7 +324,6 @@ export const createDummyFetchedGuideWithControl = async (
     reviewsGiven: await Promise.all(reviewsGivenPromises),
     gradesReceived: await Promise.all(gradesReceivedPromises),
     gradesGiven: await Promise.all(gradesGivenPromises),
-    availableToGrade: await Promise.all(availableToGradePromises),
   };
 
   const extendedGuides = await extendGuides([fetchedGuide]);

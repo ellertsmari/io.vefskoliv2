@@ -26,7 +26,7 @@ import { serializeTeam, teamShowcaseConsent } from "./helpers";
 // Because there is no session, member names appear only for members who opted
 // in — see `showcaseConsents` on the Team model. The team photo carries its own
 // consent: teams are told to photograph only the people who want to be in it,
-// and any member can take it down at any time via removeTeamImage.
+// and any member can take it down at any time via setTeamImage.
 
 const yearOf = (date: Date | string) => new Date(date).getUTCFullYear();
 

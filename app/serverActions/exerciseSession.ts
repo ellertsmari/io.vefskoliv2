@@ -32,7 +32,6 @@ import {
   saveAttempt,
   stateOf,
 } from "../lib/exerciseAttempts";
-import { runCodeSubmission } from "utils/codeRunner";
 import { MAX_ANSWER_LENGTH, normalizeAnswer } from "utils/shortAnswer";
 import {
   ExerciseTaskType,
@@ -395,6 +394,9 @@ export const checkAnswer = async (
     if (task.type === "code") {
       if (typeof answer !== "string") return failure(ErrorMessages.INVALID_INPUT);
       try {
+        // Loaded on demand: it pulls in the TypeScript compiler and QuickJS,
+        // which every guide page would otherwise parse on a cold start.
+        const { runCodeSubmission } = await import("utils/codeRunner");
         code = await runCodeSubmission(
           {
             entryPoint: task.entryPoint,

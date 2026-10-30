@@ -263,7 +263,7 @@ export const DEFAULT_PASS_THRESHOLD = 0.7;
 export const taskId = (task: { _id?: unknown; id?: string }): string =>
   String(task.id ?? task._id ?? "");
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+export const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * The tasks this build can grade and serve.

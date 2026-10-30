@@ -36,7 +36,7 @@ const Dashboard = async () => {
       getGuides(session.user.id).then((guides) => guides || []),
       getGroupProjects(),
     ]);
-    const extendedGuides = await extendGuides(fetchedGuides);
+    const extendedGuides = extendGuides(fetchedGuides);
 
     if (extendedGuides.length < 1) {
       return (
@@ -47,16 +47,15 @@ const Dashboard = async () => {
       );
     }
 
-    const modules: Module[] = await fetchModules(extendedGuides);
+    const modules: Module[] = fetchModules(extendedGuides);
 
     // Serialize the data before passing to client component
     const serializedGuides = safeSerialize(extendedGuides);
-    const serializedModules = safeSerialize(modules);
 
     return (
       <StudentHomePage
         extendedGuides={serializedGuides}
-        modules={serializedModules}
+        modules={modules}
         groupProjects={groupProjects}
       />
     );

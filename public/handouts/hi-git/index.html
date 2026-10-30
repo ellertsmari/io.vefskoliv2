@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Two Kinds of Branches</title>
+  <meta name="description" content="How the Hyper Island team keeps its own notes and tools on the fork while sending vefskoliv2 only the feature." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="assets/favicon.ico" />
+  <link rel="preload" href="assets/fonts/source-sans-3.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="style.css?v=2026-10-22b" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="topbar__brand" href="#top" aria-label="Back to top">
+      <img src="assets/logo.svg" alt="Vefskólinn" width="114" height="32" />
+    </a>
+    <nav class="topbar__nav" aria-label="Sections">
+      <a href="#why">Why</a>
+      <a href="#map">Where things live</a>
+      <a href="#flows">Push or fetch?</a>
+      <a href="#setup">Set up team/</a>
+      <a href="#pr">Every PR</a>
+      <a href="#practice">Practice</a>
+      <a href="#checklist">Checklist</a>
+    </nav>
+    <div class="topbar__progress" aria-live="polite">
+      <span class="progress-pill" id="progress-pill">0 / 0 steps done</span>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__inner">
+        <p class="eyebrow">For the Hyper Island team · io.vefskoliv2</p>
+        <h1 class="hero__title">Two kinds of branches</h1>
+        <p class="hero__lead">
+          Keep sharing everything inside the team.<br />
+          Send vefskoliv2 only the feature.
+        </p>
+
+        <figure class="graph" aria-labelledby="graph-caption">
+          <svg id="hero-graph" viewBox="0 0 820 270" role="img" aria-label="Git graph: vefskoliv2 main on top, a clean pr branch in the middle that carries only the feature, and dev-hyperisland at the bottom with all of the team's commits.">
+            <!-- main -->
+            <path class="g-line g-main" d="M20 50 H800" />
+            <!-- dev-hyperisland -->
+            <path class="g-line g-dev" d="M130 50 C 170 50, 170 215, 210 215 H600" />
+            <!-- pr/ branch: starts from the newest main, merges back -->
+            <path class="g-line g-pr" d="M470 50 C 505 50, 505 135, 540 135 H650 C 690 135, 690 50, 725 50" />
+            <!-- picked commits -->
+            <path class="g-pick" d="M250 206 C 250 150, 470 135, 589 137" />
+            <path class="g-pick" d="M370 206 C 370 165, 500 150, 591 141" />
+            <path class="g-pick" d="M490 206 C 490 175, 560 160, 594 145" />
+
+            <g class="g-commits">
+              <circle class="c c-main" cx="60" cy="50" r="9" style="--d:0.2s" />
+              <circle class="c c-main" cx="130" cy="50" r="9" style="--d:0.35s" />
+              <circle class="c c-main" cx="300" cy="50" r="9" style="--d:0.5s" />
+              <circle class="c c-main" cx="470" cy="50" r="9" style="--d:0.65s" />
+
+              <circle class="c c-dev" cx="250" cy="215" r="9" style="--d:1.1s"><title>Gallery search</title></circle>
+              <circle class="c c-team" cx="310" cy="215" r="9" style="--d:1.25s"><title>Handoff notes</title></circle>
+              <circle class="c c-dev" cx="370" cy="215" r="9" style="--d:1.4s"><title>Filters</title></circle>
+              <circle class="c c-team" cx="430" cy="215" r="9" style="--d:1.55s"><title>Seed script</title></circle>
+              <circle class="c c-dev" cx="490" cy="215" r="9" style="--d:1.7s"><title>Sort by</title></circle>
+              <circle class="c c-team" cx="550" cy="215" r="9" style="--d:1.85s"><title>docker-compose</title></circle>
+
+              <circle class="c c-pr" cx="600" cy="135" r="11" style="--d:2.7s"><title>The gallery feature, nothing else</title></circle>
+              <circle class="c c-merge" cx="725" cy="50" r="11" style="--d:3.4s"><title>Merged into vefskoliv2</title></circle>
+            </g>
+
+            <g class="g-labels">
+              <text x="20" y="30" class="lbl lbl-main" style="--d:0.3s">vefskoliv2 · main</text>
+              <text x="618" y="172" class="lbl lbl-pr" style="--d:2.9s">pr/gallery-controls</text>
+              <text x="210" y="250" class="lbl lbl-dev" style="--d:1.2s">dev-hyperisland · your team's branch</text>
+              <text x="725" y="30" class="lbl lbl-merge" style="--d:3.6s" text-anchor="middle">pull request ✓</text>
+            </g>
+          </svg>
+          <figcaption id="graph-caption" class="graph__legend">
+            <span><i class="dot dot-dev"></i>feature work</span>
+            <span><i class="dot dot-team"></i>team-only (notes, scripts, setup)</span>
+            <span><i class="dot dot-pr"></i>clean branch for the PR</span>
+            <button class="ghost-btn" id="replay-graph" type="button">↻ Replay</button>
+          </figcaption>
+        </figure>
+      </div>
+      <img class="hero__wave" src="assets/background.svg" alt="" aria-hidden="true" />
+    </section>
+
+    <!-- WHY -->
+    <section class="section" id="why">
+      <div class="container">
+        <p class="kicker">The short version</p>
+        <h2 class="section-title reveal">A pull request takes the whole branch</h2>
+        <div class="two-col">
+          <div class="reveal">
+            <p class="body-lg">
+              A pull request carries <strong>every difference</strong> between its branch and vefskoliv2's <code>main</code>.
+              Git and GitHub have no "ignore this file, but only in pull requests" setting.
+            </p>
+            <p>
+              #122 was opened from <code>dev-hyperisland</code>, the branch you all share. So it brought along
+              everything on it: your handoff notes, the seed script, your local MongoDB setup and a rewritten <code>yarn.lock</code>.
+            </p>
+            <p>
+              There are two fixes, and together they make it hard to get wrong:
+            </p>
+            <ol class="fix-list">
+              <li><span class="badge badge-team">Part 1</span> <span>Team-only files move into <code>team/</code>, a separate repo that git in the project ignores.</span></li>
+              <li><span class="badge badge-pr">Part 2</span> <span>Every PR comes from a clean <code>pr/…</code> branch that starts from vefskoliv2's <code>main</code>.</span></li>
+            </ol>
+          </div>
+
+          <div class="pr-sim reveal" aria-labelledby="sim-title">
+            <div class="pr-sim__head">
+              <p class="pr-sim__title" id="sim-title">Pull request into <code>ellertsmari/io.vefskoliv2</code></p>
+              <div class="segmented" role="tablist" aria-label="Branch the PR comes from">
+                <button role="tab" aria-selected="true" data-mode="dev" id="sim-dev">from dev-hyperisland</button>
+                <button role="tab" aria-selected="false" data-mode="clean" id="sim-clean">from pr/gallery-controls</button>
+              </div>
+            </div>
+            <div class="pr-sim__stats">
+              <span><strong id="sim-count">27</strong> files changed</span>
+              <span class="sim-warn" id="sim-warn"><strong id="sim-bad">5</strong> don't belong</span>
+            </div>
+            <ul class="chips" id="sim-chips" aria-live="polite"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="section section--tint" id="map">
+      <div class="container">
+        <p class="kicker">The picture</p>
+        <h2 class="section-title reveal">Where everything lives</h2>
+        <p class="section-lead reveal">Four places, and each kind of file has exactly one home. Click a box for details.</p>
+
+        <div class="map reveal" role="list">
+          <button class="node node--team" role="listitem" data-node="team" type="button">
+            <span class="node__tag">GitHub · private</span>
+            <span class="node__name">hyperisland-team</span>
+            <span class="node__sub">notes, seed script, docker-compose</span>
+          </button>
+          <div class="link" aria-hidden="true"><span class="link__label">push / pull</span><span class="link__track"><i></i></span></div>
+          <button class="node node--laptop" role="listitem" data-node="laptop" type="button">
+            <span class="node__tag">Your laptop</span>
+            <span class="node__name">project folder</span>
+            <span class="node__sub">app/, __tests__/ … and <b>team/</b> inside</span>
+          </button>
+          <div class="link" aria-hidden="true"><span class="link__label">push / pull</span><span class="link__track"><i></i></span></div>
+          <button class="node node--fork" role="listitem" data-node="fork" type="button">
+            <span class="node__tag">GitHub · origin</span>
+            <span class="node__name">tomonika-hyperisland</span>
+            <span class="node__sub">dev-hyperisland, feature/…, pr/…</span>
+          </button>
+          <div class="link link--pr" aria-hidden="true"><span class="link__label">pull request</span><span class="link__track"><i></i></span></div>
+          <button class="node node--upstream" role="listitem" data-node="upstream" type="button">
+            <span class="node__tag">GitHub · upstream</span>
+            <span class="node__name">io.vefskoliv2</span>
+            <span class="node__sub">main · the live school site</span>
+          </button>
+        </div>
+
+        <div class="map-detail" id="map-detail" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- PUSH, FETCH OR PR -->
+    <section class="section" id="flows">
+      <div class="container">
+        <p class="kicker">Who talks to whom</p>
+        <h2 class="section-title reveal">Push, fetch or pull request?</h2>
+        <p class="section-lead reveal">
+          You'll do three different things with these repos, and each one only goes in certain directions.
+          Get these right and the rest of this page follows.
+        </p>
+
+        <div class="rules reveal">
+          <div class="rule rule--push">
+            <p class="rule__name"><span class="rule__arrow" aria-hidden="true">↑</span> Push</p>
+            <p><strong>Uploads</strong> your commits. Goes to your fork, or to the team repo when you're inside <code>team/</code>.</p>
+            <p class="rule__never">Never to vefskoliv2.</p>
+          </div>
+          <div class="rule rule--fetch">
+            <p class="rule__name"><span class="rule__arrow" aria-hidden="true">↓</span> Fetch / pull</p>
+            <p><strong>Downloads</strong> commits. From vefskoliv2 you only ever fetch: to start a PR branch, and to catch up after a merge.</p>
+          </div>
+          <div class="rule rule--pr">
+            <p class="rule__name"><span class="rule__arrow" aria-hidden="true">→</span> Pull request</p>
+            <p><strong>Not an upload.</strong> It asks vefskoliv2 to take a branch from your fork. The code arrives there only when it's reviewed and merged.</p>
+          </div>
+        </div>
+
+        <h3 class="sub-title reveal">The folder you're in decides where a push goes</h3>
+        <p class="reveal">
+          The project folder and <code>team/</code> are two separate repos, and each has its own list of remotes, the places it can push to and fetch from.
+          <code>git remote -v</code> shows that list. After setup, this is what you should see:
+        </p>
+        <div class="remotes reveal">
+          <div class="remote-card">
+            <p class="remote-card__where">📁 In the project folder</p>
+            <pre class="term"><span class="t-name t-origin">origin</span>    https://github.com/monika-hyperisland/tomonika-hyperisland.git (fetch)
+<span class="t-name t-origin">origin</span>    https://github.com/monika-hyperisland/tomonika-hyperisland.git (push)
+<span class="t-name t-up">upstream</span>  https://github.com/ellertsmari/io.vefskoliv2.git (fetch)
+<span class="t-name t-up">upstream</span>  no-pushing-here (push)</pre>
+            <ul class="remote-card__notes">
+              <li><span class="t-origin">origin</span> is your fork. You push and fetch here all the time.</li>
+              <li><span class="t-up">upstream</span> is vefskoliv2, there only so you can <strong>fetch</strong> its <code>main</code>. Its push address is deliberately broken, so an accidental push fails instead of trying.</li>
+            </ul>
+          </div>
+          <div class="remote-card remote-card--team">
+            <p class="remote-card__where">📁 Inside <code>team/</code></p>
+            <pre class="term"><span class="t-name t-team">origin</span>  https://github.com/monika-hyperisland/hyperisland-team.git (fetch)
+<span class="t-name t-team">origin</span>  https://github.com/monika-hyperisland/hyperisland-team.git (push)</pre>
+            <ul class="remote-card__notes">
+              <li>Here <span class="t-team">origin</span> means the team repo. Same word, different folder, different place.</li>
+              <li>So a <code>git push</code> inside <code>team/</code> can only ever reach the team repo.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="sub-title reveal">What are you doing?</h3>
+        <p class="reveal">Pick a situation. The diagram shows where it goes, and the commands are below it.</p>
+        <div class="flow reveal">
+          <div class="flow__picker" role="group" aria-label="Situations" id="flow-picker"></div>
+          <div class="flow__stage">
+            <div class="flow__svgwrap"><svg class="flow__svg" id="flow-svg" viewBox="0 0 600 380" role="img" aria-labelledby="flow-svg-title">
+              <title id="flow-svg-title">Diagram: the team repo, your fork and vefskoliv2 on GitHub, and your laptop with the project folder and team/ inside it.</title>
+              <text class="f-zone" x="10" y="14" font-size="12" font-weight="700" fill="#666" font-family="sans-serif">GITHUB</text>
+              <g class="f-node" data-node="team"><rect x="10" y="24" width="160" height="76" rx="12" fill="#fff" stroke="#e6e6e6" stroke-width="2" /><text x="90" y="56" class="f-name" text-anchor="middle" font-size="15" font-weight="700" font-family="sans-serif">hyperisland-team</text><text x="90" y="78" class="f-sub" text-anchor="middle" font-size="13" fill="#666" font-family="sans-serif">team repo</text></g>
+              <g class="f-node" data-node="fork"><rect x="220" y="24" width="160" height="76" rx="12" fill="#fff" stroke="#e6e6e6" stroke-width="2" /><text x="300" y="56" class="f-name" text-anchor="middle" font-size="15" font-weight="700" font-family="sans-serif">tomonika-hyperisland</text><text x="300" y="78" class="f-sub" text-anchor="middle" font-size="13" fill="#666" font-family="sans-serif">your fork · origin</text></g>
+              <g class="f-node" data-node="upstream"><rect x="430" y="24" width="160" height="76" rx="12" fill="#fff" stroke="#e6e6e6" stroke-width="2" /><text x="510" y="56" class="f-name" text-anchor="middle" font-size="15" font-weight="700" font-family="sans-serif">io.vefskoliv2</text><text x="510" y="78" class="f-sub" text-anchor="middle" font-size="13" fill="#666" font-family="sans-serif">vefskoliv2 · upstream</text></g>
+
+              <rect class="f-laptop" x="10" y="190" width="580" height="180" rx="14" fill="#f2f2f2" stroke="#e6e6e6" stroke-width="2" />
+              <text class="f-zone" x="164" y="212" font-size="12" font-weight="700" fill="#666" font-family="sans-serif">YOUR LAPTOP</text>
+              <g class="f-folder" data-folder="project"><rect x="30" y="226" width="540" height="130" rx="10" fill="#fff" stroke="#e6e6e6" stroke-width="2" /><text x="550" y="252" class="f-name f-end" text-anchor="end" font-size="15" font-weight="700" font-family="sans-serif">📁 project folder</text><text x="550" y="274" class="f-sub f-end" text-anchor="end" font-size="13" fill="#666" font-family="sans-serif">app/, __tests__/, …</text></g>
+              <g class="f-folder f-folder--team" data-folder="team"><rect x="50" y="262" width="150" height="78" rx="8" fill="#fbf2e3" stroke="#ecd3ac" stroke-width="2" /><text x="125" y="296" class="f-name" text-anchor="middle" font-size="15" font-weight="700" font-family="sans-serif">📁 team/</text><text x="125" y="318" class="f-sub" text-anchor="middle" font-size="13" fill="#666" font-family="sans-serif">its own repo</text></g>
+
+              <g class="f-arrow f-push" data-arrow="team-push"><path d="M105 260 V110" fill="none" stroke="#e6e6e6" stroke-width="4" /><polygon points="99,112 111,112 105,101" fill="#e6e6e6" /><text x="98" y="182" text-anchor="end" opacity="0">push</text></g>
+              <g class="f-arrow f-fetch" data-arrow="team-pull"><path d="M145 102 V250" fill="none" stroke="#e6e6e6" stroke-width="4" /><polygon points="139,250 151,250 145,261" fill="#e6e6e6" /><text x="152" y="182" opacity="0">pull</text></g>
+              <g class="f-arrow f-push" data-arrow="fork-push"><path d="M280 224 V110" fill="none" stroke="#e6e6e6" stroke-width="4" /><polygon points="274,112 286,112 280,101" fill="#e6e6e6" /><text x="273" y="166" text-anchor="end" opacity="0">push</text></g>
+              <g class="f-arrow f-fetch" data-arrow="fork-pull"><path d="M320 102 V214" fill="none" stroke="#e6e6e6" stroke-width="4" /><polygon points="314,214 326,214 320,225" fill="#e6e6e6" /><text x="327" y="166" opacity="0">pull</text></g>
+              <g class="f-arrow f-fetch" data-arrow="upstream-fetch"><path d="M545 102 V214" fill="none" stroke="#e6e6e6" stroke-width="4" /><polygon points="539,214 551,214 545,225" fill="#e6e6e6" /><text x="552" y="166" opacity="0">fetch</text></g>
+              <g class="f-arrow f-never" data-arrow="upstream-push" opacity="0"><path d="M480 224 V110" fill="none" stroke="#e6e6e6" stroke-width="4" /><polygon points="474,112 486,112 480,101" fill="#e6e6e6" /><text x="472" y="166" text-anchor="end" opacity="0">push</text><path class="f-x" d="M466 130 l28 28 M494 130 l-28 28" /></g>
+              <g class="f-arrow f-pr" data-arrow="pr"><path d="M382 62 H418" fill="none" stroke="#e6e6e6" stroke-width="4" /><polygon points="418,56 418,68 429,62" fill="#e6e6e6" /><text x="405" y="48" opacity="0">PR</text></g>
+            </svg></div>
+            <div class="flow__detail" id="flow-detail" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="section section--tint" id="setup">
+      <div class="container">
+        <p class="kicker"><span class="badge badge-team">Part 1</span> Once</p>
+        <h2 class="section-title reveal">Give the team its own <code>team/</code> folder</h2>
+        <p class="section-lead reveal">
+          <code>team/</code> sits inside your project folder, so you and your AI assistants can open it like any other folder.
+          It's its own git repo, and the project's git is told to ignore it. Nothing in it can end up on a branch, so nothing in it can end up in a PR.
+        </p>
+
+        <div class="tabs reveal">
+          <div class="segmented segmented--lg" role="tablist" aria-label="Who is doing the setup">
+            <button role="tab" aria-selected="true" aria-controls="tab-one" id="tabbtn-one" data-tab="one">One person sets it up</button>
+            <button role="tab" aria-selected="false" aria-controls="tab-all" id="tabbtn-all" data-tab="all">Everyone else</button>
+          </div>
+
+          <div class="tab-panel" id="tab-one" role="tabpanel" aria-labelledby="tabbtn-one">
+            <ol class="steps">
+              <li class="step" data-step="s1">
+                <div class="step__head"><span class="step__num"></span><h3>Create the team repo on GitHub</h3><label class="done"><input type="checkbox" /> Done</label></div>
+                <p>Make a new <strong>private</strong> repository, for example <code>hyperisland-team</code>, and add the rest of the team as collaborators. Leave it empty: no README, no .gitignore.</p>
+              </li>
+              <li class="step" data-step="s2">
+                <div class="step__head"><span class="step__num"></span><h3>Tell git to ignore <code>team/</code>, then clone into it</h3><label class="done"><input type="checkbox" /> Done</label></div>
+                <p>Run this in the project folder. <code>.git/info/exclude</code> works like <code>.gitignore</code> but is never committed, so it can't show up in a PR either.</p>
+                <pre class="code"><code>echo "team/" >> .git/info/exclude
+git clone https://github.com/monika-hyperisland/hyperisland-team.git team</code></pre>
+                <p class="note">Use your repo's real name. Git will warn that you cloned an empty repository. That's expected.</p>
+              </li>
+              <li class="step" data-step="s3">
+                <div class="step__head"><span class="step__num"></span><h3>Move the team-only files out of <code>dev-hyperisland</code></h3><label class="done"><input type="checkbox" /> Done</label></div>
+                <p>Copy them into <code>team/</code> first, then remove them from the shared branch.</p>
+                <pre class="code"><code>git switch dev-hyperisland
+git pull
+mkdir -p team/docs
+cp docs/raheel-gallery-sort.md team/docs/
+cp scripts/seed-test-data.ts team/
+cp docker-compose.yml team/
+git rm docs/raheel-gallery-sort.md scripts/seed-test-data.ts docker-compose.yml
+git commit -m "chore: move team-only files to the team repo"
+git push</code></pre>
+                <p class="note">The seed script goes straight into <code>team/</code>, not <code>team/scripts/</code>. Its imports (<code>../app/models/…</code>) then still point at the right place.</p>
+              </li>
+              <li class="step" data-step="s4">
+                <div class="step__head"><span class="step__num"></span><h3>Push the team repo</h3><label class="done"><input type="checkbox" /> Done</label></div>
+                <pre class="code"><code>cd team
+git add .
+git commit -m "Team notes, seed script and local MongoDB"
+git push -u origin HEAD
+cd ..</code></pre>
+                <p>Then tell everyone it's ready.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div class="tab-panel" id="tab-all" role="tabpanel" aria-labelledby="tabbtn-all" hidden>
+            <ol class="steps">
+              <li class="step" data-step="e1">
+                <div class="step__head"><span class="step__num"></span><h3>Save any unpushed edits to the moved files</h3><label class="done"><input type="checkbox" /> Done</label></div>
+                <p>If you changed the notes, the seed script or docker-compose and haven't pushed yet, copy those files somewhere safe. Pulling will delete them from the project, and git stops if it would overwrite your edits.</p>
+              </li>
+              <li class="step" data-step="e2">
+                <div class="step__head"><span class="step__num"></span><h3>Ignore <code>team/</code>, clone it, pull</h3><label class="done"><input type="checkbox" /> Done</label></div>
+                <pre class="code"><code>git switch dev-hyperisland
+echo "team/" >> .git/info/exclude
+git clone https://github.com/monika-hyperisland/hyperisland-team.git team
+git pull</code></pre>
+              </li>
+              <li class="step" data-step="e3">
+                <div class="step__head"><span class="step__num"></span><h3>Check that git really ignores it</h3><label class="done"><input type="checkbox" /> Done</label></div>
+                <pre class="code"><code>git status</code></pre>
+                <p><code>team/</code> must <strong>not</strong> show up. If it does, the exclude line is missing: run <code>cat .git/info/exclude</code> to check.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="callout reveal">
+          <h3>From now on</h3>
+          <ul>
+            <li>Anything the team needs and vefskoliv2 doesn't (notes, scripts, local setup, experiments) goes into <code>team/</code>. Commit and push it <em>from inside</em> <code>team/</code>.</li>
+            <li>Local MongoDB: <code>docker compose -f team/docker-compose.yml --env-file .env up -d</code>. The <code>--env-file</code> keeps using the <code>.env</code> in the project folder.</li>
+            <li>The seed script: run it the way you did before, but with the path <code>team/seed-test-data.ts</code>.</li>
+            <li>AI assistants: tell them to write handoff notes into <code>team/</code>, not <code>docs/</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="section" id="pr">
+      <div class="container">
+        <p class="kicker"><span class="badge badge-pr">Part 2</span> Every time</p>
+        <h2 class="section-title reveal">Open every PR from a clean branch</h2>
+        <p class="section-lead reveal">
+          Keep working the way you do now: feature branches merge into <code>dev-hyperisland</code>, and that's where the team tests everything together.
+          When something is ready for vefskoliv2, give it a fresh branch that starts from vefskoliv2's <code>main</code> and carries only that feature.
+        </p>
+
+        <ol class="steps steps--wide">
+          <li class="step reveal" data-step="p1">
+            <div class="step__head"><span class="step__num"></span><h3>Once: add vefskoliv2 as <code>upstream</code></h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>git remote -v</code></pre>
+            <p>If no <code>upstream</code> line shows up:</p>
+            <pre class="code"><code>git remote add upstream https://github.com/ellertsmari/io.vefskoliv2.git</code></pre>
+            <p>Then make pushing to it impossible. You only ever fetch from vefskoliv2, so this costs nothing:</p>
+            <pre class="code"><code>git remote set-url --push upstream no-pushing-here</code></pre>
+          </li>
+          <li class="step reveal" data-step="p2">
+            <div class="step__head"><span class="step__num"></span><h3>Start from vefskoliv2's newest <code>main</code></h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>git fetch upstream
+git fetch origin
+git switch -c pr/gallery-controls upstream/main</code></pre>
+            <p>Name it <code>pr/</code> plus what the PR is about. One PR, one topic.</p>
+          </li>
+          <li class="step reveal" data-step="p3">
+            <div class="step__head"><span class="step__num"></span><h3>Bring over only the feature's files</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>Take the files from the team branch: the code <em>and</em> its tests.</p>
+            <pre class="code"><code>git checkout origin/dev-hyperisland -- app/components/gallery __tests__/gallerySort.test.ts</code></pre>
+            <p class="note">That's a shortened example. The <a href="#practice">practice section</a> builds the full command for the gallery work. If your commits are already cleanly split per feature, <code>git cherry-pick &lt;commit&gt;</code> works too.</p>
+          </li>
+          <li class="step reveal" data-step="p4">
+            <div class="step__head"><span class="step__num"></span><h3>Commit, then look at exactly what the PR will contain</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>git commit -m "feat(gallery): search, filters and sort"
+git diff --stat upstream/main...HEAD</code></pre>
+            <p>That list <strong>is</strong> your pull request. If something in it shouldn't be there:</p>
+            <div class="mini-grid">
+              <div><p class="mini-title">A new file that shouldn't be there</p><pre class="code"><code>git rm --cached path/to/file</code></pre></div>
+              <div><p class="mini-title">A changed file that should match vefskoliv2</p><pre class="code"><code>git checkout upstream/main -- path/to/file</code></pre></div>
+            </div>
+            <p>Then <code>git commit</code> again.</p>
+          </li>
+          <li class="step reveal" data-step="p5">
+            <div class="step__head"><span class="step__num"></span><h3>Run the checks</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>npm run typecheck
+npm test</code></pre>
+          </li>
+          <li class="step reveal" data-step="p6">
+            <div class="step__head"><span class="step__num"></span><h3>Push it to the fork and open the PR</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>git push -u origin pr/gallery-controls</code></pre>
+            <div class="pr-form" aria-label="How the GitHub compare bar should look">
+              <span class="pr-form__pill"><small>base repository</small>ellertsmari/io.vefskoliv2</span>
+              <span class="pr-form__pill"><small>base</small>main</span>
+              <span class="pr-form__arrow" aria-hidden="true">←</span>
+              <span class="pr-form__pill"><small>head repository</small>monika-hyperisland/tomonika-hyperisland</span>
+              <span class="pr-form__pill pr-form__pill--hl"><small>compare</small>pr/gallery-controls</span>
+            </div>
+          </li>
+        </ol>
+
+        <div class="callout callout--pr reveal">
+          <h3>What about #122?</h3>
+          <p>
+            GitHub can't change the branch an existing PR comes from. Open a new PR from <code>pr/gallery-controls</code>,
+            then close #122 with a comment linking to the new one. Any review feedback on #122 still applies, so make those fixes on the new branch.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRACTICE -->
+    <section class="section section--tint" id="practice">
+      <div class="container">
+        <p class="kicker">Try it</p>
+        <h2 class="section-title reveal">Sort the files from #122</h2>
+        <p class="section-lead reveal">Where does each file belong? Pick one for each row. You'll see right away whether you got it.</p>
+
+        <div class="sorter reveal">
+          <div class="sorter__score">
+            <div class="score-bar"><span id="score-fill"></span></div>
+            <p id="score-text">0 of 12 sorted</p>
+            <button class="ghost-btn ghost-btn--dark" id="sorter-reset" type="button">Start over</button>
+          </div>
+          <ul class="sorter__list" id="sorter-list"></ul>
+        </div>
+
+        <details class="full-cmd reveal" id="full-cmd">
+          <summary>The full command for the gallery PR (all 22 files)</summary>
+          <p>Run it on <code>pr/gallery-controls</code> after step 2 of Part 2:</p>
+          <pre class="code"><code>git checkout origin/dev-hyperisland -- \
+  app/components/gallery \
+  app/halloffame \
+  app/guides/components/feedback/returnForm/ReturnForm.tsx \
+  app/serverActions/getGallery.ts \
+  app/serverActions/mongoose-connector.ts \
+  app/serverActions/authenticate.ts \
+  __tests__/components/GalleryControls.test.tsx \
+  __tests__/components/ReturnForm.test.tsx \
+  __tests__/components/galleryModuleNumber.test.tsx \
+  __tests__/gallerySort.test.ts \
+  __tests__/gallerySorting.test.tsx \
+  __tests__/serverActions/getGallery.test.ts \
+  __tests__/serverActions/mongoose-connector.test.ts</code></pre>
+          <p class="note">Not on the list: <code>yarn.lock</code>, <code>.gitignore</code>, <code>docker-compose.yml</code>, <code>docs/raheel-gallery-sort.md</code> and <code>scripts/seed-test-data.ts</code>.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- CHECKLIST -->
+    <section class="section" id="checklist">
+      <div class="container container--narrow">
+        <p class="kicker">Every time</p>
+        <h2 class="section-title reveal">Before you click "Create pull request"</h2>
+
+        <div class="checklist reveal">
+          <div class="ring" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <circle class="ring__bg" cx="60" cy="60" r="52" />
+              <circle class="ring__fg" id="ring-fg" cx="60" cy="60" r="52" />
+            </svg>
+            <span class="ring__label" id="ring-label">0/7</span>
+          </div>
+          <ul class="checks" id="checks">
+            <li><label><input type="checkbox" /> <span>My branch starts from <code>upstream/main</code>, not from <code>dev-hyperisland</code>.</span></label></li>
+            <li><label><input type="checkbox" /> <span><code>git diff --stat upstream/main...HEAD</code> lists only <code>app/</code>, <code>__tests__/</code>, <code>public/</code> or <code>types/</code> files.</span></label></li>
+            <li><label><input type="checkbox" /> <span>The tests for the feature are included.</span></label></li>
+            <li><label><input type="checkbox" /> <span><code>yarn.lock</code> is unchanged, unless I changed <code>package.json</code> on purpose.</span></label></li>
+            <li><label><input type="checkbox" /> <span>No notes, seed scripts or local setup. Those live in <code>team/</code>.</span></label></li>
+            <li><label><input type="checkbox" /> <span><code>npm run typecheck</code> and <code>npm test</code> pass.</span></label></li>
+            <li><label><input type="checkbox" /> <span>The PR is about one thing, and its description says what that is.</span></label></li>
+          </ul>
+        </div>
+        <p class="ready" id="ready" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section section--tint" id="faq">
+      <div class="container container--narrow">
+        <p class="kicker">Questions</p>
+        <h2 class="section-title reveal">Things you might wonder</h2>
+
+        <div class="faq">
+          <details class="reveal">
+            <summary>Why not just add <code>team/</code> to <code>.gitignore</code>?</summary>
+            <p><code>.gitignore</code> is itself a tracked file, so changing it would show up in your PRs too. <code>.git/info/exclude</code> does the same job and never leaves your laptop.</p>
+          </details>
+          <details class="reveal">
+            <summary>Will <code>team/</code> end up on the fork?</summary>
+            <p>No. The project's git ignores it, so nothing in it is ever committed to <code>dev-hyperisland</code> or any other branch. It lives only in your own team repo.</p>
+          </details>
+          <details class="reveal">
+            <summary>Do tests go in <code>team/</code> too?</summary>
+            <p>No. Tests for a feature belong in the PR, because they keep the feature working once it's in vefskoliv2. Only things that help <em>you</em> work go in <code>team/</code>: notes, seed data, local setup.</p>
+          </details>
+          <details class="reveal">
+            <summary>I already pushed a note to my <code>pr/</code> branch. Now what?</summary>
+            <pre class="code"><code>mv path/to/note.md team/
+git rm --cached path/to/note.md
+git commit -m "chore: move note to team/"
+git push</code></pre>
+            <p>The open PR updates by itself. Then commit and push the note from inside <code>team/</code>.</p>
+          </details>
+          <details class="reveal">
+            <summary>How do we get vefskoliv2's newest changes into <code>dev-hyperisland</code>?</summary>
+            <pre class="code"><code>git fetch upstream
+git switch dev-hyperisland
+git merge upstream/main
+git push</code></pre>
+            <p>Do this after one of your PRs is merged, so the team branch and vefskoliv2 don't drift apart.</p>
+          </details>
+          <details class="reveal">
+            <summary><code>yarn.lock</code> changed but I didn't add a package</summary>
+            <p>Installing with a different tool or version rewrites the lockfile. Throw the change away: <code>git checkout upstream/main -- yarn.lock</code>.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img src="assets/logo.svg" alt="Vefskólinn" width="100" height="28" />
+    <p>Questions? Ask in class or on the PR.</p>
+  </footer>
+
+  <script src="script.js?v=2026-10-22b"></script>
+</body>
+</html>

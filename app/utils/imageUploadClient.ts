@@ -70,19 +70,32 @@ export async function processImageFile(
     };
   }
 
-  let compressed: Blob;
-  try {
-    compressed = await compressImage(file);
-  } catch {
-    return { ok: false, error: "Could not read that image file" };
+  // A GIF goes up untouched: drawing it on a canvas would keep only the first
+  // frame and turn an animation into a still. It is not downscaled, so the
+  // size limit above is the only bound on it.
+  const isGif = file.type === "image/gif";
+
+  let body: Blob;
+  if (isGif) {
+    body = file;
+  } else {
+    try {
+      body = await compressImage(file);
+    } catch {
+      return { ok: false, error: "Could not read that image file" };
+    }
   }
 
   try {
-    const result = await upload(`${prefix}/${Date.now()}.jpg`, compressed, {
-      access: "public",
-      contentType: "image/jpeg",
-      handleUploadUrl: UPLOAD_ENDPOINT,
-    });
+    const result = await upload(
+      `${prefix}/${Date.now()}.${isGif ? "gif" : "jpg"}`,
+      body,
+      {
+        access: "public",
+        contentType: isGif ? "image/gif" : "image/jpeg",
+        handleUploadUrl: UPLOAD_ENDPOINT,
+      }
+    );
     return { ok: true, url: result.url };
   } catch (error) {
     // Most likely causes: the session expired, or the Blob store is not

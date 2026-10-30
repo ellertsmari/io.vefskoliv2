@@ -17,7 +17,6 @@ import {
 } from "../__mocks__/mongoHandler";
 import {
   ReviewStatus,
-  GradesGivenStatus,
   ReturnStatus,
 } from "../../types/guideTypes";
 import exp from "constants";
@@ -25,7 +24,6 @@ import exp from "constants";
 const mockGuide = {
   returnStatus: ReturnStatus.NOT_RETURNED,
   reviewStatus: ReviewStatus.NEED_TO_REVIEW,
-  gradesGivenStatus: GradesGivenStatus.NEED_TO_GRADE,
   grade: "A",
   link: "http://example.com",
   module: { title: ["Module Title"] },

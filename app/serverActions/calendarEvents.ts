@@ -37,6 +37,7 @@ import {
   handleActionError,
   ErrorMessages,
   type ActionResult,
+  invalidInput,
 } from "../utils/errors";
 
 /**
@@ -296,10 +297,7 @@ export async function createCalendarEvent(
 
   const validated = CalendarEventInputSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const input = validated.data;
   const base = normalizeEventInput(input);
@@ -366,10 +364,7 @@ export async function updateCalendarEvent(
 
   const validated = CalendarEventInputSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const input = validated.data;
   const base = normalizeEventInput(input);
@@ -515,10 +510,7 @@ export async function copyCalendarEvents(
 
   const validated = CopyEventsInputSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { fromDate, toDate, weeks } = validated.data;
 

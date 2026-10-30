@@ -16,6 +16,7 @@ import {
   failure,
   handleActionError,
   successNoData,
+  invalidInput,
 } from "utils/errors";
 import { objectIdSchema, isTeacher, requireSession } from "./helpers";
 import { aggregatePeerEvaluations } from "./peerEvalShared";
@@ -81,10 +82,7 @@ export async function confirmPeerEvalResult(
 
   const validated = ConfirmSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { projectId, studentId, contribution, teambuilding, note } =
     validated.data;

@@ -9,8 +9,9 @@ import {
   failure,
   handleActionError,
   successNoData,
+  invalidInput,
 } from "utils/errors";
-import { objectIdSchema, requireSession } from "./helpers";
+import { objectIdSchema, requireSession, isTeamMember } from "./helpers";
 
 const SetShowcaseConsentSchema = z.object({
   teamId: objectIdSchema,
@@ -34,7 +35,7 @@ export type SetShowcaseConsentData = z.input<typeof SetShowcaseConsentSchema>;
  * 3. It is individual. A member who declines drops off the public list while
  *    their teammates stay, so nobody's answer — or silence — can block anyone
  *    else. Team photos are handled separately: consent for those is given when
- *    the picture is taken, and undone with removeTeamImage.
+ *    the picture is taken, and undone with setTeamImage.
  */
 export async function setShowcaseConsent(
   data: SetShowcaseConsentData
@@ -44,10 +45,7 @@ export async function setShowcaseConsent(
 
   const validated = SetShowcaseConsentSchema.safeParse(data);
   if (!validated.success) {
-    return failure(
-      ErrorMessages.INVALID_INPUT,
-      validated.error.flatten().fieldErrors
-    );
+    return invalidInput(validated.error);
   }
   const { teamId, name } = validated.data;
   const userId = session.user.id;
@@ -57,9 +55,7 @@ export async function setShowcaseConsent(
     const team = await Team.findById(teamId);
     if (!team) return failure(ErrorMessages.NOT_FOUND("Team"));
 
-    const isMember = team.members.some(
-      (member: ObjectId) => member.toString() === userId
-    );
+    const isMember = isTeamMember(team, userId);
     if (!isMember) return failure(ErrorMessages.NOT_AUTHORIZED);
 
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- subdocument */

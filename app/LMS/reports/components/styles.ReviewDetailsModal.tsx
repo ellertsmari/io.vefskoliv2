@@ -41,18 +41,6 @@ export const ModalTitle = styled.h2`
   margin: 0 0 0.5rem 0;
 `;
 
-export const ModuleBadge = styled.span`
-  display: inline-block;
-  background: var(--primary-black-10);
-  color: var(--primary-black-60);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-lg);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-`;
-
 export const Section = styled.div`
   margin-bottom: 2rem;
 `;
