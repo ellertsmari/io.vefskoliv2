@@ -1,6 +1,5 @@
 import {
   fireEvent,
-  getByTestId,
   render,
   waitFor,
 } from "@testing-library/react";

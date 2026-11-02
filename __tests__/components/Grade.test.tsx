@@ -1,4 +1,3 @@
-import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react";
 import { Grade } from "../../app/guides/components/grading/grade/Grade";
 import { returnGrade } from "serverActions/returnGrade";

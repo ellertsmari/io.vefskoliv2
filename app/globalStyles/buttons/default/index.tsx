@@ -1,5 +1,4 @@
 "use client";
-import { ButtonMedium } from "globalStyles/text";
 import { Button } from "./style";
 
 type Props = {

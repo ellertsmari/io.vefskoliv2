@@ -1,13 +1,5 @@
 import type { Metadata } from "next";
 import { SCHOOL_NAME, SITE_NAME } from "constants/site";
-import BackgroundImg from "app/assets/Background.svg"
-import {
-  LayoutGrid,
-  TopbarContainer,
-  Main,
-  Background
-} from "../globalStyles/layoutStyles";
-import TopBar from "../components/navigation/TopBar";
 
 export const metadata: Metadata = {
   title: `Guides · ${SITE_NAME} · ${SCHOOL_NAME}`,

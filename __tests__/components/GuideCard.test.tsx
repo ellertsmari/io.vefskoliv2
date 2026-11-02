@@ -1,17 +1,13 @@
-import React from "react";
 import "@testing-library/jest-dom";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import GuideCard from "../../app/guides/components/guideCard/GuideCard";
 import {
   clearDatabase,
   connect,
   closeDatabase,
   createDummyExtendedGuides,
-  createDummyGuide,
   createDummyUser,
-  createDummyReturn,
-  createDummyFetchedGuides,
   createDummyFetchedGuideWithControl,
   createDummyFetchedGuidedWithNoReturn,
 } from "../__mocks__/mongoHandler";
@@ -19,7 +15,6 @@ import {
   ReviewStatus,
   ReturnStatus,
 } from "../../types/guideTypes";
-import exp from "constants";
 
 const mockGuide = {
   returnStatus: ReturnStatus.NOT_RETURNED,

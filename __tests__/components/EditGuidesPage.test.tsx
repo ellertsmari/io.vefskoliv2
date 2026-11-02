@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { EditGuidesPage, FILTERS_STORAGE_KEY } from "app/components/editGuides/EditGuidesPage";
 import type { EditorGuideRow } from "serverActions/editGuideActions";

@@ -5,7 +5,6 @@ import { loadStudentGuideBoard } from "../../serverActions/guideBoard";
 import { getGroupProjects } from "../../serverActions/groups/getGroupProjects";
 import { EmptyState, ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
-import { redirect } from 'next/navigation';
 
 const Dashboard = async () => {
   const session: Session | null = await auth();

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CodeConstruct,
   CONSTRUCT_LABELS,
   MAX_CODE_LENGTH,
   type CodeFeedback,

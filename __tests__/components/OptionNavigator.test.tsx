@@ -1,4 +1,3 @@
-import { de } from "@faker-js/faker";
 import { render, fireEvent } from "@testing-library/react";
 import { OptionNavigator } from "../../app/UIcomponents/optionNavigator/OptionNavigator";
 

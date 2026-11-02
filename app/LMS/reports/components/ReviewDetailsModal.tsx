@@ -35,10 +35,6 @@ import {
   GradeDisplay,
   GradeValue,
   GradeTooltip,
-  GradeReferenceChart,
-  GradeReferenceTitle,
-  GradeReferenceItem,
-  GradeNumber,
   SaveGradeButton,
   EditButton,
 } from "./styles.ReviewDetailsModal";

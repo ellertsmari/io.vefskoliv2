@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { EditGuideForm, describeSaveFailure } from "app/components/editGuides/EditGuideForm";
 import type { GuideType } from "models/guide";

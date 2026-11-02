@@ -1,4 +1,3 @@
-import { JWK } from 'jose';
 
 export interface LTIConfig {
   issuer: string;

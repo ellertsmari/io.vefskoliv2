@@ -1,6 +1,5 @@
 import { Wrapper } from "globalStyles/globalStyles";
 import styled from "styled-components";
-import { Button } from "globalStyles/buttons/default/style";
 
 export const OverviewWrapper = styled(Wrapper)`
   gap: 2rem;

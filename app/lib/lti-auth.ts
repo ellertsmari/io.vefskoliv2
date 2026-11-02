@@ -1,4 +1,4 @@
-import { jwtVerify, importJWK, createRemoteJWKSet } from 'jose';
+import { jwtVerify, createRemoteJWKSet } from 'jose';
 import { LTIClaims, getLTIConfig } from './lti-config';
 
 export class LTIAuthError extends Error {

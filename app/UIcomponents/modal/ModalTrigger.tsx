@@ -1,5 +1,5 @@
 "use client";
-import React, { ButtonHTMLAttributes, ReactElement } from "react";
+import React from "react";
 import { useModal } from "./ModalProvider";
 
 interface ModalTriggerProps {

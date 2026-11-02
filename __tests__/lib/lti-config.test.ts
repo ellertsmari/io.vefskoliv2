@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { getUserRoleFromLTI, LTI_ROLES } from '../../app/lib/lti-config';
 
 describe('LTI Config Utils', () => {

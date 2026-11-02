@@ -1,7 +1,6 @@
 /**
  * @jest-environment node
  */
-import { mock } from "node:test";
 import {
   closeDatabase,
   clearDatabase,
@@ -11,7 +10,7 @@ import {
 import { getUsers } from "serverActions/getUsers";
 import { auth } from "../../auth";
 import { ShareableUserInfo } from "types/types";
-import { OptionalUserInfoKeys, User, UserWithIdType } from "models/user";
+import { OptionalUserInfoKeys } from "models/user";
 
 // `getUsers` is a server action guarded by a session. The real `auth()` reads
 // cookies, which throws outside a request scope, so every test signs in a
