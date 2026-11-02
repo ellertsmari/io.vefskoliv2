@@ -23,7 +23,6 @@ import { getModuleNumber } from "./moduleNumber";
 interface GalleryProps {
   items: GalleryItemType[];
   showControls?: boolean;
-  userId?: string;
 }
 
 type CategoryFilter = "all" | "design" | "web" | "other";
@@ -55,7 +54,7 @@ const getCategory = (item: GalleryItemType): CategoryFilter => {
   return "other";
 };
 
-const Gallery = ({ items, userId, showControls = false }: GalleryProps) => {
+const Gallery = ({ items, showControls = false }: GalleryProps) => {
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<GallerySortOrder>("recommended");
   const [selectedModule, setSelectedModule] = useState<string[]>([]);

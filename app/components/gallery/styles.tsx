@@ -1,6 +1,4 @@
 "use client";
-import { Background } from "globalStyles/layoutStyles";
-import { i } from "node_modules/@vercel/blob/dist/create-folder-BM6BTlko";
 import styled from "styled-components";
 
 export const GalleryItemContainer = styled.div`
@@ -93,7 +91,7 @@ export const GalleryTopicTag = styled.span`
   display: block;
   min-width: 0;
   padding: 4px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--primary-black-5);
   color: var(--primary-black-100);
   font-family: "Source Sans 3", sans-serif;
@@ -122,7 +120,7 @@ export const GalleryTopicPopover = styled.span`
   padding: 10px;
   border: 1px solid var(--primary-black-10);
   border-radius: var(--radius-md);
-  background: white;
+  background: var(--primary-white);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   opacity: 0;
   transform: translateY(4px);
@@ -392,11 +390,18 @@ export const GalleryMedia = styled.div`
   position: relative;
 `;
 
-const MODULE_COLORS = ["#3a6ea5", "#b5562a", "#6a4c93", "#2f7d5b", "#a63d6b"];
+/** The categorical accent hues from globals.css, one per module, cycling. */
+const MODULE_ACCENTS = ["blue", "amber", "violet", "green", "rose", "teal"];
 
-/** Each module number gets its own colour, cycling through the palette; no number falls back to the theme colour. */
-const moduleColor = (module?: number): string =>
-  module ? MODULE_COLORS[(module - 1) % MODULE_COLORS.length] : "var(--theme-module3-100)";
+/**
+ * Each module number gets its own accent, cycling through the palette; no
+ * number falls back to the theme colour. `-text` is the dark step, so the
+ * badge's 12px white label keeps AA contrast; `-100` fills the placeholder.
+ */
+const moduleColor = (module: number | undefined, step: "100" | "text"): string =>
+  module
+    ? `var(--accent-${MODULE_ACCENTS[(module - 1) % MODULE_ACCENTS.length]}-${step})`
+    : step === "text" ? "var(--theme-module3-hover)" : "var(--theme-module3-100)";
 
 export const ModuleBadge = styled.span<{ $module?: number }>`
   position: absolute;
@@ -404,9 +409,9 @@ export const ModuleBadge = styled.span<{ $module?: number }>`
   left: 12px;
   z-index: 1;
   padding: 4px 12px;
-  border-radius: 999px;
-  background: ${({ $module }) => moduleColor($module)};
-  color: white;
+  border-radius: var(--radius-pill);
+  background: ${({ $module }) => moduleColor($module, "text")};
+  color: var(--primary-white);
   font-size: var(--text-xs);
   font-weight: 700;
 `;
@@ -414,7 +419,7 @@ export const ModuleBadge = styled.span<{ $module?: number }>`
 /** Shown when a project has no image and no preview: same size as an image, in the module's colour. */
 export const GalleryItemPlaceholder = styled(GalleryItemImage)<{ $module?: number }>`
   background: ${({ $module }) =>
-    `linear-gradient(135deg, ${moduleColor($module)} 0%, color-mix(in srgb, ${moduleColor($module)} 60%, black) 100%)`};
+    `linear-gradient(135deg, ${moduleColor($module, "100")} 0%, ${moduleColor($module, "text")} 100%)`};
 
   svg {
     color: rgba(255, 255, 255, 0.7);
@@ -433,12 +438,12 @@ export const RecommendationBadge = styled.span`
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--primary-black-10);
   font-size: var(--text-xs);
   font-weight: 700;
   flex-shrink: 0;
-  svg { color: #e0a100; }
+  svg { color: var(--accent-amber-100); }
 `;
 
 export const GallerySort = styled.div`
@@ -461,12 +466,9 @@ export const GalleryReset = styled.button`
   gap: 8px;
   min-height: 44px;
   padding: 10px 18px;
-  border: 1px solid rgba(120, 100, 220, 0.35);
+  border: 1px solid var(--theme-module3-60);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 4px 16px rgba(80, 60, 160, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: var(--primary-white);
   color: var(--primary-black-100);
   font-family: "Source Sans 3", sans-serif;
   font-size: var(--text-base);
@@ -475,8 +477,7 @@ export const GalleryReset = styled.button`
   transition: background 160ms ease, box-shadow 160ms ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 6px 20px rgba(80, 60, 160, 0.16);
+    background: var(--theme-module3-10);
   }
 
   &:focus-visible {
@@ -485,7 +486,7 @@ export const GalleryReset = styled.button`
   }
 
   &:active {
-    background: rgba(230, 225, 255, 0.8);
+    background: var(--theme-module3-30);
   }
 
   @media (prefers-reduced-motion: reduce) {

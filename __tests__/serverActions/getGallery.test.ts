@@ -133,4 +133,24 @@ describe("getGalleryItems", () => {
     expect(galleryItems[0].returnGif).toBe(gifUrl);
     expect(galleryItems[0].returnImage).toBeNull();
   });
+
+  it("survives hand-imported returns with a string date or no date", async () => {
+    const student = await createDummyUser("user", { name: "Imported Student" });
+    const reviewer = await createDummyUser();
+    const guide = await createDummyGuide();
+
+    // Straight into the collection, past mongoose's casting and default.
+    const { insertedIds } = await Return.collection.insertMany([
+      { projectName: "String date", comment: "", owner: student._id, guide: guide._id, createdAt: "2024-03-01T00:00:00.000Z" },
+      { projectName: "No date", comment: "", owner: student._id, guide: guide._id },
+    ]);
+    for (const id of Object.values(insertedIds)) {
+      await Review.create({ guide: guide._id, return: id, owner: reviewer._id, vote: Vote.RECOMMEND_TO_GALLERY, comment: "Nice" });
+    }
+
+    const items = await getGalleryItems();
+    const byTitle = Object.fromEntries(items.map((item) => [item.title, item.createdAt]));
+
+    expect(byTitle).toEqual({ "String date": "2024-03-01T00:00:00.000Z", "No date": "" });
+  });
 });

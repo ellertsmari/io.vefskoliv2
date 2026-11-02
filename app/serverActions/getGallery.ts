@@ -5,6 +5,7 @@ import { connectToDatabase } from "./mongoose-connector";
 import { Return } from "models/return";
 import { Vote } from "models/review";
 import { ModuleType } from "models/guide";
+import { isoDate } from "utils/serialization";
 
 type ModuleSummary = Pick<ModuleType, "title" | "number">;
 
@@ -20,7 +21,7 @@ type GalleryAggregateResult = {
   projectUrl?: string;
   liveVersion?: string;
   topicsList?: string;
-  createdAt: Date;
+  createdAt?: Date | string;
 };
 
 export type GalleryItem = {
@@ -168,7 +169,9 @@ const mapAggregateToItem = (doc: GalleryAggregateResult): GalleryItem => {
     projectUrl: doc.projectUrl ?? null,
     liveVersion: doc.liveVersion ?? null,
     topics: parseTopics(doc.topicsList),
-    createdAt: doc.createdAt.toISOString(),
+    // The aggregate skips mongoose casting, so a hand-imported return may carry
+    // a string or no date at all. "" (not the epoch) keeps it out of the year filter.
+    createdAt: doc.createdAt ? isoDate(doc.createdAt) : "",
   };
 };
 

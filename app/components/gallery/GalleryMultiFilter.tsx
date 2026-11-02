@@ -56,7 +56,7 @@ const Options = styled.div`
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   font-family: "Source Sans 3", sans-serif;
   label { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 8px; cursor: pointer; }
-  label:hover { background: rgba(120,100,220,0.08); }
+  label:hover { background: var(--theme-module3-10); }
   input { accent-color: var(--theme-module3-100); }
 `;
 
