@@ -198,7 +198,8 @@ const FormContent = ({
         <ImageUploadField
           id={"pictureUrl"}
           prefix="return-picture"
-          label={"Image that suits your project (optional)"}
+          label={"Image that suits your project (recommended)"}
+          description={"Projects with an image stand out in the gallery. A screenshot of your page or design is enough."}
           value={formData?.pictureUrl || ""}
           onChange={(value) =>
             setFormData({ ...formData, projectName, pictureUrl: value })

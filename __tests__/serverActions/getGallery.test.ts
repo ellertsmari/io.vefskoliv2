@@ -24,6 +24,8 @@ describe("getGalleryItems", () => {
     const student = await createDummyUser("user", { name: "Gallery Student" });
     const reviewer = await createDummyUser("user", { name: "Peer Reviewer" });
     const guide = await createDummyGuide();
+    guide.topicsList = "- Flexbox\n- Grid, responsive design";
+    await guide.save();
 
     const projectLiveUrl = "https://example.com/live";
     const projectRepoUrl = "https://github.com/example/project";
@@ -58,13 +60,17 @@ describe("getGalleryItems", () => {
     expect(item).toMatchObject({
       returnId: userReturn._id.toString(),
       title: "Responsive Portfolio",
+      createdAt: "2024-01-01T00:00:00.000Z",
       description: "A responsive single page portfolio built with Next.js.",
       studentName: "Gallery Student",
       recommendationCount: 1,
       returnImage: projectImageUrl,
       returnGif: null,
       returnUrl: projectLiveUrl,
+      projectUrl: projectRepoUrl,
+      liveVersion: projectLiveUrl,
       guideTitle: guide.title,
+      topics: ["Flexbox", "Grid", "responsive design"],
     });
 
     expect(item.module).toMatchObject({

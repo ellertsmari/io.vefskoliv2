@@ -1,3 +1,4 @@
+import { auth } from "../../auth";
 import type { Metadata } from "next";
 import { getAllGalleryItems } from "app/serverActions/getGallery";
 import Gallery from "app/components/gallery/Gallery";
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HallOfFamePage() {
-  const galleryItems = await getAllGalleryItems();
+  const [galleryItems, session] = await Promise.all([getAllGalleryItems(), auth()]);
 
   return (
     <PageContainer>
@@ -20,7 +21,7 @@ export default async function HallOfFamePage() {
           Exceptional student projects recommended by peers for their outstanding quality and creativity.
         </PageDescription>
       </PageHeader>
-      <Gallery items={galleryItems} />
+      <Gallery items={galleryItems} showControls userId={session?.user?.id} />
     </PageContainer>
   );
 }

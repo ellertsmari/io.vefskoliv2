@@ -6,6 +6,11 @@ export const PageContainer = styled.div`
   max-width: 100%;
   margin: 0;
   padding: 40px 24px;
+  /* Header and search share a row only while both fit; otherwise the search wraps below. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  column-gap: 24px;
 
   @media (min-width: 768px) {
     padding: 60px 32px;
@@ -14,7 +19,8 @@ export const PageContainer = styled.div`
 
 export const PageHeader = styled.div`
   text-align: left;
-  margin-bottom: 48px;
+  margin-bottom: 28px;
+  flex: 1 1 520px;
 `;
 
 export const PageTitle = styled.h1`

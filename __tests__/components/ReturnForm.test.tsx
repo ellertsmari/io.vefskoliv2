@@ -127,7 +127,7 @@ describe("ReturnForm", () => {
     expect(getByLabelText("Live page")).toBeDefined();
     expect(getByLabelText("Project title")).toBeDefined();
     expect(getByLabelText("Short project description")).toBeDefined();
-    expect(getByLabelText("Image that suits your project (optional)")).toBeDefined();
+    expect(getByLabelText("Image that suits your project (recommended)")).toBeDefined();
     expect(getByRole("button", { name: "SUBMIT" })).toBeDefined();
   });
 });
