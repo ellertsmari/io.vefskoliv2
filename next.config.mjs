@@ -8,8 +8,9 @@ const isProduction = process.env.NODE_ENV === "production";
 const contentSecurityPolicyReportOnly = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data:",
+  // Google Fonts: each project brief picks its own typefaces.
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
   // Client-side uploads talk to vercel.com first, then to the blob store.

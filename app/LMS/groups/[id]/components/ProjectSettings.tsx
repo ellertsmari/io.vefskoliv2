@@ -299,7 +299,12 @@ export const ProjectSettings = ({
             />
           </Label>
           <Label>
-            Description (markdown)
+            Old description (markdown)
+            <MutedText as="span">
+              {project.brief.sections.length > 0
+                ? "Replaced by the Brief tab — students and the public page see that one. Kept for reference."
+                : "Shown to students until the Brief tab has content. The Brief tab can import it into sections."}
+            </MutedText>
             <TextArea
               value={description}
               onChange={(e) => setDescription(e.target.value)}

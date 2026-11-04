@@ -4,7 +4,9 @@ import { Session } from "next-auth";
 import { auth } from "../../../auth";
 import { GroupProject } from "models/groupProject";
 import { DEFAULT_PANEL_WEIGHT, TEAM_LINK_KEYS } from "constants/groupWork";
+import { BRIEF_SECTION_KEYS, resolveBriefTheme } from "constants/projectBrief";
 import {
+  SerializedBrief,
   SerializedGroupProject,
   SerializedPreference,
   SerializedTeam,
@@ -81,6 +83,23 @@ export function canReadDescription(
   return isPreferenceComplete(myPreference);
 }
 
+/** The brief as the client sees it; an empty one when withheld or unset. */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+export function serializeBrief(brief: any): SerializedBrief {
+  return {
+    tagline: brief?.tagline || "",
+    coverImage: brief?.coverImage || "",
+    teamSize: brief?.teamSize || "",
+    sections: BRIEF_SECTION_KEYS.flatMap((key) => {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+      const found = (brief?.sections || []).find((s: any) => s.key === key);
+      return found ? [{ key, title: found.title || "", html: found.html || "" }] : [];
+    }),
+    theme: resolveBriefTheme(brief?.theme),
+    updatedAt: brief?.updatedAt ? new Date(brief.updatedAt).toISOString() : null,
+  };
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any -- lean() docs are untyped here */
 export function serializeProject(
   project: any,
@@ -91,6 +110,9 @@ export function serializeProject(
     title: project.title,
     description: hideDescription ? "" : project.description || "",
     descriptionLocked: hideDescription,
+    slug: project.slug || "",
+    published: !!project.published,
+    brief: serializeBrief(hideDescription ? null : project.brief),
     module: project.module ?? null,
     startDate: new Date(project.startDate).toISOString(),
     endDate: new Date(project.endDate).toISOString(),

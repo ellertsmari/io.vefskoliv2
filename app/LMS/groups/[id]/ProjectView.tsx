@@ -34,6 +34,8 @@ import { AssignmentBoard } from "./components/AssignmentBoard";
 import { TeacherEvaluations } from "./components/TeacherEvaluations";
 import { ProjectSettings } from "./components/ProjectSettings";
 import { Stepper, type Step } from "./components/Stepper";
+import { BriefStudio } from "./components/BriefStudio";
+import { BriefView } from "../../../projects/components/BriefView";
 
 const HeaderInfo = styled.div`
   display: flex;
@@ -164,7 +166,11 @@ export const ProjectView = ({
 }: Props) => {
   const { project, myTeamId, teams } = details;
 
-  const teacherTabs = ["Overview", "Assignment", "Evaluations", "Settings"];
+  const teacherTabs = ["Overview", "Brief", "Assignment", "Evaluations", "Settings"];
+
+  const hasBrief = project.brief.sections.some((section) => section.html.trim());
+  const briefIsPublic =
+    project.published && project.status !== "formation" && !!project.slug;
 
   const mySlot = myTeamId
     ? project.presentationSlots.find((slot) => slot.team === myTeamId) ?? null
@@ -352,7 +358,14 @@ export const ProjectView = ({
               onSaved={() => setActiveTab("brief")}
             />
           )}
-          {currentTab === "brief" && (
+          {currentTab === "brief" && hasBrief && (
+            <BriefView
+              project={project}
+              embedded
+              publicUrl={briefIsPublic ? `/projects/${project.slug}` : null}
+            />
+          )}
+          {currentTab === "brief" && !hasBrief && (
             <>
               {project.description ? (
                 <Description>
@@ -383,6 +396,7 @@ export const ProjectView = ({
       )}
 
       {currentTab === "Overview" && <TeacherOverview details={details} />}
+      {currentTab === "Brief" && <BriefStudio details={details} />}
       {currentTab === "Assignment" && <AssignmentBoard details={details} />}
       {currentTab === "Evaluations" && (
         <TeacherEvaluations details={details} reports={reports} judges={judges} />

@@ -1,3 +1,4 @@
+import type { BriefSectionKey, BriefTheme } from "constants/projectBrief";
 import {
   GroupProjectStatus,
   JudgeFocus,
@@ -127,6 +128,24 @@ export type SerializedPresentationSlot = {
   endTime: string;
 };
 
+export type SerializedBriefSection = {
+  key: BriefSectionKey;
+  /** Empty means the section's default title. */
+  title: string;
+  /** Sanitised on save (utils/briefHtml). */
+  html: string;
+};
+
+/** The structured, themed project brief. */
+export type SerializedBrief = {
+  tagline: string;
+  coverImage: string;
+  teamSize: string;
+  sections: SerializedBriefSection[];
+  theme: BriefTheme;
+  updatedAt: string | null;
+};
+
 export type SerializedGroupProject = {
   _id: string;
   title: string;
@@ -152,6 +171,12 @@ export type SerializedGroupProject = {
    * then — hiding it in the UI alone would still ship it in the payload.
    */
   descriptionLocked: boolean;
+  /** Address of the public brief page, /projects/<slug>. */
+  slug: string;
+  /** A teacher has published the brief. It is public once formation is over. */
+  published: boolean;
+  /** Withheld with the description while it is locked. */
+  brief: SerializedBrief;
 };
 
 export type GroupProjectListItem = SerializedGroupProject & {
@@ -400,3 +425,21 @@ export type JudgeView = {
   // own submissions keyed by teamId
   myEvaluations: Record<string, TeamEvaluationEntry[]>;
 };
+
+/** What a brief page needs from its project — no teams, no evaluation state. */
+export type BriefProject = Pick<
+  SerializedGroupProject,
+  | "_id"
+  | "title"
+  | "module"
+  | "slug"
+  | "status"
+  | "published"
+  | "startDate"
+  | "endDate"
+  | "presentationDate"
+  | "presentationLength"
+  | "rubric"
+  | "panelWeight"
+  | "brief"
+>;

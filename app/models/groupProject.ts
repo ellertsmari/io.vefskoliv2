@@ -6,6 +6,7 @@ import {
   InferSchemaType,
   Types,
 } from "mongoose";
+import { BRIEF_SECTION_KEYS, BriefSectionKey } from "constants/projectBrief";
 
 const presentationSlotSchema = new Schema(
   {
@@ -33,9 +34,54 @@ const rubricItemSchema = new Schema(
   { _id: false }
 );
 
+const briefSectionSchema = new Schema(
+  {
+    key: {
+      type: Schema.Types.String,
+      required: true,
+      enum: BRIEF_SECTION_KEYS as unknown as string[],
+    },
+    title: { type: Schema.Types.String, default: "" },
+    // Sanitised HTML (utils/briefHtml) — never stored raw.
+    html: { type: Schema.Types.String, default: "" },
+  },
+  { _id: false }
+);
+
+const briefThemeSchema = new Schema(
+  {
+    background: { type: Schema.Types.String, default: "" },
+    surface: { type: Schema.Types.String, default: "" },
+    text: { type: Schema.Types.String, default: "" },
+    muted: { type: Schema.Types.String, default: "" },
+    accent: { type: Schema.Types.String, default: "" },
+    accentText: { type: Schema.Types.String, default: "" },
+    heroBackground: { type: Schema.Types.String, default: "" },
+    heroText: { type: Schema.Types.String, default: "" },
+    headingFont: { type: Schema.Types.String, default: "" },
+    bodyFont: { type: Schema.Types.String, default: "" },
+  },
+  { _id: false }
+);
+
 const groupProjectSchema = new Schema({
   title: { type: Schema.Types.String, required: true },
+  // The old one-block Markdown brief. Shown until `brief` has sections, and
+  // the source for importing them.
   description: { type: Schema.Types.String, required: false, default: "" },
+  // The public brief page lives at /projects/<slug>. Unique by check in
+  // manageBrief, not by index: a handful of documents, set once.
+  slug: { type: Schema.Types.String, required: false },
+  // Public once published AND past formation (see getPublicBriefs).
+  published: { type: Schema.Types.Boolean, default: false },
+  brief: {
+    tagline: { type: Schema.Types.String, default: "" },
+    coverImage: { type: Schema.Types.String, default: "" },
+    teamSize: { type: Schema.Types.String, default: "" },
+    sections: { type: [briefSectionSchema], default: [] },
+    theme: { type: briefThemeSchema, default: () => ({}) },
+    updatedAt: { type: Schema.Types.Date, required: false },
+  },
   // Which module this project belongs to (1, 3, 4, 5, 6) — scopes the tech
   // stack choices students can pick during formation.
   module: { type: Schema.Types.Number, required: false, min: 0, max: 7 },
@@ -131,6 +177,16 @@ export type GroupProjectLean = {
   };
   createdBy?: Types.ObjectId;
   createdAt?: Date;
+  slug?: string;
+  published?: boolean;
+  brief?: {
+    tagline?: string;
+    coverImage?: string;
+    teamSize?: string;
+    sections?: { key: BriefSectionKey; title?: string; html?: string }[];
+    theme?: Record<string, string>;
+    updatedAt?: Date;
+  };
 };
 
 export type GroupProjectDocument = GroupProjectType & Document;

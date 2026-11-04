@@ -4,9 +4,13 @@
 import robots from "../../app/robots";
 import sitemap from "../../app/sitemap";
 import { getPublicGuides } from "serverActions/getPublicGuides";
+import { getPublicBriefs } from "serverActions/groups/getPublicBriefs";
 
 jest.mock("serverActions/getPublicGuides", () => ({
   getPublicGuides: jest.fn(),
+}));
+jest.mock("serverActions/groups/getPublicBriefs", () => ({
+  getPublicBriefs: jest.fn(),
 }));
 
 describe("robots.txt", () => {
@@ -19,7 +23,11 @@ describe("robots.txt", () => {
 });
 
 describe("sitemap.xml", () => {
-  it("lists the public pages and every guide, with dates where they are usable", async () => {
+  it("lists the public pages, every guide and every public brief, with dates where they are usable", async () => {
+    (getPublicBriefs as jest.Mock).mockResolvedValue([
+      { slug: "connecting-to-the-world", brief: { updatedAt: "2026-10-01T09:00:00.000Z" } },
+      { slug: "first-website", brief: { updatedAt: null } },
+    ]);
     (getPublicGuides as jest.Mock).mockResolvedValue([
       { _id: "5f13205ab279dc27c467ca56", updatedAt: "2026-09-01T10:00:00.000Z" },
       // Hand-imported: no dates at all.
@@ -32,15 +40,21 @@ describe("sitemap.xml", () => {
       "https://io.vefskoli.is",
       "https://io.vefskoli.is/guides",
       "https://io.vefskoli.is/showcase",
+      "https://io.vefskoli.is/projects",
       "https://io.vefskoli.is/guides/5f13205ab279dc27c467ca56",
       "https://io.vefskoli.is/guides/65046cf9e886e4185644aab9",
+      "https://io.vefskoli.is/projects/connecting-to-the-world",
+      "https://io.vefskoli.is/projects/first-website",
     ]);
-    expect(urls[3].lastModified).toBe("2026-09-01T10:00:00.000Z");
-    expect(urls[4]).not.toHaveProperty("lastModified");
+    expect(urls[4].lastModified).toBe("2026-09-01T10:00:00.000Z");
+    expect(urls[5]).not.toHaveProperty("lastModified");
+    expect(urls[6].lastModified).toBe("2026-10-01T09:00:00.000Z");
+    expect(urls[7]).not.toHaveProperty("lastModified");
   });
 
   it("still lists the public pages when the guides can't be read", async () => {
     (getPublicGuides as jest.Mock).mockResolvedValue(null);
-    expect(await sitemap()).toHaveLength(3);
+    (getPublicBriefs as jest.Mock).mockResolvedValue([]);
+    expect(await sitemap()).toHaveLength(4);
   });
 });

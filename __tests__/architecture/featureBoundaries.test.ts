@@ -41,6 +41,7 @@ const FEATURES: Array<[prefix: string, feature: string]> = [
   ["app/LMS/groups", "group-work"],
   ["app/serverActions/groups", "group-work"],
   ["app/showcase", "group-work"],
+  ["app/projects", "group-work"],
   ["app/judge", "group-work"],
 
   ["app/LMS/calendar", "calendar"],

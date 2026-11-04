@@ -3,6 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 // Routes that don't require authentication:
 // - /judge/<token> is for external judges — the token is the credential
 // - /showcase is the public project showcase students link from CVs
+// - /projects holds the published group-project briefs
 // - /handouts/ holds static pages in public/handouts, shared by unlisted link
 //   with people who have no account (e.g. the Hyper Island team's git guide)
 // - /robots.txt and /sitemap.xml are for crawlers, which never log in
@@ -12,6 +13,7 @@ const PUBLIC_ROUTES = [
   "/signin",
   "/judge",
   "/showcase",
+  "/projects",
   "/handouts/",
   "/robots.txt",
   "/sitemap.xml",
