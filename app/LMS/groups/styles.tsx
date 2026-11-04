@@ -430,41 +430,6 @@ export const SelectableChip = styled.button<{ $selected: boolean }>`
   }
 `;
 
-/**
- * The preference questions. Each is one short prompt and a row of chips, so
- * stacking them full-width left two thirds of the page empty and pushed the
- * save button three screens down.
- */
-export const QuestionGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
-  gap: 1rem;
-  align-items: start;
-`;
-
-export const QuestionCard = styled.div`
-  ${cardSurface}
-  padding: 1rem 1.25rem;
-  gap: 0.75rem;
-  height: 100%;
-`;
-
-/** Spans the grid — for a question whose answer needs the full width. */
-export const WideQuestionCard = styled(QuestionCard)`
-  grid-column: 1 / -1;
-`;
-
-/**
- * A question prompt, not a section heading. These were SectionTitle, so six
- * one-line questions each carried the same weight as the page's own headings.
- */
-export const QuestionTitle = styled.h2`
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--primary-black-100);
-  margin: 0;
-`;
-
 export const StatsBar = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));

@@ -26,26 +26,13 @@ import {
   ScorePill,
   SubmittedNote,
 } from "../../styles";
-
-const CategoryBlock = styled.div<{ $color: string }>`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0 0 1rem 0.75rem;
-  border-left: 4px solid ${({ $color }) => $color};
-  border-bottom: 1px solid var(--primary-black-10);
-
-  &:last-of-type {
-    border-bottom: none;
-  }
-`;
-
-const CategoryHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-`;
+import {
+  QuestionFlow,
+  ReviewItem,
+  ReviewList,
+  DoneBurst,
+  type FlowStep,
+} from "./QuestionFlow";
 
 const ScoreRow = styled.div`
   display: flex;
@@ -241,12 +228,192 @@ export const TeamEvalForm = ({
         : result.message,
       error: !result.success,
     });
+    setJustSaved(result.success);
     if (result.success) {
       draft.clear();
       router.refresh();
-      onSubmitted?.();
+      // Let the tick play before the next team opens.
+      setTimeout(() => onSubmitted?.(), 1200);
     }
   };
+
+  const reviewIndex = rubric.length + 1;
+  const [index, setIndex] = useState(() => {
+    if (alreadySubmitted) return reviewIndex;
+    const first = rubric.findIndex(
+      (item) => requiredKeys.has(item.key) && categories[item.key]?.score == null
+    );
+    return first === -1 ? rubric.length : first;
+  });
+  const [justSaved, setJustSaved] = useState(false);
+
+  const scoreLabel = (score: number | null) =>
+    score === null ? "Not scored" : `${score}/${EVALUATION_MAX_SCORE}`;
+
+  const rowSteps: FlowStep[] = rubric.map((item, position) => {
+    const meta = DISCIPLINE_META[item.discipline ?? "general"];
+    const entry = categories[item.key] ?? EMPTY_CATEGORY;
+    const optional = !requiredKeys.has(item.key);
+    return {
+      id: item.key,
+      label: item.title,
+      eyebrow: (
+        <>
+          <ScorePill $color={meta.color} $background={meta.background}>
+            {meta.label}
+          </ScorePill>
+          Row {position + 1} of {rubric.length}
+          {optional && " · optional for you"}
+        </>
+      ),
+      title: item.title,
+      description: item.description || undefined,
+      complete: entry.score !== null,
+      optional,
+      missingHint: "Pick a score to continue",
+      content: (
+        <>
+          <ScoreRow>
+            <Scale role="radiogroup" aria-label={`${item.title} score`}>
+              {SCORES.map((score) => (
+                <ScaleButton
+                  key={score}
+                  type="button"
+                  role="radio"
+                  aria-checked={entry.score === score}
+                  $color={meta.color}
+                  $selected={entry.score === score}
+                  onClick={() => updateCategory(item.key, { score })}
+                >
+                  {score}
+                </ScaleButton>
+              ))}
+            </Scale>
+            <ScoreValue>{scoreLabel(entry.score)}</ScoreValue>
+            {optional && entry.score !== null && (
+              <SecondaryButton
+                type="button"
+                onClick={() =>
+                  updateCategory(item.key, { score: null, comment: "" })
+                }
+              >
+                Clear
+              </SecondaryButton>
+            )}
+          </ScoreRow>
+          <Legend aria-label="What the scores mean">
+            {SCALE_ANCHORS.map(([range, meaning]) => (
+              <span key={range}>
+                <strong>{range}</strong> {meaning}
+              </span>
+            ))}
+          </Legend>
+          <TextArea
+            value={entry.comment}
+            aria-label={`Comment on ${item.title}`}
+            placeholder="What worked, what could be better? (optional)"
+            style={{ minHeight: "80px" }}
+            onChange={(event) =>
+              updateCategory(item.key, { comment: event.target.value })
+            }
+          />
+        </>
+      ),
+    };
+  });
+
+  const steps: FlowStep[] = [
+    ...rowSteps,
+    {
+      id: "overall",
+      label: "Overall comment",
+      eyebrow: "Comments",
+      title: "Anything about the whole presentation?",
+      description:
+        "Comments are what the team reads afterwards. You need at least one — here or under any of the rows.",
+      complete: overallComment.trim().length > 0,
+      optional: hasComment,
+      missingHint: "Write a comment here or under a row",
+      content: (
+        <TextArea
+          value={overallComment}
+          aria-label="Overall comment"
+          placeholder="Anything that applies to the whole presentation or project…"
+          style={{ minHeight: "120px" }}
+          onChange={(event) => setOverallComment(event.target.value)}
+        />
+      ),
+    },
+    {
+      id: "review",
+      label: "Review",
+      eyebrow: "Last step",
+      title: ready ? "Ready to hand in" : "A few things left",
+      complete: ready,
+      content: (
+        <>
+          <ReviewList>
+            {rubric.map((item, position) => {
+              const entry = categories[item.key] ?? EMPTY_CATEGORY;
+              const missing =
+                requiredKeys.has(item.key) && entry.score === null;
+              return (
+                <ReviewItem
+                  key={item.key}
+                  order={position}
+                  label={item.title}
+                  value={
+                    entry.comment.trim()
+                      ? `${scoreLabel(entry.score)} · “${entry.comment.trim()}”`
+                      : requiredKeys.has(item.key) || entry.score !== null
+                        ? scoreLabel(entry.score)
+                        : "Skipped"
+                  }
+                  missing={missing}
+                  onEdit={() => setIndex(position)}
+                />
+              );
+            })}
+            <ReviewItem
+              order={rubric.length}
+              label="Overall comment"
+              value={overallComment.trim() || (hasComment ? "—" : "Needs a comment")}
+              missing={!hasComment}
+              onEdit={() => setIndex(rubric.length)}
+            />
+          </ReviewList>
+          <Footer>
+            <PrimaryButton type="submit" disabled={saving || !ready}>
+              {saving
+                ? "Saving…"
+                : alreadySubmitted
+                  ? "Save changes"
+                  : "Submit evaluation"}
+            </PrimaryButton>
+            {unscored.length > 0 && (
+              <MutedText>
+                {unscored.length === 1
+                  ? `Score “${unscored[0].title}” to continue.`
+                  : `${unscored.length} rows still need a score.`}
+              </MutedText>
+            )}
+            {unscored.length === 0 && !hasComment && (
+              <MutedText>
+                Write at least one comment — under a score or in the overall
+                comment box.
+              </MutedText>
+            )}
+            {feedback &&
+              (feedback.error || !justSaved ? (
+                <Message $error={feedback.error}>{feedback.text}</Message>
+              ) : (
+                <DoneBurst>{feedback.text}</DoneBurst>
+              ))}
+          </Footer>
+        </>
+      ),
+    },
+  ];
 
   return (
     <Card as="form" onSubmit={handleSubmit}>
@@ -257,126 +424,12 @@ export const TeamEvalForm = ({
         </SubmittedNote>
       )}
       <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
-      <MutedText>
-        Score each row from {EVALUATION_MIN_SCORE} to {EVALUATION_MAX_SCORE},
-        and write at least one comment. Comments are what the team reads
-        afterwards.
-      </MutedText>
-      <Legend aria-label="What the scores mean">
-        {SCALE_ANCHORS.map(([range, meaning]) => (
-          <span key={range}>
-            <strong>{range}</strong> {meaning}
-          </span>
-        ))}
-      </Legend>
-      {rubric.map((item) => {
-        const meta = DISCIPLINE_META[item.discipline ?? "general"];
-        const entry = categories[item.key] ?? EMPTY_CATEGORY;
-        const optional = !requiredKeys.has(item.key);
-        // Optional rows stay out of the way until asked for.
-        const collapsed = optional && entry.score === null;
-        return (
-          <CategoryBlock key={item.key} $color={meta.color}>
-            <CategoryHeader>
-              <SectionTitle as="h3" style={{ fontSize: "var(--text-base)", margin: 0 }}>
-                {item.title}
-              </SectionTitle>
-              <ScorePill $color={meta.color} $background={meta.background}>
-                {meta.label}
-              </ScorePill>
-              {optional && <MutedText>optional for you</MutedText>}
-            </CategoryHeader>
-            {item.description && <MutedText>{item.description}</MutedText>}
-            {collapsed ? (
-              <div>
-                <SecondaryButton
-                  type="button"
-                  onClick={() => updateCategory(item.key, { score: 5 })}
-                >
-                  + Add score
-                </SecondaryButton>
-              </div>
-            ) : (
-              <>
-                <ScoreRow>
-                  <Scale role="radiogroup" aria-label={`${item.title} score`}>
-                    {SCORES.map((score) => (
-                      <ScaleButton
-                        key={score}
-                        type="button"
-                        role="radio"
-                        aria-checked={entry.score === score}
-                        $color={meta.color}
-                        $selected={entry.score === score}
-                        onClick={() => updateCategory(item.key, { score })}
-                      >
-                        {score}
-                      </ScaleButton>
-                    ))}
-                  </Scale>
-                  <ScoreValue>
-                    {entry.score === null
-                      ? "Not scored"
-                      : `${entry.score}/${EVALUATION_MAX_SCORE}`}
-                  </ScoreValue>
-                  {optional && (
-                    <SecondaryButton
-                      type="button"
-                      onClick={() =>
-                        updateCategory(item.key, { score: null, comment: "" })
-                      }
-                    >
-                      Skip
-                    </SecondaryButton>
-                  )}
-                </ScoreRow>
-                <TextArea
-                  value={entry.comment}
-                  placeholder="Optional comment…"
-                  style={{ minHeight: "60px" }}
-                  onChange={(event) =>
-                    updateCategory(item.key, { comment: event.target.value })
-                  }
-                />
-              </>
-            )}
-          </CategoryBlock>
-        );
-      })}
-
-      <SectionTitle as="h3" style={{ fontSize: "var(--text-base)" }}>
-        Overall comment
-      </SectionTitle>
-      <TextArea
-        value={overallComment}
-        placeholder="Anything that applies to the whole presentation or project…"
-        style={{ minHeight: "80px" }}
-        onChange={(event) => setOverallComment(event.target.value)}
+      <QuestionFlow
+        steps={steps}
+        index={index}
+        onIndexChange={setIndex}
+        noun="Step"
       />
-
-      <Footer>
-        <PrimaryButton type="submit" disabled={saving || !ready}>
-          {saving
-            ? "Saving…"
-            : alreadySubmitted
-              ? "Save changes"
-              : "Submit evaluation"}
-        </PrimaryButton>
-        {unscored.length > 0 && (
-          <MutedText>
-            {unscored.length === 1
-              ? `Score “${unscored[0].title}” to continue.`
-              : `${unscored.length} rows still need a score.`}
-          </MutedText>
-        )}
-        {unscored.length === 0 && !hasComment && (
-          <MutedText>
-            Write at least one comment — under a score or in the overall
-            comment box.
-          </MutedText>
-        )}
-        {feedback && <Message $error={feedback.error}>{feedback.text}</Message>}
-      </Footer>
     </Card>
   );
 };

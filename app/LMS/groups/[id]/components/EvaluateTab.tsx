@@ -35,6 +35,13 @@ import {
   SelectableChip,
   SubmittedNote,
 } from "../../styles";
+import {
+  QuestionFlow,
+  ReviewItem,
+  ReviewList,
+  DoneBurst,
+  type FlowStep,
+} from "./QuestionFlow";
 import { MemberAvatar } from "./TeamHubTab";
 import { TeamEvalForm } from "./TeamEvalForm";
 
@@ -232,6 +239,25 @@ const Progress = styled.p`
   margin: 0;
   font-size: var(--text-sm);
   font-weight: 600;
+`;
+
+const TeamsTrack = styled.div`
+  height: 8px;
+  margin-top: -1rem;
+  border-radius: var(--radius-pill);
+  background: var(--primary-black-5);
+  overflow: hidden;
+`;
+
+const TeamsFill = styled.div`
+  height: 100%;
+  border-radius: inherit;
+  background: var(--error-success-100);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `;
 
 /** Sign a score the way the balance counts it: "+2", "0", "−1". */
@@ -453,6 +479,24 @@ export const TeammatesStep = ({
     evals,
     setEvals
   );
+  // Handed in already: open on the summary. Otherwise start at the intro, or
+  // at the first person still to do if a draft got part of the way.
+  const [index, setIndex] = useState(() => {
+    if (alreadySubmitted) return members.length + 1;
+    const firstOpen = members.findIndex((member) => {
+      const entry = evals[member._id];
+      return (
+        entry?.contributionScore == null ||
+        entry?.teambuildingScore == null ||
+        !entry?.comment.trim()
+      );
+    });
+    const anyStarted = members.some(
+      (member) => evals[member._id]?.contributionScore != null
+    );
+    if (!anyStarted) return 0;
+    return firstOpen === -1 ? members.length + 1 : firstOpen + 1;
+  });
 
   if (!details.project.peerEvalOpen) {
     return (
@@ -587,6 +631,221 @@ export const TeammatesStep = ({
     }
   };
 
+  const memberComplete = (memberId: string) => {
+    const entry = evals[memberId];
+    return (
+      entry.contributionScore !== null &&
+      entry.teambuildingScore !== null &&
+      !!entry.comment.trim()
+    );
+  };
+
+  const reviewIndex = members.length + 1;
+
+  const memberSteps: FlowStep[] = members.map((member, position) => {
+    const entry = evals[member._id];
+    const isSelf = member._id === userId;
+    const contributionPushes =
+      flagged.contribution && (entry.contributionScore ?? 0) > 0;
+    const teambuildingPushes =
+      flagged.teambuilding && (entry.teambuildingScore ?? 0) > 0;
+    return {
+      id: member._id,
+      label: isSelf ? "You" : member.name,
+      eyebrow: isSelf
+        ? "Start with yourself"
+        : `Teammate ${position} of ${members.length - 1}`,
+      title: (
+        <MemberHeader as="span">
+          <MemberAvatar name={member.name} avatarUrl={member.avatarUrl} />
+          {member.name}
+          {isSelf && <Pill>You</Pill>}
+        </MemberHeader>
+      ),
+      complete: memberComplete(member._id),
+      missingHint: "Pick both scores and write a reason",
+      content: (
+        <>
+          <AxisLabel>
+            {isSelf
+              ? "Your contribution to the project"
+              : "Contribution to the project"}
+          </AxisLabel>
+          <ScorePicker
+            scores={CONTRIBUTION_SCORES}
+            value={entry.contributionScore}
+            labelPrefix={
+              isSelf ? "Your own contribution" : `Contribution of ${member.name}`
+            }
+            onChange={(score) => update(member._id, { contributionScore: score })}
+            attention={contributionPushes}
+          />
+          {contributionPushes && (
+            <OverNote>
+              This {signed(entry.contributionScore!)} is part of what puts the
+              contribution balance over.
+            </OverNote>
+          )}
+
+          <AxisLabel>
+            {isSelf ? "Your communication & teamwork" : "Communication & teamwork"}
+          </AxisLabel>
+          <ScorePicker
+            scores={TEAMBUILDING_SCORES}
+            value={entry.teambuildingScore}
+            labelPrefix={isSelf ? "Your own teamwork" : `Teamwork of ${member.name}`}
+            onChange={(score) => update(member._id, { teambuildingScore: score })}
+            attention={teambuildingPushes}
+          />
+          {teambuildingPushes && (
+            <OverNote>
+              This {signed(entry.teambuildingScore!)} is part of what puts the
+              teamwork balance over.
+            </OverNote>
+          )}
+
+          <AxisLabel>
+            {isSelf ? "Why these scores for yourself?" : "Why these scores?"}
+          </AxisLabel>
+          <TextArea
+            value={entry.comment}
+            placeholder="A sentence or two your teachers can go on"
+            style={{ minHeight: "80px" }}
+            aria-label={`Why these scores for ${isSelf ? "yourself" : member.name}`}
+            onChange={(event) =>
+              update(member._id, { comment: event.target.value })
+            }
+          />
+        </>
+      ),
+    };
+  });
+
+  const steps: FlowStep[] = [
+    {
+      id: "intro",
+      label: "How it works",
+      eyebrow: "Before you start",
+      title: "How did the group work go?",
+      description: (
+        <>
+          Score yourself and each teammate on contribution and teamwork,{" "}
+          <strong>compared with the rest of the team</strong>, and say why in
+          a sentence or two. Only your teachers see this.
+        </>
+      ),
+      complete: true,
+      content: (
+        <>
+          <HowItWorks open>
+            <summary>How the scores work</summary>
+            <p>
+              The scores are relative, so a team cannot be rated above its own
+              average: marking somebody up means marking somebody else down,
+              and each balance has to end at 0 or less. If everyone pulled
+              their weight equally, leave the whole team on Average.
+            </p>
+            <p>
+              Your teachers read every answer, then confirm one contribution
+              figure and one teamwork figure per student. Those confirmed
+              figures are what turn the team&apos;s project grade into each
+              person&apos;s own grade. Nothing you write here reaches another
+              student.
+            </p>
+          </HowItWorks>
+          {nothingScoredYet && (
+            <div>
+              <SecondaryButton
+                type="button"
+                onClick={() => {
+                  startEven();
+                  setIndex(1);
+                }}
+              >
+                Everyone pulled their weight equally — start from Average
+              </SecondaryButton>
+            </div>
+          )}
+          {savedOverBudget && (
+            <Notice>
+              Your saved answers were given before this rule existed, and they
+              stay on record as they are. If you change anything here, both
+              balances have to reach 0 or less before it can be saved again.
+            </Notice>
+          )}
+        </>
+      ),
+    },
+    ...memberSteps,
+    {
+      id: "review",
+      label: "Review",
+      eyebrow: "Last step",
+      title: incomplete || overBudget ? "Nearly done" : "Ready to hand in",
+      complete: !incomplete && !overBudget,
+      content: (
+        <>
+          <ReviewList>
+            {members.map((member, position) => {
+              const entry = evals[member._id];
+              const done = memberComplete(member._id);
+              const score = (value: number | null) =>
+                value === null ? "—" : signed(value);
+              return (
+                <ReviewItem
+                  key={member._id}
+                  order={position}
+                  label={member._id === userId ? `${member.name} (you)` : member.name}
+                  value={
+                    done
+                      ? `Contribution ${score(entry.contributionScore)} · Teamwork ${score(entry.teambuildingScore)}`
+                      : "Not finished"
+                  }
+                  missing={!done}
+                  onEdit={() => setIndex(position + 1)}
+                />
+              );
+            })}
+          </ReviewList>
+          <Footer>
+            <PrimaryButton
+              type="submit"
+              disabled={saving || incomplete || overBudget}
+            >
+              {saving
+                ? "Submitting…"
+                : alreadySubmitted
+                  ? "Save changes"
+                  : "Hand in"}
+            </PrimaryButton>
+            {(flagged.contribution || flagged.teambuilding) && (
+              <Message $error>
+                Not yet: the{" "}
+                {(Object.keys(PEER_AXIS_LABELS) as PeerAxis[])
+                  .filter((axis) => flagged[axis])
+                  .map((axis) => PEER_AXIS_LABELS[axis].toLowerCase())
+                  .join(" and ")}{" "}
+                balance is too high. See the box above for what to lower.
+              </Message>
+            )}
+            {incomplete && !overBudget && (
+              <MutedText>
+                Pick both scores and write a reason for yourself and every
+                teammate.
+              </MutedText>
+            )}
+            {feedback &&
+              (feedback.error ? (
+                <Message $error>{feedback.text}</Message>
+              ) : (
+                <DoneBurst>{feedback.text}</DoneBurst>
+              ))}
+          </Footer>
+        </>
+      ),
+    },
+  ];
+
   return (
     <form onSubmit={handleSubmit}>
       <Layout>
@@ -598,162 +857,23 @@ export const TeammatesStep = ({
           </SubmittedNote>
         )}
         <DraftNotice restored={draft.restored} onDiscard={draft.discard} />
-        <MutedText>
-          How did the group work go? Score yourself and each teammate on
-          contribution and teamwork, <strong>compared with the rest of the
-          team</strong>, and say why in a sentence or two. Only your teachers
-          see this. It stays open until they close it.
-        </MutedText>
-        <HowItWorks>
-          <summary>How the scores work</summary>
-          <p>
-            The scores are relative, so a team cannot be rated above its own
-            average: marking somebody up means marking somebody else down, and
-            each balance below has to end at 0 or less. If everyone pulled
-            their weight equally, leave the whole team on Average.
-          </p>
-          <p>
-            Your teachers read every answer, then confirm one contribution
-            figure and one teamwork figure per student. Those confirmed figures
-            are what turn the team&apos;s project grade into each person&apos;s
-            own grade. Nothing you write here reaches another student.
-          </p>
-        </HowItWorks>
-        {nothingScoredYet && (
-          <div>
-            <SecondaryButton type="button" onClick={startEven}>
-              Everyone pulled their weight equally — start from Average
-            </SecondaryButton>
-          </div>
-        )}
-        {savedOverBudget && (
-          <Notice>
-            Your saved answers were given before this rule existed, and they
-            stay on record as they are. If you change anything here, both
-            balances have to reach 0 or less before it can be saved again.
-          </Notice>
-        )}
-        <BalanceMeter
-          balances={balances}
-          members={members}
-          evals={evals}
-          onReset={resetAxis}
-          sticky
-        />
-        {members.map((member) => {
-          const entry = evals[member._id];
-          const isSelf = member._id === userId;
-          const contributionPushes =
-            flagged.contribution && (entry.contributionScore ?? 0) > 0;
-          const teambuildingPushes =
-            flagged.teambuilding && (entry.teambuildingScore ?? 0) > 0;
-          return (
-            <Card key={member._id}>
-              <MemberHeader>
-                <MemberAvatar name={member.name} avatarUrl={member.avatarUrl} />
-                {member.name}
-                {isSelf && <Pill>You</Pill>}
-              </MemberHeader>
-
-              <AxisLabel>
-                {isSelf
-                  ? "Your contribution to the project"
-                  : "Contribution to the project"}
-              </AxisLabel>
-              <ScorePicker
-                scores={CONTRIBUTION_SCORES}
-                value={entry.contributionScore}
-                labelPrefix={
-                  isSelf ? "Your own contribution" : `Contribution of ${member.name}`
-                }
-                onChange={(score) =>
-                  update(member._id, { contributionScore: score })
-                }
-                attention={contributionPushes}
-              />
-              {contributionPushes && (
-                <OverNote>
-                  This {signed(entry.contributionScore!)} is part of what puts
-                  the contribution balance over.
-                </OverNote>
-              )}
-
-              <AxisLabel>
-                {isSelf
-                  ? "Your communication & teamwork"
-                  : "Communication & teamwork"}
-              </AxisLabel>
-              <ScorePicker
-                scores={TEAMBUILDING_SCORES}
-                value={entry.teambuildingScore}
-                labelPrefix={
-                  isSelf ? "Your own teamwork" : `Teamwork of ${member.name}`
-                }
-                onChange={(score) =>
-                  update(member._id, { teambuildingScore: score })
-                }
-                attention={teambuildingPushes}
-              />
-              {teambuildingPushes && (
-                <OverNote>
-                  This {signed(entry.teambuildingScore!)} is part of what puts
-                  the teamwork balance over.
-                </OverNote>
-              )}
-
-              <AxisLabel>
-                {isSelf ? "Why these scores for yourself?" : "Why these scores?"}
-              </AxisLabel>
-              <TextArea
-                value={entry.comment}
-                placeholder="A sentence or two your teachers can go on"
-                style={{ minHeight: "60px" }}
-                required
-                aria-label={`Why these scores for ${isSelf ? "yourself" : member.name}`}
-                onChange={(event) =>
-                  update(member._id, { comment: event.target.value })
-                }
-              />
-            </Card>
-          );
-        })}
-        <BalanceMeter
-          balances={balances}
-          members={members}
-          evals={evals}
-          onReset={resetAxis}
-        />
-        <Footer>
-          <PrimaryButton
-            type="submit"
-            disabled={saving || incomplete || overBudget}
-          >
-            {saving
-              ? "Submitting…"
-              : alreadySubmitted
-                ? "Save changes"
-                : "Hand in"}
-          </PrimaryButton>
-          {(flagged.contribution || flagged.teambuilding) && (
-            <Message $error>
-              Not yet: the{" "}
-              {(Object.keys(PEER_AXIS_LABELS) as PeerAxis[])
-                .filter((axis) => flagged[axis])
-                .map((axis) => PEER_AXIS_LABELS[axis].toLowerCase())
-                .join(" and ")}{" "}
-              balance is too high. See the box above for what to lower.
-            </Message>
-          )}
-          {incomplete && !overBudget && (
-            <MutedText>
-              Pick both scores and write a reason for yourself and every
-              teammate.
-            </MutedText>
-          )}
-          {feedback && (
-            <Message $error={feedback.error}>{feedback.text}</Message>
-          )}
-        </Footer>
+        <Card>
+          <QuestionFlow
+            steps={steps}
+            index={index}
+            onIndexChange={setIndex}
+            pinned={
+              index > 0 ? (
+                <BalanceMeter
+                  balances={balances}
+                  members={members}
+                  evals={evals}
+                  onReset={resetAxis}
+                />
+              ) : undefined
+            }
+          />
+        </Card>
       </Layout>
     </form>
   );
@@ -853,6 +973,11 @@ export const PresentationsStep = ({
           ? `✓ All ${otherTeams.length} teams scored`
           : `${scoredCount} of ${otherTeams.length} teams scored`}
       </Progress>
+      <TeamsTrack aria-hidden>
+        <TeamsFill
+          style={{ width: `${(scoredCount / otherTeams.length) * 100}%` }}
+        />
+      </TeamsTrack>
       <ChipRow>
         {otherTeams.map((team) => {
           const slot = slotOf(team._id);

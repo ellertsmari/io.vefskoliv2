@@ -21,10 +21,7 @@ import {
 } from "constants/groupWork";
 import { savePreferences } from "serverActions/groups/savePreferences";
 import {
-  QuestionGrid,
-  QuestionCard,
-  WideQuestionCard,
-  QuestionTitle,
+  Card,
   MutedText,
   ChipRow,
   SelectableChip,
@@ -33,6 +30,14 @@ import {
   Message,
   SubmittedNote,
 } from "../../styles";
+import {
+  QuestionFlow,
+  ReviewItem,
+  ReviewList,
+  DoneBurst,
+  useDelayedAdvance,
+  type FlowStep,
+} from "./QuestionFlow";
 
 const Form = styled.form`
   display: flex;
@@ -43,7 +48,28 @@ const Form = styled.form`
 const Footer = styled.div`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
+`;
+
+const FlowCard = styled(Card)`
+  padding: 1.75rem 2rem;
+
+  @media (max-width: 560px) {
+    padding: 1.25rem 1rem;
+  }
+`;
+
+/** Answers get bigger targets than filter chips: they are the whole screen. */
+const BigChip = styled(SelectableChip)`
+  padding: 0.7rem 1.2rem;
+  font-size: var(--text-base);
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.15s ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.96);
+  }
 `;
 
 const ChipContent = styled.span`
@@ -151,9 +177,196 @@ export const PreferencesForm = ({
     if (result.success) {
       draft.clear();
       router.refresh();
-      onSaved?.();
+      // Let the tick play before the page moves on to the brief.
+      setTimeout(() => onSaved?.(), 1400);
     }
   };
+
+  const lastIndex = 6;
+  const [index, setIndex] = useState(() => {
+    if (complete) return lastIndex;
+    const answered = [!!ambition, focus.length > 0, techStack.length > 0, !!schedule, !!location];
+    const first = answered.indexOf(false);
+    return first === -1 ? lastIndex : first;
+  });
+  const advanceSoon = useDelayedAdvance(() =>
+    setIndex((current) => Math.min(current + 1, lastIndex))
+  );
+
+  /** A single-choice question: pick moves on, picking again clears. */
+  const single = (
+    options: readonly string[],
+    icons: Record<string, string | undefined>,
+    value: string,
+    set: (next: string) => void
+  ) => (
+    <ChipRow role="radiogroup">
+      {options.map((option) => (
+        <BigChip
+          key={option}
+          type="button"
+          role="radio"
+          aria-checked={value === option}
+          $selected={value === option}
+          onClick={() => {
+            if (value === option) {
+              set("");
+            } else {
+              set(option);
+              advanceSoon();
+            }
+          }}
+        >
+          <IconChipLabel icon={icons[option]}>{option}</IconChipLabel>
+        </BigChip>
+      ))}
+    </ChipRow>
+  );
+
+  const multi = (
+    options: readonly string[],
+    icons: Record<string, string | undefined>,
+    list: string[],
+    set: (next: string[]) => void
+  ) => (
+    <ChipRow>
+      {options.map((option) => (
+        <BigChip
+          key={option}
+          type="button"
+          aria-pressed={list.includes(option)}
+          $selected={list.includes(option)}
+          onClick={() => toggle(option, list, set)}
+        >
+          <IconChipLabel icon={icons[option]}>{option}</IconChipLabel>
+        </BigChip>
+      ))}
+    </ChipRow>
+  );
+
+  const pickAll = "Pick as many as you like.";
+
+  const steps: FlowStep[] = [
+    {
+      id: "ambition",
+      label: "Ambition",
+      title: "How ambitious are you for this project?",
+      content: single(AMBITION_OPTIONS, AMBITION_ICONS, ambition, setAmbition),
+      complete: !!ambition,
+      missingHint: "Pick one to continue",
+    },
+    {
+      id: "focus",
+      label: "Focus",
+      title: "What do you want to focus on?",
+      description: pickAll,
+      content: multi(FOCUS_OPTIONS, FOCUS_ICONS, focus, setFocus),
+      complete: focus.length > 0,
+      missingHint: "Pick at least one",
+    },
+    {
+      id: "tech",
+      label: "Tech",
+      title: "Which tech do you want to work with?",
+      description: pickAll,
+      content: multi(techOptions, TECH_STACK_ICONS, techStack, setTechStack),
+      complete: techStack.length > 0,
+      missingHint: "Pick at least one",
+    },
+    {
+      id: "schedule",
+      label: "Schedule",
+      title: "When do you want to work?",
+      content: single(SCHEDULE_OPTIONS, SCHEDULE_ICONS, schedule, setSchedule),
+      complete: !!schedule,
+      missingHint: "Pick one to continue",
+    },
+    {
+      id: "location",
+      label: "Location",
+      title: "Where do you want to work?",
+      content: single(LOCATION_OPTIONS, LOCATION_ICONS, location, setLocation),
+      complete: !!location,
+      missingHint: "Pick one to continue",
+    },
+    {
+      id: "about",
+      label: "Anything else",
+      title: "Anything else your teachers should know?",
+      description: "Optional — skip it if nothing comes to mind.",
+      content: (
+        <TextArea
+          id="about"
+          aria-label="Anything else your teachers should know?"
+          value={about}
+          onChange={(e) => setAbout(e.target.value)}
+          placeholder="Who you'd like to work with, what you want to practice, scheduling constraints…"
+          maxLength={2000}
+        />
+      ),
+      complete: !!about.trim(),
+      optional: true,
+    },
+    {
+      id: "review",
+      label: "Review",
+      eyebrow: "Last step",
+      title: complete ? "Looks good — save your answers" : "Almost there",
+      description: complete
+        ? "Check your answers, then save. Saving unlocks the project brief."
+        : "Answer the questions marked below to unlock the project brief.",
+      complete,
+      content: (
+        <>
+          <ReviewList>
+            {[
+              ["Ambition", ambition, 0],
+              ["Focus", focus.join(", "), 1],
+              ["Tech", techStack.join(", "), 2],
+              ["Schedule", schedule, 3],
+              ["Location", location, 4],
+            ].map(([label, value, step], order) => (
+              <ReviewItem
+                key={label as string}
+                order={order}
+                label={label}
+                value={(value as string) || "Not answered"}
+                missing={!value}
+                onEdit={() => setIndex(step as number)}
+              />
+            ))}
+            <ReviewItem
+              order={5}
+              label="Anything else"
+              value={about.trim() || "—"}
+              onEdit={() => setIndex(5)}
+            />
+          </ReviewList>
+          <Footer>
+            <PrimaryButton type="submit" disabled={saving || !complete}>
+              {saving
+                ? "Saving…"
+                : existing
+                  ? "Save changes"
+                  : "Save & unlock the brief"}
+            </PrimaryButton>
+            {feedback &&
+              (feedback.error ? (
+                <Message $error>{feedback.text}</Message>
+              ) : (
+                <DoneBurst>{feedback.text}</DoneBurst>
+              ))}
+          </Footer>
+          {existing && complete && !feedback && (
+            <SubmittedNote role="status">
+              ✓ Your preferences are in. Change them any time while teams are
+              forming.
+            </SubmittedNote>
+          )}
+        </>
+      ),
+    },
+  ];
 
   return (
     <Form onSubmit={handleSubmit}>
@@ -164,127 +377,14 @@ export const PreferencesForm = ({
         you&apos;ve answered, and you can update your answers any time while
         teams are forming.
       </MutedText>
-
-      <QuestionGrid>
-        <QuestionCard>
-          <QuestionTitle>How ambitious are you for this project?</QuestionTitle>
-          <ChipRow>
-            {AMBITION_OPTIONS.map((option) => (
-            <SelectableChip
-              key={option}
-              type="button"
-              $selected={ambition === option}
-              onClick={() => setAmbition(ambition === option ? "" : option)}
-            >
-              <IconChipLabel icon={AMBITION_ICONS[option]}>
-                {option}
-              </IconChipLabel>
-            </SelectableChip>
-          ))}
-          </ChipRow>
-        </QuestionCard>
-
-        <QuestionCard>
-          <QuestionTitle>What do you want to focus on?</QuestionTitle>
-          <ChipRow>
-            {FOCUS_OPTIONS.map((option) => (
-            <SelectableChip
-              key={option}
-              type="button"
-              $selected={focus.includes(option)}
-              onClick={() => toggle(option, focus, setFocus)}
-            >
-              <IconChipLabel icon={FOCUS_ICONS[option]}>{option}</IconChipLabel>
-            </SelectableChip>
-          ))}
-          </ChipRow>
-        </QuestionCard>
-
-        <QuestionCard>
-          <QuestionTitle>Which tech do you want to work with?</QuestionTitle>
-          <ChipRow>
-            {techOptions.map((option) => (
-            <SelectableChip
-              key={option}
-              type="button"
-              $selected={techStack.includes(option)}
-              onClick={() => toggle(option, techStack, setTechStack)}
-            >
-              <IconChipLabel icon={TECH_STACK_ICONS[option]}>
-                {option}
-              </IconChipLabel>
-            </SelectableChip>
-          ))}
-          </ChipRow>
-        </QuestionCard>
-
-        <QuestionCard>
-          <QuestionTitle>When do you want to work?</QuestionTitle>
-          <ChipRow>
-            {SCHEDULE_OPTIONS.map((option) => (
-            <SelectableChip
-              key={option}
-              type="button"
-              $selected={schedule === option}
-              onClick={() => setSchedule(schedule === option ? "" : option)}
-            >
-              <IconChipLabel icon={SCHEDULE_ICONS[option]}>
-                {option}
-              </IconChipLabel>
-            </SelectableChip>
-          ))}
-          </ChipRow>
-        </QuestionCard>
-
-        <QuestionCard>
-          <QuestionTitle>Where do you want to work?</QuestionTitle>
-          <ChipRow>
-            {LOCATION_OPTIONS.map((option) => (
-            <SelectableChip
-              key={option}
-              type="button"
-              $selected={location === option}
-              onClick={() => setLocation(location === option ? "" : option)}
-            >
-              <IconChipLabel icon={LOCATION_ICONS[option]}>
-                {option}
-              </IconChipLabel>
-            </SelectableChip>
-          ))}
-          </ChipRow>
-        </QuestionCard>
-
-        <WideQuestionCard>
-          <QuestionTitle as="label" htmlFor="about">
-            Anything else your teachers should know?
-          </QuestionTitle>
-          <TextArea
-            id="about"
-            value={about}
-            onChange={(e) => setAbout(e.target.value)}
-            placeholder="Who you'd like to work with, what you want to practice, scheduling constraints…"
-            maxLength={2000}
-          />
-        </WideQuestionCard>
-      </QuestionGrid>
-
-      <Footer>
-        <PrimaryButton type="submit" disabled={saving || !complete}>
-          {saving ? "Saving…" : "Save preferences"}
-        </PrimaryButton>
-        {!complete && (
-          <MutedText>
-            Answer every question above to unlock the project brief.
-          </MutedText>
-        )}
-        {feedback && <Message $error={feedback.error}>{feedback.text}</Message>}
-      </Footer>
-      {existing && complete && (
-        <SubmittedNote role="status">
-          ✓ Your preferences are in. Change them any time while teams are
-          forming.
-        </SubmittedNote>
-      )}
+      <FlowCard>
+        <QuestionFlow
+          steps={steps}
+          index={index}
+          onIndexChange={setIndex}
+          noun="Question"
+        />
+      </FlowCard>
     </Form>
   );
 };
