@@ -35,7 +35,7 @@ import { TeacherEvaluations } from "./components/TeacherEvaluations";
 import { ProjectSettings } from "./components/ProjectSettings";
 import { Stepper, type Step } from "./components/Stepper";
 import { BriefStudio } from "./components/BriefStudio";
-import { BriefView } from "../../../projects/components/BriefView";
+import { BriefLaunch } from "../../../projects/components/BriefLaunch";
 
 const HeaderInfo = styled.div`
   display: flex;
@@ -359,9 +359,8 @@ export const ProjectView = ({
             />
           )}
           {currentTab === "brief" && hasBrief && (
-            <BriefView
+            <BriefLaunch
               project={project}
-              embedded
               publicUrl={briefIsPublic ? `/projects/${project.slug}` : null}
             />
           )}

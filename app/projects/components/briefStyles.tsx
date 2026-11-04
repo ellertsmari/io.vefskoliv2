@@ -977,6 +977,59 @@ export const Note = styled.p`
   font-size: 0.95rem;
 `;
 
+/** The last screen of the full-screen brief: a send-off and a way back. */
+export const Finale = styled.footer`
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem clamp(1.5rem, 5vw, 4.5rem);
+  text-align: center;
+  background:
+    radial-gradient(60% 60% at 50% 60%, color-mix(in srgb, var(--b-accent) 30%, transparent), transparent 70%),
+    var(--b-hero-bg);
+  color: var(--b-hero-text);
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+
+  h2 {
+    margin: 0 0 1.5rem;
+    font-family: var(--b-head);
+    font-size: clamp(2.5rem, 7vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1rem 1.6rem;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--b-accent);
+    color: var(--b-accent-text);
+    font: inherit;
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: transform 0.3s ${ease};
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+`;
+
 export const Footer = styled.footer`
   padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4.5rem);
   background: var(--b-hero-bg);

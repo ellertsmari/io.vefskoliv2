@@ -26,6 +26,8 @@ type Props = {
   previewBanner?: string | null;
   /** Link out to the public page from the LMS. */
   publicUrl?: string | null;
+  /** Opened full-screen from the LMS: ends with a way back, not a footer. */
+  onClose?: () => void;
 };
 
 const dateFmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
@@ -53,6 +55,7 @@ export const BriefView = ({
   onEditLook,
   previewBanner,
   publicUrl,
+  onClose,
 }: Props) => {
   const { brief } = project;
   const theme = brief.theme;
@@ -131,6 +134,18 @@ export const BriefView = ({
   } as CSSProperties;
 
   const words = briefDisplayTitle(project.title).split(/\s+/);
+
+  /**
+   * Contents links scroll by script rather than by #hash: inside the LMS the
+   * brief may be open full-screen on a #read-brief history entry, which a
+   * hash change would replace. The href stays for no-JS readers.
+   */
+  const jumpTo = (event: React.MouseEvent, key: string) => {
+    const target = rootRef.current?.querySelector(`#brief-${key}`);
+    if (!target) return;
+    event.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const moduleLabel = project.module ? `Module ${project.module}` : null;
 
   const automaticContent = (key: BriefSectionKey) => {
@@ -217,8 +232,14 @@ export const BriefView = ({
         <S.HeroShade $hasImage={!!brief.coverImage} aria-hidden />
         {!embedded && (
           <S.HeroTopLine>
-            <Link href="/projects">{SITE_NAME} · Group projects</Link>
-            <span>{dateFmt(project.startDate, { month: "long", year: "numeric" })}</span>
+            {onClose ? (
+              <span>{SITE_NAME} · {dateFmt(project.startDate, { month: "long", year: "numeric" })}</span>
+            ) : (
+              <>
+                <Link href="/projects">{SITE_NAME} · Group projects</Link>
+                <span>{dateFmt(project.startDate, { month: "long", year: "numeric" })}</span>
+              </>
+            )}
           </S.HeroTopLine>
         )}
         {onEditLook && (
@@ -248,7 +269,11 @@ export const BriefView = ({
           ))}
         </S.Facts>
         {!embedded && sections[0] && (
-          <S.ScrollCue href={`#brief-${sections[0].key}`} aria-label="Read the brief">
+          <S.ScrollCue
+            href={`#brief-${sections[0].key}`}
+            aria-label="Read the brief"
+            onClick={(event) => jumpTo(event, sections[0].key)}
+          >
             <Icon icon="mdi:arrow-down" aria-hidden />
           </S.ScrollCue>
         )}
@@ -262,6 +287,7 @@ export const BriefView = ({
             <S.RailLink
               key={section.key}
               href={`#brief-${section.key}`}
+              onClick={(event) => jumpTo(event, section.key)}
               $active={active === `brief-${section.key}`}
               aria-current={active === `brief-${section.key}` ? "true" : undefined}
             >
@@ -315,7 +341,17 @@ export const BriefView = ({
       </S.Body>
       </S.BodyFrame>
 
-      {!embedded && (
+      {onClose && (
+        <S.Finale>
+          <p>That&apos;s the brief.</p>
+          <h2>Now build something big.</h2>
+          <button type="button" onClick={onClose}>
+            <Icon icon="mdi:arrow-left" aria-hidden /> Back to the project
+          </button>
+        </S.Finale>
+      )}
+
+      {!embedded && !onClose && (
         <S.Footer>
           <span>
             A group project at{" "}
