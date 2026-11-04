@@ -3,6 +3,14 @@
 import { RefObject, useEffect, useState } from "react";
 
 /**
+ * Scroll events do not bubble, and inside the LMS the page scrolls in <Main>
+ * (overflow: auto), not the window — a plain window listener never fired
+ * there, so the contents rail stayed on the first section. Capturing on the
+ * window hears a scroll from any container.
+ */
+const SCROLL_OPTS: AddEventListenerOptions = { passive: true, capture: true };
+
+/**
  * The brief page's motion, driven by attributes in the HTML so teachers can
  * use it without writing a script:
  *
@@ -117,7 +125,7 @@ export function useBriefMotion(
       });
     };
     if (parallax.length) {
-      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("scroll", onScroll, SCROLL_OPTS);
       onScroll();
     }
 
@@ -135,16 +143,22 @@ export function useBriefMotion(
         for (const section of sections) {
           if (section.getBoundingClientRect().top <= line) current = section.id;
         }
+        // A short last section never reaches the line; once its end is on
+        // screen, it is the one being read.
+        const last = sections[sections.length - 1];
+        if (last && last.getBoundingClientRect().bottom <= window.innerHeight + 2) {
+          current = last.id;
+        }
         setActive(current);
       });
     };
-    window.addEventListener("scroll", spy, { passive: true });
+    window.addEventListener("scroll", spy, SCROLL_OPTS);
     spy();
 
     return () => {
       reveal.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("scroll", spy);
+      window.removeEventListener("scroll", onScroll, SCROLL_OPTS);
+      window.removeEventListener("scroll", spy, SCROLL_OPTS);
       cancelAnimationFrame(frame);
       cancelAnimationFrame(spyFrame);
     };
@@ -170,11 +184,11 @@ export function useReadingProgress(rootRef: RefObject<HTMLElement | null>): numb
         setProgress(total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 1);
       });
     };
-    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("scroll", update, SCROLL_OPTS);
     window.addEventListener("resize", update);
     update();
     return () => {
-      window.removeEventListener("scroll", update);
+      window.removeEventListener("scroll", update, SCROLL_OPTS);
       window.removeEventListener("resize", update);
       cancelAnimationFrame(frame);
     };
