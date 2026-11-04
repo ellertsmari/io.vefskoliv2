@@ -25,8 +25,8 @@ describe("robots.txt", () => {
 describe("sitemap.xml", () => {
   it("lists the public pages, every guide and every public brief, with dates where they are usable", async () => {
     (getPublicBriefs as jest.Mock).mockResolvedValue([
-      { slug: "connecting-to-the-world", brief: { updatedAt: "2026-10-01T09:00:00.000Z" } },
-      { slug: "first-website", brief: { updatedAt: null } },
+      { brief: { slug: "connecting-to-the-world", updated: "2026-10-01" } },
+      { brief: { slug: "first-website", updated: "2026-08-20" } },
     ]);
     (getPublicGuides as jest.Mock).mockResolvedValue([
       { _id: "5f13205ab279dc27c467ca56", updatedAt: "2026-09-01T10:00:00.000Z" },
@@ -48,8 +48,8 @@ describe("sitemap.xml", () => {
     ]);
     expect(urls[4].lastModified).toBe("2026-09-01T10:00:00.000Z");
     expect(urls[5]).not.toHaveProperty("lastModified");
-    expect(urls[6].lastModified).toBe("2026-10-01T09:00:00.000Z");
-    expect(urls[7]).not.toHaveProperty("lastModified");
+    expect(urls[6].lastModified).toBe("2026-10-01");
+    expect(urls[7].lastModified).toBe("2026-08-20");
   });
 
   it("still lists the public pages when the guides can't be read", async () => {

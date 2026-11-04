@@ -157,6 +157,7 @@ vercel.json              Deployment configuration
 | Exercise engine decisions | [Exercise engine notes](docs/exercise-engine-tasks.md) |
 | Community participation forms | [Activity logs and Module 2 setup](docs/activity-log-guide.md) |
 | Group assessment | [Peer evaluation](docs/peer-evaluation.md) |
+| Group project briefs | [Writing a project brief](docs/writing-a-project-brief.md) |
 | Who can see feedback and grades | [Feedback visibility](docs/feedback-visibility.md) |
 | Canvas connection | [LTI setup](documentation/LTI_SETUP.md) · [Canvas integration](documentation/CANVAS_INTEGRATION_GUIDE.md) |
 

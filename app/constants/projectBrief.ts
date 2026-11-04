@@ -1,83 +1,96 @@
 /**
- * The structured project brief: a fixed set of sections every group project
- * has, a per-project theme, and the animation hooks teachers can use in a
- * section's HTML. Shared by the public brief page, the student view in the
- * LMS and the teachers' brief editor.
+ * A group project brief: one static file per module in app/projects/briefs,
+ * written (usually with an LLM — see docs/writing-a-project-brief.md) and
+ * reviewed like any other code. The brief holds the words and the look; the
+ * dates, rubric and grade weights come from the module's project in the
+ * database, so the page is never out of step with what is graded.
+ *
+ * Text fields accept a little inline formatting: **bold**, *italic*,
+ * `code` and [links](https://…). Nothing else is interpreted.
  */
 
-export const BRIEF_SECTION_KEYS = [
-  "overview",
-  "requirements",
-  "deliverables",
-  "ideas",
-  "timeline",
-  "presentation",
-  "grading",
-] as const;
-export type BriefSectionKey = (typeof BRIEF_SECTION_KEYS)[number];
+/** A card with an icon (any Iconify name, e.g. "mdi:map-outline"). */
+export type BriefCard = { icon: string; title: string; text: string };
 
-export type BriefSectionMeta = {
-  key: BriefSectionKey;
-  defaultTitle: string;
-  icon: string;
-  /** What belongs here, for the empty state in the editor. */
-  hint: string;
+export type BriefMedia =
+  | { type: "youtube"; id: string; title: string }
+  | { type: "image"; src: string; alt: string; caption?: string };
+
+export type ProjectBrief = {
+  /** Which module's project supplies the dates, rubric and weights. */
+  module: number;
+  /** The public address: /projects/<slug>. */
+  slug: string;
+  /** Short display title, without "Module N — Group Project:". */
+  title: string;
+  /** One sentence under the title on the cover. */
+  tagline: string;
+  /** "4–5 students", "One team of everyone"; empty to leave it off. */
+  teamSize: string;
+  /** Last real change to the brief, YYYY-MM-DD (sitemap, structured data). */
+  updated: string;
+  /** Optional https:// image behind the cover. */
+  coverImage?: string;
+  theme: Partial<BriefTheme>;
+
+  /** 01 — why this project exists. Keep it to a screen or so. */
+  mission: {
+    /** A big opening statement, one or two sentences. */
+    statement: string;
+    paragraphs: string[];
+    /** A side note that deepens the why — a story, a law, a fact. */
+    aside?: { title: string; text: string };
+    media?: BriefMedia;
+    /** The three or four things a team will have shown by the end. */
+    goals: BriefCard[];
+  };
+
+  /** 02 — what every team must do, one tab per area. */
+  requirements: Array<{ label: string; icon: string; intro?: string; items: string[] }>;
+  /** Optional extras that impress but are not required. */
+  bonus?: { title: string; items: string[] };
+  /** What is handed in at the end — becomes a checklist. */
+  handIn: string[];
+
+  /** 03 — starting points for the team's own idea. */
+  ideas: BriefCard[];
+  /** Said under the ideas, e.g. "Your own idea is welcome — talk to us first." */
+  ideasNote?: string;
+
   /**
-   * Built from the project's own data (dates, rubric), so the section shows
-   * even with no HTML — the HTML is an optional intro above it.
+   * 04 — the phases between kick-off and presentation day, in order. Each
+   * phase gets a share of that time proportional to its `weight`, so the
+   * timeline still fits when the dates move.
    */
-  automatic?: boolean;
+  phases: Array<{
+    title: string;
+    icon: string;
+    weight: number;
+    text: string;
+    tasks: string[];
+  }>;
+
+  /**
+   * 05 — the presentation, part by part. `criteria` are rubric keys from the
+   * project in the database; the page shows their titles and highlights them.
+   */
+  presentation: Array<{ title: string; minutes: number; text: string; criteria: string[] }>;
+
+  /** Said under the agenda, e.g. who sees the presentation first. */
+  presentationNote?: string;
+
+  /**
+   * Optional: a list the team must pick a minimum from ("at least 9 of these
+   * complexity aspects"). Shown as a checklist students can try out.
+   */
+  pickList?: { title: string; intro: string; minimum: number; items: string[] };
+
+  /** 07 — questions students actually ask. Also marked up for search engines. */
+  faq: Array<{ question: string; answer: string }>;
 };
 
-export const BRIEF_SECTIONS: BriefSectionMeta[] = [
-  {
-    key: "overview",
-    defaultTitle: "The brief",
-    icon: "mdi:compass-outline",
-    hint: "What the project is and why it matters, in a few paragraphs.",
-  },
-  {
-    key: "requirements",
-    defaultTitle: "Requirements",
-    icon: "mdi:clipboard-check-outline",
-    hint: "What every team has to do: process, design, tech.",
-  },
-  {
-    key: "deliverables",
-    defaultTitle: "Deliverables",
-    icon: "mdi:package-variant-closed",
-    hint: "What gets handed in at the end, and where.",
-  },
-  {
-    key: "ideas",
-    defaultTitle: "Theme ideas",
-    icon: "mdi:lightbulb-on-outline",
-    hint: "Ideas to start from. Cards work well here.",
-  },
-  {
-    key: "timeline",
-    defaultTitle: "Timeline",
-    icon: "mdi:timeline-clock-outline",
-    hint: "Optional notes above the dates — milestones, check-ins.",
-    automatic: true,
-  },
-  {
-    key: "presentation",
-    defaultTitle: "Presentation",
-    icon: "mdi:presentation",
-    hint: "How the presentation runs, part by part.",
-  },
-  {
-    key: "grading",
-    defaultTitle: "How it's graded",
-    icon: "mdi:scale-balance",
-    hint: "Optional intro above the rubric and the grade weights.",
-    automatic: true,
-  },
-];
-
-export const briefSectionMeta = (key: BriefSectionKey): BriefSectionMeta =>
-  BRIEF_SECTIONS.find((section) => section.key === key)!;
+/** A brief with every theme field filled in, as the page receives it. */
+export type ResolvedBrief = Omit<ProjectBrief, "theme"> & { theme: BriefTheme };
 
 export type BriefTheme = {
   background: string;
@@ -120,28 +133,6 @@ export const DEFAULT_BRIEF_THEME: BriefTheme = {
   bodyFont: "Source Sans 3",
 };
 
-/** Suggestions for the font fields; any Google Fonts family name works. */
-export const BRIEF_FONT_SUGGESTIONS = [
-  "Fraunces",
-  "Playfair Display",
-  "DM Serif Display",
-  "Instrument Serif",
-  "Libre Caslon Text",
-  "Source Serif 4",
-  "Inter",
-  "Source Sans 3",
-  "DM Sans",
-  "Manrope",
-  "Space Grotesk",
-  "Syne",
-  "Archivo",
-  "Bricolage Grotesque",
-  "Unbounded",
-  "Bebas Neue",
-  "JetBrains Mono",
-  "Space Mono",
-];
-
 export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 export const FONT_FAMILY = /^[A-Za-z0-9 ]{1,40}$/;
 export const BRIEF_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -182,114 +173,8 @@ export function briefFontUrls(theme: BriefTheme): string[] {
   );
 }
 
-/**
- * "Module 4 — Group Project: Connecting to the World" → "Connecting to the
- * World". The cover already says the module and "Group project" above the
- * title, so the long form only repeated itself in giant type.
- */
-export const briefDisplayTitle = (title: string): string =>
-  title.replace(/^\s*module\s*\d+\s*[—–:-]\s*(group\s*project\s*:?\s*)?/i, "").trim() || title;
 
-/** Default page address: "module-4-connecting-to-the-world". */
-export const defaultBriefSlug = (title: string, module: number | null | undefined): string =>
-  slugify([module ? `module ${module}` : "", briefDisplayTitle(title)].join(" "));
-
-export const slugify = (text: string): string =>
-  text
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[ðÐ]/g, "d")
-    .replace(/[þÞ]/g, "th")
-    .replace(/[æÆ]/g, "ae")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80)
-    .replace(/-+$/g, "");
-
-/**
- * The animation and layout hooks a section's HTML can use. Listed in the
- * editor as a cheat sheet with one-click inserts.
- */
-export const BRIEF_SNIPPETS: Array<{ label: string; html: string; note: string }> = [
-  {
-    label: "Lead paragraph",
-    note: "Large intro text",
-    html: '<p class="brief-lead" data-animate="fade-up">A big opening sentence.</p>',
-  },
-  {
-    label: "Cards",
-    note: "Grid of cards that come in one after another",
-    html: `<div class="brief-grid" data-stagger>
-  <div class="brief-card"><h3>Idea one</h3><p>Short description.</p></div>
-  <div class="brief-card"><h3>Idea two</h3><p>Short description.</p></div>
-  <div class="brief-card"><h3>Idea three</h3><p>Short description.</p></div>
-</div>`,
-  },
-  {
-    label: "Big numbers",
-    note: "Count up when scrolled into view — write the final number in both places",
-    html: `<div class="brief-stats" data-stagger>
-  <div class="brief-stat"><strong data-count="4">4</strong><span>weeks</span></div>
-  <div class="brief-stat"><strong data-count="30">30</strong><span>minute presentation</span></div>
-</div>`,
-  },
-  {
-    label: "Callout",
-    note: "Highlighted box for what must not be missed",
-    html: '<div class="brief-callout" data-animate="zoom-in"><strong>Important:</strong> the product must be online.</div>',
-  },
-  {
-    label: "Checklist",
-    note: "Ticked list",
-    html: `<ul class="brief-checklist" data-stagger>
-  <li>First requirement</li>
-  <li>Second requirement</li>
-</ul>`,
-  },
-  {
-    label: "Steps",
-    note: "Numbered steps with timings",
-    html: `<ol class="brief-steps" data-stagger>
-  <li><strong>Introduction</strong> <span class="brief-pill">5 min</span><p>Demo, tools, how you worked.</p></li>
-  <li><strong>Design</strong> <span class="brief-pill">7 min</span><p>Research, prototypes, style guide.</p></li>
-</ol>`,
-  },
-  {
-    label: "Two columns",
-    note: "Side by side on wide screens",
-    html: `<div class="brief-columns">
-  <div data-animate="slide-right"><h3>Design</h3><p>…</p></div>
-  <div data-animate="slide-left"><h3>Code</h3><p>…</p></div>
-</div>`,
-  },
-  {
-    label: "YouTube video",
-    note: "Responsive 16:9 embed",
-    html: `<div class="brief-video" data-animate="fade-up">
-  <iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="Video" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-</div>`,
-  },
-  {
-    label: "Image",
-    note: "Full-width image with a caption",
-    html: `<figure class="brief-figure" data-animate="blur-in">
-  <img src="https://…" alt="Describe the image" loading="lazy">
-  <figcaption>Caption</figcaption>
-</figure>`,
-  },
-  {
-    label: "Parallax image",
-    note: "Drifts slightly as you scroll",
-    html: '<img class="brief-wide" data-parallax="0.15" src="https://…" alt="" loading="lazy">',
-  },
-];
-
-export const BRIEF_ANIMATIONS = [
-  "fade-up",
-  "fade-in",
-  "zoom-in",
-  "slide-left",
-  "slide-right",
-  "blur-in",
-] as const;
+export const resolveBrief = (brief: ProjectBrief): ResolvedBrief => ({
+  ...brief,
+  theme: resolveBriefTheme(brief.theme),
+});

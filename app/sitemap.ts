@@ -31,9 +31,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       };
     }),
-    ...briefs.map((brief) => ({
+    ...briefs.map(({ brief }) => ({
       url: `${SITE_URL}/projects/${brief.slug}`,
-      ...(brief.brief.updatedAt ? { lastModified: brief.brief.updatedAt } : {}),
+      lastModified: brief.updated,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),

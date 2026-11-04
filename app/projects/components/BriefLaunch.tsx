@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import styled, { css, keyframes } from "styled-components";
 import { Icon } from "@iconify/react";
 import { BriefProject } from "types/groupTypes";
-import { briefDisplayTitle, briefFontUrls } from "constants/projectBrief";
+import { briefFontUrls } from "constants/projectBrief";
 import { rubricForProject } from "constants/groupWork";
 import { BriefView } from "./BriefView";
 
@@ -42,15 +42,14 @@ const markSeen = (id: string) => {
   }
 };
 
-/** Rough reading time of the written sections, for the teaser. */
+/** Rough reading time of the brief, for the teaser. */
 const readingMinutes = (project: BriefProject) => {
-  const text = project.brief.sections
-    .map((s) => s.html.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " "))
-    .join(" ");
-  const words =
+  // Every string in the brief is something to read, apart from the look.
+  const text = JSON.stringify({ ...project.brief, theme: null }).replace(/"[a-zA-Z]+":/g, " ");
+  const count =
     text.split(/\s+/).filter(Boolean).length +
     rubricForProject(project.rubric).length * 15;
-  return Math.max(2, Math.round(words / 200));
+  return Math.max(2, Math.round(count / 200));
 };
 
 type Phase = "closed" | "intro" | "open";
@@ -158,8 +157,8 @@ export const BriefLaunch = ({
           <TeaserEyebrow>
             {moduleLabel} · The final project
           </TeaserEyebrow>
-          <TeaserTitle>{briefDisplayTitle(project.title)}</TeaserTitle>
-          {project.brief.tagline && <TeaserTagline>{project.brief.tagline}</TeaserTagline>}
+          <TeaserTitle>{project.brief.title}</TeaserTitle>
+          <TeaserTagline>{project.brief.tagline}</TeaserTagline>
           <TeaserMeta>
             {project.brief.teamSize && (
               <span>
@@ -188,13 +187,13 @@ export const BriefLaunch = ({
           <Overlay
             role="dialog"
             aria-modal="true"
-            aria-label={`${project.title} — project description`}
+            aria-label={`${project.brief.title} — project description`}
             style={vars}
           >
             {phase === "intro" && (
               <Intro
                 moduleLabel={moduleLabel}
-                title={briefDisplayTitle(project.title)}
+                title={project.brief.title}
                 onLift={() => setRevealing(true)}
                 onDone={() => setPhase("open")}
               />

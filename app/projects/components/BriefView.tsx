@@ -1,38 +1,36 @@
 "use client";
 
-import { CSSProperties, Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { BriefProject } from "types/groupTypes";
-import {
-  BRIEF_SECTIONS,
-  BriefSectionKey,
-  briefDisplayTitle,
-  briefFontUrls,
-} from "constants/projectBrief";
-import { DISCIPLINE_META, rubricForProject } from "constants/groupWork";
+import { briefFontUrls } from "constants/projectBrief";
+import { rubricForProject } from "constants/groupWork";
 import { SITE_NAME } from "constants/site";
 import { useBriefMotion, useReadingProgress } from "./useBriefMotion";
+import {
+  FaqSection,
+  IdeasSection,
+  MissionSection,
+  PresentationSection,
+  RequirementsSection,
+  TimelineSection,
+  dateFmt,
+} from "./BriefSections";
+import { GradingLab } from "./GradingLab";
 import * as S from "./briefStyles";
 
 type Props = {
   project: BriefProject;
   /** Inside the LMS: a rounded panel instead of a full page. */
   embedded?: boolean;
-  /** Teachers editing: edit buttons on each part, empty sections shown. */
-  onEditSection?: (key: BriefSectionKey) => void;
-  onEditLook?: () => void;
-  /** Unpublished page seen by a teacher. */
+  /** A teacher looking at a page that is not public yet. */
   previewBanner?: string | null;
   /** Link out to the public page from the LMS. */
   publicUrl?: string | null;
   /** Opened full-screen from the LMS: ends with a way back, not a footer. */
   onClose?: () => void;
 };
-
-const dateFmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
-  // Iceland is UTC all year; pinning it keeps server and browser identical.
-  new Date(iso).toLocaleDateString("en-GB", { timeZone: "UTC", ...opts });
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -45,60 +43,99 @@ const splitTeamSize = (teamSize: string) => {
       label: `${match[2].trim() || "people"} per team`,
     };
   }
-  return { value: teamSize, label: "team" };
+  return { value: teamSize, label: "" };
 };
 
 export const BriefView = ({
   project,
   embedded = false,
-  onEditSection,
-  onEditLook,
   previewBanner,
   publicUrl,
   onClose,
 }: Props) => {
   const { brief } = project;
   const theme = brief.theme;
-  const editing = !!onEditSection;
   const rootRef = useRef<HTMLElement>(null);
-
   const rubric = rubricForProject(project.rubric);
-
-  /** Sections in their fixed order; empty ones only while editing. */
-  const sections = useMemo(
-    () =>
-      BRIEF_SECTIONS.map((meta) => {
-        const stored = brief.sections.find((s) => s.key === meta.key);
-        return {
-          ...meta,
-          title: stored?.title || meta.defaultTitle,
-          html: stored?.html || "",
-        };
-      }).filter((s) => editing || s.automatic || s.html),
-    [brief.sections, editing]
-  );
-
-  const sectionIds = sections.map((s) => `brief-${s.key}`);
-  const active = useBriefMotion(rootRef, sectionIds, brief);
-  const progress = useReadingProgress(rootRef);
 
   // Only known after hydration, so server and first client render agree.
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => setNow(Date.now()), []);
 
+  const sections: Array<{ key: string; title: string; icon: string; content: ReactNode }> = [
+    {
+      key: "mission",
+      title: "The mission",
+      icon: "mdi:compass-outline",
+      content: <MissionSection brief={brief} />,
+    },
+    {
+      key: "requirements",
+      title: "Requirements",
+      icon: "mdi:clipboard-check-outline",
+      content: <RequirementsSection brief={brief} />,
+    },
+    {
+      key: "ideas",
+      title: "Ideas",
+      icon: "mdi:lightbulb-on-outline",
+      content: <IdeasSection brief={brief} />,
+    },
+    {
+      key: "timeline",
+      title: "Timeline",
+      icon: "mdi:timeline-clock-outline",
+      content: (
+        <TimelineSection
+          brief={brief}
+          startDate={project.startDate}
+          endDate={project.endDate}
+          presentationDate={project.presentationDate}
+          now={now}
+        />
+      ),
+    },
+    {
+      key: "presentation",
+      title: "Presentation",
+      icon: "mdi:presentation",
+      content: <PresentationSection brief={brief} rubric={rubric} />,
+    },
+    {
+      key: "grading",
+      title: "How it's graded",
+      icon: "mdi:scale-balance",
+      content: <GradingLab rubric={rubric} panelWeight={project.panelWeight} />,
+    },
+    ...(brief.faq.length
+      ? [
+          {
+            key: "faq",
+            title: "Questions",
+            icon: "mdi:help-circle-outline",
+            content: <FaqSection brief={brief} />,
+          },
+        ]
+      : []),
+  ];
+
+  const sectionIds = sections.map((s) => `brief-${s.key}`);
+  const active = useBriefMotion(rootRef, sectionIds);
+  const progress = useReadingProgress(rootRef);
+
   const start = new Date(project.startDate).getTime();
   const end = new Date(project.endDate).getTime();
   const weeks = Math.max(1, Math.round((end - start) / (7 * DAY)));
+  const minutes =
+    brief.presentation.reduce((sum, part) => sum + part.minutes, 0) ||
+    project.presentationLength ||
+    0;
 
   const facts: Array<{ value: string; label: string; count?: number }> = [];
   if (brief.teamSize) facts.push(splitTeamSize(brief.teamSize));
   facts.push({ value: String(weeks), label: weeks === 1 ? "week" : "weeks", count: weeks });
-  if (project.presentationLength) {
-    facts.push({
-      value: String(project.presentationLength),
-      label: "minute presentation",
-      count: project.presentationLength,
-    });
+  if (minutes) {
+    facts.push({ value: String(minutes), label: "minute presentation", count: minutes });
   }
   if (project.presentationDate) {
     facts.push({
@@ -107,18 +144,6 @@ export const BriefView = ({
     });
   }
   facts.push({ value: String(rubric.length), label: "graded criteria", count: rubric.length });
-
-  const points = [
-    { label: "Kick-off", iso: project.startDate },
-    ...(project.presentationDate
-      ? [{ label: "Presentations", iso: project.presentationDate }]
-      : []),
-    { label: "Wrap-up", iso: project.endDate },
-  ];
-  const done =
-    now === null ? 0 : Math.min(1, Math.max(0, (now - start) / (end - start || 1)));
-
-  const panelPercent = Math.round(project.panelWeight * 100);
 
   const style = {
     "--b-bg": theme.background,
@@ -133,7 +158,7 @@ export const BriefView = ({
     "--b-body-font": `"${theme.bodyFont}"`,
   } as CSSProperties;
 
-  const words = briefDisplayTitle(project.title).split(/\s+/);
+  const words = brief.title.split(/\s+/);
 
   /**
    * Contents links scroll by script rather than by #hash: inside the LMS the
@@ -147,75 +172,6 @@ export const BriefView = ({
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const moduleLabel = project.module ? `Module ${project.module}` : null;
-
-  const automaticContent = (key: BriefSectionKey) => {
-    if (key === "timeline") {
-      return (
-        <S.Timeline
-          style={{ "--points": points.length, "--done": done } as CSSProperties}
-          aria-label="Project dates"
-        >
-          {points.map((point) => (
-            <S.TimelinePoint
-              key={point.label}
-              $passed={now !== null && new Date(point.iso).getTime() <= now}
-              data-animate="fade-up"
-            >
-              <strong>{dateFmt(point.iso, { day: "numeric", month: "short" })}</strong>
-              <span>
-                {point.label} · {dateFmt(point.iso, { weekday: "long" })}
-              </span>
-            </S.TimelinePoint>
-          ))}
-        </S.Timeline>
-      );
-    }
-    if (key === "grading") {
-      return (
-        <>
-          <S.WeightBar
-            role="img"
-            aria-label={`Teachers and judges ${panelPercent}%, student audience ${100 - panelPercent}%`}
-          >
-            <S.WeightPart $tone="accent" style={{ flexBasis: `${panelPercent}%` }}>
-              Teachers & judges {panelPercent}%
-            </S.WeightPart>
-            {panelPercent < 100 && (
-              <S.WeightPart $tone="soft" style={{ flexBasis: `${100 - panelPercent}%` }}>
-                Audience {100 - panelPercent}%
-              </S.WeightPart>
-            )}
-          </S.WeightBar>
-          <S.Note style={{ marginTop: "0.5rem" }}>
-            Every team is scored 0–10 on each criterion below by the teachers,
-            invited industry judges and the other students.
-            {panelPercent === 100 &&
-              " Only the teachers' and judges' scores count towards the grade; the students' scores are feedback."}
-          </S.Note>
-          <S.RubricGrid data-stagger="70">
-            {rubric.map((item) => {
-              const meta = DISCIPLINE_META[item.discipline ?? "general"];
-              return (
-                <S.RubricCard key={item.key} $color={meta.color}>
-                  <S.Discipline $color={meta.color} $background={meta.background}>
-                    {meta.label}
-                  </S.Discipline>
-                  <h3>{item.title}</h3>
-                  {item.description && <p>{item.description}</p>}
-                </S.RubricCard>
-              );
-            })}
-          </S.RubricGrid>
-          <S.Note>
-            Your own grade is the team&apos;s result adjusted by the contribution
-            and teamwork figures your teachers confirm from the teammate ratings.
-            An average team member keeps the team&apos;s result.
-          </S.Note>
-        </>
-      );
-    }
-    return null;
-  };
 
   return (
     <S.BriefRoot ref={rootRef} style={style} $embedded={embedded}>
@@ -242,11 +198,6 @@ export const BriefView = ({
             )}
           </S.HeroTopLine>
         )}
-        {onEditLook && (
-          <S.HeroEdit type="button" onClick={onEditLook}>
-            <Icon icon="mdi:palette-outline" aria-hidden /> Cover & theme
-          </S.HeroEdit>
-        )}
         <S.Eyebrow>
           {[moduleLabel, "Group project"].filter(Boolean).join(" · ")}
         </S.Eyebrow>
@@ -257,18 +208,18 @@ export const BriefView = ({
             </Fragment>
           ))}
         </S.HeroTitle>
-        {brief.tagline && <S.HeroTagline>{brief.tagline}</S.HeroTagline>}
+        <S.HeroTagline>{brief.tagline}</S.HeroTagline>
         <S.Facts>
           {facts.map((fact, index) => (
-            <S.Fact key={fact.label} style={{ animationDelay: `${450 + index * 90}ms` }}>
+            <S.Fact key={fact.label || fact.value} style={{ animationDelay: `${450 + index * 90}ms` }}>
               <dd {...(fact.count !== undefined ? { "data-count": fact.count } : {})}>
                 {fact.value}
               </dd>
-              <dt>{fact.label}</dt>
+              {fact.label && <dt>{fact.label}</dt>}
             </S.Fact>
           ))}
         </S.Facts>
-        {!embedded && sections[0] && (
+        {!embedded && (
           <S.ScrollCue
             href={`#brief-${sections[0].key}`}
             aria-label="Read the brief"
@@ -280,65 +231,45 @@ export const BriefView = ({
       </S.Hero>
 
       <S.BodyFrame>
-      <S.Body>
-        <S.Rail aria-label="Sections">
-          <S.RailLabel>Contents</S.RailLabel>
-          {sections.map((section, index) => (
-            <S.RailLink
-              key={section.key}
-              href={`#brief-${section.key}`}
-              onClick={(event) => jumpTo(event, section.key)}
-              $active={active === `brief-${section.key}`}
-              aria-current={active === `brief-${section.key}` ? "true" : undefined}
-            >
-              <small>{String(index + 1).padStart(2, "0")}</small>
-              {section.title}
-            </S.RailLink>
-          ))}
-          {publicUrl && (
-            <S.RailAction href={publicUrl} target="_blank" rel="noopener">
-              <Icon icon="mdi:open-in-new" aria-hidden /> Public page
-            </S.RailAction>
-          )}
-        </S.Rail>
+        <S.Body>
+          <S.Rail aria-label="Sections">
+            <S.RailLabel>Contents</S.RailLabel>
+            {sections.map((section, index) => (
+              <S.RailLink
+                key={section.key}
+                href={`#brief-${section.key}`}
+                onClick={(event) => jumpTo(event, section.key)}
+                $active={active === `brief-${section.key}`}
+                aria-current={active === `brief-${section.key}` ? "true" : undefined}
+              >
+                <small>{String(index + 1).padStart(2, "0")}</small>
+                {section.title}
+              </S.RailLink>
+            ))}
+            {publicUrl && (
+              <S.RailAction href={publicUrl} target="_blank" rel="noopener">
+                <Icon icon="mdi:open-in-new" aria-hidden /> Public page
+              </S.RailAction>
+            )}
+          </S.Rail>
 
-        <S.Sections>
-          {sections.map((section, index) => (
-            <S.Section key={section.key} id={`brief-${section.key}`}>
-              <S.SectionHead data-animate="fade-up">
-                <S.SectionNumber aria-hidden>
-                  {String(index + 1).padStart(2, "0")}
-                </S.SectionNumber>
-                <S.SectionTitle>
-                  <Icon icon={section.icon} aria-hidden />
-                  {section.title}
-                </S.SectionTitle>
-                {onEditSection && (
-                  <S.EditButton type="button" onClick={() => onEditSection(section.key)}>
-                    <Icon icon="mdi:pencil-outline" aria-hidden /> Edit
-                  </S.EditButton>
-                )}
-              </S.SectionHead>
-              {section.html ? (
-                <S.Html
-                  className="brief-html"
-                  data-animate="fade-up"
-                  dangerouslySetInnerHTML={{ __html: section.html }}
-                />
-              ) : (
-                editing &&
-                !section.automatic && (
-                  <S.EmptySection type="button" onClick={() => onEditSection?.(section.key)}>
-                    <strong>Empty — click to write it.</strong> {section.hint} Empty
-                    sections are hidden from students and the public page.
-                  </S.EmptySection>
-                )
-              )}
-              {automaticContent(section.key)}
-            </S.Section>
-          ))}
-        </S.Sections>
-      </S.Body>
+          <S.Sections>
+            {sections.map((section, index) => (
+              <S.Section key={section.key} id={`brief-${section.key}`}>
+                <S.SectionHead data-animate="fade-up">
+                  <S.SectionNumber aria-hidden>
+                    {String(index + 1).padStart(2, "0")}
+                  </S.SectionNumber>
+                  <S.SectionTitle>
+                    <Icon icon={section.icon} aria-hidden />
+                    {section.title}
+                  </S.SectionTitle>
+                </S.SectionHead>
+                {section.content}
+              </S.Section>
+            ))}
+          </S.Sections>
+        </S.Body>
       </S.BodyFrame>
 
       {onClose && (

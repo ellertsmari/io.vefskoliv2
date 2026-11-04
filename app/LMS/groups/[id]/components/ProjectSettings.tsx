@@ -299,11 +299,11 @@ export const ProjectSettings = ({
             />
           </Label>
           <Label>
-            Old description (markdown)
+            Description (markdown)
             <MutedText as="span">
-              {project.brief.sections.length > 0
-                ? "Replaced by the Brief tab — students and the public page see that one. Kept for reference."
-                : "Shown to students until the Brief tab has content. The Brief tab can import it into sections."}
+              {project.brief
+                ? "Not shown to students: this module has a brief page, which they see instead. Kept for reference."
+                : "Shown to students, because this module has no brief page yet (see docs/writing-a-project-brief.md)."}
             </MutedText>
             <TextArea
               value={description}

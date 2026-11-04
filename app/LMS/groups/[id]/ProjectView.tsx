@@ -34,7 +34,6 @@ import { AssignmentBoard } from "./components/AssignmentBoard";
 import { TeacherEvaluations } from "./components/TeacherEvaluations";
 import { ProjectSettings } from "./components/ProjectSettings";
 import { Stepper, type Step } from "./components/Stepper";
-import { BriefStudio } from "./components/BriefStudio";
 import { BriefLaunch } from "../../../projects/components/BriefLaunch";
 
 const HeaderInfo = styled.div`
@@ -157,6 +156,37 @@ const HowYouAreGraded = ({ details }: { details: GroupProjectDetails }) => {
   );
 };
 
+/**
+ * The brief step: the module's brief page (app/projects/briefs) when it has
+ * one, otherwise the project's Markdown description.
+ */
+const BriefStep = ({ details }: { details: GroupProjectDetails }) => {
+  const { project } = details;
+  if (project.brief) {
+    return (
+      <BriefLaunch
+        project={{ ...project, brief: project.brief }}
+        publicUrl={project.status !== "formation" ? `/projects/${project.brief.slug}` : null}
+      />
+    );
+  }
+  return (
+    <>
+      {project.description ? (
+        <Description>
+          <MarkdownReader>{project.description}</MarkdownReader>
+        </Description>
+      ) : (
+        <MutedText>
+          Your teachers haven&apos;t written the brief yet — it will
+          appear here.
+        </MutedText>
+      )}
+      <HowYouAreGraded details={details} />
+    </>
+  );
+};
+
 export const ProjectView = ({
   details,
   reports,
@@ -168,9 +198,6 @@ export const ProjectView = ({
 
   const teacherTabs = ["Overview", "Brief", "Assignment", "Evaluations", "Settings"];
 
-  const hasBrief = project.brief.sections.some((section) => section.html.trim());
-  const briefIsPublic =
-    project.published && project.status !== "formation" && !!project.slug;
 
   const mySlot = myTeamId
     ? project.presentationSlots.find((slot) => slot.team === myTeamId) ?? null
@@ -358,27 +385,7 @@ export const ProjectView = ({
               onSaved={() => setActiveTab("brief")}
             />
           )}
-          {currentTab === "brief" && hasBrief && (
-            <BriefLaunch
-              project={project}
-              publicUrl={briefIsPublic ? `/projects/${project.slug}` : null}
-            />
-          )}
-          {currentTab === "brief" && !hasBrief && (
-            <>
-              {project.description ? (
-                <Description>
-                  <MarkdownReader>{project.description}</MarkdownReader>
-                </Description>
-              ) : (
-                <MutedText>
-                  Your teachers haven&apos;t written the brief yet — it will
-                  appear here.
-                </MutedText>
-              )}
-              <HowYouAreGraded details={details} />
-            </>
-          )}
+          {currentTab === "brief" && <BriefStep details={details} />}
           {currentTab === "team" && (
             <TeamHubTab details={details} isTeacher={false} />
           )}
@@ -395,7 +402,7 @@ export const ProjectView = ({
       )}
 
       {currentTab === "Overview" && <TeacherOverview details={details} />}
-      {currentTab === "Brief" && <BriefStudio details={details} />}
+      {currentTab === "Brief" && <BriefStep details={details} />}
       {currentTab === "Assignment" && <AssignmentBoard details={details} />}
       {currentTab === "Evaluations" && (
         <TeacherEvaluations details={details} reports={reports} judges={judges} />

@@ -5,8 +5,6 @@ import { CSSProperties } from "react";
 import styled, { keyframes } from "styled-components";
 import { BriefProject } from "types/groupTypes";
 import { SITE_NAME } from "constants/site";
-import { briefDisplayTitle } from "constants/projectBrief";
-import { briefExcerpt } from "./briefExcerpt";
 
 const rise = keyframes`
   from { opacity: 0; transform: translateY(24px); }
@@ -155,7 +153,7 @@ export const ProjectsIndex = ({ projects }: { projects: BriefProject[] }) => (
       </p>
     </Head>
     {projects.length === 0 ? (
-      <Empty>No briefs are published yet.</Empty>
+      <Empty>The first briefs go up once teams are formed.</Empty>
     ) : (
       <Grid>
         {projects.map((project, index) => {
@@ -163,7 +161,7 @@ export const ProjectsIndex = ({ projects }: { projects: BriefProject[] }) => (
           return (
             <Card
               key={project._id}
-              href={`/projects/${project.slug}`}
+              href={`/projects/${project.brief.slug}`}
               style={
                 {
                   "--hero-bg": theme.heroBackground,
@@ -185,8 +183,8 @@ export const ProjectsIndex = ({ projects }: { projects: BriefProject[] }) => (
                   year: "numeric",
                 })}
               </small>
-              <h2>{briefDisplayTitle(project.title)}</h2>
-              <p>{briefExcerpt(project, 140)}</p>
+              <h2>{project.brief.title}</h2>
+              <p>{project.brief.tagline}</p>
             </Card>
           );
         })}

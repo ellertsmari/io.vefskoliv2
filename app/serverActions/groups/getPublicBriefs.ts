@@ -3,48 +3,61 @@
 import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { BriefProject } from "types/groupTypes";
+import { ResolvedBrief } from "constants/projectBrief";
+import { BRIEFS, briefForSlug } from "../../projects/briefs";
 import { isTeacher, requireSession, serializeProject } from "./helpers";
 
 /**
- * Public brief pages. A brief is public when a teacher has published it and
- * teams are no longer forming: during formation the brief is still the
- * reward for answering the preferences form (helpers.canReadDescription),
- * and a public copy would hand it out for free.
+ * Public brief pages. The words come from the static brief files; the dates,
+ * rubric and weights from the module's newest project in the database.
+ *
+ * A brief is public once that project is past team formation: during
+ * formation the brief is still the reward for answering the preferences form
+ * (helpers.canReadDescription), and a public copy would hand it out for free.
+ * A module with no project in the database has no page.
  */
-const PUBLIC_FILTER = {
-  published: true,
-  status: { $ne: "formation" },
-  slug: { $type: "string", $ne: "" },
-};
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
-const toBriefProject = (doc: any): BriefProject => {
+const toBriefProject = (doc: any, brief: ResolvedBrief): BriefProject => {
   const p = serializeProject(doc);
   return {
     _id: p._id,
-    title: p.title,
     module: p.module,
-    slug: p.slug,
     status: p.status,
-    published: p.published,
     startDate: p.startDate,
     endDate: p.endDate,
     presentationDate: p.presentationDate,
     presentationLength: p.presentationLength,
     rubric: p.rubric,
     panelWeight: p.panelWeight,
-    brief: p.brief,
+    brief,
   };
 };
 
-/** Every public brief, newest first, for /projects and the sitemap. */
+/** The newest project of each module that has a brief. */
+async function projectsByModule(modules: number[]) {
+  await connectToDatabase();
+  const docs = await GroupProject.find({ module: { $in: modules } })
+    .sort({ startDate: -1 })
+    .lean();
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
+  const newest = new Map<number, any>();
+  for (const doc of docs) {
+    if (!newest.has(doc.module as number)) newest.set(doc.module as number, doc);
+  }
+  return newest;
+}
+
+/** Every public brief, in programme order, for /projects and the sitemap. */
 export async function getPublicBriefs(): Promise<BriefProject[]> {
   try {
-    await connectToDatabase();
-    const docs = await GroupProject.find(PUBLIC_FILTER)
-      .sort({ startDate: -1 })
-      .lean();
-    return docs.map(toBriefProject);
+    const projects = await projectsByModule(BRIEFS.map((b) => b.module));
+    return BRIEFS.flatMap((brief) => {
+      const doc = projects.get(brief.module);
+      if (!doc || doc.status === "formation") return [];
+      const resolved = briefForSlug(brief.slug);
+      return resolved ? [toBriefProject(doc, resolved)] : [];
+    });
   } catch (error) {
     console.error("[getPublicBriefs]", error);
     return [];
@@ -52,25 +65,25 @@ export async function getPublicBriefs(): Promise<BriefProject[]> {
 }
 
 /**
- * One brief by its address. Teachers also get unpublished and still-forming
- * projects, so they can see the page before it goes live; `isPreview` says
- * when that is what they are looking at.
+ * One brief by its address. Teachers also get briefs whose project is still
+ * forming teams, so they can check the page first; `isPreview` says when that
+ * is what they are looking at.
  */
 export async function getBriefBySlug(
   slug: string
 ): Promise<(BriefProject & { isPreview: boolean }) | null> {
-  if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
+  const brief = briefForSlug(slug);
+  if (!brief) return null;
   try {
-    const session = await requireSession();
-    const preview = !!session && isTeacher(session);
-    await connectToDatabase();
-    const doc = await GroupProject.findOne(
-      preview ? { slug } : { ...PUBLIC_FILTER, slug }
-    ).lean();
+    const projects = await projectsByModule([brief.module]);
+    const doc = projects.get(brief.module);
     if (!doc) return null;
-    const project = toBriefProject(doc);
-    const isPublic = project.published && project.status !== "formation";
-    return { ...project, isPreview: !isPublic };
+    const isPublic = doc.status !== "formation";
+    if (!isPublic) {
+      const session = await requireSession();
+      if (!session || !isTeacher(session)) return null;
+    }
+    return { ...toBriefProject(doc, brief), isPreview: !isPublic };
   } catch (error) {
     console.error("[getBriefBySlug]", error);
     return null;

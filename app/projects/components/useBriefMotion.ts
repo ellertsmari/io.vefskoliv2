@@ -11,8 +11,7 @@ import { RefObject, useEffect, useState } from "react";
 const SCROLL_OPTS: AddEventListenerOptions = { passive: true, capture: true };
 
 /**
- * The brief page's motion, driven by attributes in the HTML so teachers can
- * use it without writing a script:
+ * The brief page's motion, driven by attributes on the elements:
  *
  *   data-animate="fade-up|fade-in|zoom-in|slide-left|slide-right|blur-in"
  *   data-delay="200"         — milliseconds before it starts
@@ -28,9 +27,7 @@ const SCROLL_OPTS: AddEventListenerOptions = { passive: true, capture: true };
  */
 export function useBriefMotion(
   rootRef: RefObject<HTMLElement | null>,
-  sectionIds: string[],
-  /** Re-scan when the HTML changes (the editor's live preview). */
-  version: unknown
+  sectionIds: string[]
 ): string | null {
   const [active, setActive] = useState<string | null>(sectionIds[0] ?? null);
   const idsKey = sectionIds.join("|");
@@ -163,7 +160,7 @@ export function useBriefMotion(
       cancelAnimationFrame(spyFrame);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ids compared by value
-  }, [rootRef, idsKey, version]);
+  }, [rootRef, idsKey]);
 
   return active;
 }
