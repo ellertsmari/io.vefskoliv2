@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   // Lets every page give relative canonical and Open Graph URLs.
   metadataBase: new URL(SITE_URL),
   title: SITE_NAME,
-  description: `${SITE_NAME} (${PROGRAMME_NAME}) is the web development programme at ${SCHOOL_NAME} in Reykjavík.`,
+  description: `${SITE_NAME} (${PROGRAMME_NAME}) is the web development programme at ${SCHOOL_NAME} in Hafnarfjörður, Iceland.`,
   // Proves ownership of the https://io.vefskoli.is/ property in Google Search
   // Console. Removing it un-verifies the property.
   verification: {
