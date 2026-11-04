@@ -139,7 +139,7 @@ Run the checker:
 ```
 python3 scripts/checkExerciseBank.py                 # structure, notes, duplicates, coverage
 python3 scripts/checkExerciseBank.py --check-links   # also verifies every link returns 200
-npx jest __tests__/content/exerciseBank.test.ts      # runs the code tasks for real
+npm run test:content                                 # runs the code tasks for real
 ```
 
 The checker enforces §5 and flags §4. **It cannot judge §1, §2 or §3** — it can only tell

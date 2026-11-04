@@ -48,6 +48,11 @@ jobs:
       - name: Test
         run: npx jest --ci
 
+      # Split out of the main run because it is most of its time; see
+      # jest.config.ts. Still required: it runs every code exercise for real.
+      - name: Test the exercise bank
+        run: JEST_CONTENT=1 npx jest --ci __tests__/content
+
       # The build succeeding does not mean the deployment carries the files the
       # code opens at runtime. It did not, once, and students saw the result.
       - name: Verify the build ships what it reads at runtime

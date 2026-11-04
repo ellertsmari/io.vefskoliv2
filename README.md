@@ -96,7 +96,8 @@ The app uses **Next.js App Router, React, TypeScript, MongoDB/Mongoose, Auth.js,
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Start the development server. |
-| `npm test -- --runInBand` | Run the test suite sequentially. |
+| `npm test -- --runInBand` | Run the test suite sequentially (without the slow exercise bank). |
+| `npm run test:content` | Run every code exercise through the real grader (slow; CI and `verify` run it too). |
 | `npm run build` | Create the production build. |
 | `npm run typecheck` | Check TypeScript, including generated route types. |
 | `npm run verify:trace` | Check that the build includes the runtime files needed by the exercise engine. |

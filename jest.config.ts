@@ -25,7 +25,14 @@ const config: Config = {
     // Map bson to CommonJS version
     "^bson$": "<rootDir>/node_modules/bson/lib/bson.cjs",
   },
-  testPathIgnorePatterns: ["<rootDir>/__tests__/__mocks__/"],
+  testPathIgnorePatterns: [
+    "<rootDir>/__tests__/__mocks__/",
+    // The exercise bank runs every code task through the real grader
+    // (TypeScript compiler + QuickJS) and takes over a minute — most of the
+    // whole suite. It has its own command, `npm run test:content`, which CI
+    // and `npm run verify` run too, so it still guards every push.
+    ...(process.env.JEST_CONTENT === "1" ? [] : ["<rootDir>/__tests__/content/"]),
+  ],
   transformIgnorePatterns: [
     "/node_modules/(?!(react-session-hooks|jose|next-auth|@auth)/)"
   ],
