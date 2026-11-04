@@ -19,7 +19,28 @@ const PUBLIC_ROUTES = [
 
 export const isPublicPathname = (pathname: string): boolean =>
   pathname === "/" ||
+  pathname === "/icon" ||
   PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+
+/**
+ * The route segments behind the login. Only these send a logged-out visitor
+ * to /signin. Any other address is left to Next.js, so one that does not
+ * exist gets a real 404 instead of a sign-in page that crawlers would file
+ * under that address.
+ *
+ * __tests__/architecture/routeAccess.test.ts fails when a new top-level route
+ * is in neither this list nor PUBLIC_ROUTES, so nothing becomes public by
+ * accident.
+ */
+export const PROTECTED_ROUTES = ["/LMS", "/halloffame", "/lti"];
+
+export const requiresSignIn = (pathname: string): boolean =>
+  !isPublicPathname(pathname) &&
+  PROTECTED_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+
+export { PUBLIC_ROUTES };
 
 export const authConfig = {
   pages: {
@@ -36,19 +57,9 @@ export const authConfig = {
     },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const { pathname } = nextUrl;
-
-      const isPublicRoute = isPublicPathname(pathname);
-
-      if (isPublicRoute) {
-        return true;
-      }
-
-      if (isLoggedIn) {
-        return true;
-      }
-
-      return false; // Redirect unauthenticated users to login page
+      // Unauthenticated users are sent to the login page only from a
+      // protected route; elsewhere the page itself (or its 404) is shown.
+      return isLoggedIn || !requiresSignIn(nextUrl.pathname);
     },
   },
   providers: [], // Add providers with an empty array for now

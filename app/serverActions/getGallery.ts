@@ -2,6 +2,7 @@
 
 import mongoose, { PipelineStage, Types } from "mongoose";
 import { connectToDatabase } from "./mongoose-connector";
+import { parseTopics } from "utils/galleryTopics";
 import { Return } from "models/return";
 import { Vote } from "models/review";
 import { ModuleType } from "models/guide";
@@ -138,19 +139,6 @@ const parseMedia = (url?: string): { image: string | null; gif: string | null } 
     : { image: trimmed, gif: null };
 };
 
-const parseTopics = (topicsList?: string): string[] =>
-  (topicsList ?? "")
-    .split(/[\n,;]+/)
-    .map((topic) =>
-      topic
-        .trim()
-        .replace(/^#{1,6}\s+/, "")
-        .replace(/^(?:[-*+]|\d+[.)])\s+/, "")
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-        .replace(/[*_`~]/g, "")
-        .trim()
-    )
-    .filter(Boolean);
 
 const mapAggregateToItem = (doc: GalleryAggregateResult): GalleryItem => {
   const { image, gif } = parseMedia(doc.pictureUrl);

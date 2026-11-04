@@ -1,6 +1,9 @@
 "use client";
 import styled from "styled-components";
 
+/** Marks a Markdown "# Heading" rendered as an <h2> (see reader.tsx). */
+export const MARKDOWN_H1_CLASS = "md-h1";
+
 /**
  * Pulls the markdown body onto our tokens.
  *
@@ -45,7 +48,8 @@ export const MarkdownWrapper = styled.div`
 
     /* Markdown headings sit inside a section that already has a heading, so
        they step down from it rather than restating the page's top level. */
-    h1 {
+    h1,
+    .${MARKDOWN_H1_CLASS} {
       font-size: var(--text-lg);
     }
     h2 {

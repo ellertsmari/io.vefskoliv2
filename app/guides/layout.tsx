@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { SCHOOL_NAME, SITE_NAME } from "constants/site";
 
 export const metadata: Metadata = {
-  title: `Guides · ${SITE_NAME} · ${SCHOOL_NAME}`,
+  // "Guides · Vefskólinn · Tækniskólinn" was too short to say what is here.
+  title: `Web Development Guides, Module by Module · ${SITE_NAME} · ${SCHOOL_NAME}`,
   description: `Every assignment in the ${SITE_NAME} web development programme at ${SCHOOL_NAME}, module by module: HTML, CSS, JavaScript, React, TypeScript, back-end and UI/UX design.`,
 };
 

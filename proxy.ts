@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { authConfig, isPublicPathname } from "./auth.config";
+import { authConfig, requiresSignIn } from "./auth.config";
 import { NextResponse, after } from "next/server";
 import {
   normalizePath,
@@ -43,7 +43,7 @@ export default auth(function proxy(request) {
     });
   }
 
-  if (!isPublicPathname(pathname) && !request.auth?.user) {
+  if (requiresSignIn(pathname) && !request.auth?.user) {
     const signIn = new URL("/signin", request.nextUrl);
     signIn.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signIn);

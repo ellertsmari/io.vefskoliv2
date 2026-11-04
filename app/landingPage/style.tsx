@@ -129,7 +129,8 @@ export const Title = styled.h1`
         font-size: var(--text-display);
     }
 `
-export const Subtitle = styled.h2`
+// A tagline, not a section: as an <h2> it opened an empty section in the outline.
+export const Subtitle = styled.p`
     font-family: "Sunflower", sans-serif;
     font-size: var(--text-base);
     font-weight: 300;
@@ -260,6 +261,13 @@ export const AboutUsText = styled.div`
         line-height: 1.6;
     }
 
+    /* The global reset removes paragraph margins; keep paragraphs apart. */
+    p + p,
+    p + ol,
+    ol + p {
+        margin-top: 12px;
+    }
+
     @media (min-width: 768px) {
         padding: 0;
         text-align: left;
@@ -388,4 +396,109 @@ export const FooterCopyright = styled.div`
         font-size: var(--text-base);
         gap: 0;
     }
+`
+
+/** A section sized to its content; the full-screen Section suits the hero-like blocks only. */
+export const ContentSection = styled(Section)`
+    min-height: auto;
+    padding-top: 64px;
+    padding-bottom: 64px;
+`
+
+export const SubsectionTitle = styled.h3`
+    font-family: "Sunflower", sans-serif;
+    font-size: var(--text-xl);
+    font-weight: 700;
+    margin: 24px 0 8px;
+
+    @media (min-width: 768px) {
+        font-size: var(--text-2xl);
+    }
+`
+
+/** Key facts as a definition list: label and value, read as pairs. */
+export const FactList = styled.dl`
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 16px 0 32px;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    div {
+        padding: 16px;
+        border: 1px solid var(--primary-black-10);
+        border-radius: 8px;
+        background: var(--primary-white);
+    }
+
+    dt {
+        font-size: var(--text-sm);
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--primary-black-60);
+    }
+
+    dd {
+        margin: 4px 0 0;
+        font-size: var(--text-base);
+        line-height: 1.5;
+    }
+`
+
+/** Body lists inside the text blocks (modules, AI phases). */
+export const TextList = styled.ol`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-left: 1.5em;
+    text-align: left;
+    font-size: var(--text-base);
+    line-height: 1.6;
+
+    @media (min-width: 768px) {
+        font-size: var(--text-lg);
+    }
+`
+
+export const FaqList = styled.div`
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1100px;
+    gap: 8px;
+
+    details {
+        border: 1px solid var(--primary-black-10);
+        border-radius: 8px;
+        background: var(--primary-white);
+        padding: 16px;
+    }
+
+    summary {
+        cursor: pointer;
+        font-size: var(--text-base);
+        font-weight: 600;
+
+        @media (min-width: 768px) {
+            font-size: var(--text-lg);
+        }
+    }
+
+    p {
+        margin-top: 8px;
+        font-size: var(--text-base);
+        line-height: 1.6;
+    }
+`
+
+export const TextLink = styled.a`
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
 `

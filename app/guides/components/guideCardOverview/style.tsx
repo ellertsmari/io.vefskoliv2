@@ -47,14 +47,16 @@ export const Info = styled(Wrapper)`
  * round — a 16px "GUIDE 5" over a 12px title — so the least useful line on the
  * card was the loudest.
  */
-export const GuideNr = styled.h2`
+export const GuideNr = styled.p`
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--primary-black-60);
 `;
 
-export const Name = styled.p`
+// The title is the card's heading, so a list of guides reads as a list of
+// guide names rather than forty-five "MODULE 3" headings.
+export const Name = styled.h2`
   font-size: var(--text-sm);
   font-weight: 600;
   line-height: 1.35;
