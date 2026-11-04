@@ -10,7 +10,9 @@ export default function NotFound() {
       message="This page doesn't exist, or it may have moved. Check the address, or head back and find it from the menu."
     >
       <RetryButton label="REFRESH" />
-      <LinkButton href="/LMS/dashboard">BACK TO HOME</LinkButton>
+      {/* "/" sends a signed-in user on to the dashboard and shows a guest
+          the landing page; "/LMS/dashboard" bounced guests to sign-in. */}
+      <LinkButton href="/">BACK TO HOME</LinkButton>
     </ErrorState>
   );
 }
