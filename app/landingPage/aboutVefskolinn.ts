@@ -52,6 +52,7 @@ export const aboutUs = [
 
 export const facts: { label: string; value: string }[] = [
   { label: "Length", value: "1 year full time (autumn, spring and summer term), or up to 2 years at your own pace" },
+  { label: "Workload", value: "About 40 hours a week if you aim to finish in one year, less if you take two" },
   { label: "Credits", value: "90 einingar at hæfniþrep 4, a diploma from Tækniskólinn" },
   { label: "Language", value: "All teaching in English" },
   { label: "Tuition", value: "30,000 kr per term, 90,000 kr for the whole programme" },
@@ -93,7 +94,7 @@ export const howWeUseAI = {
 export const howStudyingWorks = [
   "The teachers are in the classroom every working day from 9 to 16. Attendance is not compulsory and there is no penalty for missing a day: we expect you to take responsibility for your own studies.",
   "We do strongly recommend coming in. The classroom is where the help is, every day, and where you get to know your classmates. A good class spirit makes the year better for everyone.",
-  "Deadlines are as flexible as we can make them. If you have the time and the ambition, you can finish in one year. Life happens, though: people get sick, have children or land their dream job halfway through. You can take up to two years to finish.",
+  "Deadlines are as flexible as we can make them. If you have the time and the ambition, you can finish in one year, which takes about 40 hours a week, like a full-time job. Most students start out aiming for one year, and many switch to two when that pace does not fit their life. People get sick, have children or land their dream job halfway through. That is fine: you can take up to two years to finish.",
 ];
 
 export const graduateEmployers = [
@@ -117,7 +118,7 @@ export const faq: { question: string; answer: string }[] = [
   {
     question: "How long is the programme?",
     answer:
-      "Three terms (autumn, spring and summer), 90 einingar. Full time, that is one year. You can also take up to two years at your own pace.",
+      "Three terms (autumn, spring and summer), 90 einingar. Full time, about 40 hours a week, that is one year. You can also take up to two years at your own pace, and many students do.",
   },
   {
     question: "How much does it cost?",
