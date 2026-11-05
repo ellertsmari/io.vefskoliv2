@@ -166,7 +166,7 @@ const BriefStep = ({ details }: { details: GroupProjectDetails }) => {
     return (
       <BriefLaunch
         project={{ ...project, brief: project.brief }}
-        publicUrl={project.status !== "formation" ? `/projects/${project.brief.slug}` : null}
+        publicUrl={project.briefPublic ? `/projects/${project.brief.slug}` : null}
       />
     );
   }

@@ -10,7 +10,8 @@ import { growingComplexity } from "./module-6-growing-complexity";
  * write or rewrite one, see docs/writing-a-project-brief.md.
  *
  * The brief for a module is shown on that module's project in the LMS and at
- * /projects/<slug> once that project is past team formation.
+ * /projects/<slug> once that project is past team formation, or earlier when
+ * a teacher makes it public in the project's Settings.
  */
 export const BRIEFS: ProjectBrief[] = [
   firstWebsite,

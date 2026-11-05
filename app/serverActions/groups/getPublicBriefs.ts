@@ -5,16 +5,18 @@ import { GroupProject } from "models/groupProject";
 import { BriefProject } from "types/groupTypes";
 import { ResolvedBrief } from "constants/projectBrief";
 import { BRIEFS, briefForSlug } from "../../projects/briefs";
-import { isTeacher, requireSession, serializeProject } from "./helpers";
+import { isBriefPublic, isTeacher, requireSession, serializeProject } from "./helpers";
 
 /**
  * Public brief pages. The words come from the static brief files; the dates,
  * rubric and weights from the module's newest project in the database.
  *
- * A brief is public once that project is past team formation: during
- * formation the brief is still the reward for answering the preferences form
- * (helpers.canReadDescription), and a public copy would hand it out for free.
- * A module with no project in the database has no page.
+ * A brief is public once that project is past team formation, or earlier if
+ * a teacher made it public (helpers.isBriefPublic) — for visitors who need to
+ * read it before deciding to join. Until then the brief is the reward for
+ * answering the preferences form (helpers.canReadDescription), and a public
+ * copy would hand it out for free. A module with no project in the database
+ * has no page.
  */
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- lean() docs are untyped */
@@ -30,6 +32,7 @@ const toBriefProject = (doc: any, brief: ResolvedBrief): BriefProject => {
     presentationLength: p.presentationLength,
     rubric: p.rubric,
     panelWeight: p.panelWeight,
+    briefPublic: p.briefPublic,
     brief,
   };
 };
@@ -54,7 +57,7 @@ export async function getPublicBriefs(): Promise<BriefProject[]> {
     const projects = await projectsByModule(BRIEFS.map((b) => b.module));
     return BRIEFS.flatMap((brief) => {
       const doc = projects.get(brief.module);
-      if (!doc || doc.status === "formation") return [];
+      if (!doc || !isBriefPublic(doc)) return [];
       const resolved = briefForSlug(brief.slug);
       return resolved ? [toBriefProject(doc, resolved)] : [];
     });
@@ -65,8 +68,8 @@ export async function getPublicBriefs(): Promise<BriefProject[]> {
 }
 
 /**
- * One brief by its address. Teachers also get briefs whose project is still
- * forming teams, so they can check the page first; `isPreview` says when that
+ * One brief by its address. Teachers also get briefs that are not public
+ * yet, so they can check the page first; `isPreview` says when that
  * is what they are looking at.
  */
 export async function getBriefBySlug(
@@ -78,7 +81,7 @@ export async function getBriefBySlug(
     const projects = await projectsByModule([brief.module]);
     const doc = projects.get(brief.module);
     if (!doc) return null;
-    const isPublic = doc.status !== "formation";
+    const isPublic = isBriefPublic(doc);
     if (!isPublic) {
       const session = await requireSession();
       if (!session || !isTeacher(session)) return null;

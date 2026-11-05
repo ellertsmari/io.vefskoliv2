@@ -80,6 +80,11 @@ const groupProjectSchema = new Schema({
     required: true,
     default: false,
   },
+  // The module's brief page (/projects/<slug>) is public from the moment
+  // teams are formed. A teacher can make it public earlier — e.g. for visitors
+  // deciding whether to join — without ending formation, so the preferences
+  // step stays open for the class.
+  briefPublic: { type: Schema.Types.Boolean, required: true, default: false },
   // Which automatic transitions have already fired. Each fires exactly once,
   // so a teacher can override the result (close a gate, revert the status)
   // without the next read re-applying it.
@@ -124,6 +129,7 @@ export type GroupProjectLean = {
   peerEvalOpen: boolean;
   teamEvalOpen: boolean;
   gradesReleased?: boolean;
+  briefPublic?: boolean;
   autoApplied?: {
     activated?: boolean;
     teamEvalOpened?: boolean;

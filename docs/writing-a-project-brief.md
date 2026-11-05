@@ -9,7 +9,7 @@ grading lab always match what is actually graded.
 The brief is shown:
 
 - in the LMS, on the module's project (the **Project brief** step, and the **Brief** tab for teachers);
-- at `/projects/<slug>`, publicly, once the project is past team formation. Teachers can open it earlier.
+- at `/projects/<slug>`, publicly, once the project is past team formation — or earlier, when a teacher ticks "Brief page public now" in the project's Settings. Teachers can open it earlier.
 
 There is no editor. To change a brief, edit the file (or ask an LLM to), open a
 pull request and review it like any other change.

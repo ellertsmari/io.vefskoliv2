@@ -105,7 +105,7 @@ export default async function ProjectBriefPage({ params }: { params: Params }) {
         project={project}
         previewBanner={
           project.isPreview
-            ? "Teacher preview — this page goes public once teams are formed."
+            ? "Teacher preview — this page goes public once teams are formed, or when you make it public in the project's Settings."
             : null
         }
       />
