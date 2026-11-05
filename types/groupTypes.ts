@@ -147,6 +147,11 @@ export type SerializedGroupProject = {
   /** Teachers have published the scores; written feedback does not wait for this. */
   gradesReleased: boolean;
   /**
+   * The public brief page is live: either teams are formed, or a teacher
+   * made it public early (see isBriefPublic).
+   */
+  briefPublic: boolean;
+  /**
    * True when `description` was withheld server-side because the viewer is a
    * student who hasn't completed their formation preferences yet. The brief is
    * the reward for filling in the form, so it never reaches the client until
@@ -422,4 +427,5 @@ export type BriefProject = Pick<
   | "presentationLength"
   | "rubric"
   | "panelWeight"
+  | "briefPublic"
 > & { brief: ResolvedBrief };

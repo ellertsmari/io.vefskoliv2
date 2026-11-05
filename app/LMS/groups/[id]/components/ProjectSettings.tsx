@@ -246,6 +246,23 @@ export const ProjectSettings = ({
     }
   };
 
+  // Saved on the spot, like the weighting: making a page public is its own
+  // decision, not something to bundle with unsaved date edits.
+  const handleBriefPublic = async (makePublic: boolean) => {
+    setSaving(true);
+    setFeedback(null);
+    const result = await updateGroupProject({
+      projectId: project._id,
+      briefPublic: makePublic,
+    });
+    setSaving(false);
+    if (result.success) {
+      router.refresh();
+    } else {
+      setFeedback({ text: result.message, error: true });
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -350,6 +367,48 @@ export const ProjectSettings = ({
             their preferences.
           </MutedText>
         </Card>
+
+        {project.brief && (
+          <Card>
+            <SectionTitle>Public brief page</SectionTitle>
+            {project.status === "formation" ? (
+              <>
+                <MutedText>
+                  The brief page goes public by itself when the project starts.
+                  Make it public now when someone outside the class needs to
+                  read it first — visiting students deciding whether to join,
+                  for example. Teams keep forming as before: your students
+                  still unlock the brief in the LMS by answering the
+                  preferences form, though anyone with the address can read
+                  the public page.
+                </MutedText>
+                <ToggleRow>
+                  <input
+                    type="checkbox"
+                    checked={project.briefPublic}
+                    disabled={saving}
+                    onChange={(e) => handleBriefPublic(e.target.checked)}
+                  />
+                  Brief page public now
+                </ToggleRow>
+              </>
+            ) : (
+              <MutedText>
+                Teams are formed, so the brief page is public.
+              </MutedText>
+            )}
+            <MutedText>
+              <a
+                href={`/projects/${project.brief.slug}`}
+                target="_blank"
+                rel="noopener"
+              >
+                /projects/{project.brief.slug}
+              </a>
+              {project.briefPublic ? "" : " — only teachers can open it yet"}
+            </MutedText>
+          </Card>
+        )}
 
         <Card>
           <SectionTitle>Presentations</SectionTitle>

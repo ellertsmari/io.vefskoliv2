@@ -82,6 +82,19 @@ export function canReadDescription(
   return isPreferenceComplete(myPreference);
 }
 
+/**
+ * Whether the module's brief page at /projects/<slug> is public. It is once
+ * teams are formed; before that only if a teacher made it public early. This
+ * only decides the public page — students in the class still unlock the brief
+ * in the LMS by answering the preferences form (canReadDescription).
+ */
+export function isBriefPublic(project: {
+  status: string;
+  briefPublic?: boolean | null;
+}): boolean {
+  return project.status !== "formation" || !!project.briefPublic;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any -- lean() docs are untyped here */
 export function serializeProject(
   project: any,
@@ -119,6 +132,7 @@ export function serializeProject(
         ? project.panelWeight
         : DEFAULT_PANEL_WEIGHT,
     teamEvalOpen: !!project.teamEvalOpen,
+    briefPublic: isBriefPublic(project),
   };
 }
 
