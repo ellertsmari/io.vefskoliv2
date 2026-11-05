@@ -6,8 +6,8 @@ export const connectingToTheWorld: ProjectBrief = {
   title: "Connecting to the World",
   tagline:
     "A web application that gets its power from other systems' data, built with AI and owned line by line.",
-  teamSize: "4–5 students",
-  updated: "2026-11-04",
+  teamSize: "3–4 students",
+  updated: "2026-11-05",
   theme: {
     heroBackground: "#0b1530",
     heroText: "#eaf2ff",
@@ -91,6 +91,7 @@ export const connectingToTheWorld: ProjectBrief = {
         "Live data from **at least two APIs**, combined into something useful, with typed responses.",
         "**At least one MCP server**, with only the permissions it needs.",
         "Loading, empty and error states, and secret API keys that stay on the server.",
+        "When an API is protected by a **CORS** rule and refuses calls from the browser, build a small **proxy** for it: Node.js, Next.js or any other back-end technology that suits the project.",
         "A component library: your team's design system in code, with props that match the Figma properties.",
         "A keyboard test and an axe scan that run in CI on every pull request.",
       ],
@@ -114,6 +115,8 @@ export const connectingToTheWorld: ProjectBrief = {
       items: [
         "The final product must be **available online** for the general public.",
         "It looks and behaves like your hi-fi prototype.",
+        "**Your own CMS, made for this product only.** Not a general system like WordPress: just the things your user needs to change, in a way that is simple enough to use without training.",
+        "Before AI, nobody built a custom CMS for every client: it cost too much. Now it is easy, and something you can offer any client.",
         "The whole main flow works with the **keyboard only**, with focus always visible.",
       ],
     },
@@ -136,25 +139,27 @@ export const connectingToTheWorld: ProjectBrief = {
   ideas: [
     {
       icon: "mdi:message-reply-text-outline",
-      title: "Better feedback on io.vefskoli.is",
-      text: "Make the feedback students give and get on their work more useful.",
+      title: "Feedback nobody can use",
+      text: "Students on io.vefskoli.is give and get feedback on every project, but much of it is too vague to act on. Why does that happen, and what would make it useful?",
     },
     {
-      icon: "mdi:trophy-outline",
-      title: "A Hall of Fame",
-      text: "Celebrate the best work from Vefskólinn students, past and present.",
+      icon: "mdi:storefront-outline",
+      title: "Updates nobody can find",
+      text: "A local club, café or volunteer group posts its news on social media, yet people still can't tell what's on this week or whether it's open today. What do they need to know, and what stops the people running it from keeping it up to date?",
     },
     {
       icon: "mdi:database-search-outline",
-      title: "Under-used public APIs",
-      text: "Find open data nobody is making good use of, and build what it deserves.",
+      title: "Open data, unanswered questions",
+      text: "Weather, roads, buses and prices are all published as open data, yet everyday questions still take five websites to answer. Whose question is it, and what gets in their way?",
     },
     {
       icon: "mdi:earth-plus",
-      title: "The UN Sustainable Development Goals",
-      text: "Pick one of the 17 goals and build something that moves it forward.",
+      title: "A goal with a person behind it",
+      text: "Pick one of the UN's 17 Sustainable Development Goals and find someone it touches in daily life. What makes things hard for them, and why hasn't it been solved?",
     },
   ],
+  ideasNote:
+    "These are problems, not products: the design sprint decides what you build, and the APIs follow from that. A problem of your own is welcome too — talk to your teachers first.",
 
   phases: [
     {
@@ -211,13 +216,13 @@ export const connectingToTheWorld: ProjectBrief = {
   presentation: [
     {
       title: "Introduction",
-      minutes: 5,
+      minutes: 10,
       text: "Let the audience try it, show the product, and explain how you worked.",
       criteria: ["trying-it-out", "product-demo", "work-organization", "task-to-feature", "tools-tech-stack"],
     },
     {
       title: "Design",
-      minutes: 7,
+      minutes: 14,
       text: "From the sprint to the finished, accessible design.",
       criteria: [
         "design-sprint",
@@ -232,7 +237,7 @@ export const connectingToTheWorld: ProjectBrief = {
     },
     {
       title: "Programming",
-      minutes: 10,
+      minutes: 20,
       text: "The code live, the main flow with the keyboard only, and what you taught your agent, including one time it was wrong.",
       criteria: [
         "connecting-the-data",
@@ -248,7 +253,7 @@ export const connectingToTheWorld: ProjectBrief = {
     },
     {
       title: "Q&A",
-      minutes: 8,
+      minutes: 16,
       text: "Questions from the judges and the audience.",
       criteria: ["answering-questions", "presentation-overall"],
     },
@@ -275,6 +280,10 @@ export const connectingToTheWorld: ProjectBrief = {
     {
       question: "What if I can't explain part of our code?",
       answer: "Then it isn't ready to merge. Ask the AI to explain it, walk a teammate through it, or rewrite it until you can. AI use you declared in your notes is never penalised; what counts is whether you understand the result.",
+    },
+    {
+      question: "An API works in the browser's address bar but not in our app. Why?",
+      answer: "Usually a CORS rule: the API refuses requests that come from another website's JavaScript. Call it from your own server instead, through a small proxy in Node.js, Next.js or any other back-end technology that suits your project. That is also where secret API keys belong.",
     },
     {
       question: "Does the product have to be online?",

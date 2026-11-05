@@ -408,7 +408,7 @@ export function disciplineMetaForCategory(
 // Presentation slot scheduling: pick a start time between 09:00 and 16:00
 // (24-hour clock); the end time follows from the presentation length. The
 // default length per module comes from the presentation format in the docs
-// (M1: 20 min, M3/M4/M5: 30 min, M6: 40 min).
+// (M1: 20 min, M3/M5: 30 min, M4: 60 min, M6: 40 min).
 const PRESENTATION_DAY_START = "09:00";
 const PRESENTATION_DAY_END = "16:00";
 const PRESENTATION_START_STEP_MINUTES = 10;
@@ -417,7 +417,7 @@ const DEFAULT_PRESENTATION_LENGTH = 30;
 const MODULE_PRESENTATION_LENGTH: Record<number, number> = {
   1: 20,
   3: 30,
-  4: 30,
+  4: 60,
   5: 30,
   6: 40,
 };
