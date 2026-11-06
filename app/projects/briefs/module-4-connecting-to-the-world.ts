@@ -7,7 +7,7 @@ export const connectingToTheWorld: ProjectBrief = {
   tagline:
     "A web application that gets its power from other systems' data, built with AI and owned line by line.",
   teamSize: "3–4 students",
-  updated: "2026-11-05",
+  updated: "2026-11-06",
   theme: {
     heroBackground: "#0b1530",
     heroText: "#eaf2ff",
@@ -32,6 +32,13 @@ export const connectingToTheWorld: ProjectBrief = {
     aside: {
       title: "Why this matters more in the age of AI",
       text: "Making websites is getting easier, and many say supply and demand will make web developers unemployed. History says otherwise. When steam engines needed less coal, people expected coal miners to suffer — but cheap coal made people want more of it. That is **Jevons paradox**, and it has held for LED lights, fuel-efficient cars and, as we know best in Iceland, cheap hot water: we build huge swimming pools and take longer showers. The same is predicted for web development, so let's prepare for an age of large-scale websites where everyone has their own custom CMS and can pull any relevant data from anywhere, on demand.",
+    },
+    media: {
+      type: "video",
+      src: "/projects/connecting-to-the-world.mp4",
+      poster: "/projects/connecting-to-the-world-poster.jpg",
+      title: "Connecting to the World: the project in under four minutes",
+      caption: "The whole brief in under four minutes: the why, the four pillars, the timeline, what you hand in and how it's graded.",
     },
     goals: [
       {

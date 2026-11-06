@@ -14,7 +14,9 @@ export type BriefCard = { icon: string; title: string; text: string };
 
 export type BriefMedia =
   | { type: "youtube"; id: string; title: string }
-  | { type: "image"; src: string; alt: string; caption?: string };
+  | { type: "image"; src: string; alt: string; caption?: string }
+  /** A self-hosted film, e.g. "/projects/<slug>.mp4" in public/. */
+  | { type: "video"; src: string; title: string; poster?: string; caption?: string };
 
 export type ProjectBrief = {
   /** Which module's project supplies the dates, rubric and weights. */

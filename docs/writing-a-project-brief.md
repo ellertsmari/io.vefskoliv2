@@ -63,7 +63,7 @@ npm run dev                             # then open http://localhost:3000/projec
 | Field | Becomes |
 | --- | --- |
 | `title`, `tagline`, `teamSize`, `coverImage` | The cover. Weeks, presentation length and the number of criteria are added from the project. |
-| `mission` | 01 — a big statement, a few paragraphs, an optional `aside` (a story or fact that deepens the why), optional `media` (YouTube id or image), and 3–4 `goals` cards. |
+| `mission` | 01 — a big statement, a few paragraphs, an optional `aside` (a story or fact that deepens the why), optional `media` (YouTube id, image, or a self-hosted `video` in `public/projects/`), and 3–4 `goals` cards. |
 | `requirements` | 02 — one tab per area. `bonus` adds a "nice to have" card, `handIn` a checklist, and `pickList` a "pick at least N" checklist with a counter. |
 | `ideas`, `ideasNote` | 03 — idea cards. |
 | `phases` | 04 — the timeline. Phases share the time from kick-off to presentation day by `weight`, so it still fits when the dates move. A wrap-up is added after presentation day. |

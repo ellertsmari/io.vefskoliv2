@@ -163,7 +163,8 @@ const Media = styled.figure`
   margin: 0 0 clamp(1.75rem, 4vw, 2.5rem);
 
   iframe,
-  img {
+  img,
+  video {
     display: block;
     width: 100%;
     aspect-ratio: 16 / 9;
@@ -208,6 +209,19 @@ export const MissionSection = ({ brief }: { brief: ResolvedBrief }) => {
               allowFullScreen
               loading="lazy"
             />
+          ) : mission.media.type === "video" ? (
+            <>
+              <video
+                src={mission.media.src}
+                poster={mission.media.poster}
+                title={mission.media.title}
+                aria-label={mission.media.title}
+                controls
+                playsInline
+                preload="metadata"
+              />
+              {mission.media.caption && <figcaption>{mission.media.caption}</figcaption>}
+            </>
           ) : (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element -- any https host */}
