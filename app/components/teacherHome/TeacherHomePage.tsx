@@ -6,7 +6,11 @@ import { useState, useEffect, useActionState, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "UIcomponents/modal/modal";
 import MarkdownReader from "UIcomponents/markdown/reader";
-import { getUngradedReviews, UngradedReviewWithDetails } from "serverActions/getUngradedReviews";
+import {
+  getUngradedReviewCount,
+  getUngradedReviews,
+  UngradedReviewWithDetails,
+} from "serverActions/getUngradedReviews";
 import { returnGrade } from "serverActions/returnGrade";
 import { getAnalyticsHeadline } from "serverActions/getAnalyticsHeadline";
 import type { AnalyticsHeadline } from "types/analyticsTypes";
@@ -264,8 +268,7 @@ export const TeacherHomePage = () => {
 
   useEffect(() => {
     const fetchCount = async () => {
-      const reviews = await getUngradedReviews();
-      setUngradedCount(reviews.length);
+      setUngradedCount(await getUngradedReviewCount());
     };
     fetchCount();
     // Separate from the count: a slow or failing analytics read must never
