@@ -6,14 +6,14 @@
     "dev": "NODE_OPTIONS='--localstorage-file=/tmp/next-localstorage' next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "jest",
     "test:content": "JEST_CONTENT=1 jest __tests__/content",
     "test-watch": "jest --watch",
     "doctor": "npx react-doctor@latest",
     "typecheck": "tsc --noEmit",
     "verify:trace": "node scripts/verifyBuildTrace.mjs",
-    "verify": "npm run build && npm run typecheck && npm test && npm run test:content && npm run verify:trace"
+    "verify": "npm run build && npm run typecheck && npm run lint && npm test && npm run test:content && npm run verify:trace"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
@@ -46,8 +46,8 @@
     "@types/react-dom": "^18.3.0",
     "dotenv": "^16.4.5",
     "eslint": "^9.13.0",
-    "eslint-config-next": "15.0.2",
-    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-config-next": "^16.3.4",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "mongodb-memory-server": "^10.0.0",
