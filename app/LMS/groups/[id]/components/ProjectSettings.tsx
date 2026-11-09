@@ -65,6 +65,18 @@ const Footer = styled.div`
 
 const toDateInput = (iso: string) => iso.slice(0, 10);
 
+const formatDay = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+
+// Mirrors startDateHasArrived in serverActions/groups/lifecycle (UTC days).
+const startDateHasArrived = (iso: string) =>
+  Date.now() >= new Date(toDateInput(iso)).getTime();
+
 const SlotGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -181,8 +193,9 @@ export const ProjectSettings = ({
   const endTimeFor = (startTime: string) =>
     timeFromMinutes(minutesFromTime(startTime) + presentationLength);
 
-  // Formation → active happens automatically on the start date. Finishing is
-  // the one manual phase change left, and it publishes the grades in the same
+  // Formation → active happens automatically on the start date; the formation
+  // toggle below opens or closes it by hand. Finishing is the other manual
+  // phase change, and it publishes the grades in the same
   // breath: a grade that can still move is worse than one that has not arrived
   // yet, so team evaluation closes at the same moment. Written feedback never
   // waited for any of this — it opens for each student the day they hand in.
@@ -215,6 +228,23 @@ export const ProjectSettings = ({
     setSaving(false);
     if (result.success) {
       setTeamEvalOpen(finishing ? false : teamEvalOpen);
+      router.refresh();
+    } else {
+      setFeedback({ text: result.message, error: true });
+    }
+  };
+
+  // Saved on the spot. Reopening re-arms the automatic close when the start
+  // date is still ahead; otherwise formation stays open until closed here.
+  const handleFormationToggle = async (open: boolean) => {
+    setSaving(true);
+    setFeedback(null);
+    const result = await updateGroupProject({
+      projectId: project._id,
+      status: open ? "formation" : "active",
+    });
+    setSaving(false);
+    if (result.success) {
       router.refresh();
     } else {
       setFeedback({ text: result.message, error: true });
@@ -367,6 +397,28 @@ export const ProjectSettings = ({
             their preferences.
           </MutedText>
         </Card>
+
+        {project.status !== "archived" && (
+          <Card>
+            <SectionTitle>Team formation</SectionTitle>
+            <MutedText>
+              {project.status === "formation"
+                ? startDateHasArrived(project.startDate)
+                  ? "Students can fill in and change their preferences. The start date has passed, so formation stays open until you close it here."
+                  : `Students can fill in and change their preferences. Formation closes by itself on the start date (${formatDay(project.startDate)}), or when you close it here.`
+                : "Closed: students can no longer fill in or change their preferences. Reopen it if someone missed the form or the start date moved. With the start date still ahead, formation closes by itself on that day again."}
+            </MutedText>
+            <ToggleRow>
+              <input
+                type="checkbox"
+                checked={project.status === "formation"}
+                disabled={saving}
+                onChange={(e) => handleFormationToggle(e.target.checked)}
+              />
+              Team formation open — students can answer the preferences form
+            </ToggleRow>
+          </Card>
+        )}
 
         {project.brief && (
           <Card>

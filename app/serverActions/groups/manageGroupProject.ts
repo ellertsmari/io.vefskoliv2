@@ -19,6 +19,7 @@ import {
   invalidInput,
 } from "utils/errors";
 import { objectIdSchema, isTeacher, requireSession } from "./helpers";
+import { startDateHasArrived } from "./lifecycle";
 
 const moduleSchema = z
   .number()
@@ -219,6 +220,27 @@ export async function updateGroupProject(
             `This project has already been evaluated, so rubric rows can no longer be added or removed (${changes}). You can still edit their titles, descriptions and disciplines.`
           );
         }
+      }
+    }
+
+    // Putting a project (back) into formation, or moving the start date of
+    // one that is forming, decides again whether the automatic switch to
+    // active is still to come: with the start date ahead it closes formation
+    // on that day; with it already here, formation stays open until a teacher
+    // closes it, instead of the next read switching it straight back.
+    const reopening = definedUpdates.status === "formation";
+    const redatingFormation =
+      validated.data.startDate !== undefined && !definedUpdates.status;
+    if (reopening || redatingFormation) {
+      const current = await GroupProject.findById(projectId, {
+        status: 1,
+        startDate: 1,
+      }).lean<Pick<GroupProjectLean, "status" | "startDate"> | null>();
+      if (!current) return failure(ErrorMessages.NOT_FOUND("Group project"));
+      if (reopening || current.status === "formation") {
+        definedUpdates["autoApplied.activated"] = startDateHasArrived(
+          validated.data.startDate ?? current.startDate
+        );
       }
     }
 

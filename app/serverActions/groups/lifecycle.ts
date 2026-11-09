@@ -11,7 +11,9 @@ import { logError } from "utils/errors";
 //
 // Each transition fires exactly once (tracked in `autoApplied`), so teachers
 // can override the result afterwards — close a gate again, revert the status —
-// without the next read re-applying it.
+// without the next read re-applying it. Reopening formation from the teacher
+// settings re-arms the status switch when the start date is still ahead (see
+// updateGroupProject), so moving the date forward and reopening is enough.
 //
 // Times are interpreted in server time; Iceland runs on UTC year-round so
 // "HH:MM" strings on the presentation date map directly onto UTC.
@@ -37,6 +39,17 @@ const startOfDay = (value: Date | string): Date => {
   date.setUTCHours(0, 0, 0, 0);
   return date;
 };
+
+/**
+ * Whether the automatic formation → active switch should count as spent for
+ * a project a teacher (re)opens for formation now: true once the start date
+ * has arrived, so the switch does not immediately undo the teacher's choice.
+ * A start date still ahead re-arms it, and formation closes on that day.
+ */
+export const startDateHasArrived = (
+  startDate: Date | string,
+  now: Date = new Date()
+): boolean => now >= startOfDay(startDate);
 
 const endOfDay = (value: Date | string): Date => {
   const date = new Date(value);
@@ -86,7 +99,7 @@ export function dueLifecycleUpdates(
   if (
     project.status === "formation" &&
     !done.activated &&
-    now >= startOfDay(project.startDate)
+    startDateHasArrived(project.startDate, now)
   ) {
     updates.status = "active";
   }

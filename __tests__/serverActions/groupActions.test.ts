@@ -1791,6 +1791,80 @@ describe("group work server actions", () => {
       ).toEqual({});
     });
 
+    it("keeps reopened formation open when the start date has passed", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject(
+        {
+          status: "active",
+          startDate: new Date("2020-01-01"),
+          autoApplied: { activated: true },
+        },
+        teacher
+      );
+      loginAs(teacher);
+
+      const reopened = await updateGroupProject({
+        projectId: project._id.toString(),
+        status: "formation",
+      });
+      expect(reopened.success).toBe(true);
+
+      // the next read must not switch it straight back to active
+      const details = await getGroupProject(project._id.toString());
+      expect(details?.project.status).toBe("formation");
+      const stored = await GroupProject.findById(project._id);
+      expect(stored.autoApplied.activated).toBe(true);
+
+      const closed = await updateGroupProject({
+        projectId: project._id.toString(),
+        status: "active",
+      });
+      expect(closed.success).toBe(true);
+      expect((await GroupProject.findById(project._id)).status).toBe("active");
+    });
+
+    it("re-arms the automatic close when formation reopens with the start date ahead", async () => {
+      const teacher = await createDummyUser("teacher");
+      const project = await createProject(
+        {
+          status: "active",
+          startDate: new Date("2020-01-01"),
+          autoApplied: { activated: true },
+        },
+        teacher
+      );
+      loginAs(teacher);
+
+      // reopen first, then move the start date: the order does not matter
+      await updateGroupProject({
+        projectId: project._id.toString(),
+        status: "formation",
+      });
+      await updateGroupProject({
+        projectId: project._id.toString(),
+        startDate: "2099-01-01",
+      });
+      let stored = await GroupProject.findById(project._id);
+      expect(stored.status).toBe("formation");
+      expect(stored.autoApplied.activated).toBe(false);
+      expect(
+        dueLifecycleUpdates(stored.toObject(), new Date("2099-01-01T00:00:00Z"))
+      ).toEqual({ status: "active" });
+
+      // moving the date of an active project leaves the switch alone
+      await updateGroupProject({
+        projectId: project._id.toString(),
+        status: "active",
+      });
+      await updateGroupProject({
+        projectId: project._id.toString(),
+        startDate: "2020-01-01",
+      });
+      stored = await GroupProject.findById(project._id);
+      expect(stored.status).toBe("active");
+      expect(stored.autoApplied.activated).toBe(false);
+    });
+
     it("lets students submit team evaluations once the presentation day arrives, without a prior read", async () => {
       const student = await createDummyUser("user");
       const project = await createProject({
