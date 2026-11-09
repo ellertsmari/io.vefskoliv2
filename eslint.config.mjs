@@ -4,6 +4,9 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 const eslintConfig = defineConfig([
   ...nextVitals,
   {
+    // Same files eslint-config-next registers the react-hooks plugin for;
+    // a rule on a file the plugin does not cover is a config error.
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
@@ -21,6 +24,9 @@ const eslintConfig = defineConfig([
   globalIgnores([
     ".next/**",
     ".next-verify/**",
+    ".next-e2e/**",
+    "test-results/**",
+    "playwright-report/**",
     "out/**",
     "build/**",
     "coverage/**",

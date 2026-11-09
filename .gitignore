@@ -53,3 +53,9 @@ CLAUDE.md
 
 # Yarn is the package manager; a stray `npm install` must not add a second lockfile.
 package-lock.json
+
+# Browser tests (yarn e2e)
+/.next-e2e/
+/e2e/.auth/
+/test-results/
+/playwright-report/
