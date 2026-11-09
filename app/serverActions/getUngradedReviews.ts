@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { Review
  } from "../models/review";
 import { Return } from "../models/return";
@@ -45,7 +46,7 @@ export async function getUngradedReviews(): Promise<UngradedReviewWithDetails[]>
   }
 
   // Only teachers can access this
-  if (session.user.role !== "teacher") {
+  if (!isActingAsTeacher(session)) {
     return [];
   }
 

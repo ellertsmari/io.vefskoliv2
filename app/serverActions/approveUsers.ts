@@ -5,7 +5,7 @@ import { z } from "zod";
 import { auth } from "../../auth";
 import { User } from "../models/user";
 import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import {
   failure,
   successNoData,
@@ -38,7 +38,7 @@ const userIdSchema = z
 
 export async function getPendingUsers(): Promise<PendingUser[]> {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) return [];
+  if (!isActingAsTeacher(session)) return [];
 
   await connectToDatabase();
   const users = await User.find(
@@ -60,7 +60,7 @@ export async function getPendingUsers(): Promise<PendingUser[]> {
 
 export async function approveUser(userId: string): Promise<ActionResult<void>> {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) {
+  if (!isActingAsTeacher(session)) {
     return failure(ErrorMessages.NOT_AUTHORIZED);
   }
   const validated = userIdSchema.safeParse(userId);
@@ -92,7 +92,7 @@ export async function approveUser(userId: string): Promise<ActionResult<void>> {
  */
 export async function rejectUser(userId: string): Promise<ActionResult<void>> {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) {
+  if (!isActingAsTeacher(session)) {
     return failure(ErrorMessages.NOT_AUTHORIZED);
   }
   const validated = userIdSchema.safeParse(userId);

@@ -1,4 +1,5 @@
 import { auth } from "../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { redirect } from 'next/navigation';
 import { Session } from "next-auth";
 import { ReportsPage } from "./components/ReportsPage";
@@ -9,7 +10,7 @@ const Reports = async () => {
   const session: Session | null = await auth();
   
   // Redirect if not authenticated or not a teacher
-  if (!session?.user?.id || session.user.role !== "teacher") {
+  if (!session?.user?.id || !isActingAsTeacher(session)) {
     redirect('/');
   }
 

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import { Semester } from "../models/semester";
 import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions } from "../utils/userUtils";
+import { isActingAsTeacher } from "../utils/userUtils";
 import { DEFAULT_SEMESTER } from "../constants/semesterPlan";
 import { SemesterInputSchema, type SemesterInput } from "../utils/calendarUtils";
 import type { SemesterInfo } from "types/calendarTypes";
@@ -48,7 +48,7 @@ export async function saveSemester(
 ): Promise<ActionResult<void>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   const validated = SemesterInputSchema.safeParse(data);
   if (!validated.success) {

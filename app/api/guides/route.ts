@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { Guide } from "../../models/guide";
 import { connectToDatabase } from "../../serverActions/mongoose-connector";
 
@@ -15,7 +16,7 @@ import { connectToDatabase } from "../../serverActions/mongoose-connector";
 export async function POST() {
   try {
     const session = await auth();
-    if (!session?.user?.id || session.user.role !== "teacher") {
+    if (!session?.user?.id || !isActingAsTeacher(session)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

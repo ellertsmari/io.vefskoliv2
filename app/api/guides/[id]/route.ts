@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { auth } from "../../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { Guide } from "../../../models/guide";
 import { connectToDatabase } from "../../../serverActions/mongoose-connector";
 import { extractModuleNumber } from "../../../utils/moduleUtils";
@@ -199,7 +200,7 @@ export async function PUT(
     const { id } = await params;
     const session = await auth();
 
-    if (!session?.user?.id || session.user.role !== "teacher") {
+    if (!session?.user?.id || !isActingAsTeacher(session)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

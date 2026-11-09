@@ -3,6 +3,7 @@
 import { ObjectId } from "mongodb";
 import type { GradedReviewDocument } from "../models/review";
 import { auth } from "../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { Review } from "../models/review";
 import { z } from "zod";
 import { safeSerialize } from "../utils/serialization";
@@ -47,7 +48,7 @@ export async function returnGrade(
   // reviews; all review grades are assigned by teachers (e.g. via the reports
   // page). This is the single source of authorization for grading — there is no
   // student grading path anywhere in the app.
-  if (session.user.role !== "teacher") {
+  if (!isActingAsTeacher(session)) {
     return failure("Only teachers can grade reviews");
   }
 

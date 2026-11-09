@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { auth } from "../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { getGroupProjects } from "serverActions/groups/getGroupProjects";
 import { GroupsListView } from "./GroupsListView";
 
@@ -19,7 +20,7 @@ const GroupsPage = async () => {
   return (
     <GroupsListView
       projects={projects}
-      isTeacher={session.user.role === "teacher"}
+      isTeacher={isActingAsTeacher(session)}
     />
   );
 };

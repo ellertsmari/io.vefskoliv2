@@ -2,7 +2,7 @@ import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
 import { EditGuidesPage } from "../../components/editGuides/EditGuidesPage";
 import { getGuidesForEditor } from "../../serverActions/editGuideActions";
-import { hasTeacherPermissions } from "../../utils/userUtils";
+import { isActingAsTeacher } from "../../utils/userUtils";
 import { ErrorState } from "UIcomponents/states/States";
 import { Session } from "next-auth";
 
@@ -14,7 +14,7 @@ const EditGuides = async () => {
   if (!session?.user?.id) {
     redirect("/signin?callbackUrl=/LMS/edit-guides");
   }
-  if (!hasTeacherPermissions(session)) {
+  if (!isActingAsTeacher(session)) {
     redirect("/LMS/dashboard");
   }
 

@@ -5,7 +5,7 @@ import { auth } from "../../auth";
 import { Guide } from "../models/guide";
 import { ExerciseAttempt } from "../models/exerciseAttempt";
 import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import {
   computeExerciseAnalytics,
   type AttemptForAnalytics,
@@ -22,7 +22,7 @@ export const getExerciseAnalytics = async (
   guideId: string
 ): Promise<ExerciseAnalytics | null> => {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) return null;
+  if (!isActingAsTeacher(session)) return null;
   if (!ObjectId.isValid(guideId)) return null;
 
   await connectToDatabase();

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import { Guide } from "../models/guide";
 import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions } from "../utils/userUtils";
+import { isActingAsTeacher } from "../utils/userUtils";
 import { getDiscipline, getIsSpecialty } from "../utils/guideTaxonomy";
 import { extractModuleNumber } from "../utils/moduleUtils";
 import { isoDate } from "../utils/serialization";
@@ -53,7 +53,7 @@ type LeanGuide = {
  */
 export async function getGuidesForEditor(): Promise<EditorGuideRow[]> {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) return [];
+  if (!isActingAsTeacher(session)) return [];
 
   try {
     await connectToDatabase();
@@ -103,7 +103,7 @@ export async function getGuidesForEditor(): Promise<EditorGuideRow[]> {
 export async function deleteGuide(guideId: string): Promise<ActionResult<void>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
   if (!ObjectId.isValid(guideId)) return failure(ErrorMessages.NOT_FOUND("Guide"));
 
   try {
