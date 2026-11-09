@@ -50,3 +50,6 @@ pictures_for_claude/
 # AGENTS.md is re-created by `next dev`, so it can't just be deleted.
 AGENTS.md
 CLAUDE.md
+
+# Yarn is the package manager; a stray `npm install` must not add a second lockfile.
+package-lock.json
