@@ -42,6 +42,11 @@ const logger = {
   },
 };
 
+/**
+ * Nobody needs to call this by hand: the plugin in `models/autoConnect.ts`
+ * calls it before every query. It stays exported for that plugin and for the
+ * rare caller that wants to know the connection is up before doing anything.
+ */
 export async function connectToDatabase(): Promise<typeof mongoose> {
   if (!MONGODB_URI) {
     logger.error("MONGODB_CONNECTION environment variable is missing");

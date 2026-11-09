@@ -1,6 +1,5 @@
 "use server";
 import { ObjectId } from "mongodb";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { TeamEvaluation } from "models/teamEvaluation";
@@ -151,7 +150,6 @@ const toShowcaseTeam = (team: any, quotes: ShowcaseQuote[]): ShowcaseTeam => {
 export async function getShowcase(year?: number): Promise<ShowcaseIndex> {
   const empty: ShowcaseIndex = { projects: [], years: [], year: null };
   try {
-    await connectToDatabase();
     const allProjects = await GroupProject.find(
       { status: { $in: ["active", "archived"] } },
       { title: 1, module: 1, startDate: 1, endDate: 1 }
@@ -209,7 +207,6 @@ export async function getShowcaseTeam(
   if (!ObjectId.isValid(teamId)) return null;
 
   try {
-    await connectToDatabase();
     const team = await Team.findById(teamId)
       .populate("members", "name")
       .lean<{

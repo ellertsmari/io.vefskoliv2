@@ -1,5 +1,4 @@
 "use server";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { GroupPreference } from "models/groupPreference";
@@ -22,7 +21,6 @@ export async function getGroupProjects(): Promise<GroupProjectListItem[]> {
   if (!session) return [];
 
   try {
-    await connectToDatabase();
     let projects = await GroupProject.find({})
       .sort({ startDate: -1 })
       .lean<GroupProjectLean[]>();

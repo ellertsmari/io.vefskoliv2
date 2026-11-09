@@ -9,7 +9,6 @@ import { Guide } from "models/guide";
 import { User } from "models/user";
 import { ActivityCycleModel } from "models/activityCycle";
 import { ActivityEntryModel } from "models/activityEntry";
-import { connectToDatabase } from "./mongoose-connector";
 import { isActingAsTeacher } from "utils/userUtils";
 import { activityCycleSchema, activityDateSchema, calculateActivityProgress, normalizeActivityName } from "utils/activityLog";
 import { success, successNoData, failure, handleActionError, type ActionResult } from "utils/errors";
@@ -68,7 +67,6 @@ export async function getActivityLog(guideId: string, selectedCycleId?: string):
   if (!session?.user?.id) return failure("Sign in to see your activity log.");
   if (!idSchema.safeParse(guideId).success || (selectedCycleId && !idSchema.safeParse(selectedCycleId).success)) return failure("Activity log not found.");
   try {
-    await connectToDatabase();
     const guide = await Guide.findOne({ _id: guideId, submissionType: "activityLog" }).select("activityCycleId").lean<{ activityCycleId?: Types.ObjectId }>();
     if (!guide) return failure("Activity log not found.");
     const cycles = (await ActivityCycleModel.find({ guide: guideId }).sort({ createdAt: -1 }).lean<CycleRow[]>()).map(cycleDTO);
@@ -100,7 +98,6 @@ export async function saveActivityCycle(guideId: string, input: unknown, cycleId
   const parsed = activityCycleSchema.safeParse(input);
   if (!idSchema.safeParse(guideId).success || (cycleId && !idSchema.safeParse(cycleId).success) || !parsed.success) return failure(parsed.success ? "Invalid guide." : parsed.error.issues[0].message);
   try {
-    await connectToDatabase();
     const guide = await Guide.findOne({ _id: guideId, submissionType: "activityLog" }).select("_id");
     if (!guide) return failure("Activity log not found.");
     if (cycleId && await ActivityEntryModel.exists({ cycle: cycleId })) return failure("This year already has activities. Its dates and targets are locked to preserve earned credit.");
@@ -126,7 +123,6 @@ export async function saveActivityEntry(input: ActivityEntryInput): Promise<Acti
   if (!parsed.success) return failure(parsed.error.issues[0].message);
   const value = parsed.data;
   try {
-    await connectToDatabase();
     const [guide, cycle] = await Promise.all([
       Guide.exists({ _id: value.guideId, submissionType: "activityLog" }),
       ActivityCycleModel.findOne({ _id: value.cycleId, guide: value.guideId }).lean<CycleRow>(),
@@ -182,7 +178,6 @@ export async function deleteActivityEntry(guideId: string, entryId: string, revi
   if (!session?.user?.id || isActingAsTeacher(session)) return failure("Only the student can delete their activity.");
   if (!idSchema.safeParse(entryId).success || !idSchema.safeParse(guideId).success || !Number.isInteger(revision)) return failure("Invalid activity.");
   try {
-    await connectToDatabase();
     const result = await ActivityEntryModel.deleteOne({ _id: entryId, guide: guideId, owner: session.user.id, revision });
     if (!result.deletedCount) return failure("This activity changed. Reload and try again.");
     refresh(guideId);
@@ -197,7 +192,6 @@ export async function reviewActivityEntries(guideId: string, cycleId: string, en
   if (!parsed.success) return failure("Invalid review.");
   if (decision === "changesRequested" && !parsed.data.comment) return failure("Tell the student what to change.");
   try {
-    await connectToDatabase();
     const result = await ActivityEntryModel.bulkWrite(parsed.data.entries.map((entry) => ({ updateOne: {
       filter: { _id: new Types.ObjectId(entry.id), guide: new Types.ObjectId(guideId), cycle: new Types.ObjectId(cycleId), revision: entry.revision, status: { $in: ["pending", "approved"] } },
       update: { $set: { status: decision, teacherComment: parsed.data.comment, reviewedBy: session!.user!.id, reviewedAt: new Date() }, $inc: { revision: 1 } },

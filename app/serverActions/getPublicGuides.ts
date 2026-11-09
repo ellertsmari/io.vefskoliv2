@@ -1,5 +1,4 @@
 "use server";
-import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { GuideType } from "models/guide";
 import { safeSerialize } from "utils/serialization";
@@ -7,8 +6,6 @@ import { isDraftGuide } from "utils/guideSeo";
 
 export async function getPublicGuides(): Promise<GuideType[] | null> {
   try {
-    await connectToDatabase();
-
     // Fetch only the basic guide information without user-specific data
     const guides = await Guide.find({})
       .select({

@@ -4,7 +4,6 @@ import { ObjectId } from "mongodb";
 import { auth } from "../../auth";
 import { Guide } from "../models/guide";
 import { ExerciseAttempt } from "../models/exerciseAttempt";
-import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions } from "utils/userUtils";
 import {
   computeExerciseAnalytics,
@@ -25,7 +24,6 @@ export const getExerciseAnalytics = async (
   if (!hasTeacherPermissions(session)) return null;
   if (!ObjectId.isValid(guideId)) return null;
 
-  await connectToDatabase();
   const guide = (await Guide.findById(new ObjectId(guideId))
     .select("gradingMode exercise")
     .lean()) as { gradingMode?: string; exercise?: ServerExercise } | null;

@@ -1,7 +1,6 @@
 "use server";
 import { ObjectId } from "mongodb";
 import { auth } from "../../auth";
-import { connectToDatabase } from "./mongoose-connector";
 import { Guide } from "models/guide";
 import { PipelineStage } from "mongoose";
 import { GradingMode, GuideInfo } from "types/guideTypes";
@@ -390,8 +389,6 @@ export async function getGuides(
   if (!ObjectId.isValid(targetId)) return null;
 
   try {
-    await connectToDatabase();
-
     const userId = new ObjectId(targetId);
     const pipeline = getGuidesPipelines(userId);
 

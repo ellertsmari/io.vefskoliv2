@@ -1,6 +1,5 @@
 "use server";
 import { ObjectId } from "mongodb";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { PeerEvaluation } from "models/peerEvaluation";
@@ -35,7 +34,6 @@ export async function getEvaluationReports(
   }
 
   try {
-    await connectToDatabase();
     const [project, teams, peerEvals, teamEvals, peerResults] = await Promise.all([
       GroupProject.findById(projectId).lean<GroupProjectLean | null>(),
       Team.find({ project: projectId })

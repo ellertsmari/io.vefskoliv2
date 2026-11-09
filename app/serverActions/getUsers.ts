@@ -1,7 +1,6 @@
 "use server";
 import { auth } from "../../auth";
 import { OptionalUserInfoKeys, User } from "models/user";
-import { connectToDatabase } from "./mongoose-connector";
 import { ShareableUserInfo } from "types/types";
 
 /**
@@ -29,7 +28,6 @@ export const getUsers = async (
     query.role = filter.role;
   }
 
-  await connectToDatabase();
   const users = await User.find(query, SHAREABLE_PROJECTION).lean<
     Array<Partial<ShareableUserInfo>>
   >();

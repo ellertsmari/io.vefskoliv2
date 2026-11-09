@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../auth";
 import { Guide } from "../../models/guide";
-import { connectToDatabase } from "../../serverActions/mongoose-connector";
 
 /**
  * Create a new guide.
@@ -18,8 +17,6 @@ export async function POST() {
     if (!session?.user?.id || session.user.role !== "teacher") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    await connectToDatabase();
 
     // Place the new guide at the end of the list.
     const last = (await Guide.findOne()

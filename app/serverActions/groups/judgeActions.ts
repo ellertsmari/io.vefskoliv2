@@ -1,7 +1,6 @@
 "use server";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { JudgeInvitation } from "models/judgeInvitation";
 import { Team } from "models/team";
@@ -46,7 +45,6 @@ async function findInvitation(token: string) {
 
 export async function getJudgeView(token: string): Promise<JudgeView | null> {
   try {
-    await connectToDatabase();
     const invitation = await findInvitation(token);
     if (!invitation) return null;
 
@@ -100,7 +98,6 @@ export async function submitJudgeEvaluation(
   const { token, teamId, entries, overallComment } = validated.data;
 
   try {
-    await connectToDatabase();
     const invitation = await findInvitation(token);
     if (!invitation) return failure(ErrorMessages.NOT_FOUND("Invitation"));
 
@@ -160,7 +157,6 @@ export async function setJudgeShowcaseConsent(data: {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     const result = await JudgeInvitation.updateOne(
       { token: validated.data.token },
       { $set: { showcaseNameConsent: validated.data.allow } }

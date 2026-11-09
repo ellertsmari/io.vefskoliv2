@@ -1,6 +1,5 @@
 "use server";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { TeamEvaluation } from "models/teamEvaluation";
@@ -105,7 +104,6 @@ export async function createGroupProject(
   }
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.create({
       ...validated.data,
       status: "formation",
@@ -170,8 +168,6 @@ export async function updateGroupProject(
   }
 
   try {
-    await connectToDatabase();
-
     if (validated.data.presentationSlots?.length) {
       const projectTeamIds = new Set(
         (await Team.find({ project: projectId }, { _id: 1 }).lean()).map(

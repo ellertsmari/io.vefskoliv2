@@ -1,6 +1,5 @@
 "use server";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { PeerEvaluation } from "models/peerEvaluation";
 import { PeerEvaluationResult } from "models/peerEvaluationResult";
@@ -88,7 +87,6 @@ export async function confirmPeerEvalResult(
     validated.data;
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(projectId, { _id: 1 }).lean();
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
 
@@ -144,7 +142,6 @@ export async function confirmAllPeerEvalResults(data: {
   const { projectId } = validated.data;
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(projectId, { _id: 1 }).lean();
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
 
@@ -209,7 +206,6 @@ export async function clearPeerEvalResult(data: {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     await PeerEvaluationResult.deleteOne({
       project: validated.data.projectId,
       student: validated.data.studentId,

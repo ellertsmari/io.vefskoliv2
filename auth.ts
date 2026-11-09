@@ -4,7 +4,6 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import type { UserDocument } from "models/user";
 import { User } from "models/user";
-import { connectToDatabase } from "serverActions/mongoose-connector";
 import { cookies } from "next/headers";
 import { verifyCredentials } from "app/lib/credentials";
 import { getClientIp } from "app/lib/clientIp";
@@ -48,7 +47,6 @@ const nextAuth = NextAuth({
       // First call, right after `authorize` succeeded.
       if (user) {
         try {
-          await connectToDatabase();
           const dbuser: UserDocument | null = await User.findOne({
             email: user.email,
           });
@@ -78,7 +76,6 @@ const nextAuth = NextAuth({
         // If teacher has set an alias, override the session with the aliased user
         if (aliasedUserId && token.role === "teacher") {
           try {
-            await connectToDatabase();
             const aliasUser = await User.findById(aliasedUserId);
 
             if (aliasUser) {

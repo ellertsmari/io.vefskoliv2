@@ -4,7 +4,6 @@ import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { auth } from "../../auth";
 import { User } from "../models/user";
-import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions } from "utils/userUtils";
 import {
   failure,
@@ -40,7 +39,6 @@ export async function getPendingUsers(): Promise<PendingUser[]> {
   const session = await auth();
   if (!hasTeacherPermissions(session)) return [];
 
-  await connectToDatabase();
   const users = await User.find(
     { status: "pending" },
     { _id: 1, name: 1, email: 1, createdAt: 1 }
@@ -67,7 +65,6 @@ export async function approveUser(userId: string): Promise<ActionResult<void>> {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     const result = await User.updateOne(
       { _id: new ObjectId(validated.data), status: "pending" },
       { $set: { status: "active" } }
@@ -99,7 +96,6 @@ export async function rejectUser(userId: string): Promise<ActionResult<void>> {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     const result = await User.deleteOne({
       _id: new ObjectId(validated.data),
       status: "pending",

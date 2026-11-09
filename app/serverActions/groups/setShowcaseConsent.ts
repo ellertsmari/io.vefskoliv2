@@ -1,7 +1,6 @@
 "use server";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { Team } from "models/team";
 import {
   ActionResult,
@@ -51,7 +50,6 @@ export async function setShowcaseConsent(
   const userId = session.user.id;
 
   try {
-    await connectToDatabase();
     const team = await Team.findById(teamId);
     if (!team) return failure(ErrorMessages.NOT_FOUND("Team"));
 
