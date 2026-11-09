@@ -52,7 +52,11 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
 
   const state = mongoose.connection.readyState;
 
-  if (cache.conn && state === CONNECTED) {
+  // Connected is connected, whoever opened it. The hooks in
+  // models/autoConnect call this before every query, including in code (and
+  // tests) that opened the connection directly on mongoose.
+  if (state === CONNECTED) {
+    cache.conn ??= mongoose;
     return cache.conn;
   }
 
