@@ -13,6 +13,7 @@
     "doctor": "npx react-doctor@latest",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
+    "e2e:dev": "node e2e/start-server.cjs --dev",
     "verify:trace": "node scripts/verifyBuildTrace.mjs",
     "verify": "yarn build && yarn typecheck && yarn lint && yarn test && yarn test:content && yarn verify:trace"
   },
