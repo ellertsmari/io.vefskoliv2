@@ -1,4 +1,5 @@
-import NextAuth from "next-auth";
+import NextAuth, { type Session } from "next-auth";
+import { cache } from "react";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
@@ -132,7 +133,24 @@ const nextAuth = NextAuth({
   },
 });
 
-export const { handlers, auth, signIn, signOut } = nextAuth;
+export const { handlers, signIn, signOut } = nextAuth;
+
+/**
+ * One session read per render. A guide page asks for the session about five
+ * times (layout, page, loaders) and the calendar about seven; each call
+ * decodes the token, and re-reads the user from the database once the token
+ * is older than the re-validation window or a teacher is viewing as a student.
+ *
+ * The cache is keyed on the request's cookies, not just on "this request": a
+ * server action that switches the alias or re-issues the session cookie
+ * changes the key, so the next `auth()` in that same request reads again.
+ */
+const readSession = cache((_cookieKey: string): Promise<Session | null> =>
+  nextAuth.auth()
+);
+
+export const auth = async (): Promise<Session | null> =>
+  readSession((await cookies()).toString());
 
 /**
  * Re-issue the session cookie from the database. Only callable where cookies
