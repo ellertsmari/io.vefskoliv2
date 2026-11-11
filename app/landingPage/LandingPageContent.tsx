@@ -174,8 +174,9 @@ const LandingPageContent = ({ galleryItems = [] }: LandingPageContentProps) => {
           muted
           playsInline
         >
+          {/* In Vercel Blob, not in /public: 12 MB of video does not belong in git. */}
           <source
-            src="/vefskolinn.mp4"
+            src="https://7ns219yf9xw5vgje.public.blob.vercel-storage.com/site/vefskolinn.mp4"
             type="video/mp4"
           />
           Your browser does not support the video tag.
