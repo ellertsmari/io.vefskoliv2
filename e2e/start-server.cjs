@@ -6,12 +6,18 @@
 // between the two, and the CSP test has to see what production sends.
 //
 //   E2E_SKIP_BUILD=1 reuses the build in .next-e2e (faster while writing tests).
+//
+// `--dev` (yarn e2e:dev) is for checking a change by hand rather than running
+// the tests: the same throwaway database with the fuller seed, but `next dev`,
+// which is up in seconds and reloads as you edit. It has its own ports so it
+// can run beside the tests. See .claude/skills/verify.
 const { spawn, spawnSync } = require("node:child_process");
 const { MongoMemoryServer } = require("mongodb-memory-server");
-const { seed } = require("./seed.cjs");
+const { seed, PASSWORD, USERS, VERIFY_USERS, IDS } = require("./seed.cjs");
 
-const PORT = 3998;
-const MONGO_PORT = 27998;
+const DEV = process.argv.includes("--dev");
+const PORT = DEV ? 3999 : 3998;
+const MONGO_PORT = DEV ? 27999 : 27998;
 const NEXT = require.resolve("next/dist/bin/next");
 
 (async () => {
@@ -19,7 +25,7 @@ const NEXT = require.resolve("next/dist/bin/next");
     instance: { port: MONGO_PORT, dbName: "e2e" },
   });
   const uri = `mongodb://127.0.0.1:${MONGO_PORT}/e2e`;
-  await seed(uri);
+  await seed(uri, { verify: DEV });
 
   // Process env beats .env.local in Next, so none of this can reach the
   // database or the blob store that a developer's .env.local points at.
@@ -33,8 +39,15 @@ const NEXT = require.resolve("next/dist/bin/next");
     BLOB_READ_WRITE_TOKEN: "",
     NEXT_DIST_DIR: ".next-e2e",
   };
+  if (DEV) {
+    // What `yarn dev` sets: without a file, Node's own localStorage breaks
+    // code that checks for one while rendering on the server.
+    env.NODE_OPTIONS = [process.env.NODE_OPTIONS, "--localstorage-file=/tmp/next-e2e-localstorage"]
+      .filter(Boolean)
+      .join(" ");
+  }
 
-  if (!process.env.E2E_SKIP_BUILD) {
+  if (!DEV && !process.env.E2E_SKIP_BUILD) {
     const build = spawnSync(process.execPath, [NEXT, "build"], {
       env,
       stdio: "inherit",
@@ -45,10 +58,22 @@ const NEXT = require.resolve("next/dist/bin/next");
     }
   }
 
-  const server = spawn(process.execPath, [NEXT, "start", "-p", String(PORT)], {
+  const server = spawn(process.execPath, [NEXT, DEV ? "dev" : "start", "-p", String(PORT)], {
     env,
     stdio: "inherit",
   });
+
+  if (DEV) {
+    const people = Object.values({ ...USERS, ...VERIFY_USERS })
+      .map((user) => `  ${user.email.padEnd(18)} ${user.role}`)
+      .join("\n");
+    console.log(
+      `\nThrowaway app on http://localhost:${PORT} (database: ${uri})\n` +
+        `Password for everyone: ${PASSWORD}\n${people}\n` +
+        `Guides: /guides/${IDS.returnGuide} (return), /guides/${IDS.quizGuide} (quiz), ` +
+        `/guides/${IDS.exerciseGuide} (full exercise)\n`
+    );
+  }
 
   const shutdown = async () => {
     server.kill();
