@@ -174,7 +174,7 @@ const isKnownTask = (
  */
 export type CodeResults = Record<string, CodeFeedback>;
 
-/** What grading one task produced, before it is turned into a TaskResult. */
+/** What grading one task produced. */
 export type GradedTask = {
   status: TaskStatus;
   /** convenience mirror of `status === "correct"` */
@@ -183,50 +183,6 @@ export type GradedTask = {
   pointsPossible: number;
   /** short answer only: the accepted answer this matched or nearly matched */
   matched?: string;
-};
-
-export type TaskResult = {
-  taskId: string;
-  /**
-   * `pending` means the answer was close to an accepted one and is held for a
-   * teacher rather than marked wrong. It earns no points yet, so the score a
-   * student sees is a floor that can only rise.
-   */
-  status: TaskStatus;
-  /** true only for a FULLY correct answer */
-  correct: boolean;
-  pointsEarned: number;
-  pointsPossible: number;
-  /** revealed only when the task was answered fully CORRECTLY */
-  explanation?: string;
-  /** revealed when the task was answered incorrectly or only partially */
-  hint?: string;
-  /** code tasks only: test outcomes, type errors and the mapped runtime error */
-  code?: CodeFeedback;
-};
-
-/** Per-knowledge-goal score aggregation across the graded tasks. */
-export type GoalResult = {
-  goal: string;
-  earnedPoints: number;
-  totalPoints: number;
-};
-
-export type GradeResult = {
-  /** 0..10, matching the peer-review grade scale */
-  score: number;
-  passed: boolean;
-  earnedPoints: number;
-  totalPoints: number;
-  results: TaskResult[];
-  /** present when at least one graded task is tagged with a knowledge goal */
-  goalBreakdown?: GoalResult[];
-  /**
-   * How many answers are held for a teacher. While this is above zero the score
-   * is provisional and can only rise, so the UI says "awaiting review" rather
-   * than "not passed".
-   */
-  pendingCount: number;
 };
 
 /** Thrown when a task cannot be graded, e.g. a type this build does not know. */
@@ -446,123 +402,6 @@ const gradeShortAnswerTask = (
     pointsEarned: status === "correct" ? points : 0,
     pointsPossible: points,
     matched,
-  };
-};
-
-/**
- * Resolve which tasks a submission should be graded against.
- *
- * Nothing pooled: every task, answered or not. Pooled: for each pooled type,
- * exactly the tasks the student answered, and there must be exactly as many as
- * that type's pool size — anything else is a malformed submission. Types that
- * are not pooled are graded whole, so leaving one blank still scores zero
- * rather than silently dropping out.
- *
- * (A determined student could hand-craft which pooled tasks they answer. With
- * unlimited retries and best-score-counts they can already reroll for an easier
- * draw, so pooling was never a security control — it exists to make retries
- * meaningful and to vary problems between students. Revisit if these ever
- * become summative.)
- */
-const tasksToGrade = (
-  exercise: ServerExercise,
-  answers: ExerciseAnswers
-): ServerTask[] => {
-  const allTasks = knownTasks(exercise);
-  const pools = normalizedPoolSizes(exercise);
-  if (pools.size === 0) return allTasks;
-
-  const answeredIds = new Set(Object.keys(answers));
-  const graded = allTasks.filter(
-    (task) => !pools.has(task.type) || answeredIds.has(taskId(task))
-  );
-
-  for (const [type, expected] of pools) {
-    const got = graded.filter((task) => task.type === type).length;
-    if (got !== expected) {
-      throw new ExerciseGradingError(
-        "Something went wrong reading your answers. Nothing was lost — press Submit again."
-      );
-    }
-  }
-
-  return graded;
-};
-
-/**
- * Grade a submitted exercise server-side.
- *
- * The final score is rescaled to 0..10 so it flows through the existing grade UI.
- */
-export const gradeExercise = (
-  exercise: ServerExercise,
-  answers: ExerciseAnswers,
-  codeResults: CodeResults = {}
-): GradeResult => {
-  const tasks = tasksToGrade(exercise, answers);
-  const threshold = exercise.passThreshold ?? DEFAULT_PASS_THRESHOLD;
-
-  let earnedPoints = 0;
-  let totalPoints = 0;
-  const goalTotals = new Map<string, { earned: number; total: number }>();
-
-  const results: TaskResult[] = tasks.map((task) => {
-    const id = taskId(task);
-    const selected = answers[id] ?? [];
-    const feedback = codeResults[id];
-    const graded = gradeTask(task, selected, feedback);
-
-    earnedPoints += graded.pointsEarned;
-    totalPoints += graded.pointsPossible;
-
-    if (task.goal) {
-      const entry = goalTotals.get(task.goal) ?? { earned: 0, total: 0 };
-      entry.earned += graded.pointsEarned;
-      entry.total += graded.pointsPossible;
-      goalTotals.set(task.goal, entry);
-    }
-
-    return {
-      taskId: id,
-      status: graded.status,
-      correct: graded.correct,
-      pointsEarned: graded.pointsEarned,
-      pointsPossible: graded.pointsPossible,
-      // The explanation typically restates the answer, so it's only revealed
-      // once the student has it fully right; otherwise they get the hint,
-      // which points back at the material without giving the answer away.
-      explanation: graded.correct ? task.explanation : undefined,
-      // A held answer gets neither: the hint would imply it was wrong, which
-      // is exactly what has not been decided yet.
-      hint: graded.status === "incorrect" ? task.hint : undefined,
-      // Test outcomes, type errors and the mapped runtime error. Already
-      // stripped of hidden test details by the runner.
-      code: feedback,
-    };
-  });
-
-  earnedPoints = round2(earnedPoints);
-  const fraction = totalPoints > 0 ? earnedPoints / totalPoints : 0;
-  const score = Math.round(fraction * 10 * 10) / 10; // 0..10, one decimal
-  const passed = fraction >= threshold;
-
-  const goalBreakdown =
-    goalTotals.size > 0
-      ? [...goalTotals.entries()].map(([goal, { earned, total }]) => ({
-          goal,
-          earnedPoints: round2(earned),
-          totalPoints: total,
-        }))
-      : undefined;
-
-  return {
-    score,
-    passed,
-    earnedPoints,
-    totalPoints,
-    results,
-    goalBreakdown,
-    pendingCount: results.filter((r) => r.status === "pending").length,
   };
 };
 
