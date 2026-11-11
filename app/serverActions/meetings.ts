@@ -7,7 +7,6 @@ import { BookingWindow } from "../models/bookingWindow";
 import { CalendarEvent } from "../models/calendarEvent";
 import { Team } from "../models/team";
 import { User } from "../models/user";
-import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions, isActingAsTeacher } from "../utils/userUtils";
 import {
   BookMeetingInputSchema,
@@ -70,7 +69,6 @@ export async function getBookingWindows(): Promise<BookingWindowInfo[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
   try {
-    await connectToDatabase();
     const rows = await BookingWindow.find()
       .sort({ weekday: 1, startTime: 1 })
       .lean<WindowRow[]>();
@@ -94,7 +92,6 @@ export async function saveBookingWindow(
   }
 
   try {
-    await connectToDatabase();
     const created = await BookingWindow.create(validated.data);
     revalidatePath(CALENDAR_PATH);
     return success({ id: String(created._id) }, "Meeting hours added");
@@ -112,7 +109,6 @@ export async function deleteBookingWindow(
   if (!ObjectId.isValid(windowId)) return failure(ErrorMessages.NOT_FOUND("Meeting hours"));
 
   try {
-    await connectToDatabase();
     const result = await BookingWindow.deleteOne({ _id: new ObjectId(windowId) });
     if (result.deletedCount === 0) return failure(ErrorMessages.NOT_FOUND("Meeting hours"));
     revalidatePath(CALENDAR_PATH);
@@ -230,7 +226,6 @@ export async function getMeetingSlots(
     return [];
   }
   try {
-    await connectToDatabase();
     return await computeSlots(fromDate, toDate);
   } catch (error) {
     handleActionError("getMeetingSlots", error);
@@ -262,7 +257,6 @@ export async function bookMeeting(
   const { date, startTime, topic, withTeam } = validated.data;
 
   try {
-    await connectToDatabase();
     const slot = (await computeSlots(date, date)).find(
       (candidate) => candidate.startTime === startTime
     );
@@ -336,7 +330,6 @@ export async function getUpcomingMeetings(): Promise<UpcomingMeeting[]> {
   const me = session.user.id;
 
   try {
-    await connectToDatabase();
     const today = todayKey();
     const rows = await CalendarEvent.find({
       category: "meeting",

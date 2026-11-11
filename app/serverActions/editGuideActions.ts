@@ -3,7 +3,6 @@ import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import { Guide } from "../models/guide";
-import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions } from "../utils/userUtils";
 import { getDiscipline, getIsSpecialty } from "../utils/guideTaxonomy";
 import { extractModuleNumber } from "../utils/moduleUtils";
@@ -56,7 +55,6 @@ export async function getGuidesForEditor(): Promise<EditorGuideRow[]> {
   if (!hasTeacherPermissions(session)) return [];
 
   try {
-    await connectToDatabase();
     const rows = await Guide.find(
       {},
       {
@@ -107,7 +105,6 @@ export async function deleteGuide(guideId: string): Promise<ActionResult<void>> 
   if (!ObjectId.isValid(guideId)) return failure(ErrorMessages.NOT_FOUND("Guide"));
 
   try {
-    await connectToDatabase();
     const result = await Guide.deleteOne({ _id: new ObjectId(guideId) });
     if (result.deletedCount === 0) return failure(ErrorMessages.NOT_FOUND("Guide"));
     revalidatePath("/guides");

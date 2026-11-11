@@ -1,7 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { AnalyticsSalt } from "models/analyticsSalt";
 import { Pageview } from "models/pageview";
-import { connectToDatabase } from "serverActions/mongoose-connector";
 import {
   campaignSource,
   agentFor,
@@ -104,7 +103,6 @@ export async function toPageview(hit: PageviewSnapshot) {
 export async function recordPageview(hit: PageviewSnapshot): Promise<void> {
   if (process.env.ANALYTICS_DISABLED === "1") return;
   try {
-    await connectToDatabase();
     await Pageview.create(await toPageview(hit));
   } catch (error) {
     console.error(

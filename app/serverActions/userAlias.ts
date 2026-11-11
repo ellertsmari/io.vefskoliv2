@@ -1,7 +1,6 @@
 "use server";
 
 import { auth } from "auth";
-import { connectToDatabase } from "./mongoose-connector";
 import { User } from "models/user";
 import { cookies } from "next/headers";
 import { hasTeacherPermissions } from "utils/userUtils";
@@ -24,7 +23,6 @@ export async function getAllUsers(): Promise<ActionResult<UserListItem[]>> {
   }
 
   try {
-    await connectToDatabase();
     const users = await User.find({}, { _id: 1, name: 1, email: 1, role: 1 })
       .sort({ name: 1 })
       .lean();
@@ -54,7 +52,6 @@ export async function setAlias(userId: string): Promise<ActionResult<void>> {
   }
 
   try {
-    await connectToDatabase();
     const targetUser = await User.findById(userId);
 
     if (!targetUser) {

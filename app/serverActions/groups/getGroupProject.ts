@@ -1,6 +1,5 @@
 "use server";
 import { ObjectId } from "mongodb";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { GroupPreference } from "models/groupPreference";
@@ -46,7 +45,6 @@ export async function getGroupProject(
   if (!session || !ObjectId.isValid(projectId)) return null;
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(projectId).lean<GroupProjectLean | null>();
     if (!project) return null;
     await applyLifecycle(project);

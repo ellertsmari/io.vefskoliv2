@@ -7,7 +7,6 @@ import { Return } from "../models/return";
 import { User } from "../models/user";
 import { Guide } from "../models/guide";
 import { safeSerialize } from "../utils/serialization";
-import { connectToDatabase } from "./mongoose-connector";
 
 export type UngradedReviewWithDetails = {
   _id: string;
@@ -50,8 +49,6 @@ export async function getUngradedReviews(): Promise<UngradedReviewWithDetails[]>
   }
 
   try {
-    await connectToDatabase();
-
     // Find all reviews without a grade
     const ungradedReviews = await Review.find({
       $or: [

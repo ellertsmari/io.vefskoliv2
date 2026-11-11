@@ -4,7 +4,6 @@ import { auth } from "../../auth";
 import { Return } from "../models/return";
 import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
-import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
 import { webLink } from "utils/webLink";
 import {
@@ -67,8 +66,6 @@ export async function returnGuide(
     // Mongoose buffers queries when it has no connection and gives up after
     // 10s. A server action can land on a lambda where nothing has connected
     // yet, so every entry point connects for itself.
-    await connectToDatabase();
-
     if (await Guide.exists({ _id: new ObjectId(guideId), submissionType: "activityLog" })) {
       return failure("Use this guide's activity log to record hours and evidence.");
     }

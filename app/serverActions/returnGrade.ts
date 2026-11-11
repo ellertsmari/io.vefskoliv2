@@ -6,7 +6,6 @@ import { auth } from "../../auth";
 import { Review } from "../models/review";
 import { z } from "zod";
 import { safeSerialize } from "../utils/serialization";
-import { connectToDatabase } from "./mongoose-connector";
 import {
   failure,
   success,
@@ -54,8 +53,6 @@ export async function returnGrade(
   const userId = new ObjectId(session.user.id);
 
   try {
-    await connectToDatabase();
-
     // Teachers can grade and re-grade any review. Record the grade and grader.
     const gradedDocument = (await Review.findByIdAndUpdate(
       new ObjectId(reviewId),

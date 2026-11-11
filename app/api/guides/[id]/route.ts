@@ -4,7 +4,6 @@ import { z } from "zod";
 import { webLink } from "../../../utils/webLink";
 import { auth } from "../../../../auth";
 import { Guide } from "../../../models/guide";
-import { connectToDatabase } from "../../../serverActions/mongoose-connector";
 import { extractModuleNumber } from "../../../utils/moduleUtils";
 import { planOrderShift } from "../../../utils/guideOrder";
 
@@ -250,8 +249,6 @@ export async function PUT(
       delete update.exercise;
       update.$unset = { ...(update.$unset as Record<string, number> ?? {}), exercise: 1 };
     }
-
-    await connectToDatabase();
 
     // A new order number that another guide in the module already has moves
     // that guide, and the ones between, out of the way (see planOrderShift).

@@ -1,3 +1,4 @@
+import "models/autoConnect";
 import { Schema, model, models } from "mongoose";
 
 const activityEntrySchema = new Schema({

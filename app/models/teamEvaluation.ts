@@ -1,3 +1,4 @@
+import "models/autoConnect";
 import {
   Document,
   Schema,

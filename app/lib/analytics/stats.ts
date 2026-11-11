@@ -2,7 +2,6 @@ import type { PipelineStage } from "mongoose";
 import { DailyStat } from "models/dailyStat";
 import { Guide } from "models/guide";
 import { Pageview } from "models/pageview";
-import { connectToDatabase } from "serverActions/mongoose-connector";
 import type {
   AnalyticsDashboard,
   AnalyticsHeadline,
@@ -306,7 +305,6 @@ export async function getAnalyticsDashboard(
   range: RangeDays,
   now = new Date()
 ): Promise<AnalyticsDashboard> {
-  await connectToDatabase();
   await rollUpFinishedDays(now);
 
   const to = dayKey(now);
@@ -383,7 +381,6 @@ export async function getAnalyticsHeadline(
   now = new Date()
 ): Promise<AnalyticsHeadline> {
   const days = 7;
-  await connectToDatabase();
   await rollUpFinishedDays(now);
   const to = dayKey(now);
   const [series, since] = await Promise.all([

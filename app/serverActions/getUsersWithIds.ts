@@ -1,7 +1,6 @@
 "use server";
 import { auth } from "../../auth";
 import { User } from "models/user";
-import { connectToDatabase } from "./mongoose-connector";
 import { hasTeacherPermissions } from "utils/userUtils";
 import type { GetUsersFilter } from "./getUsers";
 
@@ -32,7 +31,6 @@ export const getUsersWithIds = async (
     query.role = filter.role;
   }
 
-  await connectToDatabase();
   const users = await User.find(query, {
     _id: 1,
     name: 1,
