@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Portfolio schema review</title>
-<meta name="description" content="A review of the proposed student portfolio schema: what works well, and ten suggestions on top.">
+<meta name="description" content="A review of the proposed student portfolio schema: what works well, and eleven suggestions on top.">
 <meta name="robots" content="noindex, nofollow">
 <style>
 :root {
@@ -158,6 +158,12 @@ pre { margin: 0; padding: 9px; font-size: 12px; line-height: 1.5; white-space: p
 .ic:hover { border-color: var(--accent); }
 .ic .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px; display: grid; place-items: center; grid-row: span 2; grid-column: 1; }
 .ic b { font-size: 14px; } .ic span { font-size: 13px; color: var(--muted); grid-column: 2; }
+.dec { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; align-items: start; }
+.dec > div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 14px; }
+.dec h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 6px; color: var(--muted); }
+.dec .done h3 { color: var(--new); } .dec .yours h3 { color: var(--accent); } .dec .open h3 { color: var(--changed); }
+.dec ul { margin: 0; padding-left: 18px; } .dec li { margin: 8px 0; font-size: 14px; } .dec li b { display: block; }
+.dec code { font-size: 12.5px; }
 .idea { margin-top: 14px; border: 1px dashed var(--line); border-radius: 12px; padding: 14px 16px; }
 .idea b { display: block; } .idea p { margin: 4px 0 0; color: var(--muted); max-width: 80ch; } .idea code { font-size: 12.5px; }
 .tip { position: fixed; z-index: 20; max-width: 240px; background: var(--text); color: var(--bg); font-size: 12.5px; line-height: 1.35; padding: 6px 9px; border-radius: 7px; pointer-events: none; opacity: 0; transition: opacity .12s; }
@@ -184,7 +190,7 @@ pre { margin: 0; padding: 9px; font-size: 12px; line-height: 1.5; white-space: p
 <div class="wrap">
   <header>
     <h1>Portfolio schema review</h1>
-    <p>A proposal for student portfolios: a <code>PortfolioDraft</code> type, a <code>useDraft()</code> hook and <code>PortfolioView</code> props. It is a well thought-out design and most of it stays exactly as written. Green ticks mark what works well and why. Numbers mark ten suggestions on top. Switch between the two diagrams to watch what moves.</p>
+    <p>A proposal for student portfolios: a <code>PortfolioDraft</code> type, a <code>useDraft()</code> hook and <code>PortfolioView</code> props. It is a well thought-out design and most of it stays exactly as written. Green ticks mark what works well and why. Numbers mark eleven suggestions on top. Switch between the two diagrams to watch what moves.</p>
     <p class="kept" id="kept"></p>
   </header>
 
@@ -213,9 +219,38 @@ pre { margin: 0; padding: 9px; font-size: 12px; line-height: 1.5; white-space: p
     <h2>What the proposal gets right</h2>
     <p class="sub">These are decisions worth keeping, and worth repeating in the next thing you design.</p>
     <div class="cards" id="goods"></div>
-    <h2>Ten suggestions on top</h2>
+    <h2>Eleven suggestions on top</h2>
     <p class="sub">Each is a small edit to the contract. None of them changes the overall design.</p>
     <div class="cards" id="cards"></div>
+    <h2>Decisions</h2>
+    <p class="sub">Questions the suggestions raised, and where each one stands.</p>
+    <div class="dec">
+      <div class="done">
+        <h3>Decided</h3>
+        <ul>
+          <li><b>Portfolios are indexed.</b>Students want to be found by name, so the pages are open to search engines and listed in the sitemap.</li>
+          <li><b>A hidden portfolio is visible only to its owner.</b>A teacher who needs to help views the app as that student.</li>
+          <li><b>A draft in the browser is enough.</b>Everyone works on their own laptop, so the draft is always where its owner is. Nothing unfinished is stored in the database.</li>
+          <li><b>Portfolios outlive the course, but the address changes.</b>When a cohort finishes, its site moves to a Vercel domain. The portfolio is still there, under the new address.</li>
+          <li><b>Changing a slug breaks the old link.</b>No redirects. That is how the web works, and this is a good place to learn it. The editor should say so before a new slug is saved.</li>
+          <li><b>Links are validated like the calendar's link field,</b>with an <code>https:</code> check added (suggestion 6).</li>
+        </ul>
+      </div>
+      <div class="yours">
+        <h3>Yours to decide</h3>
+        <ul>
+          <li><b>Who can have a portfolio.</b>Students only, or teachers too?</li>
+          <li><b>The route name.</b>For example <code>/portfolio/&lt;slug&gt;</code>. Whatever you pick has to be added to <code>PUBLIC_ROUTES</code> (suggestion 3).</li>
+          <li><b>The name of <code>profile.role</code>.</b>Keep it, or pick <code>title</code> or <code>headline</code> (suggestion 11).</li>
+        </ul>
+      </div>
+      <div class="open">
+        <h3>Still being discussed</h3>
+        <ul>
+          <li><b>A local draft that is older than the stored version.</b>With one laptop per student this can hardly happen, so the simplest rule may be enough: the local draft wins. Until that is settled, treat <code>basedOn</code> in the diagram as optional.</li>
+        </ul>
+      </div>
+    </div>
     <div class="idea">
       <b>An idea, not a change: projects could point at the showcase</b>
       <p>Group projects already have public pages under <code>app/showcase</code>, and the code there says students link them from portfolios and CVs. A portfolio project could optionally reference a showcase team instead of retyping the title, description and image. The showcase has its own consent rules for names and photos, which a reference would inherit.</p>
@@ -266,17 +301,24 @@ const CHANGES = [
     demo: "embed" },
   { n: 2, title: "Draft in the browser, published version in the database", hint: "One document with a status flag cannot be both the draft and the live page.",
     why: ["With one document and a status flag, saving a draft of an already published portfolio either changes the live page or takes it offline.",
-          "Keeping the draft in localStorage solves that without a second copy in the database: the database holds only what was published. It costs three things:"],
-    list: ["Drafts are per browser. Another computer does not have them, and clearing site data loses them.", "Teachers cannot see unpublished work.", "Images cannot live in localStorage, so they upload when picked (see 7)."],
-    why2: ["visibility: \"hidden\" covers the first two: publish without going live, to switch computers or to show a teacher. The editor starts from the stored version when there is no local draft, and warns when the local draft is older than the stored one."],
+          "Keeping the draft in localStorage solves that without a second copy in the database: the database holds only what was published. Three things follow from that:"],
+    list: ["Drafts are per browser. Everyone works on their own laptop, so the draft is always where its owner is. Clearing site data does lose it.", "A hidden portfolio is visible only to its owner. A teacher who needs to help views the app as that student, and sees the stored version, not the draft on the student's laptop.", "Images cannot live in localStorage, so they upload when picked (see 7)."],
+    why2: ["visibility: \"hidden\" lets a student take the page offline without deleting it. The editor starts from the stored version when there is no local draft. What to do when a local draft is older than the stored version is still being discussed; see Decisions below."],
     before: "status: \"draft\" | \"published\"",
     after: "// database\nvisibility: \"public\" | \"hidden\"\npublishedAt: Date\n\n// localStorage[\"portfolio-draft\"]\n{ content, savedAt, basedOn }",
+    ev: [["app/utils/hooks/useStorage.ts", "an existing localStorage hook the draft storage can build on."],
+         ["app/serverActions/userAlias.ts", "the view-as-student feature teachers already have."]],
     demo: "draft" },
   { n: 3, title: "A slug for the public address", hint: "The public page needs a readable, unique address.",
     why: ["The published page needs a URL, and the schema has nothing to build one from except id and studentId. Those expose internal ids and are unreadable.",
-          "A unique slug, defaulting to the student's name and editable, gives a readable address. Limit it to lowercase letters, digits and hyphens, and reserve words the app's own routes use."],
+          "A unique slug, defaulting to the student's name and editable, gives a readable address. Limit it to lowercase letters, digits and hyphens, and reserve words the app's own routes use.",
+          "The pages should be indexed and listed in the sitemap, so a student can be found by name. The new public route also has to be registered, or visitors are sent to the sign-in page.",
+          "Changing a slug breaks the old address, on purpose: there is no redirect, so the editor should say so before the change is saved. The address also changes once more when a finished cohort's site moves to a Vercel domain; the portfolio itself survives."],
     before: "id: string          // the URL is ...?",
-    after: "slug: string        // unique index\n// e.g. \"jon-jonsson\"" },
+    after: "slug: string        // unique index\n// e.g. \"jon-jonsson\"",
+    ev: [["app/constants/projectBrief.ts:140", "BRIEF_SLUG, the slug pattern the project briefs already use."],
+         ["auth.config.ts:11", "PUBLIC_ROUTES, where a new public prefix is registered."],
+         ["app/sitemap.ts", "where public pages are listed for search engines."]] },
   { n: 4, title: "One name field", hint: "User has a single name, and Icelandic names split badly into first and last.",
     why: ["The account stores one name field. Most Icelandic last names are patronymics and middle names are common, so first/last is a poor fit and has to be derived from data that does not have it.",
           "One name, prefilled from the account and editable after that, is simpler. The same prefill question applies to photoUrl (the account has avatarUrl) and to the email."],
@@ -287,12 +329,14 @@ const CHANGES = [
     why: ["Anything on a public page is collected by scrapers. A required email, likely prefilled with the school login address, publishes that address for every student.",
           "Make it optional and empty by default. Hiding or unpublishing a portfolio should take the page down for real, not just unlink it."],
     before: "contact: { email: string }",
-    after: "contact: { email?: string }  // empty unless added" },
+    after: "contact: { email?: string }  // empty unless added",
+    ev: [["app/models/team.ts:54", "showcaseConsents: how the showcase already asks before showing a name in public."]] },
   { n: 6, title: "Check every link on the server", hint: "Stored links end up in href attributes on a public page.",
     why: ["liveUrl, githubUrl and linkedinUrl are typed by students and rendered as links for visitors. Accept https: only, checked on the server when publishing, because a check in the browser can be skipped.",
           "React 19 already refuses to render javascript: links, but that is the last line of defence and does not cover http: or data: links, or anything else that later reads the stored data. Put length caps on the text fields and a maximum number of projects in the same check."],
     before: "liveUrl?: string     // anything goes",
-    after: "function isSafeUrl(value: string) {\n  try {\n    return new URL(value).protocol === \"https:\";\n  } catch {\n    return false;\n  }\n}",
+    after: "// the calendar's link field, plus https only\nconst link = z\n  .string()\n  .trim()\n  .max(2000)\n  .url(\"Please enter a full link, including https://\")\n  .refine(\n    (v) => new URL(v).protocol === \"https:\",\n    \"Links must start with https://\"\n  );",
+    ev: [["app/utils/calendarUtils.ts:71", "the calendar's link field: trimmed, capped at 2000 characters, checked with .url(). Follow that pattern and add the https: check, because .url() on its own also accepts javascript: and data: links."]],
     demo: "url" },
   { n: 7, title: "Use the image upload the app already has", hint: "imageUrl and photoUrl need an upload, and one exists.",
     why: ["Both fields hold a URL, so the editor needs either a pasted link or an upload. You do not have to build one: the app already downscales an image in the browser, sends it straight to Vercel Blob and stores only the resulting URL, with the size limit and file-type check included.",
@@ -314,7 +358,14 @@ const CHANGES = [
     why: ["The shape of the hook is good and stays. With the draft in localStorage, saveDraft no longer talks to the server, so isSaving becomes isPublishing.",
           "publishDraft is then the single server action, and it validates the whole document. hasLocalChanges lets the editor show that there are unpublished changes, and error gives a failed publish somewhere to go."],
     before: "saveDraft,      // request\npublishDraft,   // request\nisSaving",
-    after: "saveDraft,      // localStorage, no request\npublishDraft,   // the only server action\nisPublishing,\nhasLocalChanges,\nerror" }
+    after: "saveDraft,      // localStorage, no request\npublishDraft,   // the only server action\nisPublishing,\nhasLocalChanges,\nerror",
+    ev: [["app/utils/hooks/useStorage.ts", "the existing localStorage hook; saveDraft can be a thin layer over it."]] },
+  { n: 11, title: "Consider another name for profile.role", hint: "role already means something else in this app.",
+    why: ["In this codebase role is the account's permission level: user or teacher. A second role that means 'Front-end developer' will be misread sooner or later, most likely in a permission check.",
+          "title or headline says what the field is. This one is your call: the type works either way, and the diagram leaves it as you wrote it."],
+    before: "profile: { role: string }",
+    after: "profile: { title: string }   // or headline",
+    ev: [["app/models/user.ts:63", "role on the account: the permission level."]] }
 ];
 
 /* ---------- what the proposal gets right ---------- */
@@ -350,7 +401,7 @@ const content = (s) => [
   { g: "profile", fields: [
     s ? f("p.first", "name", "string", { st: "changed", m: 4, c: [4] }) : f("p.first", "firstName", "string", { m: 4, c: [4] }),
     !s && f("p.last", "lastName", "string", { c: [4], into: "p.first" }),
-    f("p.role", "role", "string"), f("p.tag", "tagline", "string"), f("p.about", "about", "string"),
+    f("p.role", "role", "string", { m: 11, c: [11] }), f("p.tag", "tagline", "string"), f("p.about", "about", "string"),
     f("p.photo", "photoUrl", "string | null", { m: 7, c: [7, "E"] }),
     f("p.loc", "location", "string"), f("p.skills", "skills", "string[]"), f("p.lang", "languages", "string[]") ] },
   { g: "availability", fields: [
