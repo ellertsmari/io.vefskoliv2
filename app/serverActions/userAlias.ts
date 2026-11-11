@@ -3,7 +3,7 @@
 import { auth } from "auth";
 import { User } from "models/user";
 import { cookies } from "next/headers";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isTeacherAccount } from "utils/userUtils";
 import {
   failure,
   success,
@@ -18,7 +18,7 @@ type UserListItem = { id: string; name: string; email: string; role: string };
 export async function getAllUsers(): Promise<ActionResult<UserListItem[]>> {
   const session = await auth();
 
-  if (!hasTeacherPermissions(session)) {
+  if (!isTeacherAccount(session)) {
     return failure(ErrorMessages.NOT_AUTHORIZED);
   }
 
@@ -47,7 +47,7 @@ export async function getAllUsers(): Promise<ActionResult<UserListItem[]>> {
 export async function setAlias(userId: string): Promise<ActionResult<void>> {
   const session = await auth();
 
-  if (!hasTeacherPermissions(session)) {
+  if (!isTeacherAccount(session)) {
     return failure(ErrorMessages.NOT_AUTHORIZED);
   }
 

@@ -7,7 +7,7 @@ import { BookingWindow } from "../models/bookingWindow";
 import { CalendarEvent } from "../models/calendarEvent";
 import { Team } from "../models/team";
 import { User } from "../models/user";
-import { hasTeacherPermissions, isActingAsTeacher } from "../utils/userUtils";
+import { isActingAsTeacher } from "../utils/userUtils";
 import {
   BookMeetingInputSchema,
   BookingWindowInputSchema,
@@ -84,7 +84,7 @@ export async function saveBookingWindow(
 ): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   const validated = BookingWindowInputSchema.safeParse(data);
   if (!validated.success) {
@@ -105,7 +105,7 @@ export async function deleteBookingWindow(
 ): Promise<ActionResult<void>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
   if (!ObjectId.isValid(windowId)) return failure(ErrorMessages.NOT_FOUND("Meeting hours"));
 
   try {
@@ -326,7 +326,7 @@ type MeetingRow = {
  */
 export async function getUpcomingMeetings(): Promise<UpcomingMeeting[]> {
   const session = await auth();
-  if (!session?.user?.id || !hasTeacherPermissions(session)) return [];
+  if (!session?.user?.id || !isActingAsTeacher(session)) return [];
   const me = session.user.id;
 
   try {

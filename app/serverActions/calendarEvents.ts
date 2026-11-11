@@ -9,7 +9,7 @@ import { CalendarEvent } from "../models/calendarEvent";
 import { Team } from "../models/team";
 import { GroupProject } from "../models/groupProject";
 import { User } from "../models/user";
-import { hasTeacherPermissions, isActingAsTeacher } from "../utils/userUtils";
+import { isActingAsTeacher } from "../utils/userUtils";
 import {
   CalendarEventInputSchema,
   CopyEventsInputSchema,
@@ -453,7 +453,7 @@ export async function deleteCalendarEvent(
 export async function importSemesterPlan(): Promise<ActionResult<{ added: number }>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   try {
     const result = await CalendarEvent.bulkWrite(
@@ -498,7 +498,7 @@ export async function copyCalendarEvents(
 ): Promise<ActionResult<{ added: number }>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   const validated = CopyEventsInputSchema.safeParse(data);
   if (!validated.success) {

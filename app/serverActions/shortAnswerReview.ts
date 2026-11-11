@@ -6,7 +6,7 @@ import { z } from "zod";
 import { auth } from "../../auth";
 import { Guide } from "../models/guide";
 import { ExerciseAttempt } from "../models/exerciseAttempt";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import {
   knownTasks,
   taskId,
@@ -77,7 +77,7 @@ export const getShortAnswerReview = async (
   guideId: string
 ): Promise<TaskReview[] | null> => {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) return null;
+  if (!isActingAsTeacher(session)) return null;
 
   const guide = await loadAutoGuide(guideId);
   if (!guide) return null;
@@ -165,7 +165,7 @@ export const promoteShortAnswer = async (
   const { guideId, taskId: id, answer } = validated.data;
 
   const session = await auth();
-  if (!hasTeacherPermissions(session)) {
+  if (!isActingAsTeacher(session)) {
     return failure("Only teachers can accept an answer");
   }
 

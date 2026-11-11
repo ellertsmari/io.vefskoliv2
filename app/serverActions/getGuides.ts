@@ -6,7 +6,7 @@ import { PipelineStage } from "mongoose";
 import { GradingMode, GuideInfo } from "types/guideTypes";
 import type { ServerExercise } from "utils/exerciseUtils";
 import { ensureActiveAttempt, LEGACY_STATUSES } from "../lib/exerciseAttempts";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import { ActivityCycleModel } from "models/activityCycle";
 import { ActivityEntryModel } from "models/activityEntry";
 import { calculateActivityProgress } from "utils/activityLog";
@@ -382,7 +382,7 @@ export async function getGuides(
   if (!session?.user?.id) return null;
 
   const targetId =
-    hasTeacherPermissions(session) && userIdString
+    isActingAsTeacher(session) && userIdString
       ? userIdString
       : session.user.id;
 

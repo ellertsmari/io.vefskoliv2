@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "../../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { getGroupProject } from "serverActions/groups/getGroupProject";
 import { getEvaluationReports } from "serverActions/groups/getEvaluationReports";
 import { listJudgeInvitations } from "serverActions/groups/manageJudges";
@@ -22,7 +23,7 @@ const GroupProjectPage = async ({
   const details = await getGroupProject(id);
   if (!details) notFound();
 
-  const isTeacher = session.user.role === "teacher";
+  const isTeacher = isActingAsTeacher(session);
   const [reports, judges] = isTeacher
     ? await Promise.all([getEvaluationReports(id), listJudgeInvitations(id)])
     : [null, []];

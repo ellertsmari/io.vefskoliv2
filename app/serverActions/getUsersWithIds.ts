@@ -1,7 +1,7 @@
 "use server";
 import { auth } from "../../auth";
 import { User } from "models/user";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import type { GetUsersFilter } from "./getUsers";
 
 type UserForReports = {
@@ -23,7 +23,7 @@ export const getUsersWithIds = async (
   filter: GetUsersFilter = {}
 ): Promise<UserForReports[]> => {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) return [];
+  if (!isActingAsTeacher(session)) return [];
 
   // Pending accounts have no work to report on and are not in the class yet.
   const query: Record<string, unknown> = { status: { $ne: "pending" } };

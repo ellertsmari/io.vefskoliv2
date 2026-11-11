@@ -1,4 +1,5 @@
 import { auth } from "../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { StudentHomePage } from "../../components/studentHome/StudentHomePage";
 import { TeacherHomePage } from "../../components/teacherHome/TeacherHomePage";
 import { loadStudentGuideBoard } from "../../serverActions/guideBoard";
@@ -22,7 +23,7 @@ const Dashboard = async () => {
 
   // The teacher dashboard is a set of shortcuts and a grading queue — it reads
   // none of the guide data, so don't pay to fetch, extend and serialize it.
-  if (session.user.role === "teacher") {
+  if (isActingAsTeacher(session)) {
     return <TeacherHomePage />;
   }
 
