@@ -3,8 +3,7 @@
 import mongoose, { PipelineStage, Types } from "mongoose";
 import { connectToDatabase } from "./mongoose-connector";
 import { parseTopics } from "utils/galleryTopics";
-import { Return } from "models/return";
-import { Vote } from "models/review";
+import { Review, Vote } from "models/review";
 import { ModuleType } from "models/guide";
 import { isoDate } from "utils/serialization";
 
@@ -42,38 +41,28 @@ export type GalleryItem = {
   createdAt: string;
 };
 
+/**
+ * Starts from the gallery votes, not from the returns: only a few reviews
+ * recommend a return for the gallery, while the old pipeline joined the
+ * reviews of every return ever handed in before throwing most of them away.
+ */
 const buildPipeline = (limit?: number): PipelineStage[] => {
   const pipeline: PipelineStage[] = [
+    { $match: { vote: Vote.RECOMMEND_TO_GALLERY } },
+    { $group: { _id: "$return", recommendationCount: { $sum: 1 } } },
     {
       $lookup: {
-        from: "reviews",
+        from: "returns",
         localField: "_id",
-        foreignField: "return",
-        as: "reviews",
+        foreignField: "_id",
+        as: "return",
       },
     },
-    {
-      $addFields: {
-        recommendationCount: {
-          $size: {
-            $filter: {
-              input: "$reviews",
-              as: "review",
-              cond: { $eq: ["$$review.vote", Vote.RECOMMEND_TO_GALLERY] },
-            },
-          },
-        },
-      },
-    },
-    {
-      $match: {
-        recommendationCount: { $gt: 0 },
-      },
-    },
+    { $unwind: "$return" },
     {
       $lookup: {
         from: "guides",
-        localField: "guide",
+        localField: "return.guide",
         foreignField: "_id",
         as: "guide",
       },
@@ -82,7 +71,7 @@ const buildPipeline = (limit?: number): PipelineStage[] => {
     {
       $lookup: {
         from: "users",
-        localField: "owner",
+        localField: "return.owner",
         foreignField: "_id",
         as: "owner",
       },
@@ -92,8 +81,8 @@ const buildPipeline = (limit?: number): PipelineStage[] => {
       $project: {
         _id: 0,
         returnId: "$_id",
-        title: "$projectName",
-        description: "$comment",
+        title: "$return.projectName",
+        description: "$return.comment",
         studentName: "$owner.name",
         module: {
           title: "$guide.module.title",
@@ -102,10 +91,10 @@ const buildPipeline = (limit?: number): PipelineStage[] => {
         guideTitle: "$guide.title",
         topicsList: "$guide.topicsList",
         recommendationCount: 1,
-        pictureUrl: "$pictureUrl",
-        projectUrl: "$projectUrl",
-        liveVersion: "$liveVersion",
-        createdAt: "$createdAt",
+        pictureUrl: "$return.pictureUrl",
+        projectUrl: "$return.projectUrl",
+        liveVersion: "$return.liveVersion",
+        createdAt: "$return.createdAt",
       },
     },
     {
@@ -172,7 +161,7 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
     }
 
     const pipeline = buildPipeline(4);
-    const results = await Return.aggregate<GalleryAggregateResult>(pipeline);
+    const results = await Review.aggregate<GalleryAggregateResult>(pipeline);
 
     return results.map(mapAggregateToItem);
   } catch (error) {
@@ -194,7 +183,7 @@ export async function getAllGalleryItems(): Promise<GalleryItem[]> {
     }
 
     const pipeline = buildPipeline();
-    const results = await Return.aggregate<GalleryAggregateResult>(pipeline);
+    const results = await Review.aggregate<GalleryAggregateResult>(pipeline);
 
     return results.map(mapAggregateToItem);
   } catch (error) {
