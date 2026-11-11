@@ -6,6 +6,7 @@ import { TeacherHomePage } from "../../app/components/teacherHome/TeacherHomePag
 
 jest.mock("serverActions/getUngradedReviews", () => ({
   getUngradedReviews: jest.fn(),
+  getUngradedReviewCount: jest.fn(),
 }));
 jest.mock("serverActions/returnGrade", () => ({
   returnGrade: jest.fn(),
@@ -25,7 +26,10 @@ jest.mock("UIcomponents/markdown/reader", () => ({
   default: ({ children }: any) => <div>{children}</div>,
 }));
 
-import { getUngradedReviews } from "serverActions/getUngradedReviews";
+import {
+  getUngradedReviewCount,
+  getUngradedReviews,
+} from "serverActions/getUngradedReviews";
 import { returnGrade } from "serverActions/returnGrade";
 import { getAnalyticsHeadline } from "serverActions/getAnalyticsHeadline";
 
@@ -49,6 +53,7 @@ describe("TeacherHomePage grading queue", () => {
   afterEach(() => jest.clearAllMocks());
 
   it("counts the queue on the card and drops it as reviews are graded", async () => {
+    (getUngradedReviewCount as jest.Mock).mockResolvedValue(2);
     (getUngradedReviews as jest.Mock).mockResolvedValue([
       ungradedReview("r1", "Aretha"),
       ungradedReview("r2", "Valdís"),
@@ -82,13 +87,10 @@ describe("TeacherHomePage grading queue", () => {
 
   it("re-syncs the card when the modal loads a changed queue", async () => {
     // Another teacher graded two reviews since this page was loaded.
-    (getUngradedReviews as jest.Mock)
-      .mockResolvedValueOnce([
-        ungradedReview("r1", "Aretha"),
-        ungradedReview("r2", "Valdís"),
-        ungradedReview("r3", "Ingvar"),
-      ])
-      .mockResolvedValueOnce([ungradedReview("r3", "Ingvar")]);
+    (getUngradedReviewCount as jest.Mock).mockResolvedValue(3);
+    (getUngradedReviews as jest.Mock).mockResolvedValue([
+      ungradedReview("r3", "Ingvar"),
+    ]);
 
     render(<TeacherHomePage />);
 
@@ -103,6 +105,7 @@ describe("TeacherHomePage grading queue", () => {
   });
 
   it("says when nothing is waiting", async () => {
+    (getUngradedReviewCount as jest.Mock).mockResolvedValue(0);
     (getUngradedReviews as jest.Mock).mockResolvedValue([]);
 
     render(<TeacherHomePage />);
@@ -113,6 +116,7 @@ describe("TeacherHomePage grading queue", () => {
 
 describe("TeacherHomePage analytics card", () => {
   beforeEach(() => {
+    (getUngradedReviewCount as jest.Mock).mockResolvedValue(0);
     (getUngradedReviews as jest.Mock).mockResolvedValue([]);
   });
   afterEach(() => jest.clearAllMocks());
