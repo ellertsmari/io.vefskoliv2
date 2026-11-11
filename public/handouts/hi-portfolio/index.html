@@ -158,11 +158,11 @@ pre { margin: 0; padding: 9px; font-size: 12px; line-height: 1.5; white-space: p
 .ic:hover { border-color: var(--accent); }
 .ic .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px; display: grid; place-items: center; grid-row: span 2; grid-column: 1; }
 .ic b { font-size: 14px; } .ic span { font-size: 13px; color: var(--muted); grid-column: 2; }
-.dec { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; align-items: start; }
+.dec { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; align-items: stretch; }
 .dec > div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 14px; }
-.dec h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 6px; color: var(--muted); }
-.dec .done h3 { color: var(--new); } .dec .yours h3 { color: var(--accent); } .dec .open h3 { color: var(--changed); }
-.dec ul { margin: 0; padding-left: 18px; } .dec li { margin: 8px 0; font-size: 14px; } .dec li b { display: block; }
+.dec h3 { font-size: 14.5px; line-height: 1.3; margin: 0 0 6px; }
+.dec p { margin: 0; font-size: 14px; color: var(--muted); }
+.dec p b { color: var(--accent); font-weight: 700; }
 .dec code { font-size: 12.5px; }
 .idea { margin-top: 14px; border: 1px dashed var(--line); border-radius: 12px; padding: 14px 16px; }
 .idea b { display: block; } .idea p { margin: 4px 0 0; color: var(--muted); max-width: 80ch; } .idea code { font-size: 12.5px; }
@@ -222,34 +222,19 @@ pre { margin: 0; padding: 9px; font-size: 12px; line-height: 1.5; white-space: p
     <h2>Eleven suggestions on top</h2>
     <p class="sub">Each is a small edit to the contract. None of them changes the overall design.</p>
     <div class="cards" id="cards"></div>
-    <h2>Decisions</h2>
-    <p class="sub">Questions the suggestions raised, and where each one stands.</p>
+    <h2>Open questions, with a suggestion for each</h2>
+    <p class="sub">Nothing here is decided. These are the questions the review raised and what we would suggest. They are yours to settle.</p>
     <div class="dec">
-      <div class="done">
-        <h3>Decided</h3>
-        <ul>
-          <li><b>Portfolios are indexed.</b>Students want to be found by name, so the pages are open to search engines and listed in the sitemap.</li>
-          <li><b>A hidden portfolio is visible only to its owner.</b>A teacher who needs to help views the app as that student.</li>
-          <li><b>A draft in the browser is enough.</b>Everyone works on their own laptop, so the draft is always where its owner is. Nothing unfinished is stored in the database.</li>
-          <li><b>Portfolios outlive the course, but the address changes.</b>When a cohort finishes, its site moves to a Vercel domain. The portfolio is still there, under the new address.</li>
-          <li><b>Changing a slug breaks the old link.</b>No redirects. That is how the web works, and this is a good place to learn it. The editor should say so before a new slug is saved.</li>
-          <li><b>Links are validated like the calendar's link field,</b>with an <code>https:</code> check added (suggestion 6).</li>
-        </ul>
-      </div>
-      <div class="yours">
-        <h3>Yours to decide</h3>
-        <ul>
-          <li><b>Who can have a portfolio.</b>Students only, or teachers too?</li>
-          <li><b>The route name.</b>For example <code>/portfolio/&lt;slug&gt;</code>. Whatever you pick has to be added to <code>PUBLIC_ROUTES</code> (suggestion 3).</li>
-          <li><b>The name of <code>profile.role</code>.</b>Keep it, or pick <code>title</code> or <code>headline</code> (suggestion 11).</li>
-        </ul>
-      </div>
-      <div class="open">
-        <h3>Still being discussed</h3>
-        <ul>
-          <li><b>A local draft that is older than the stored version.</b>With one laptop per student this can hardly happen, so the simplest rule may be enough: the local draft wins. Until that is settled, treat <code>basedOn</code> in the diagram as optional.</li>
-        </ul>
-      </div>
+      <div><h3>Should portfolios be found by search engines?</h3><p><b>Suggestion:</b> yes. Students want to be found by name, so leave the pages open to crawlers and list them in the sitemap.</p></div>
+      <div><h3>Who can see a hidden portfolio?</h3><p><b>Suggestion:</b> only its owner. A teacher who needs to help can view the app as that student.</p></div>
+      <div><h3>Is a draft in the browser enough?</h3><p><b>Suggestion:</b> yes. Everyone works on their own laptop, so the draft is always where its owner is, and nothing unfinished has to be stored in the database.</p></div>
+      <div><h3>What if the local draft is older than the stored version?</h3><p><b>Suggestion:</b> keep it simple and let the local draft win. With one laptop per student it can hardly happen, which would make <code>basedOn</code> in the diagram unnecessary.</p></div>
+      <div><h3>What happens to a portfolio after the course?</h3><p><b>Worth knowing:</b> when a cohort finishes, its site moves to a Vercel domain. The portfolio survives, under a new address. <b>Suggestion:</b> say so where students copy their link.</p></div>
+      <div><h3>What happens to old links when a slug changes?</h3><p><b>Suggestion:</b> they break, with no redirect. That is how the web works, and this is a good place to learn it. Warn in the editor before a new slug is saved.</p></div>
+      <div><h3>Which links are accepted?</h3><p><b>Suggestion:</b> only <code>http:</code> and <code>https:</code>, checked on the server with the app's shared link schema (suggestion 6).</p></div>
+      <div><h3>What is the route called?</h3><p><b>Suggestion:</b> something like <code>/portfolio/&lt;slug&gt;</code>. Whatever you pick has to be added to <code>PUBLIC_ROUTES</code> (suggestion 3).</p></div>
+      <div><h3>Should <code>profile.role</code> be renamed?</h3><p><b>Suggestion:</b> probably, to <code>title</code> or <code>headline</code> (suggestion 11).</p></div>
+      <div><h3>Who can have a portfolio?</h3><p><b>No suggestion from us.</b> Students only, or teachers too, is your call.</p></div>
     </div>
     <div class="idea">
       <b>An idea, not a change: projects could point at the showcase</b>
@@ -302,8 +287,8 @@ const CHANGES = [
   { n: 2, title: "Draft in the browser, published version in the database", hint: "One document with a status flag cannot be both the draft and the live page.",
     why: ["With one document and a status flag, saving a draft of an already published portfolio either changes the live page or takes it offline.",
           "Keeping the draft in localStorage solves that without a second copy in the database: the database holds only what was published. Three things follow from that:"],
-    list: ["Drafts are per browser. Everyone works on their own laptop, so the draft is always where its owner is. Clearing site data does lose it.", "A hidden portfolio is visible only to its owner. A teacher who needs to help views the app as that student, and sees the stored version, not the draft on the student's laptop.", "Images cannot live in localStorage, so they upload when picked (see 7)."],
-    why2: ["visibility: \"hidden\" lets a student take the page offline without deleting it. The editor starts from the stored version when there is no local draft. What to do when a local draft is older than the stored version is still being discussed; see Decisions below."],
+    list: ["Drafts are per browser. Everyone works on their own laptop, so the draft is always where its owner is. Clearing site data does lose it.", "We suggest a hidden portfolio is visible only to its owner. A teacher who needs to help can view the app as that student, and sees the stored version, not the draft on the student's laptop.", "Images cannot live in localStorage, so they upload when picked (see 7)."],
+    why2: ["visibility: \"hidden\" lets a student take the page offline without deleting it. The editor starts from the stored version when there is no local draft. What to do when a local draft is older than the stored version is an open question; see the list at the bottom of the page."],
     before: "status: \"draft\" | \"published\"",
     after: "// database\nvisibility: \"public\" | \"hidden\"\npublishedAt: Date\n\n// localStorage[\"portfolio-draft\"]\n{ content, savedAt, basedOn }",
     ev: [["app/utils/hooks/useStorage.ts", "an existing localStorage hook the draft storage can build on."],
@@ -312,8 +297,8 @@ const CHANGES = [
   { n: 3, title: "A slug for the public address", hint: "The public page needs a readable, unique address.",
     why: ["The published page needs a URL, and the schema has nothing to build one from except id and studentId. Those expose internal ids and are unreadable.",
           "A unique slug, defaulting to the student's name and editable, gives a readable address. Limit it to lowercase letters, digits and hyphens, and reserve words the app's own routes use.",
-          "The pages should be indexed and listed in the sitemap, so a student can be found by name. The new public route also has to be registered, or visitors are sent to the sign-in page.",
-          "Changing a slug breaks the old address, on purpose: there is no redirect, so the editor should say so before the change is saved. The address also changes once more when a finished cohort's site moves to a Vercel domain; the portfolio itself survives."],
+          "We suggest indexing the pages and listing them in the sitemap, so a student can be found by name. The new public route also has to be registered, or visitors are sent to the sign-in page.",
+          "We suggest that changing a slug simply breaks the old address, with no redirect, and that the editor says so before the change is saved. The address also changes once more when a finished cohort's site moves to a Vercel domain; the portfolio itself survives."],
     before: "id: string          // the URL is ...?",
     after: "slug: string        // unique index\n// e.g. \"jon-jonsson\"",
     ev: [["app/constants/projectBrief.ts:140", "BRIEF_SLUG, the slug pattern the project briefs already use."],
@@ -332,11 +317,11 @@ const CHANGES = [
     after: "contact: { email?: string }  // empty unless added",
     ev: [["app/models/team.ts:54", "showcaseConsents: how the showcase already asks before showing a name in public."]] },
   { n: 6, title: "Check every link on the server", hint: "Stored links end up in href attributes on a public page.",
-    why: ["liveUrl, githubUrl and linkedinUrl are typed by students and rendered as links for visitors. Accept https: only, checked on the server when publishing, because a check in the browser can be skipped.",
-          "React 19 already refuses to render javascript: links, but that is the last line of defence and does not cover http: or data: links, or anything else that later reads the stored data. Put length caps on the text fields and a maximum number of projects in the same check."],
+    why: ["liveUrl, githubUrl and linkedinUrl are typed by students and rendered as links for visitors. Accept only http: and https: links, checked on the server when publishing, because a check in the browser can be skipped.",
+          "React 19 already refuses to render javascript: links, but that is the last line of defence and does not cover data: links, or anything else that later reads the stored data. Put length caps on the text fields and a maximum number of projects in the same check."],
     before: "liveUrl?: string     // anything goes",
-    after: "// the calendar's link field, plus https only\nconst link = z\n  .string()\n  .trim()\n  .max(2000)\n  .url(\"Please enter a full link, including https://\")\n  .refine(\n    (v) => new URL(v).protocol === \"https:\",\n    \"Links must start with https://\"\n  );",
-    ev: [["app/utils/calendarUtils.ts:71", "the calendar's link field: trimmed, capped at 2000 characters, checked with .url(). Follow that pattern and add the https: check, because .url() on its own also accepts javascript: and data: links."]],
+    after: "// a shared schema, being added to the app\nimport { webLink } from \"utils/webLink\";\n\nliveUrl: webLink().optional()",
+    ev: [["app/utils/webLink.ts", "a shared link schema being added to the app: trimmed, capped at 2000 characters, http: and https: only. Use it once it is on main. Until then the rule is the one in the demo above."]],
     demo: "url" },
   { n: 7, title: "Use the image upload the app already has", hint: "imageUrl and photoUrl need an upload, and one exists.",
     why: ["Both fields hold a URL, so the editor needs either a pasted link or an upload. You do not have to build one: the app already downscales an image in the browser, sends it straight to Vercel Blob and stores only the resulting URL, with the size limit and file-type check included.",
@@ -411,7 +396,7 @@ const content = (s) => [
   { g: "projects[]", fields: [
     f("j.id", "id", "string", { c: ["E"] }), f("j.title", "title", "string"), f("j.desc", "description", "string"),
     f("j.img", "imageUrl", "string | null", { c: [7, "E"] }), f("j.tech", "technologies", "string[]"),
-    f("j.live", "liveUrl?", "string", { m: 6, c: [6], cm: s ? "https only" : null, st: s ? "changed" : null }),
+    f("j.live", "liveUrl?", "string", { m: 6, c: [6], cm: s ? "web links only" : null, st: s ? "changed" : null }),
     f("j.gh", "githubUrl?", "string", { c: [6] }) ] },
   { g: "contact", fields: [
     s ? f("c.email", "email?", "string", { st: "changed", m: 5, c: [5] }) : f("c.email", "email", "string", { m: 5, c: [5] }),
@@ -673,7 +658,7 @@ const DEMOS = {
       h("div", { class: "live" }, h("div", { class: "url" }, h("i", {}), "live page · /portfolio/jon-jonsson"), live), out);
   },
   url() {
-    const isSafeUrl = (v) => { try { return new URL(v).protocol === "https:"; } catch { return false; } };
+    const isSafeUrl = (v) => { try { const p = new URL(v).protocol; return p === "http:" || p === "https:"; } catch { return false; } };
     const input = h("input", { id: "d-url", value: "javascript:alert(document.cookie)", autocomplete: "off", spellcheck: "false" });
     const gate = h("div", { class: "st" }, svg(ICON.gate), "server check"), store = h("div", { class: "st" }, svg(ICON.db), "database");
     const dot = h("div", { class: "dot", style: "opacity:0" });
@@ -692,7 +677,7 @@ const DEMOS = {
       dot.style.opacity = "0"; busy = false;
       let why = "that is not a URL at all";
       try { why = "its protocol is " + new URL(input.value).protocol; } catch {}
-      out.replaceChildren(ok ? h("span", { class: "ok" }, "Stored. The protocol is https:.") : h("span", { class: "no" }, "Rejected: " + why + ", and only https: is accepted."));
+      out.replaceChildren(ok ? h("span", { class: "ok" }, "Stored. " + new URL(input.value).protocol + " is a web address.") : h("span", { class: "no" }, "Rejected: " + why + ", and only http: and https: are accepted."));
     };
     const tries = ["javascript:alert(document.cookie)", "https://my-project.vercel.app", "http://example.com", "data:text/html,<h1>hi</h1>", "my project"];
     return h("div", { class: "demo" },
