@@ -97,8 +97,8 @@ const useCarryOverLegacyChoice = (
     try {
       const stored = localStorage.getItem(LEGACY_STORAGE_KEY);
       localStorage.removeItem(LEGACY_STORAGE_KEY);
-      const module = parseModuleChoice(stored);
-      if (module !== null) setSelectedModule(module);
+      const storedModule = parseModuleChoice(stored);
+      if (storedModule !== null) setSelectedModule(storedModule);
     } catch {
       // Storage blocked: there is nothing to carry over.
     }
@@ -132,8 +132,8 @@ const currentOptionName = (
   modules: Module[]
 ) => {
   if (selectedModule === null) return ALL_MODULES;
-  const module = modules.find((m) => m.number === selectedModule);
-  return module ? moduleLabel(module) : ALL_MODULES;
+  const selected = modules.find((m) => m.number === selectedModule);
+  return selected ? moduleLabel(selected) : ALL_MODULES;
 };
 
 const createOptions = (

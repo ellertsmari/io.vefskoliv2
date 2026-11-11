@@ -45,6 +45,9 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      - name: Lint
+        run: npx eslint .
+
       - name: Test
         run: npx jest --ci
 
