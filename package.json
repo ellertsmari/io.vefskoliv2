@@ -12,6 +12,7 @@
     "test-watch": "jest --watch",
     "doctor": "npx react-doctor@latest",
     "typecheck": "tsc --noEmit",
+    "e2e": "playwright test",
     "verify:trace": "node scripts/verifyBuildTrace.mjs",
     "verify": "yarn build && yarn typecheck && yarn lint && yarn test && yarn test:content && yarn verify:trace"
   },
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.0.0",
+    "@playwright/test": "^1.65.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.2",
     "@testing-library/react": "^16.0.1",
