@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { Types } from "mongoose";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { webLink } from "utils/webLink";
 import { auth } from "../../auth";
 import { Guide } from "models/guide";
 import { User } from "models/user";
@@ -27,7 +28,7 @@ const entrySchema = z.object({
   location: z.string().trim().max(200),
   description: z.string().trim().max(5000),
   sessions: z.array(z.object({ date: activityDateSchema, minutes: z.number().int().min(1).max(1440) })).min(1).max(50),
-  links: z.array(z.string().trim().max(2000).url().refine((s) => /^https?:\/\//i.test(s))).max(5),
+  links: z.array(webLink()).max(5),
   images: z.array(imageSchema).max(2),
   status: z.enum(["draft", "pending"]),
 }).superRefine((v, ctx) => {

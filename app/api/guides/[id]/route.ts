@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import { z } from "zod";
+import { webLink } from "../../../utils/webLink";
 import { auth } from "../../../../auth";
 import { Guide } from "../../../models/guide";
 import { connectToDatabase } from "../../../serverActions/mongoose-connector";
@@ -33,7 +34,7 @@ const exerciseTaskSchema = z
     hint: z.string().optional(),
     goal: z.string().optional(),
     helpLinks: z
-      .array(z.object({ label: z.string(), url: z.string().url() }))
+      .array(z.object({ label: z.string(), url: webLink() }))
       .optional(),
     helpText: z.string().optional(),
     answerFeedback: z

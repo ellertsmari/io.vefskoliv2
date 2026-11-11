@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { webLink } from "utils/webLink";
 import type {
   EventCategory,
   EventVisibility,
@@ -68,13 +69,7 @@ export const CalendarEventInputSchema = z
     endDate: optionalString(z.string().regex(DATE_RE, "Please pick a last day")),
     startTime: optionalString(z.string().regex(TIME_RE, "Please pick a time")),
     endTime: optionalString(z.string().regex(TIME_RE, "Please pick a time")),
-    link: optionalString(
-      z
-        .string()
-        .trim()
-        .max(2000, "Keep the link under 2000 characters")
-        .url("Please enter a full link, including https://")
-    ),
+    link: optionalString(webLink()),
     visibility: z.enum(["everyone", "team", "shared", "private"]).optional(),
     /** User ids for a "shared" event. */
     sharedWith: z.array(z.string().trim().min(1)).max(100).default([]),

@@ -57,6 +57,8 @@ describe("CalendarEventInputSchema", () => {
     ["an end time without a start", { endTime: "11:00" }, "startTime"],
     ["an end time before the start", { startTime: "11:00", endTime: "10:00" }, "endTime"],
     ["a link without a scheme", { link: "vefskolinn.is" }, "link"],
+    ["a link that runs code", { link: "javascript:alert(1)" }, "link"],
+    ["a link that is not a web address", { link: "data:text/html,<b>x</b>" }, "link"],
     ["a title over 120 characters", { title: "x".repeat(121) }, "title"],
     ["a repeat that ends before it starts", { repeatWeeklyUntil: "2026-09-02" }, "repeatWeeklyUntil"],
     [
