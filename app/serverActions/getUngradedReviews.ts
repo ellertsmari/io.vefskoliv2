@@ -73,8 +73,6 @@ const uniqueIds = (ids: Array<Id | null | undefined>) => [
  * guide, return, reviewer or return owner no longer exists is left out.
  */
 const loadUngradedReviews = async (): Promise<UngradedReviewWithDetails[]> => {
-  await connectToDatabase();
-
   const reviews = await Review.find({
     $or: [{ grade: null }, { grade: { $exists: false } }],
   })
@@ -140,10 +138,7 @@ const loadUngradedReviews = async (): Promise<UngradedReviewWithDetails[]> => {
   return queue;
 };
 
-const isTeacherSession = async () => {
-  const session = await auth();
-  return session?.user?.role === "teacher";
-};
+const isTeacherSession = async () => isActingAsTeacher(await auth());
 
 export async function getUngradedReviews(): Promise<UngradedReviewWithDetails[]> {
   if (!(await isTeacherSession())) return [];
