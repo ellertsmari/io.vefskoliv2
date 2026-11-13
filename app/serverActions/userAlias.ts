@@ -1,10 +1,9 @@
 "use server";
 
 import { auth } from "auth";
-import { connectToDatabase } from "./mongoose-connector";
 import { User } from "models/user";
 import { cookies } from "next/headers";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isTeacherAccount } from "utils/userUtils";
 import {
   failure,
   success,
@@ -19,12 +18,11 @@ type UserListItem = { id: string; name: string; email: string; role: string };
 export async function getAllUsers(): Promise<ActionResult<UserListItem[]>> {
   const session = await auth();
 
-  if (!hasTeacherPermissions(session)) {
+  if (!isTeacherAccount(session)) {
     return failure(ErrorMessages.NOT_AUTHORIZED);
   }
 
   try {
-    await connectToDatabase();
     const users = await User.find({}, { _id: 1, name: 1, email: 1, role: 1 })
       .sort({ name: 1 })
       .lean();
@@ -49,12 +47,11 @@ export async function getAllUsers(): Promise<ActionResult<UserListItem[]>> {
 export async function setAlias(userId: string): Promise<ActionResult<void>> {
   const session = await auth();
 
-  if (!hasTeacherPermissions(session)) {
+  if (!isTeacherAccount(session)) {
     return failure(ErrorMessages.NOT_AUTHORIZED);
   }
 
   try {
-    await connectToDatabase();
     const targetUser = await User.findById(userId);
 
     if (!targetUser) {

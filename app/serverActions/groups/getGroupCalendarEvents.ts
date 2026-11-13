@@ -1,5 +1,4 @@
 "use server";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { logError } from "utils/errors";
@@ -21,7 +20,6 @@ export async function getGroupCalendarEvents(): Promise<CalendarEvent[]> {
   if (!session) return [];
 
   try {
-    await connectToDatabase();
     const projects = await GroupProject.find({}).lean<GroupProjectLean[]>();
     await Promise.all(projects.map((project) => applyLifecycle(project)));
 

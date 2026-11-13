@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Session } from "next-auth";
 import { getAllUsers, setAlias, clearAlias } from "serverActions/userAlias";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isTeacherAccount } from "utils/userUtils";
 import { Avatar } from "UIcomponents/avatar/Avatar";
 import { EyeIcon, ChevronIcon, ExitIcon } from "assets/Icons";
 import {
@@ -54,7 +54,7 @@ export const UserAliasDropdown = ({ session }: UserAliasDropdownProps) => {
   // and the page only updates once the new session has rendered.
   const [switching, startSwitch] = useTransition();
 
-  const isTeacher = hasTeacherPermissions(session);
+  const isTeacher = isTeacherAccount(session);
   const isAliased = session?.user?.isAliased;
   const currentUser = session?.user;
 

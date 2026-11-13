@@ -1,6 +1,5 @@
 // Deliberately not "use server": these are read by server components only,
 // and an action would let any browser call getBriefBySlug directly.
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { BriefProject } from "types/groupTypes";
 import { ResolvedBrief } from "constants/projectBrief";
@@ -39,7 +38,6 @@ const toBriefProject = (doc: any, brief: ResolvedBrief): BriefProject => {
 
 /** The newest project of each module that has a brief. */
 async function projectsByModule(modules: number[]) {
-  await connectToDatabase();
   const docs = await GroupProject.find({ module: { $in: modules } })
     .sort({ startDate: -1 })
     .lean();

@@ -2,17 +2,15 @@
 import { Types } from "mongoose";
 import { auth } from "../../auth";
 import { Guide, GuideType } from "models/guide";
-import { connectToDatabase } from "./mongoose-connector";
 import { sanitizeGuideForClient } from "utils/exerciseUtils";
 import { safeSerialize } from "utils/serialization";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import type { ClientGuide } from "types/guideTypes";
 
 const findGuide = async (id: string): Promise<GuideType | null> => {
   if (!Types.ObjectId.isValid(id)) {
     return null;
   }
-  await connectToDatabase();
   const guide = await Guide.findById(new Types.ObjectId(id)).lean<GuideType>();
   return guide ?? null;
 };
@@ -50,7 +48,7 @@ export const getGuideForTeacher = async (
   id: string
 ): Promise<GuideType | null> => {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) {
+  if (!isActingAsTeacher(session)) {
     return null;
   }
   const guide = await findGuide(id);

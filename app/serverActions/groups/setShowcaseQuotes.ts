@@ -1,6 +1,5 @@
 "use server";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { Team } from "models/team";
 import { TeamEvaluation } from "models/teamEvaluation";
 import { MAX_SHOWCASE_QUOTES } from "constants/groupWork";
@@ -48,7 +47,6 @@ export async function setShowcaseQuotes(
   const { teamId, evaluationIds } = validated.data;
 
   try {
-    await connectToDatabase();
     const team = await Team.findById(teamId);
     if (!team) return failure(ErrorMessages.NOT_FOUND("Team"));
 

@@ -533,16 +533,17 @@ describe("getGuides", () => {
       ]);
     });
 
-    it("keeps working for a teacher who is aliased as a student", async () => {
+    it("treats a teacher who is viewing as a student like that student", async () => {
       const student = await createDummyUser();
       const guide = await createDummyGuide();
-      const studentReturn = await createDummyReturn(student, guide);
-      const other = await createDummyUser();
-      // While aliased, session.user IS the student; the original role is what
-      // grants the lookup.
+      await createDummyReturn(student, guide);
+      const viewedAs = await createDummyUser();
+      const ownReturn = await createDummyReturn(viewedAs, guide);
+      // While aliased, session.user IS the student being viewed. Asking for
+      // somebody else's guides gets that student's own, as it would for them.
       (auth as jest.Mock).mockResolvedValue({
         user: {
-          id: other._id.toString(),
+          id: viewedAs._id.toString(),
           role: "user",
           isAliased: true,
           originalUser: { id: "t", role: "teacher" },
@@ -555,7 +556,7 @@ describe("getGuides", () => {
       );
 
       expect(info?.returnsSubmitted.map((r: any) => r._id)).toEqual([
-        studentReturn._id.toString(),
+        ownReturn._id.toString(),
       ]);
     });
   });

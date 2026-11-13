@@ -7,8 +7,7 @@ import { BookingWindow } from "../models/bookingWindow";
 import { CalendarEvent } from "../models/calendarEvent";
 import { Team } from "../models/team";
 import { User } from "../models/user";
-import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions, isActingAsTeacher } from "../utils/userUtils";
+import { isActingAsTeacher } from "../utils/userUtils";
 import {
   BookMeetingInputSchema,
   BookingWindowInputSchema,
@@ -70,7 +69,6 @@ export async function getBookingWindows(): Promise<BookingWindowInfo[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
   try {
-    await connectToDatabase();
     const rows = await BookingWindow.find()
       .sort({ weekday: 1, startTime: 1 })
       .lean<WindowRow[]>();
@@ -86,7 +84,7 @@ export async function saveBookingWindow(
 ): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   const validated = BookingWindowInputSchema.safeParse(data);
   if (!validated.success) {
@@ -94,7 +92,6 @@ export async function saveBookingWindow(
   }
 
   try {
-    await connectToDatabase();
     const created = await BookingWindow.create(validated.data);
     revalidatePath(CALENDAR_PATH);
     return success({ id: String(created._id) }, "Meeting hours added");
@@ -108,11 +105,10 @@ export async function deleteBookingWindow(
 ): Promise<ActionResult<void>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
   if (!ObjectId.isValid(windowId)) return failure(ErrorMessages.NOT_FOUND("Meeting hours"));
 
   try {
-    await connectToDatabase();
     const result = await BookingWindow.deleteOne({ _id: new ObjectId(windowId) });
     if (result.deletedCount === 0) return failure(ErrorMessages.NOT_FOUND("Meeting hours"));
     revalidatePath(CALENDAR_PATH);
@@ -230,7 +226,6 @@ export async function getMeetingSlots(
     return [];
   }
   try {
-    await connectToDatabase();
     return await computeSlots(fromDate, toDate);
   } catch (error) {
     handleActionError("getMeetingSlots", error);
@@ -262,7 +257,6 @@ export async function bookMeeting(
   const { date, startTime, topic, withTeam } = validated.data;
 
   try {
-    await connectToDatabase();
     const slot = (await computeSlots(date, date)).find(
       (candidate) => candidate.startTime === startTime
     );
@@ -332,11 +326,10 @@ type MeetingRow = {
  */
 export async function getUpcomingMeetings(): Promise<UpcomingMeeting[]> {
   const session = await auth();
-  if (!session?.user?.id || !hasTeacherPermissions(session)) return [];
+  if (!session?.user?.id || !isActingAsTeacher(session)) return [];
   const me = session.user.id;
 
   try {
-    await connectToDatabase();
     const today = todayKey();
     const rows = await CalendarEvent.find({
       category: "meeting",

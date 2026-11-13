@@ -9,8 +9,7 @@ import { CalendarEvent } from "../models/calendarEvent";
 import { Team } from "../models/team";
 import { GroupProject } from "../models/groupProject";
 import { User } from "../models/user";
-import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions, isActingAsTeacher } from "../utils/userUtils";
+import { isActingAsTeacher } from "../utils/userUtils";
 import {
   CalendarEventInputSchema,
   CopyEventsInputSchema,
@@ -151,7 +150,6 @@ export async function getViewerTeamName(): Promise<string | null> {
   const session = await auth();
   if (!session?.user?.id) return null;
   try {
-    await connectToDatabase();
     const team = await currentTeamOf(session.user.id);
     return team?.name ?? null;
   } catch (error) {
@@ -189,7 +187,6 @@ export async function getCalendarEvents(): Promise<ClientEvent[]> {
   const isTeacher = isActingAsTeacher(session);
 
   try {
-    await connectToDatabase();
     const filter = {
       $or: [
         { visibility: "everyone" },
@@ -219,7 +216,6 @@ export async function getShareableUsers(): Promise<ShareableUser[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
   try {
-    await connectToDatabase();
     const users = await User.find(
       { status: { $ne: "pending" } },
       { name: 1, avatarUrl: 1 }
@@ -305,7 +301,6 @@ export async function createCalendarEvent(
   if (refused) return failure(refused);
 
   try {
-    await connectToDatabase();
     const resolved = await resolveAudience(
       input.visibility,
       input.sharedWith,
@@ -369,7 +364,6 @@ export async function updateCalendarEvent(
   const input = validated.data;
   const base = normalizeEventInput(input);
   try {
-    await connectToDatabase();
     const event = await loadEditable(eventId, session);
     if (!event) return failure(ErrorMessages.NOT_FOUND("Event"));
     if (event === "forbidden") {
@@ -434,7 +428,6 @@ export async function deleteCalendarEvent(
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
 
   try {
-    await connectToDatabase();
     const event = await loadEditable(eventId, session);
     if (!event) return failure(ErrorMessages.NOT_FOUND("Event"));
     if (event === "forbidden") {
@@ -460,10 +453,9 @@ export async function deleteCalendarEvent(
 export async function importSemesterPlan(): Promise<ActionResult<{ added: number }>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   try {
-    await connectToDatabase();
     const result = await CalendarEvent.bulkWrite(
       SEMESTER_PLAN_2026.map((event) => ({
         updateOne: {
@@ -506,7 +498,7 @@ export async function copyCalendarEvents(
 ): Promise<ActionResult<{ added: number }>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   const validated = CopyEventsInputSchema.safeParse(data);
   if (!validated.success) {
@@ -515,7 +507,6 @@ export async function copyCalendarEvents(
   const { fromDate, toDate, weeks } = validated.data;
 
   try {
-    await connectToDatabase();
     const sources = await CalendarEvent.find({
       visibility: "everyone",
       startDate: { $gte: fromDate, $lte: toDate },

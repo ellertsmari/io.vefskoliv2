@@ -1,3 +1,4 @@
+import "models/autoConnect";
 import {
   Document,
   Schema,
@@ -7,11 +8,10 @@ import {
   Types,
 } from "mongoose";
 
-export enum Vote {
-  NO_PASS = "no pass",
-  PASS = "pass",
-  RECOMMEND_TO_GALLERY = "recommend to Hall of fame",
-}
+import { Vote } from "constants/vote";
+
+// Re-exported for server code. Browser code imports it from constants/vote.
+export { Vote };
 
 const reviewSchema = new Schema({
   guide: { type: Schema.Types.ObjectId, required: true, ref: "Guide", index: true },

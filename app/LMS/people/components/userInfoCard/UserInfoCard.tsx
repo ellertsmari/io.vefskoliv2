@@ -1,4 +1,4 @@
-import { OptionalUserInfoKeys } from "models/user";
+import { OptionalUserInfoKeys } from "constants/userInfo";
 import React from "react";
 import {
   CardHeader,

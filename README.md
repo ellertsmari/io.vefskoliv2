@@ -38,12 +38,12 @@ The Module 2 Community & Networking activity log has a separate activation and r
 
 ### 1. Install dependencies
 
-Use **Node.js 24**, matching [CI](.github/workflows/ci.yml), and a MongoDB database for local development. The commands below follow CI's npm workflow and use `package-lock.json`.
+Use **Node.js 24**, matching [CI](.github/workflows/ci.yml), and a MongoDB database for local development. The project uses Yarn 1 (see `packageManager` in `package.json`), as CI does.
 
 ```bash
 git clone https://github.com/ellertsmari/io.vefskoliv2.git
 cd io.vefskoliv2
-npm ci
+yarn install --frozen-lockfile
 ```
 
 ### 2. Configure the environment
@@ -67,7 +67,7 @@ Use your development database connection string if MongoDB runs elsewhere. Local
 ### 3. Start the app
 
 ```bash
-npm run dev
+yarn dev
 ```
 
 Open [localhost:3000](http://localhost:3000).
@@ -95,25 +95,25 @@ The app uses **Next.js App Router, React, TypeScript, MongoDB/Mongoose, Auth.js,
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Start the development server. |
-| `npm test -- --runInBand` | Run the test suite sequentially (without the slow exercise bank). |
-| `npm run test:content` | Run every code exercise through the real grader (slow; CI and `verify` run it too). |
-| `npm run build` | Create the production build. |
-| `npm run typecheck` | Check TypeScript, including generated route types. |
-| `npm run verify:trace` | Check that the build includes the runtime files needed by the exercise engine. |
-| `npm run verify` | Run the build, type check, tests, and build trace check in order. |
-| `npm start` | Serve an existing production build. |
+| `yarn dev` | Start the development server. |
+| `yarn test --runInBand` | Run the test suite sequentially (without the slow exercise bank). |
+| `yarn test:content` | Run every code exercise through the real grader (slow; CI and `verify` run it too). |
+| `yarn build` | Create the production build. |
+| `yarn typecheck` | Check TypeScript, including generated route types. |
+| `yarn verify:trace` | Check that the build includes the runtime files needed by the exercise engine. |
+| `yarn verify` | Run the build, type check, tests, and build trace check in order. |
+| `yarn start` | Serve an existing production build. |
 
 On a fresh checkout, build before running the standalone type check: Next.js generates the route and asset declarations it needs. CI follows that order.
 
 If a development server is already running, put the production build in its own directory so it does not overwrite the development output:
 
 ```bash
-NEXT_DIST_DIR=.next-verify npm run build
-NEXT_DIST_DIR=.next-verify npm run verify:trace
+NEXT_DIST_DIR=.next-verify yarn build
+NEXT_DIST_DIR=.next-verify yarn verify:trace
 ```
 
-The repository contains both npm and Yarn lockfiles, and `package.json` declares Yarn. CI currently installs with npm. Keep dependency changes consistent across the committed lockfiles.
+`yarn.lock` is the only lockfile. Do not run `npm install`: it writes a `package-lock.json` (ignored by git) and rewrites `yarn.lock`.
 
 ### Working with course data
 

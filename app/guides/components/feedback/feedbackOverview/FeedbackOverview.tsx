@@ -21,7 +21,7 @@ import {
 } from "./style";
 import { Border } from "globalStyles/globalStyles";
 import { StyleColors } from "globalStyles/colors";
-import { Vote } from "models/review";
+import { Vote } from "constants/vote";
 
 export const FeedbackOverview = () => {
   const { guide } = useGuide();

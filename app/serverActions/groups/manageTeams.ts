@@ -1,6 +1,5 @@
 "use server";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { Team } from "models/team";
 import {
@@ -31,7 +30,6 @@ export async function createTeam(data: {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(validated.data.projectId);
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
 
@@ -62,7 +60,6 @@ export async function deleteTeam(data: {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     const team = await Team.findById(validated.data.teamId);
     if (!team) return failure(ErrorMessages.NOT_FOUND("Team"));
     if (team.members.length > 0) {
@@ -108,7 +105,6 @@ export async function saveAssignments(
   const { projectId, changes } = validated.data;
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(projectId);
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
 
