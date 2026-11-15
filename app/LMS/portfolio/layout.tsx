@@ -1,22 +1,14 @@
 import type { ReactNode } from "react";
+import styles from "./layout.module.css";
 
-// Issue #31: the Portfolio Builder's own content area.
-// The existing app layout already renders the LMS header and main navigation.
+// The main LMS layout already includes the header and navigation.
 export default function PortfolioLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   return (
-    <section
-      aria-label="Portfolio builder workspace"
-      style={{
-        boxSizing: "border-box",
-        width: "100%",
-        minHeight: "100%",
-        padding: "24px",
-      }}
-    >
+    <section className={styles.layout} aria-label="Portfolio builder workspace">
       {children}
     </section>
   );
