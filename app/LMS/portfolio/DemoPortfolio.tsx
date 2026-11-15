@@ -12,7 +12,10 @@ export default function DemoPortfolio() {
     <div className={styles.portfolio}>
       <p className={styles.demoNotice}>DEMO PROFILE · SAMPLE DATA FROM FIGMA · NOT PUBLISHED</p>
       <header className={styles.portfolioHeader}>
-        <div className={styles.smallBrand}>✦ VEFSKÓLINN</div>
+        <div className={styles.smallBrand}>
+          <img src="/portfolio/icons/logo.svg" alt="" width="12" height="20" />
+          <span>VEFSKÓLINN</span>
+        </div>
         <nav className={styles.portfolioNav} aria-label="Demo portfolio pages">
           <span className={styles.activeTab}>Work</span>
           <span>About</span>
