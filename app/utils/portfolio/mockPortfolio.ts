@@ -105,28 +105,21 @@ export const mockPortfolioContent: PortfolioContent = {
   theme: "editorial",
 };
 
-/**
- * Published portfolio.
- *
- * Represents data stored in the database.
+/*
+  Published portfolio.
+  Represents data stored in the database.
  */
 export const mockPortfolio: Portfolio = {
   _id: mockId("507f191e810c19729de860ea"),
-
   studentId: mockId("507f191e810c19729de860eb"),
-
   slug: "anna-jonsdottir",
-
   visibility: "public",
-
   publishedAt: new Date("2026-11-05T12:00:00.000Z"),
-
   updatedAt: new Date("2026-11-05T12:00:00.000Z"),
-
   content: mockPortfolioContent,
 };
 
-/**
+/*
  * Student's local draft.
  *
  * The tagline has been edited locally,
@@ -141,19 +134,36 @@ export const mockLocalDraft: LocalDraft = {
 
       tagline:
         "Building accessible digital experiences.",
+
+    
+      skills: [...mockPortfolioContent.profile.skills],
+      languages: [...mockPortfolioContent.profile.languages],  
     },
   },
+
+  availability: {
+      ...mockPortfolioContent.availability,
+    },
+
+    projects: mockPortfolioContent.projects.map((project) => ({
+      ...project,
+      technologies: [...project.technologies],
+    })),
+
+    contact: {
+      ...mockPortfolioContent.contact,
+    },
+
 
   savedAt: "2026-11-11T14:00:00.000Z",
 
   basedOn: mockPortfolio.publishedAt.toISOString(),
 };
 
-/**
- * Public portfolio data.
- *
- * Includes only the content needed
- * by PortfolioView.
+/*
+  Public portfolio data.
+  Includes only the content needed
+  by PortfolioView.
  */
 export const mockPublicPortfolio: PublicPortfolio = {
   content: mockPortfolio.content,

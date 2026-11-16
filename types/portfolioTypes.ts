@@ -1,8 +1,16 @@
 import type { Types } from "mongoose";
 
-/**
- * A project displayed in the portfolio.
+/*
+Portfolio theme options
  */
+export type PortfolioTheme =
+  | "editorial"
+  | "minimal"
+  | "studio";
+
+/*
+A project the student wants to showcase
+*/
 export type PortfolioProject = {
   id: string;
   title: string;
@@ -10,7 +18,7 @@ export type PortfolioProject = {
   imageUrl: string | null; // URL from the existing upload
   technologies: string[];
   // Optional project links
-  liveUrl?: string;
+  liveUrl?: webLink().optional();
   githubUrl?: string;
 };
 
@@ -43,6 +51,7 @@ export type PortfolioContent = {
     email?: string;
     linkedinUrl?: string;
     githubUrl?: string;
+    cvUrl?: string;
   };
 
   theme: PortfolioTheme;
@@ -95,3 +104,4 @@ export type PortfolioTheme =
   | "editorial"
   | "minimal"
   | "studio";
+
