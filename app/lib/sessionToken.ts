@@ -1,6 +1,5 @@
 import type { JWT } from "next-auth/jwt";
 import { User, type UserDocument } from "models/user";
-import { connectToDatabase } from "serverActions/mongoose-connector";
 
 /**
  * The session token carries the user's role and profile so that rendering a
@@ -39,7 +38,6 @@ export async function refreshToken(token: JWT): Promise<JWT | null> {
   if (!token.id) return null;
 
   try {
-    await connectToDatabase();
     const dbuser: UserDocument | null = await User.findById(token.id);
     if (!dbuser || dbuser.status !== "active") return null;
     return snapshotUser(token, dbuser);

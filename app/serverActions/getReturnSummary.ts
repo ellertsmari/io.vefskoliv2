@@ -3,7 +3,6 @@ import { ObjectId } from "mongodb";
 import { auth } from "../../auth";
 import { Return, type ReturnDocument } from "../models/return";
 import { Review, type ReviewDocument } from "../models/review";
-import { connectToDatabase } from "./mongoose-connector";
 import { calculateReturnStatus } from "../utils/guideUtils";
 import { handleActionError } from "../utils/errors";
 import { REQUIRED_REVIEWS_COUNT } from "../constants/peerReview";
@@ -38,7 +37,6 @@ export async function getReturnSummary(
   if (!session?.user?.id || !ObjectId.isValid(guideId)) return null;
 
   try {
-    await connectToDatabase();
     const returns = await Return.find({
       owner: new ObjectId(session.user.id),
       guide: new ObjectId(guideId),

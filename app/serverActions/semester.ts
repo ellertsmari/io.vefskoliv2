@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import { Semester } from "../models/semester";
-import { connectToDatabase } from "./mongoose-connector";
-import { hasTeacherPermissions } from "../utils/userUtils";
+import { isActingAsTeacher } from "../utils/userUtils";
 import { DEFAULT_SEMESTER } from "../constants/semesterPlan";
 import { SemesterInputSchema, type SemesterInput } from "../utils/calendarUtils";
 import type { SemesterInfo } from "types/calendarTypes";
@@ -21,7 +20,6 @@ import {
 export async function getSemester(): Promise<SemesterInfo> {
   const fallback: SemesterInfo = { ...DEFAULT_SEMESTER, saved: false };
   try {
-    await connectToDatabase();
     const active = await Semester.findOne({ active: true }).lean<{
       label: string;
       startDate: string;
@@ -48,7 +46,7 @@ export async function saveSemester(
 ): Promise<ActionResult<void>> {
   const session = await auth();
   if (!session?.user?.id) return failure(ErrorMessages.NOT_LOGGED_IN);
-  if (!hasTeacherPermissions(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
+  if (!isActingAsTeacher(session)) return failure(ErrorMessages.NOT_AUTHORIZED);
 
   const validated = SemesterInputSchema.safeParse(data);
   if (!validated.success) {
@@ -57,7 +55,6 @@ export async function saveSemester(
   const { label, startDate, endDate, spann2Start } = validated.data;
 
   try {
-    await connectToDatabase();
     const fields = { label, startDate, endDate, active: true };
     await Semester.findOneAndUpdate(
       { active: true },

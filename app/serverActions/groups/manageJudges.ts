@@ -2,7 +2,6 @@
 import { randomBytes } from "node:crypto";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { JudgeInvitation } from "models/judgeInvitation";
 import { TeamEvaluation } from "models/teamEvaluation";
@@ -41,7 +40,6 @@ export async function createJudgeInvitation(
   }
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(validated.data.projectId);
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
 
@@ -94,7 +92,6 @@ export async function updateJudgeFocus(data: {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     const result = await JudgeInvitation.updateOne(
       { _id: validated.data.invitationId },
       { $set: { focus: validated.data.focus } }
@@ -121,7 +118,6 @@ export async function listJudgeInvitations(
   }
 
   try {
-    await connectToDatabase();
     const invitations = await JudgeInvitation.find({ project: projectId })
       .sort({ createdAt: 1 })
       .lean();
@@ -159,7 +155,6 @@ export async function deleteJudgeInvitation(data: {
   if (!validated.success) return failure(ErrorMessages.INVALID_INPUT);
 
   try {
-    await connectToDatabase();
     const hasEvaluations = await TeamEvaluation.exists({
       judge: validated.data.invitationId,
     });

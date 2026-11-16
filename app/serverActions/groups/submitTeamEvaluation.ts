@@ -1,6 +1,5 @@
 "use server";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import {
@@ -44,7 +43,6 @@ export async function submitTeamEvaluation(
   const { projectId, teamId, entries, overallComment } = validated.data;
 
   try {
-    await connectToDatabase();
     const [project, team] = await Promise.all([
       GroupProject.findById(projectId).lean<GroupProjectLean | null>(),
       Team.findById(teamId),

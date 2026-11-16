@@ -1,3 +1,4 @@
+import "models/autoConnect";
 import {
   Document,
   Schema,
@@ -28,13 +29,10 @@ export interface RequiredUserInfo {
   status?: UserStatus;
 }
 
-export enum OptionalUserInfoKeys {
-  background = "background",
-  careerGoals = "careerGoals",
-  interests = "interests",
-  favoriteArtists = "favoriteArtists",
-  avatarUrl = "avatarUrl",
-}
+import { OptionalUserInfoKeys } from "constants/userInfo";
+
+// Re-exported for server code. Browser code imports it from constants/userInfo.
+export { OptionalUserInfoKeys };
 
 // Use mapped type to create OptionalUserInfo interface
 export type OptionalUserInfo = {

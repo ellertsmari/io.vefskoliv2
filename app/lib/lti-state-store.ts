@@ -1,3 +1,4 @@
+import "models/autoConnect";
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 // Interface for LTI state document

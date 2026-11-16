@@ -17,6 +17,13 @@ const each = <T,>(list: T[], check: (item: T) => string | null) =>
     return problem ? [problem] : [];
   });
 
+// A video (and its poster) may be self-hosted: a file that exists in public/projects/.
+const isHttpsOrHostedFile = (src: string) =>
+  src.startsWith("https://") ||
+  (src.startsWith("/projects/") &&
+    !src.includes("..") &&
+    fs.existsSync(path.join(process.cwd(), "public", src)));
+
 describe("project briefs", () => {
   it("lists every brief file in the registry, once per module and address", () => {
     const files = fs
@@ -41,7 +48,12 @@ describe("project briefs", () => {
       ),
       ...each([b.coverImage ?? "https://"], (url) => (url.startsWith("https://") ? null : `${b.slug}: cover must be https`)),
       ...each([b.mission.media], (m) =>
-        !m || (m.type === "youtube" ? /^[\w-]{6,20}$/.test(m.id) : m.src.startsWith("https://"))
+        !m ||
+        (m.type === "youtube"
+          ? /^[\w-]{6,20}$/.test(m.id)
+          : m.type === "video"
+            ? isHttpsOrHostedFile(m.src) && (!m.poster || isHttpsOrHostedFile(m.poster))
+            : m.src.startsWith("https://"))
           ? null
           : `${b.slug}: media`
       ),

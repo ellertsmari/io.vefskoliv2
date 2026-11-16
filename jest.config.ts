@@ -10,6 +10,10 @@ const createJestConfig = nextJest({
 const config: Config = {
   coverageProvider: "v8",
   testEnvironment: "jsdom",
+  // Each worker can start its own in-memory MongoDB (~300 MB in /tmp, which is
+  // RAM-backed on some machines). Uncapped, jest uses one worker per core and
+  // can exhaust memory on a laptop.
+  maxWorkers: 4,
   // Add more setup options before each test is run
   setupFilesAfterEnv: ["./jest.setup.js"],
   moduleNameMapper: {
@@ -41,7 +45,7 @@ const config: Config = {
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async.
 // next/jest overrides transformIgnorePatterns, so we patch the generated config to keep our
 // ESM allowlist (next-auth v5 and friends ship untranspiled ESM that jest must transform).
-export default async () => {
+const jestConfig = async () => {
   const generated = await createJestConfig(config)();
   return {
     ...generated,
@@ -51,3 +55,5 @@ export default async () => {
     ],
   };
 };
+
+export default jestConfig;

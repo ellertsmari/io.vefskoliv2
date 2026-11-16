@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
 import { User, type UserDocument } from "models/user";
-import { connectToDatabase } from "serverActions/mongoose-connector";
 import { consume, isLimited, rateLimitKey, reset } from "utils/rateLimit";
 import { PendingApprovalError, RateLimitedError } from "./authErrors";
 
@@ -21,7 +20,6 @@ async function getUser(
   options: { withPassword?: boolean } = {}
 ): Promise<UserDocument | null> {
   try {
-    await connectToDatabase();
     // The password hash is `select: false` on the schema; only the credentials
     // `authorize` flow opts in to it for bcrypt comparison.
     const query = User.findOne({ email });

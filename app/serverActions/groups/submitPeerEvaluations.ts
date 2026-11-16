@@ -1,7 +1,6 @@
 "use server";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { Team } from "models/team";
 import { PeerEvaluation } from "models/peerEvaluation";
@@ -59,7 +58,6 @@ export async function submitPeerEvaluations(
   const { projectId, evaluations } = validated.data;
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(projectId).lean<GroupProjectLean | null>();
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
     await applyLifecycle(project);

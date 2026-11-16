@@ -95,11 +95,11 @@ export const createDummyGuide = async (): Promise<GuideDocument> => {
 export const createDummyModules = (count: number): Module[] => {
   const modules = [];
   for (let i = 0; i < count; i++) {
-    const module = {
+    const dummyModule = {
       title: i + faker.lorem.sentence(),
       number: i,
     };
-    modules.push(module);
+    modules.push(dummyModule);
   }
   return modules;
 };

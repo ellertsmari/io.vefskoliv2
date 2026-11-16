@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "../../auth";
 import { Guide } from "../models/guide";
-import { connectToDatabase } from "./mongoose-connector";
 import {
   DEFAULT_PASS_THRESHOLD,
   knownTasks,
@@ -152,7 +151,6 @@ const revalidateQuietly = (...paths: string[]) => {
 
 const loadExercise = async (guideId: string): Promise<ServerExercise | null> => {
   if (!ObjectId.isValid(guideId)) return null;
-  await connectToDatabase();
   const guide = (await Guide.findById(new ObjectId(guideId))
     .select("gradingMode exercise")
     .lean()) as { gradingMode?: string; exercise?: ServerExercise } | null;

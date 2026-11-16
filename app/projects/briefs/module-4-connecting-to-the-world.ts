@@ -35,7 +35,8 @@ export const connectingToTheWorld: ProjectBrief = {
     },
     media: {
       type: "video",
-      src: "/projects/connecting-to-the-world.mp4",
+      // In Vercel Blob, not in /public: 17 MB of video does not belong in git.
+      src: "https://7ns219yf9xw5vgje.public.blob.vercel-storage.com/site/projects/connecting-to-the-world.mp4",
       poster: "/projects/connecting-to-the-world-poster.jpg",
       title: "Connecting to the World: the project in under four minutes",
       caption: "The whole brief in under four minutes: the why, the four pillars, the timeline, what you hand in and how it's graded.",

@@ -1,5 +1,4 @@
 "use server";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject } from "models/groupProject";
 import { logError } from "utils/errors";
 import { RubricItem } from "constants/groupWork";
@@ -18,7 +17,6 @@ export async function getRubricLibrary(
   if (!session || !isTeacher(session)) return [];
 
   try {
-    await connectToDatabase();
     const projects = await GroupProject.find(
       { "rubric.0": { $exists: true } },
       { title: 1, module: 1, rubric: 1 }

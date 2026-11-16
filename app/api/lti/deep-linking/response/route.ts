@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT, importPKCS8, jwtVerify } from 'jose';
 import { getLTIConfig } from '../../../../lib/lti-config';
-import { connectToDatabase } from '../../../../serverActions/mongoose-connector';
 import { Guide } from '../../../../models/guide';
 
 export async function POST(request: NextRequest) {
@@ -79,8 +78,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectToDatabase();
-    
     // Fetch selected guides
     const guides = await Guide.find({ _id: { $in: selectedGuides } });
     

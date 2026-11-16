@@ -1,6 +1,5 @@
 "use server";
 import { z } from "zod";
-import { connectToDatabase } from "../mongoose-connector";
 import { GroupProject, GroupProjectLean } from "models/groupProject";
 import { GroupPreference } from "models/groupPreference";
 import {
@@ -60,7 +59,6 @@ export async function savePreferences(
   }
 
   try {
-    await connectToDatabase();
     const project = await GroupProject.findById(projectId).lean<GroupProjectLean | null>();
     if (!project) return failure(ErrorMessages.NOT_FOUND("Group project"));
     await applyLifecycle(project);

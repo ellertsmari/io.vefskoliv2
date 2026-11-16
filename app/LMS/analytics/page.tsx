@@ -4,7 +4,7 @@ import { auth } from "../../../auth";
 import { getAnalyticsDashboard } from "../../lib/analytics/stats";
 import { ErrorState } from "UIcomponents/states/States";
 import { parseRange } from "utils/analytics";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 import { AnalyticsPage } from "./AnalyticsPage";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default async function Analytics({ searchParams }: Props) {
   // The proxy redirects anonymous visitors; this keeps students out. Teachers
   // viewing as a student keep their teacher tools, as on the reports page.
   const session = await auth();
-  if (!hasTeacherPermissions(session)) redirect("/");
+  if (!isActingAsTeacher(session)) redirect("/");
 
   const range = parseRange((await searchParams).days);
 

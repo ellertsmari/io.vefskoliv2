@@ -1,5 +1,6 @@
 import { ReturnDocument } from "models/return";
-import { ReviewDocument, GradedReviewDocument, Vote } from "models/review";
+import type { ReviewDocument, GradedReviewDocument } from "models/review";
+import { Vote } from "constants/vote";
 import {
   ReturnStatus,
   ReviewStatus,

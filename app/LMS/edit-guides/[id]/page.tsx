@@ -9,7 +9,7 @@ import { getShortAnswerReview } from "../../../serverActions/shortAnswerReview";
 import { ShortAnswerReviewPanel } from "../../../components/editGuides/ShortAnswerReviewPanel";
 import { safeSerialize } from "../../../utils/serialization";
 import { Session } from "next-auth";
-import { hasTeacherPermissions } from "../../../utils/userUtils";
+import { isActingAsTeacher } from "../../../utils/userUtils";
 
 interface EditGuidePageProps {
   params: Promise<{ id: string }>;
@@ -24,7 +24,7 @@ const EditGuidePage = async ({ params }: EditGuidePageProps) => {
     redirect(`/signin?callbackUrl=/LMS/edit-guides/${id}`);
   }
 
-  if (!hasTeacherPermissions(session)) {
+  if (!isActingAsTeacher(session)) {
     redirect("/LMS/dashboard");
   }
 

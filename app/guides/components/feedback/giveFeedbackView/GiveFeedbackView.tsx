@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "globalStyles/buttons/default/style";
 import { useGuide } from "providers/GuideProvider";
 import { returnReview } from "serverActions/returnFeedback";
-import { Vote } from "models/review";
+import { Vote } from "constants/vote";
 import { StyleColors } from "globalStyles/colors";
 import { RedCross, GreenTick, PurpleStar } from "assets/Icons";
 import { FeedbackInfoContainer, ReturnDetailsColumn } from "./style";

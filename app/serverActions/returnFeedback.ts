@@ -6,7 +6,6 @@ import type { ReviewType } from "models/review";
 import { auth } from "../../auth";
 import { Review, Vote } from "models/review";
 import { Return } from "models/return";
-import { connectToDatabase } from "./mongoose-connector";
 import {
   failure,
   successNoData,
@@ -49,8 +48,6 @@ export async function returnReview(
   const { user } = session;
 
   try {
-    await connectToDatabase();
-
     // The form only offers returns the student is allowed to review, but
     // the ids arrive from the browser and the rules have to hold here too:
     // the return must exist, belong to the guide it claims, not be their

@@ -1,34 +1,31 @@
 import { Session } from "next-auth";
 
 /**
- * Gets the original user role, which is useful for determining permissions
- * even when a teacher is aliasing as a student
+ * Two questions, deliberately kept apart.
+ *
+ * A teacher can "view as" another user. While they do, the session's `user`
+ * is that other user (role included) and the teacher's own account sits in
+ * `originalUser`. The rule, decided 2026-11-09: while viewing as a student the
+ * teacher sees and can do exactly what that student can, nothing more. The
+ * powers come back the moment they switch back.
+ *
+ *   - `isActingAsTeacher` is the one to use for permissions and for what the
+ *     page shows. It reads the effective role.
+ *   - `isTeacherAccount` is only for the view-as controls themselves, which
+ *     must keep working while aliased or there would be no way back.
  */
-function getOriginalUserRole(session: Session | null): string | undefined {
-  if (!session?.user) return undefined;
-  
-  // If the user is aliased, return the original user's role
-  if (session.user.isAliased && session.user.originalUser) {
-    return session.user.originalUser.role;
-  }
-  
-  // Otherwise return the current user's role
-  return session.user.role;
-}
 
-/**
- * Checks if the user has teacher permissions (either as a teacher or aliased teacher)
- */
-export function hasTeacherPermissions(session: Session | null): boolean {
-  return getOriginalUserRole(session) === "teacher";
-}
-
-/**
- * Whether the viewer should be treated as a teacher right now. Differs from
- * `hasTeacherPermissions` while a teacher is viewing as a student: teacher
- * tools stay reachable, but anything that acts on the aliased student's
- * behalf (returns, reviews, calendar events) behaves as that student would.
- */
+/** Should this request be treated as a teacher's? False while viewing as a student. */
 export function isActingAsTeacher(session: Session | null): boolean {
-  return hasTeacherPermissions(session) && !session?.user?.isAliased;
+  return session?.user?.role === "teacher";
+}
+
+/** Is the signed-in account really a teacher's, whoever they are viewing as? */
+export function isTeacherAccount(session: Session | null): boolean {
+  if (!session?.user) return false;
+  const account =
+    session.user.isAliased && session.user.originalUser
+      ? session.user.originalUser
+      : session.user;
+  return account.role === "teacher";
 }

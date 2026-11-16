@@ -68,10 +68,10 @@ LTI_DEPLOYMENT_ID=
 
 ```bash
 # Build the application
-npm run build
+yarn build
 
 # Start the production server
-npm start
+yarn start
 ```
 
 Your application should now be accessible at your domain.
@@ -153,7 +153,7 @@ pm2 restart vefskolinn
 sudo systemctl restart vefskolinn
 
 # If running directly
-# Stop the server (Ctrl+C) and run npm start again
+# Stop the server (Ctrl+C) and run yarn start again
 ```
 
 ## Step 6: Install Tool in a Canvas Course (5 minutes)

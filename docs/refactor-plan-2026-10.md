@@ -95,6 +95,6 @@ This interacts with SEO: a cached guest view of `/guides` is only possible once 
 
 ## Needs a decision from Smári
 
-- `gradeExercise` / `tasksToGrade` (`utils/exerciseUtils.ts:467-560`) are not used in production any more, but 33 tests use them. Which of those tests get rewritten against `gradeTask` / `deriveAttempt`, and which go?
+- ~~`gradeExercise` / `tasksToGrade`~~ Decided 2026-11-09: deleted, together with the tests that used them.
 - Compass backfills: `module.number` + `order` on guides (see 1), and `status` on legacy users. The member query is spelled `status: { $ne: "pending" }` at 6 sites because old users have no `status`. Add a `role` enum while at it: `activityLog.ts:83` still queries `["user", "student"]`.
 - The 3 definitions of "returned/complete" on the student home page (see 1).

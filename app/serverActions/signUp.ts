@@ -2,7 +2,6 @@
 
 import bcrypt from "bcrypt";
 import { User } from "../models/user";
-import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
 import { consume, rateLimitKey } from "../utils/rateLimit";
 import { getClientIp } from "../lib/clientIp";
@@ -77,7 +76,6 @@ export async function signUp(
     // bufferCommands is disabled on the connection, so User.create fails on a
     // cold start unless we connect explicitly (previously this relied on some
     // earlier request having already opened the connection).
-    await connectToDatabase();
     await User.create({
       name: firstName + " " + lastName,
       email,

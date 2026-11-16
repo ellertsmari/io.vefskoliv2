@@ -154,7 +154,6 @@ const codeTasks = readCodeTasks();
 const describeIfPresent = codeTasks.length > 0 ? describe : describe.skip;
 
 if (codeTasks.length === 0) {
-  // eslint-disable-next-line no-console
   console.log(
     `[exerciseBank] ${GUIDES} not present — skipping. Export the collection from Compass to run these.`
   );
@@ -182,16 +181,13 @@ describeIfPresent("authored code tasks", () => {
         solution
       );
       if (feedback.typeErrors.length) {
-        // eslint-disable-next-line no-console
         console.log(task.entryPoint, feedback.typeErrors);
       }
       if (feedback.runtimeError) {
-        // eslint-disable-next-line no-console
         console.log(task.entryPoint, feedback.runtimeError);
       }
       const failures = feedback.tests.filter((t) => !t.passed);
       if (failures.length) {
-        // eslint-disable-next-line no-console
         console.log(task.entryPoint, failures);
       }
       expect(feedback.compiled).toBe(true);

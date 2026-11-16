@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLTIConfig } from '../../../lib/lti-config';
 import { storeLTIState } from '../../../lib/lti-state-store';
-import { connectToDatabase } from '../../../serverActions/mongoose-connector';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,8 +29,6 @@ export async function POST(request: NextRequest) {
 
     // Store state and nonce in database with TTL for validation
     // This prevents replay attacks and ensures single-use
-    await connectToDatabase();
-    
     await storeLTIState(state, nonce, {
       targetLinkUri,
     });

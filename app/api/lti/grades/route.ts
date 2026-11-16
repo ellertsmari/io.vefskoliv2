@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '../../../serverActions/mongoose-connector';
 import { LTILaunch } from '../../../models/lti-launch';
 import { LTIGradingService } from '../../../lib/lti-grading';
 import { auth } from '../../../../auth';
+import { isActingAsTeacher } from "utils/userUtils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only teachers can submit grades
-    if (session.user.role !== 'teacher') {
+    if (!isActingAsTeacher(session)) {
       return NextResponse.json({ error: 'Forbidden: Only teachers can submit grades' }, { status: 403 });
     }
 
@@ -62,8 +62,6 @@ export async function POST(request: NextRequest) {
     if (comment && (typeof comment !== 'string' || comment.length > 1000)) {
       return NextResponse.json({ error: 'Invalid comment: must be string under 1000 characters' }, { status: 400 });
     }
-
-    await connectToDatabase();
 
     // Find the LTI launch context for this student and resource
     const ltiLaunch = await LTILaunch.findOne({

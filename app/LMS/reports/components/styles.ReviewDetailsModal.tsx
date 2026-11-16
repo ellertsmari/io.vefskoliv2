@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Vote } from "models/review";
+import { Vote } from "constants/vote";
 
 /* Width, scrolling and padding are the dialog's job (Modal size="xl"). */
 export const ModalWrapper = styled.div`

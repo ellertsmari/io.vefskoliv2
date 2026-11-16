@@ -1,6 +1,5 @@
 import { auth } from "../../../../../auth";
 import { ActivityEntryModel } from "models/activityEntry";
-import { connectToDatabase } from "serverActions/mongoose-connector";
 import { isActingAsTeacher } from "utils/userUtils";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ activityId: string; imageId: string }> }) {
@@ -8,7 +7,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ act
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
   const { activityId, imageId } = await params;
   if (!/^[a-f0-9]{24}$/i.test(activityId) || !/^[a-f0-9-]{36}$/i.test(imageId)) return new Response("Not found", { status: 404 });
-  await connectToDatabase();
   const entry = await ActivityEntryModel.findOne({
     _id: activityId,
     ...(!isActingAsTeacher(session) ? { owner: session.user.id } : {}),

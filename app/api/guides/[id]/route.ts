@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import { z } from "zod";
+import { webLink } from "../../../utils/webLink";
 import { auth } from "../../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { Guide } from "../../../models/guide";
-import { connectToDatabase } from "../../../serverActions/mongoose-connector";
 import { extractModuleNumber } from "../../../utils/moduleUtils";
 import { planOrderShift } from "../../../utils/guideOrder";
 
@@ -33,7 +34,7 @@ const exerciseTaskSchema = z
     hint: z.string().optional(),
     goal: z.string().optional(),
     helpLinks: z
-      .array(z.object({ label: z.string(), url: z.string().url() }))
+      .array(z.object({ label: z.string(), url: webLink() }))
       .optional(),
     helpText: z.string().optional(),
     answerFeedback: z
@@ -199,7 +200,7 @@ export async function PUT(
     const { id } = await params;
     const session = await auth();
 
-    if (!session?.user?.id || session.user.role !== "teacher") {
+    if (!session?.user?.id || !isActingAsTeacher(session)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -249,8 +250,6 @@ export async function PUT(
       delete update.exercise;
       update.$unset = { ...(update.$unset as Record<string, number> ?? {}), exercise: 1 };
     }
-
-    await connectToDatabase();
 
     // A new order number that another guide in the module already has moves
     // that guide, and the ones between, out of the way (see planOrderShift).

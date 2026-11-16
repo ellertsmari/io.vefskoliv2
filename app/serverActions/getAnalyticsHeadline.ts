@@ -3,7 +3,7 @@
 import { auth } from "../../auth";
 import { getAnalyticsHeadline as readHeadline } from "../lib/analytics/stats";
 import type { AnalyticsHeadline } from "types/analyticsTypes";
-import { hasTeacherPermissions } from "utils/userUtils";
+import { isActingAsTeacher } from "utils/userUtils";
 
 /**
  * Last week's public visitors, for the analytics card on the teacher home
@@ -13,7 +13,7 @@ import { hasTeacherPermissions } from "utils/userUtils";
  */
 export async function getAnalyticsHeadline(): Promise<AnalyticsHeadline | null> {
   const session = await auth();
-  if (!hasTeacherPermissions(session)) return null;
+  if (!isActingAsTeacher(session)) return null;
   try {
     return await readHeadline();
   } catch (error) {

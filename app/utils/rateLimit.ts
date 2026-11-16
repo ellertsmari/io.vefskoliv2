@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { RateLimit } from "models/rateLimit";
-import { connectToDatabase } from "serverActions/mongoose-connector";
 
 /**
  * Fixed-window rate limiting on top of MongoDB.
@@ -47,7 +46,6 @@ export async function consume(
   limit: number,
   windowSeconds: number
 ): Promise<RateLimitState> {
-  await connectToDatabase();
   const now = new Date();
   const windowEnd = new Date(now.getTime() + windowSeconds * 1000);
   const stillOpen = { $gt: ["$expiresAt", now] };
@@ -89,7 +87,6 @@ export async function isLimited(
   key: string,
   limit: number
 ): Promise<RateLimitState> {
-  await connectToDatabase();
   const row = await RateLimit.findOne({
     key,
     expiresAt: { $gt: new Date() },
@@ -101,7 +98,6 @@ export async function isLimited(
 
 /** Forget everything counted against `key`. */
 export async function reset(key: string): Promise<void> {
-  await connectToDatabase();
   await RateLimit.deleteOne({ key });
 }
 

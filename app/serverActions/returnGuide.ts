@@ -4,8 +4,8 @@ import { auth } from "../../auth";
 import { Return } from "../models/return";
 import { Guide } from "../models/guide";
 import { ObjectId } from "mongodb";
-import { connectToDatabase } from "./mongoose-connector";
 import { z } from "zod";
+import { webLink } from "utils/webLink";
 import {
   failure,
   successNoData,
@@ -66,8 +66,6 @@ export async function returnGuide(
     // Mongoose buffers queries when it has no connection and gives up after
     // 10s. A server action can land on a lambda where nothing has connected
     // yet, so every entry point connects for itself.
-    await connectToDatabase();
-
     if (await Guide.exists({ _id: new ObjectId(guideId), submissionType: "activityLog" })) {
       return failure("Use this guide's activity log to record hours and evidence.");
     }
@@ -103,13 +101,9 @@ export async function returnGuide(
 
 // A typo'd URL doesn't just hurt the submitter: a classmate gets assigned to
 // review the return and hits a dead link. So URLs are actually validated as
-// URLs (the client normalizes bare domains to https:// before submitting).
-const urlField = (message: string) =>
-  z
-    .string()
-    .trim()
-    .max(2000, { message: "Keep the URL under 2000 characters" })
-    .url({ message });
+// URLs (the client normalizes bare domains to https:// before submitting),
+// and only as web addresses: see utils/webLink.
+const urlField = (message: string) => webLink(message);
 
 const ReturnFormSchema = z.object({
   projectUrl: urlField(

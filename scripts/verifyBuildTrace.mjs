@@ -45,7 +45,7 @@ const tracePath = path.join(process.cwd(), TRACE);
 if (!fs.existsSync(tracePath)) {
   console.error(
     `verifyBuildTrace: ${TRACE} not found.\n` +
-      "Run `npm run build` first — this checks the build output, not the source."
+      "Run `yarn build` first — this checks the build output, not the source."
   );
   process.exit(1);
 }

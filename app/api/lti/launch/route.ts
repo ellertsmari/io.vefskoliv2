@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateLTIToken, extractUserInfo, extractContextInfo, extractGradingInfo, LTIAuthError } from '../../../lib/lti-auth';
 import { getUserRoleFromLTI, getLTIConfig, LTI_MESSAGE_TYPES } from '../../../lib/lti-config';
-import { connectToDatabase } from '../../../serverActions/mongoose-connector';
 import { User } from '../../../models/user';
 import { LTILaunch } from '../../../models/lti-launch';
 import { SignJWT } from 'jose';
@@ -23,8 +22,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Connect to database first
-    await connectToDatabase();
-
     // Validate the LTI token
     const claims = await validateLTIToken(idToken);
     

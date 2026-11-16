@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { Session } from "next-auth";
 import { auth } from "../../../auth";
+import { isActingAsTeacher } from "utils/userUtils";
 import { GroupProject } from "models/groupProject";
 import { DEFAULT_PANEL_WEIGHT, TEAM_LINK_KEYS } from "constants/groupWork";
 import { briefForModule } from "../../projects/briefs";
@@ -25,7 +26,7 @@ export async function requireSession(): Promise<Session | null> {
 }
 
 export function isTeacher(session: Session): boolean {
-  return session.user.role === "teacher";
+  return isActingAsTeacher(session);
 }
 
 /** Is this user one of the team's members? */

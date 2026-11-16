@@ -1,4 +1,4 @@
-import { OptionalUserInfoKeys } from "models/user";
+import { OptionalUserInfoKeys } from "constants/userInfo";
 
 export type ShareableUserInfo = Partial<{
   [key in OptionalUserInfoKeys]: string;
