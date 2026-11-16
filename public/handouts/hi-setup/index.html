@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>From Clone to Logged In</title>
+  <meta name="description" content="Step by step: your own test database, a fresh clone of the project, your first user, and dummy data to work with." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../hi-git/assets/favicon.ico" />
+  <link rel="preload" href="../hi-git/assets/fonts/source-sans-3.woff2" as="font" type="font/woff2" crossorigin />
+  <!-- Shares the look of the git handout: same stylesheet, fonts and logo. -->
+  <link rel="stylesheet" href="../hi-git/style.css?v=2026-10-22b" />
+  <style>
+    .hero__lead { max-width: 40ch; }
+    .route { list-style: none; display: grid; gap: 10px; margin-top: 32px; max-width: 760px; }
+    .route a {
+      display: flex; gap: 14px; align-items: baseline; padding: 12px 16px; border-radius: 12px;
+      background: rgba(255, 255, 255, 0.12); color: #fff; text-decoration: none;
+      border: 1px solid rgba(255, 255, 255, 0.2); transition: background 0.2s;
+    }
+    .route a:hover { background: rgba(255, 255, 255, 0.22); color: #fff; }
+    .route b { flex: none; font-family: "Sunflower", sans-serif; }
+    .route span { opacity: 0.9; }
+    .route .is-key { background: rgba(255, 255, 255, 0.24); border-color: #fff; }
+    @media (min-width: 760px) { .route { grid-template-columns: 1fr 1fr; } }
+
+    .step > ul, .step > ol { margin: 10px 0 0 22px; display: grid; gap: 6px; }
+    .step > .term, .step > .doc, .step > .say { margin-top: 10px; }
+    /* Wraps, so the end of the connection string is visible on a phone too. */
+    .term { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+    .term mark { background: #fea65b; color: #1c1b3f; border-radius: 3px; padding: 0 2px; }
+    .term .dim { opacity: 0.55; }
+
+    /* What the app says, quoted exactly. */
+    .say {
+      border-radius: 10px; padding: 10px 14px; font-weight: 600;
+      background: var(--error-failure-10); border: 1px solid var(--error-failure-30); color: #8f2320;
+    }
+    .say--ok { background: var(--accent-green-10); border-color: var(--error-success-30); color: var(--accent-green-text); }
+    .say small { display: block; font-weight: 400; color: var(--primary-black-60); margin-bottom: 2px; }
+
+    /* The one document that has to change. */
+    .doc { display: grid; gap: 12px; }
+    @media (min-width: 760px) { .doc { grid-template-columns: 1fr 1fr; } }
+    .doc figure { margin: 0; min-width: 0; }
+    .doc figcaption { font-size: var(--text-sm); font-weight: 600; margin-bottom: 6px; }
+    .doc .bad { color: #ff9c98; }
+    .doc .good { color: #a8e695; font-weight: 700; }
+
+    .key-step { border: 2px solid var(--theme-module3-100) !important; }
+    .callout p + p, .callout ul + p, .callout p + ul { margin-top: 10px; }
+    .callout--free { background: var(--theme-module3-10); border-left-color: var(--theme-module3-100); }
+
+    .fixes { display: grid; gap: 10px; }
+    .fixes details p + p, .fixes details p + pre, .fixes details ul { margin-top: 8px; }
+    .fixes details ul { margin-left: 22px; display: grid; gap: 4px; }
+    .prompt code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="topbar__brand" href="#top" aria-label="Back to top">
+      <img src="../hi-git/assets/logo.svg" alt="Vefskólinn" width="114" height="32" />
+    </a>
+    <nav class="topbar__nav" aria-label="Sections">
+      <a href="#why">Why</a>
+      <a href="#database">1 Database</a>
+      <a href="#project">2 Project</a>
+      <a href="#user">3 First user</a>
+      <a href="#data">4 Dummy data</a>
+      <a href="#stuck">Stuck?</a>
+    </nav>
+    <div class="topbar__progress" aria-live="polite">
+      <span class="progress-pill" id="progress-pill">0 / 0 steps done</span>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero__inner">
+        <p class="eyebrow">For the Hyper Island team · io.vefskoliv2</p>
+        <h1 class="hero__title">From clone to logged in</h1>
+        <p class="hero__lead">
+          Every step from an empty folder to a working copy of the project, with a test database that is yours to break.
+        </p>
+        <ol class="route">
+          <li><a href="#database"><b>Part 1</b> <span>Make your own test database in MongoDB Atlas</span></a></li>
+          <li><a href="#project"><b>Part 2</b> <span>Clone the project and connect it to that database</span></a></li>
+          <li><a class="is-key" href="#user"><b>Part 3</b> <span>Register, then approve yourself in the database</span></a></li>
+          <li><a href="#data"><b>Part 4</b> <span>Let AI fill the database with dummy data</span></a></li>
+        </ol>
+      </div>
+      <img class="hero__wave" src="../hi-git/assets/background.svg" alt="" aria-hidden="true" />
+    </section>
+
+    <!-- WHY -->
+    <section class="section" id="why">
+      <div class="container container--narrow">
+        <p class="kicker">The short version</p>
+        <h2 class="section-title">You registered, and now you can't log in</h2>
+        <p class="body-lg">
+          That is the app working as designed. Every new account starts as <code>pending</code>,
+          and a pending account can't log in until a teacher approves it.
+        </p>
+        <p>
+          On the school's site a teacher clicks "Approve". In <strong>your own</strong> database there is no teacher yet, so nobody can approve you.
+          You fix it by opening the database and changing your own user by hand. That is <a href="#user">Part 3</a>, and it takes a minute.
+        </p>
+        <p style="margin-top: 14px">
+          If you already have the project running and only the login is the problem, jump straight to <a href="#user-edit">Part 3, step 3</a>.
+          If you are not sure where it goes wrong, start at Part 1 and tick the steps off as you go.
+        </p>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section class="section section--tint" id="database">
+      <div class="container">
+        <p class="kicker"><span class="badge badge-team">Part 1</span> Once</p>
+        <h2 class="section-title">Make your own test database</h2>
+        <p class="section-lead">
+          MongoDB Atlas hosts a small database for free. You do these steps in the browser at
+          <a href="https://cloud.mongodb.com" target="_blank" rel="noopener">cloud.mongodb.com</a>.
+          Atlas renames its buttons now and then: if a label here is slightly different on your screen, look for the same idea.
+        </p>
+
+        <ol class="steps steps--wide">
+          <li class="step" data-step="d1">
+            <div class="step__head"><span class="step__num"></span><h3>Sign in to Atlas</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>Create a free account at <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank" rel="noopener">mongodb.com/cloud/atlas/register</a>, or sign in if you have one. No credit card is needed.</p>
+          </li>
+          <li class="step" data-step="d2">
+            <div class="step__head"><span class="step__num"></span><h3>Create a free cluster</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>A cluster is the server your database lives on.</p>
+            <ol>
+              <li>On <strong>Project Overview</strong>, click <strong>Create</strong>.</li>
+              <li>Choose the <strong>Free</strong> option (also called <strong>M0</strong>).</li>
+              <li>Pick any provider and a region close to you. Keep the name <code>Cluster0</code> or choose your own.</li>
+              <li>Click <strong>Create</strong>.</li>
+            </ol>
+            <p class="note">A project can hold one free cluster. If you already have one, use it: a cluster can hold many databases, and you name yours in step 5.</p>
+          </li>
+          <li class="step" data-step="d3">
+            <div class="step__head"><span class="step__num"></span><h3>Create a database user</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>Atlas asks for this right after creating the cluster. Fill in <strong>Username</strong> and <strong>Password</strong>, then click <strong>Create Database User</strong>.</p>
+            <ul>
+              <li>This is the login your <em>app</em> uses for the database. It is not your Atlas account.</li>
+              <li>Use only letters and numbers in the password. Characters like <code>@</code>, <code>:</code>, <code>/</code> or <code>#</code> break the connection string.</li>
+              <li>Write both down. You need them in step 5.</li>
+            </ul>
+            <p class="note">Skipped it? Open <strong>Database Access</strong> in the sidebar (under Security) and add a user there, with read and write access to any database.</p>
+          </li>
+          <li class="step" data-step="d4">
+            <div class="step__head"><span class="step__num"></span><h3>Let your computer in</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>Atlas only answers computers on its allow list. In the same dialog, click <strong>Add My Current IP Address</strong>, then <strong>Finish and Close</strong>.</p>
+            <p>
+              Your IP address changes when you move between school, home and a café, and then the app suddenly can't connect.
+              For this test database you can allow every address instead: open <strong>Network Access</strong> in the sidebar (under Security),
+              add an IP address, and enter <code>0.0.0.0/0</code>.
+            </p>
+            <p class="note">Only the database user and password can then get in. That is fine for a test database. You would not do it for a real one.</p>
+          </li>
+          <li class="step" data-step="d5">
+            <div class="step__head"><span class="step__num"></span><h3>Copy the connection string and finish it</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>Go to <strong>Clusters</strong>, click <strong>Connect</strong> on your cluster, then <strong>Drivers</strong>. Copy the string it shows. It looks like this:</p>
+            <pre class="term">mongodb+srv://monika:<mark>&lt;db_password&gt;</mark>@cluster0.ab1cd.mongodb.net/<mark> </mark>?retryWrites=true&amp;w=majority&amp;appName=Cluster0</pre>
+            <p>Two things are missing, marked in orange. Fix both:</p>
+            <ol>
+              <li>Replace <code>&lt;db_password&gt;</code> with the password from step 3. The <code>&lt;</code> and <code>&gt;</code> go away too.</li>
+              <li>Add a name for your database between the <code>/</code> and the <code>?</code>, for example <code>vefskolinn_dev</code>.</li>
+            </ol>
+            <p>The finished string:</p>
+            <pre class="term">mongodb+srv://monika:<mark>Sunny4Day2026</mark>@cluster0.ab1cd.mongodb.net/<mark>vefskolinn_dev</mark>?retryWrites=true&amp;w=majority&amp;appName=Cluster0</pre>
+            <p class="note">
+              You don't create the database anywhere else. It appears by itself the first time the app saves something.
+              Without a name the app still works, but everything lands in a database called <code>test</code>, which is easy to lose track of.
+            </p>
+          </li>
+        </ol>
+
+        <div class="callout">
+          <h3>One database each, or one for the team?</h3>
+          <p>
+            Both work. With one each, nobody can break anyone else's data, and you can wipe yours whenever you like.
+            With a shared one, everyone sees the same users and dummy data, and only one person has to do Parts 1, 3 and 4:
+            the others just need the finished connection string.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section class="section" id="project">
+      <div class="container">
+        <p class="kicker"><span class="badge badge-pr">Part 2</span> For every new clone</p>
+        <h2 class="section-title">Clone the project and connect it</h2>
+        <p class="section-lead">You do these steps in a terminal. They were tested from a fresh clone, in this order.</p>
+
+        <ol class="steps steps--wide">
+          <li class="step" data-step="p1">
+            <div class="step__head"><span class="step__num"></span><h3>Clone your fork and switch to the team branch</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>git clone https://github.com/monika-hyperisland/tomonika-hyperisland.git
+cd tomonika-hyperisland
+git switch dev-hyperisland</code></pre>
+            <p class="note">Every command from here on runs inside the <code>tomonika-hyperisland</code> folder.</p>
+          </li>
+          <li class="step" data-step="p2">
+            <div class="step__head"><span class="step__num"></span><h3>Check Node, then install</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>node -v</code></pre>
+            <p>It should say <code>v24</code> and something. If it is older, install Node 24 from <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> first. Then:</p>
+            <pre class="code"><code>yarn install --frozen-lockfile</code></pre>
+            <p>If the terminal answers <code>yarn: command not found</code>, install yarn once and run the line above again:</p>
+            <pre class="code"><code>npm install --global yarn</code></pre>
+            <p class="note">Don't use <code>npm install</code> for the project itself. It rewrites <code>yarn.lock</code>, and that change then shows up in your pull requests.</p>
+          </li>
+          <li class="step" data-step="p3">
+            <div class="step__head"><span class="step__num"></span><h3>Create <code>.env.local</code></h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>
+              Make a new file called exactly <code>.env.local</code> in the project folder, next to <code>package.json</code>.
+              It holds the three settings the app can't run without:
+            </p>
+            <pre class="code"><code>MONGODB_CONNECTION=paste-your-finished-connection-string-here
+AUTH_SECRET=paste-a-generated-secret-here
+NEXTAUTH_URL=http://localhost:3000</code></pre>
+            <p>For <code>AUTH_SECRET</code>, run this and paste what it prints:</p>
+            <pre class="code"><code>node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"</code></pre>
+            <ul>
+              <li>The file name starts with a dot and has no <code>.txt</code> at the end.</li>
+              <li>No spaces around <code>=</code>, no quotes, each setting on one line.</li>
+              <li>If you also have a file called <code>.env</code>, the values in <code>.env.local</code> win. Keep these three in one place.</li>
+            </ul>
+            <p class="note">Git ignores this file, so your password stays on your computer. That is exactly why it is not in the clone and you have to make it yourself.</p>
+          </li>
+          <li class="step" data-step="p4">
+            <div class="step__head"><span class="step__num"></span><h3>Start the app</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <pre class="code"><code>yarn dev</code></pre>
+            <p>Open <a href="http://localhost:3000/signin" target="_blank" rel="noopener">localhost:3000/signin</a>. You should see the SIGN IN form.</p>
+            <p>Leave the terminal open and keep an eye on it. Once you use the form in Part 3, this line tells you the database is connected:</p>
+            <pre class="term">[DB] MongoDB connected successfully</pre>
+            <p class="note">Changed <code>.env.local</code>? Stop the app with <kbd>Ctrl</kbd> + <kbd>C</kbd> and run <code>yarn dev</code> again, so it reads the new values.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section class="section section--tint" id="user">
+      <div class="container">
+        <p class="kicker"><span class="badge badge-team">Part 3</span> The step most people miss</p>
+        <h2 class="section-title">Register, then approve yourself</h2>
+        <p class="section-lead">
+          Registering only gets you halfway. The account exists, but it is waiting for a teacher, and your database has none.
+          So you become the first teacher, by hand.
+        </p>
+
+        <ol class="steps steps--wide">
+          <li class="step" data-step="u1">
+            <div class="step__head"><span class="step__num"></span><h3>Register</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>On <a href="http://localhost:3000/signin" target="_blank" rel="noopener">localhost:3000/signin</a>, click <strong>REGISTER</strong>, fill in the form and click <strong>REGISTER</strong> again. The password needs at least 8 characters. Any email works; nothing is sent to it.</p>
+            <p>A green message shows for three seconds, and then you are back on the login form:</p>
+            <p class="say say--ok"><small>The app says</small>Your account is created. A teacher needs to approve it before you can sign in — you'll get access once that's done.</p>
+          </li>
+          <li class="step" data-step="u2">
+            <div class="step__head"><span class="step__num"></span><h3>Try to log in, and expect it to fail</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p class="say"><small>The app says</small>Your account is waiting for a teacher to approve it. Try again once they have.</p>
+            <p>
+              <strong>This is not a bug and you did nothing wrong.</strong> It even proves that Parts 1 and 2 worked:
+              the app reached your database and found your account there. Waiting will not help, though. No teacher is coming.
+            </p>
+          </li>
+          <li class="step key-step" data-step="u3" id="user-edit">
+            <div class="step__head"><span class="step__num"></span><h3>Change your user in the database</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <ol>
+              <li>In Atlas, open <strong>Data Explorer</strong> in the sidebar.</li>
+              <li>Open your database (<code>vefskolinn_dev</code>), then the <code>users</code> collection.</li>
+              <li>Hover over your user and click the <strong>pencil</strong> icon.</li>
+              <li>Click the value of <code>status</code> and change <code>pending</code> to <code>active</code>.</li>
+              <li>Click the value of <code>role</code> and change <code>user</code> to <code>teacher</code>.</li>
+              <li>Click <strong>Update</strong>.</li>
+            </ol>
+            <div class="doc">
+              <figure>
+                <figcaption>Before</figcaption>
+                <pre class="term">name: "Monika Example"
+<!--email_off-->email: "monika@example.com"<!--/email_off-->
+role: <span class="bad">"user"</span>
+status: <span class="bad">"pending"</span></pre>
+              </figure>
+              <figure>
+                <figcaption>After</figcaption>
+                <pre class="term">name: "Monika Example"
+<!--email_off-->email: "monika@example.com"<!--/email_off-->
+role: <span class="good">"teacher"</span>
+status: <span class="good">"active"</span></pre>
+              </figure>
+            </div>
+            <ul>
+              <li><code>status: "active"</code> is what lets you log in.</li>
+              <li><code>role: "teacher"</code> gives you the teacher pages, so you can approve other accounts and create guides. A student has the role <code>user</code>.</li>
+              <li>Spelling counts: lowercase, no extra spaces.</li>
+            </ul>
+            <p class="note">No <code>users</code> collection? It appears after the first registration. Refresh Data Explorer. Still missing? Look for a database called <code>test</code>: that is where the data goes when the connection string has no database name.</p>
+          </li>
+          <li class="step" data-step="u4">
+            <div class="step__head"><span class="step__num"></span><h3>Log in</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>Back on the login form, use the same email and password. You land on the <strong>Teacher Dashboard</strong>. It is mostly empty, because your database is. Part 4 fixes that.</p>
+          </li>
+          <li class="step" data-step="u5">
+            <div class="step__head"><span class="step__num"></span><h3>From now on, approve in the app</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>
+              You only edit the database by hand for this first user. When a teammate registers, or you make a second account to try the app as a student,
+              log in as the teacher, open <strong>PEOPLE</strong>, and click <strong>Approve</strong> under "Waiting for approval".
+            </p>
+            <p class="note">To see what a student sees without a second account, use <strong>View as user</strong> at the top of the page.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section class="section" id="data">
+      <div class="container">
+        <p class="kicker"><span class="badge badge-pr">Part 4</span> Whenever you need it</p>
+        <h2 class="section-title">Let AI fill the database</h2>
+        <p class="section-lead">
+          An empty database makes an empty app: no guides, no students, nothing to click on.
+          Writing test data by hand is slow. Your AI assistant can read the project and write a script that does it for you.
+        </p>
+
+        <ol class="steps steps--wide">
+          <li class="step" data-step="a1">
+            <div class="step__head"><span class="step__num"></span><h3>Give your AI assistant this request</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>Open the assistant inside the project folder (Claude Code, Cursor, Copilot…) and paste this. Change the numbers to whatever you need.</p>
+            <pre class="code prompt"><code id="seed-prompt"></code></pre>
+          </li>
+          <li class="step" data-step="a2">
+            <div class="step__head"><span class="step__num"></span><h3>Check the database name before you say yes</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>
+              The script prints the name of the database it is about to change. Make sure it is yours (<code>vefskolinn_dev</code>), then let it run.
+              That one look is the whole safety check.
+            </p>
+            <p>You can run it again yourself whenever you want the dummy data back the way it started:</p>
+            <pre class="code"><code>node team/seed-dummy-data.cjs --yes</code></pre>
+          </li>
+          <li class="step" data-step="a3">
+            <div class="step__head"><span class="step__num"></span><h3>Log in as one of the dummy people</h3><label class="done"><input type="checkbox" /> Done</label></div>
+            <p>The assistant tells you which accounts it made. Log in as a dummy student to see the student side, and as yourself to see the teacher side.</p>
+          </li>
+        </ol>
+
+        <div class="callout callout--free">
+          <h3>This database is yours to break</h3>
+          <p>It is a test database, completely separate from the school's live one. Nothing in it is real, and nothing you do in it can reach real students or their work. So:</p>
+          <ul>
+            <li>Try things. Edit documents, delete them, ask the AI for stranger data: a student with no returns, a guide with a very long title, fifty students at once.</li>
+            <li>If it turns into a mess, delete the whole database in Data Explorer and start again from <a href="#user">Part 3</a>. That takes five minutes.</li>
+            <li>
+              Even a leaked connection string is not a catastrophe here. If one ends up in a commit, a screenshot or a chat,
+              change the database user's password in Atlas (<strong>Database Access</strong> → Edit), put the new one in <code>.env.local</code>, and carry on.
+            </li>
+          </ul>
+          <p>
+            Do still try not to leak it. Keep keys in <code>.env.local</code> and nowhere else: not in the code, not in a pull request, not in a prompt you share.
+            You are building the habit now, while a mistake costs nothing, so that it is automatic on the day the database is a real one.
+          </p>
+        </div>
+
+        <div class="callout">
+          <h3>The seed script stays with the team</h3>
+          <p>
+            It belongs in <code>team/</code>, like your other team-only tools, and never in a pull request to vefskoliv2.
+            A script that deletes and creates data is useful on your test database and dangerous anywhere else.
+            The <a href="../hi-git/index.html#setup">git handout</a> shows how <code>team/</code> works.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUCK -->
+    <section class="section section--tint" id="stuck">
+      <div class="container container--narrow">
+        <p class="kicker">Stuck?</p>
+        <h2 class="section-title">Find your message</h2>
+        <p class="section-lead">Messages in the browser come first, then messages in the terminal where <code>yarn dev</code> runs.</p>
+
+        <div class="faq fixes">
+          <details>
+            <summary>"Your account is waiting for a teacher to approve it."</summary>
+            <p>Your account is still <code>pending</code>. Do <a href="#user-edit">Part 3, step 3</a>.</p>
+          </details>
+          <details>
+            <summary>I changed the status and it still says "waiting"</summary>
+            <ul>
+              <li>Did you click <strong>Update</strong>? Open the document again and check that it says <code>active</code>.</li>
+              <li>Is it spelled <code>active</code>, lowercase, in the field <code>status</code>?</li>
+              <li>Are you looking at the database the app uses? Compare the name in your connection string (between <code>/</code> and <code>?</code>) with the one in Data Explorer. No name in the string means the app uses <code>test</code>.</li>
+            </ul>
+          </details>
+          <details>
+            <summary>"Invalid credentials."</summary>
+            <p>The email or password is wrong, or this account does not exist in the database the app is connected to. Check in Data Explorer that your user is in <code>users</code>. If it isn't, register again.</p>
+          </details>
+          <details>
+            <summary>"User with this email already exists."</summary>
+            <p>You are already registered. Don't register again: go to <a href="#user-edit">Part 3, step 3</a> and approve the account you have.</p>
+          </details>
+          <details>
+            <summary>"Too many registrations from this connection" or "Too many attempts"</summary>
+            <p>The app limits how often one computer can register or try to log in. It is your database, so you can lift the limit: in Data Explorer, open the <code>ratelimits</code> collection and delete the documents in it.</p>
+          </details>
+          <details>
+            <summary>I am logged in but I don't see the teacher pages</summary>
+            <p>Your role is read when you log in. After changing <code>role</code> in the database, log out and log in again.</p>
+          </details>
+          <details>
+            <summary>Terminal: "Please define the MONGODB_CONNECTION environment variable inside .env.local"</summary>
+            <p>The app can't find the setting. Check that the file is called exactly <code>.env.local</code>, sits next to <code>package.json</code>, and that the name before the <code>=</code> is spelled <code>MONGODB_CONNECTION</code>. Then restart <code>yarn dev</code>.</p>
+          </details>
+          <details>
+            <summary>Terminal: "[DB Error] Failed to connect to MongoDB", or the page loads for half a minute and fails</summary>
+            <p>The app found the setting but could not get into the database. The rest of the line tells you which of these it is:</p>
+            <ul>
+              <li><strong>authentication failed</strong>: the username or password in the connection string is wrong, or <code>&lt;db_password&gt;</code> is still in there.</li>
+              <li><strong>a timeout, or "could not connect to any servers"</strong>: your IP address is not on the allow list. See <a href="#database">Part 1, step 4</a>.</li>
+              <li><strong>the address looks cut off</strong>: the password contains a character like <code>@</code> or <code>/</code>. Give the database user a new password with only letters and numbers.</li>
+            </ul>
+          </details>
+          <details>
+            <summary>It worked last month and now it can't connect</summary>
+            <p>Atlas pauses a free cluster that nobody has connected to for 30 days. Open Atlas and resume the cluster. Your data is still there.</p>
+          </details>
+          <details>
+            <summary>None of these</summary>
+            <p>Copy the exact message from the terminal and bring it to class, or paste it to your AI assistant together with what you were doing. Leave the connection string out of what you paste.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img src="../hi-git/assets/logo.svg" alt="Vefskólinn" width="100" height="28" />
+    <p>Questions? Ask in class.</p>
+  </footer>
+
+  <script>
+    document.documentElement.classList.remove("no-js");
+
+    // The request for the AI assistant, kept here so the page shows and copies
+    // exactly the same text.
+    document.getElementById("seed-prompt").textContent = [
+      "This project runs against my own MongoDB test database. The connection string is MONGODB_CONNECTION in .env.local. It is a throwaway test database, not production, and it is almost empty: only my own user is in it.",
+      "",
+      "Write a script that fills it with dummy data, so I can try the app as a student and as a teacher.",
+      "",
+      "1. Before writing anything, read the Mongoose models in app/models, the example seed in e2e/seed.cjs, and app/utils/guideTaxonomy.ts, app/constants/peerReview.ts and app/constants/vote.ts, so every document has the fields, types and values the app expects.",
+      "2. Create: 6 students and 1 teacher (all with status \"active\" and the password \"password123\", hashed with bcrypt the same way the app does it), about 8 guides in modules 1, 3 and 4 with both code and design guides, and returns and reviews between the students. Make the states varied: at least one guide passed, one failed, one in the hall of fame, one still waiting for reviews, and some reviews that the teacher has not graded yet.",
+      "3. Give every dummy user an email ending in @dummy.test. Leave all other users alone, so my own account survives.",
+      "4. Make it safe to run twice: give every document the script creates a fixed _id, and on each run first delete only those documents. Never drop the database or empty a whole collection (e2e/seed.cjs does, do not copy that).",
+      "5. Read the connection string from .env.local. Print the name of the database and stop unless I run it with --yes.",
+      "6. Save it as team/seed-dummy-data.cjs (create the team folder if it is missing). It is a team-only tool: do not put it in scripts/ and do not commit it. If git status shows team/, add the line team/ to .git/info/exclude.",
+      "7. Use the mongodb and bcrypt packages that are already installed. Do not install anything.",
+      "",
+      "Then run it, and tell me which accounts I can log in with and what I should see.",
+    ].join("\n");
+
+    const store = {
+      get(key, fallback) {
+        try {
+          const raw = localStorage.getItem("hi-setup:" + key);
+          return raw === null ? fallback : JSON.parse(raw);
+        } catch {
+          return fallback;
+        }
+      },
+      set(key, value) {
+        try {
+          localStorage.setItem("hi-setup:" + key, JSON.stringify(value));
+        } catch {}
+      },
+    };
+
+    document.querySelectorAll("pre.code").forEach((pre) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+      btn.setAttribute("aria-label", "Copy");
+      btn.addEventListener("click", async () => {
+        const code = pre.querySelector("code");
+        try {
+          await navigator.clipboard.writeText(code.textContent);
+          btn.textContent = "Copied";
+        } catch {
+          const range = document.createRange();
+          range.selectNodeContents(code);
+          const sel = getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          btn.textContent = "Selected";
+        }
+        btn.classList.add("copied");
+        setTimeout(() => {
+          btn.textContent = "Copy";
+          btn.classList.remove("copied");
+        }, 1600);
+      });
+      pre.appendChild(btn);
+    });
+
+    const steps = document.querySelectorAll(".step[data-step]");
+    const pill = document.getElementById("progress-pill");
+    const doneSteps = new Set(store.get("steps", []));
+
+    function updatePill() {
+      const done = [...steps].filter((s) => doneSteps.has(s.dataset.step)).length;
+      pill.textContent = done + " / " + steps.length + " steps done";
+      pill.classList.toggle("complete", done === steps.length);
+    }
+
+    steps.forEach((step) => {
+      const box = step.querySelector(".done input");
+      const id = step.dataset.step;
+      box.checked = doneSteps.has(id);
+      step.classList.toggle("is-done", box.checked);
+      box.addEventListener("change", () => {
+        if (box.checked) doneSteps.add(id);
+        else doneSteps.delete(id);
+        step.classList.toggle("is-done", box.checked);
+        store.set("steps", [...doneSteps]);
+        updatePill();
+      });
+    });
+    updatePill();
+  </script>
+</body>
+</html>
