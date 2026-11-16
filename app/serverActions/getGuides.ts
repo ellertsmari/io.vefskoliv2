@@ -109,7 +109,7 @@ const lookupAvailableForReview = (userId: ObjectId): PipelineStage => {
           },
         },
         {
-          $sort: { createdAt: -1 }, // Sort returns by the createdAt field in descending order
+          $sort: { createdAt: -1, _id: -1, }, // Sort returns by the createdAt field in descending order
         },
         {
           $group: {
