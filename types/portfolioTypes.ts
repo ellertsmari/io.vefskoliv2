@@ -18,7 +18,7 @@ export type PortfolioProject = {
   imageUrl: string | null; // URL from the existing upload
   technologies: string[];
   // Optional project links
-  liveUrl?: webLink().optional();
+  liveUrl?: string;
   githubUrl?: string;
 };
 
@@ -96,12 +96,4 @@ export type Portfolio = {
 export type PublicPortfolio = {
   content: PortfolioContent;
 };
-
-/**
- * Available portfolio themes.
- */
-export type PortfolioTheme =
-  | "editorial"
-  | "minimal"
-  | "studio";
 

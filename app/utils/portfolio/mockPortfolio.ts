@@ -125,6 +125,13 @@ export const mockPortfolio: Portfolio = {
  * The tagline has been edited locally,
  * but these changes are not yet published.
  */
+
+/**
+ * Student's local draft.
+ *
+ * The tagline has been edited locally,
+ * but these changes are not yet published.
+ */
 export const mockLocalDraft: LocalDraft = {
   content: {
     ...mockPortfolioContent,
@@ -132,16 +139,13 @@ export const mockLocalDraft: LocalDraft = {
     profile: {
       ...mockPortfolioContent.profile,
 
-      tagline:
-        "Building accessible digital experiences.",
+      tagline: "Building accessible digital experiences.",
 
-    
       skills: [...mockPortfolioContent.profile.skills],
-      languages: [...mockPortfolioContent.profile.languages],  
+      languages: [...mockPortfolioContent.profile.languages],
     },
-  },
 
-  availability: {
+    availability: {
       ...mockPortfolioContent.availability,
     },
 
@@ -153,7 +157,7 @@ export const mockLocalDraft: LocalDraft = {
     contact: {
       ...mockPortfolioContent.contact,
     },
-
+  },
 
   savedAt: "2026-11-11T14:00:00.000Z",
 
