@@ -70,4 +70,34 @@ describe("PortfolioView", () => {
     expect(screen.queryByRole("link", { name: "LinkedIn" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "GitHub" })).not.toBeInTheDocument();
   });
+
+  it("outlines only the last word of the name", () => {
+    const portfolio: PublicPortfolio = {
+      content: {
+        ...mockPublicPortfolio.content,
+        profile: { ...mockPublicPortfolio.content.profile, name: "Anna María Jónsdóttir" },
+      },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Anna María Jónsdóttir");
+    // The outlined word is its own element; the rest is plain text in the h1.
+    expect(screen.getByText("Jónsdóttir").tagName).toBe("SPAN");
+  });
+
+  it("leaves out the headline line when it is empty", () => {
+    const { headline, tagline } = mockPublicPortfolio.content.profile;
+    const portfolio: PublicPortfolio = {
+      content: {
+        ...mockPublicPortfolio.content,
+        profile: { ...mockPublicPortfolio.content.profile, headline: "", tagline: "" },
+      },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    expect(screen.queryByText(headline)).not.toBeInTheDocument();
+    expect(screen.queryByText(tagline)).not.toBeInTheDocument();
+  });
 });
