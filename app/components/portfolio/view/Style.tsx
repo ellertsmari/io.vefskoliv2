@@ -189,6 +189,50 @@ export const SectionPlaceholder = styled.section`
   text-align: center;
 `;
 
+/* ---------- Hero ---------- */
+
+export const HeroSection = styled.section`
+  margin-bottom: 48px;
+`;
+
+export const HeroName = styled.h1`
+  margin: 0;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere; /* a very long name wraps instead of widening the page */
+`;
+
+/* Still real text, so screen readers and search engines read it. */
+export const NameOutline = styled.span`
+  @supports (-webkit-text-stroke: 1px black) {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--primary-black-100);
+  }
+`;
+
+export const HeroLines = styled.p`
+  margin: 8px 0 0;
+  display: flex;
+  flex-wrap: wrap; /* on phones the tagline moves to its own line */
+  align-items: baseline;
+  column-gap: 16px;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  line-height: 1.15;
+`;
+
+export const Headline = styled.span`
+  font-weight: 700;
+`;
+
+export const Tagline = styled.span`
+  font-family: var(--portfolio-serif), serif;
+  letter-spacing: 0.02em;
+`;
+
 /* ---------- Footer ---------- */
 
 export const FooterBar = styled.footer`
