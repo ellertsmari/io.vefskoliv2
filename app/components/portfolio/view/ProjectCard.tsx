@@ -45,6 +45,7 @@ export const ProjectCard = ({ project }: Props) => {
     <GalleryItemContainer>
       {imageUrl ? (
         <ProjectImage>
+          {/* eslint-disable-next-line @next/next/no-img-element -- students host project images anywhere */}
           <img src={imageUrl} alt={`Screenshot of ${title}`} loading="lazy" />
         </ProjectImage>
       ) : (
