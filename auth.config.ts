@@ -14,6 +14,7 @@ const PUBLIC_ROUTES = [
   "/judge",
   "/showcase",
   "/projects",
+  "/portfolio",
   "/handouts/",
   "/robots.txt",
   "/sitemap.xml",
