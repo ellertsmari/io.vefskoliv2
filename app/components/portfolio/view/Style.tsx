@@ -1,5 +1,6 @@
 "use client";
 import styled, { css } from "styled-components";
+import { GalleryItemImage } from "app/components/gallery/styles";
 
 /* Shared look of the public portfolio page. Fonts and colours come from the
    app's global CSS variables; the three themes are added later (#28). */
@@ -231,6 +232,96 @@ export const Headline = styled.span`
 export const Tagline = styled.span`
   font-family: var(--portfolio-serif), serif;
   letter-spacing: 0.02em;
+`;
+
+/* ---------- Works ---------- */
+
+export const WorksSection = styled.section`
+  margin-top: 48px;
+`;
+
+export const WorksHeading = styled.h2`
+  margin: 0 0 24px;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: var(--text-lg);
+  font-weight: 600;
+`;
+
+/* Two cards per row, as in Figma. The Gallery's grid keeps adding columns
+   on a wide screen, so it is not reused here; the cards themselves are. */
+export const WorksGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+
+  @media (max-width: ${BREAKPOINT}) {
+    grid-template-columns: 1fr; /* one card per row on phones */
+  }
+`;
+
+/* The Gallery image box has a fixed height, which looks flat in a wide
+   two-column card. Here it keeps the 3:2 shape from Figma at any width. */
+export const ProjectImage = styled(GalleryItemImage)`
+  height: auto;
+  aspect-ratio: 3 / 2;
+
+  @media (min-width: 768px) {
+    height: auto;
+  }
+`;
+
+/* Shown when a project has no image: neutral, like the photo frame in Figma,
+   so it doesn't clash with the student's accent colour. */
+export const ProjectPlaceholder = styled(ProjectImage)`
+  background: var(--primary-black-5);
+  color: var(--primary-black-60);
+  font-family: var(--portfolio-mono), monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+`;
+
+/* The full text of a long project description, shown over the cut one.
+   It grows upwards over the image, so the card (overflow: hidden) never
+   clips it. Hidden only visually: screen readers always read it. */
+export const DescriptionPopover = styled.span`
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  z-index: 2;
+  padding: 10px;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
+  background: var(--primary-white);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  color: var(--primary-black-100);
+  font-family: "Source Sans 3", sans-serif;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+`;
+
+/* Wraps a long description: hover, keyboard focus or a tap shows the popover. */
+export const DescriptionHover = styled.div`
+  position: relative;
+  flex: 1;
+  cursor: default;
+
+  &:hover ${DescriptionPopover},
+  &:focus ${DescriptionPopover} {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-module3-100);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
 `;
 
 /* ---------- Footer ---------- */

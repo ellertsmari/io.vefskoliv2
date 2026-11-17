@@ -5,6 +5,7 @@ import type { PublicPortfolio } from "types/portfolioTypes";
 import { Header, type PortfolioTab } from "./Header";
 import { Container, Main, Page, SectionPlaceholder } from "./Style";
 import { Hero } from "./Hero";
+import { Works } from "./Works";
 import { Footer } from "./Footer";
 import { portfolioMono, portfolioSans, portfolioSerif } from "./fonts";
 
@@ -31,9 +32,11 @@ export const PortfolioView = ({ portfolio }: Props) => {
       <Main>
         <Container>
           <Hero profile={portfolio.content.profile} />
-          <SectionPlaceholder>
-            {activeTab === "work" ? "Works" : "About"}
-          </SectionPlaceholder>
+          {activeTab === "work" ? (
+            <Works projects={portfolio.content.projects} />
+          ) : (
+            <SectionPlaceholder>About</SectionPlaceholder>
+          )}
         </Container>
       </Main>
       <Footer portfolio={portfolio} />
