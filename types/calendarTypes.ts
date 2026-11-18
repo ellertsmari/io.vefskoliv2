@@ -67,6 +67,12 @@ export interface CalendarEvent {
   canEdit?: boolean;
   /** Set on every occurrence of a repeating event. */
   seriesId?: string;
+  /** The viewer created it. Decides whose "not available" counts as busy. */
+  mine?: boolean;
+  /** A reminder rather than a place to be; never counts as "taken". */
+  tentative?: boolean;
+  /** Set on events drawn from a sign-up sheet; opens it in Meetings. */
+  meetingRef?: { kind: "sheet"; id: string };
 }
 
 export interface CategoryMeta {
@@ -94,6 +100,8 @@ export interface BookingWindowInfo {
   weekday: number;
   startTime: string;
   endTime: string;
+  /** How long each meeting in the window lasts, in minutes. */
+  slotMinutes: number;
   /** Inclusive "YYYY-MM-DD" range the window applies to. */
   validFrom: string;
   validTo: string;
@@ -115,10 +123,128 @@ export interface UpcomingMeeting {
   startTime: string;
   endTime: string;
   topic: string;
+  /** Who the teacher is meeting: a student, a team, or the meeting's title. */
   studentName: string;
   studentAvatarUrl?: string;
   /** The other teachers attending, by name. */
   withTeachers: string[];
   /** Set when the student put it on their team's calendar too. */
   teamName?: string;
+}
+
+// ── Sign-up sheets ────────────────────────────────────────────────────────
+
+/**
+ * Who a sign-up sheet is for.
+ * - project: the teams of one group project; a team takes one slot together
+ * - everyone / team / shared: people sign up one by one
+ */
+export type SignupAudience = "project" | "everyone" | "team" | "shared";
+
+/** One team or person on a slot. */
+export interface SignupClaim {
+  /** Team id on a team sheet, user id otherwise. */
+  id: string;
+  /** Team name or the person's name. */
+  label: string;
+  /** Team members' names, on a team sheet. */
+  members?: string[];
+  /** The viewer, or the viewer's team. */
+  mine: boolean;
+}
+
+export interface SignupSlot {
+  startTime: string;
+  endTime: string;
+  claims: SignupClaim[];
+  /** No places left. */
+  full: boolean;
+  /** Already started; nobody can sign up any more. */
+  past: boolean;
+}
+
+export interface SignupSheetInfo {
+  id: string;
+  title: string;
+  description?: string;
+  /** "YYYY-MM-DD". */
+  date: string;
+  slotMinutes: number;
+  /** Places on each slot. */
+  capacity: number;
+  audience: SignupAudience;
+  /** True when a whole team takes a slot. */
+  byTeam: boolean;
+  /** "Teams of Module 3", "Everyone", "Kaffistofan", "Anna, Björn". */
+  audienceLabel: string;
+  ownerName: string;
+  isOwner: boolean;
+  /** The owner and teachers: clear, move and assign slots, delete the sheet. */
+  canManage: boolean;
+  /** The viewer (or their team) may take a slot. */
+  canSignUp: boolean;
+  /** Who would be signed up: the viewer's team name on a team sheet. */
+  signUpAs?: string;
+  /** Start time of the slot the viewer (or their team) holds. */
+  mySlot?: string;
+  slots: SignupSlot[];
+  /** For managers of a team sheet: teams that have not picked a slot yet. */
+  waiting?: Array<{ id: string; label: string }>;
+}
+
+/** What the "new sign-up sheet" form may offer the viewer. */
+export interface SignupTargets {
+  /** Teachers only: group projects that have teams. */
+  projects: Array<{ id: string; title: string; teams: number }>;
+  /** The viewer's current team, if any. */
+  teamName: string | null;
+}
+
+// ── Find a time ───────────────────────────────────────────────────────────
+
+/** Who a "find a time" poll is for; people answer one by one. */
+export type PollAudience = "everyone" | "team" | "shared";
+
+export interface PollResponse {
+  /** User id. */
+  id: string;
+  name: string;
+  /** Grid cells the person is free in, each "YYYY-MM-DD HH:MM". */
+  cells: string[];
+  mine: boolean;
+}
+
+export interface MeetingPollInfo {
+  id: string;
+  title: string;
+  description?: string;
+  /** Candidate days, "YYYY-MM-DD", in order. */
+  days: string[];
+  /** The hours asked about on each day, "HH:MM". */
+  dayStart: string;
+  dayEnd: string;
+  /** How long the meeting will be. */
+  lengthMinutes: number;
+  audience: PollAudience;
+  audienceLabel: string;
+  ownerName: string;
+  isOwner: boolean;
+  /** The owner and teachers: pick the time, delete the poll. */
+  canManage: boolean;
+  responses: PollResponse[];
+  /** The viewer has marked their times. */
+  answered: boolean;
+  /** How many people were asked, when that is a fixed list. */
+  invited?: number;
+}
+
+/** One possible meeting time on a poll, with who can make it. */
+export interface PollOption {
+  date: string;
+  startTime: string;
+  endTime: string;
+  /** Names of those who are free for all of it. */
+  free: string[];
+  /** Names of those who answered but are not. */
+  busy: string[];
 }

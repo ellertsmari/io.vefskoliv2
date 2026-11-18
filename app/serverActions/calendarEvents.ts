@@ -142,6 +142,7 @@ const toClientEvent = (
     sharedWith: event.visibility === "shared" ? sharedWith : undefined,
     canEdit: canEditEvent(isTeacher, viewerId, { owner: ownerId }),
     seriesId: event.seriesId,
+    mine: ownerId === viewerId,
   };
 };
 

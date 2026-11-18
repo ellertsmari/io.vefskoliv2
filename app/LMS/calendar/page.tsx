@@ -10,9 +10,11 @@ import {
 } from "serverActions/calendarEvents";
 import { getSemester } from "serverActions/semester";
 import { getBookingWindows, getMeetingSlots } from "serverActions/meetings";
+import { getSignupSheets, getSignupTargets } from "serverActions/signupSheets";
+import { getMeetingPolls } from "serverActions/meetingPolls";
+import { sheetCalendarEvents } from "utils/meetingUtils";
 import type { CalendarEvent } from "types/calendarTypes";
 import CalendarView from "./CalendarView";
-import { SemesterCard } from "./SemesterCard";
 
 export const metadata: Metadata = {
   title: "Calendar | Vefskólinn LMS",
@@ -33,18 +35,31 @@ export default async function CalendarPage() {
 
   // Only the meeting slots need the semester, so it doesn't hold up the rest.
   const semesterRequest = getSemester();
-  const [semester, events, groupProjectEvents, teamName, people, windows, slots] =
-    await Promise.all([
-      semesterRequest,
-      getCalendarEvents(),
-      getGroupCalendarEvents(),
-      isTeacher ? Promise.resolve(null) : getViewerTeamName(),
-      isTeacher ? Promise.resolve([]) : getShareableUsers(),
-      isTeacher ? getBookingWindows() : Promise.resolve([]),
-      isTeacher
-        ? Promise.resolve([])
-        : semesterRequest.then((s) => getMeetingSlots(s.startDate, s.endDate)),
-    ]);
+  const [
+    semester,
+    events,
+    groupProjectEvents,
+    teamName,
+    people,
+    windows,
+    slots,
+    sheets,
+    targets,
+    polls,
+  ] = await Promise.all([
+    semesterRequest,
+    getCalendarEvents(),
+    getGroupCalendarEvents(),
+    isTeacher ? Promise.resolve(null) : getViewerTeamName(),
+    getShareableUsers(),
+    isTeacher ? getBookingWindows() : Promise.resolve([]),
+    isTeacher
+      ? Promise.resolve([])
+      : semesterRequest.then((s) => getMeetingSlots(s.startDate, s.endDate)),
+    getSignupSheets(),
+    getSignupTargets(),
+    getMeetingPolls(),
+  ]);
 
   // Group projects are managed on their own pages; here they are read-only.
   const generated: CalendarEvent[] = groupProjectEvents.map((event) => ({
@@ -55,22 +70,17 @@ export default async function CalendarPage() {
 
   return (
     <CalendarView
-      events={[...events, ...generated]}
+      events={[...events, ...generated, ...sheetCalendarEvents(sheets)]}
+      eventCount={events.length}
       semester={semester}
       isTeacher={isTeacher}
       teamName={teamName}
       people={people}
       slots={slots}
-      settings={
-        isTeacher ? (
-          <SemesterCard
-            key="semester-settings"
-            semester={semester}
-            eventCount={events.length}
-            windows={windows}
-          />
-        ) : undefined
-      }
+      windows={windows}
+      sheets={sheets}
+      polls={polls}
+      targets={targets}
     />
   );
 }

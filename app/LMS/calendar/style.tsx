@@ -637,56 +637,10 @@ export const FormSuccess = styled.p`
   color: var(--error-success-100);
 `;
 
-export const SettingsCard = styled.section`
-  border: 1px solid var(--primary-black-10);
-  border-radius: var(--radius-lg);
-  background: var(--primary-white);
-  padding: 1rem 1.25rem;
-`;
-
-export const SettingsSummary = styled.summary`
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--primary-black-100);
-  list-style: none;
-
-  &::-webkit-details-marker {
-    display: none;
-  }
-
-  &::before {
-    content: "▸ ";
-    color: var(--primary-black-60);
-  }
-
-  details[open] > &::before {
-    content: "▾ ";
-  }
-`;
-
-export const SettingsBody = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin-top: 1rem;
-
-  @media (min-width: 900px) {
-    grid-template-columns: 1fr 1fr;
-  }
-`;
-
 export const SettingsSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-`;
-
-export const SettingsTitle = styled.h3`
-  margin: 0;
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--primary-black-100);
 `;
 
 export const PeopleSearch = styled.input`
@@ -772,22 +726,3 @@ export const SlotChip = styled.button<{ $selected?: boolean }>`
   }
 `;
 
-export const WindowList = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-`;
-
-export const WindowRow = styled.li`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  font-size: var(--text-sm);
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--primary-black-10);
-  border-radius: var(--radius-sm);
-`;

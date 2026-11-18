@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import { BookingWindow } from "../models/bookingWindow";
 import { CalendarEvent } from "../models/calendarEvent";
+import { SignupSheet } from "../models/signupSheet";
 import { Team } from "../models/team";
 import { User } from "../models/user";
 import { isActingAsTeacher } from "../utils/userUtils";
@@ -16,15 +17,15 @@ import {
   SCHOOL_BUSY_CATEGORIES,
   TEACHER_BUSY_CATEGORIES,
   addDays,
-  addMinutes,
   coversSlot,
-  slotStarts,
+  timesOverlap,
   todayKey,
   weekdayOf,
   type BookMeetingInput,
   type BookingWindowInput,
   type BusyBlock,
 } from "../utils/calendarUtils";
+import { buildSlots, fromMinutes, isMeetingLength, toMinutes } from "../utils/meetingUtils";
 import type {
   BookingWindowInfo,
   MeetingSlot,
@@ -52,6 +53,7 @@ type WindowRow = {
   weekday: number;
   startTime: string;
   endTime: string;
+  slotMinutes?: number;
   validFrom: string;
   validTo: string;
 };
@@ -61,6 +63,7 @@ const toInfo = (row: WindowRow): BookingWindowInfo => ({
   weekday: row.weekday,
   startTime: row.startTime,
   endTime: row.endTime,
+  slotMinutes: row.slotMinutes ?? MEETING_SLOT_MINUTES,
   validFrom: row.validFrom,
   validTo: row.validTo,
 });
@@ -89,6 +92,11 @@ export async function saveBookingWindow(
   const validated = BookingWindowInputSchema.safeParse(data);
   if (!validated.success) {
     return invalidInput(validated.error);
+  }
+  if (!isMeetingLength(validated.data.slotMinutes)) {
+    return failure(ErrorMessages.INVALID_INPUT, {
+      slotMinutes: ["Pick one of the listed lengths"],
+    });
   }
 
   try {
@@ -124,7 +132,30 @@ type Teacher = { _id: ObjectId; name: string };
 
 type BusyRow = BusyBlock & { owner: ObjectId | null };
 
-type BookedRow = { startDate: string; startTime?: string };
+/** A time some teachers are already spoken for: a meeting or a sign-up sheet. */
+type Engagement = {
+  date: string;
+  startTime: string;
+  endTime: string;
+  teachers: Set<string>;
+};
+
+type MeetingEventRow = {
+  owner: ObjectId | null;
+  sharedWith?: ObjectId[];
+  startDate: string;
+  startTime?: string;
+  endTime?: string;
+};
+
+type SheetRow = {
+  owner: ObjectId;
+  date: string;
+  slots: Array<{ startTime: string; endTime: string }>;
+};
+
+/** A meeting saved without an end is taken to last this long. */
+const ASSUMED_MEETING_MINUTES = 60;
 
 /**
  * Which teachers are free for one slot. A lecture or holiday on the school
@@ -150,8 +181,9 @@ const freeTeachers = (
 
 /**
  * Every bookable slot between two dates. A slot is offered when it lies in
- * a meeting-hours window, is in the future, nobody has booked it, no lecture
- * or holiday is on, and at least MIN_TEACHERS_PRESENT teachers are free.
+ * a meeting-hours window, is in the future, no lecture or holiday is on, and
+ * at least MIN_TEACHERS_PRESENT teachers are free: not "not available", not
+ * in another meeting, and not running a sign-up sheet at that time.
  */
 async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSlot[]> {
   const windows = await BookingWindow.find({
@@ -166,7 +198,7 @@ async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSl
   ).lean<Teacher[]>();
   if (teachers.length < MIN_TEACHERS_PRESENT) return [];
 
-  const [busy, booked] = await Promise.all([
+  const [busy, meetings, sheets] = await Promise.all([
     // School-wide blocks must be on the school calendar: a student's own
     // event, whatever it is called, keeps nobody out of a meeting.
     CalendarEvent.find(
@@ -182,28 +214,74 @@ async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSl
     ).lean<BusyRow[]>(),
     CalendarEvent.find(
       { category: "meeting", startDate: { $gte: fromDate, $lte: toDate } },
-      { startDate: 1, startTime: 1 }
-    ).lean<BookedRow[]>(),
+      { owner: 1, sharedWith: 1, startDate: 1, startTime: 1, endTime: 1 }
+    ).lean<MeetingEventRow[]>(),
+    SignupSheet.find(
+      {
+        date: { $gte: fromDate, $lte: toDate },
+        owner: { $in: teachers.map((teacher) => teacher._id) },
+      },
+      { owner: 1, date: 1, "slots.startTime": 1, "slots.endTime": 1 }
+    ).lean<SheetRow[]>(),
   ]);
-  const taken = new Set(booked.map((row) => `${row.startDate} ${row.startTime}`));
+
+  // A meeting takes whoever set it up and whoever it is shared with; a
+  // sign-up sheet takes the teacher who runs it, from its first slot to its
+  // last. Another teacher sitting in on a sheet marks "not available".
+  const engagements: Engagement[] = [];
+  for (const meeting of meetings) {
+    if (!meeting.startTime) continue;
+    engagements.push({
+      date: meeting.startDate,
+      startTime: meeting.startTime,
+      endTime:
+        meeting.endTime ??
+        fromMinutes(toMinutes(meeting.startTime) + ASSUMED_MEETING_MINUTES),
+      teachers: new Set([meeting.owner, ...(meeting.sharedWith ?? [])].map(String)),
+    });
+  }
+  for (const sheet of sheets) {
+    if (sheet.slots.length === 0) continue;
+    engagements.push({
+      date: sheet.date,
+      startTime: sheet.slots[0].startTime,
+      endTime: sheet.slots[sheet.slots.length - 1].endTime,
+      teachers: new Set([String(sheet.owner)]),
+    });
+  }
 
   const now = new Date();
   const today = todayKey();
   const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
   const slots: MeetingSlot[] = [];
+  // Two windows can overlap; a time is offered once.
+  const offered = new Set<string>();
   for (let date = fromDate, i = 0; date <= toDate && i < MAX_RANGE_DAYS; date = addDays(date, 1), i++) {
     if (date < today) continue;
     const weekday = weekdayOf(date);
     for (const window of windows) {
       if (window.weekday !== weekday) continue;
       if (date < window.validFrom || date > window.validTo) continue;
-      for (const startTime of slotStarts(window.startTime, window.endTime)) {
+      const minutes = window.slotMinutes ?? MEETING_SLOT_MINUTES;
+      for (const { startTime, endTime } of buildSlots(
+        window.startTime,
+        window.endTime,
+        minutes
+      )) {
         if (date === today && startTime <= nowTime) continue;
-        if (taken.has(`${date} ${startTime}`)) continue;
-        const endTime = addMinutes(startTime, MEETING_SLOT_MINUTES);
-        const free = freeTeachers(teachers, busy, date, startTime, endTime);
+        if (offered.has(`${date} ${startTime}`)) continue;
+        const engaged = engagements.filter(
+          (engagement) =>
+            engagement.date === date &&
+            timesOverlap(startTime, endTime, engagement.startTime, engagement.endTime)
+        );
+        const free = freeTeachers(teachers, busy, date, startTime, endTime).filter(
+          (teacher) =>
+            !engaged.some((engagement) => engagement.teachers.has(String(teacher._id)))
+        );
         if (free.length < MIN_TEACHERS_PRESENT) continue;
+        offered.add(`${date} ${startTime}`);
         slots.push({
           date,
           startTime,
@@ -213,7 +291,9 @@ async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSl
       }
     }
   }
-  return slots;
+  return slots.sort(
+    (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
+  );
 }
 
 export async function getMeetingSlots(
@@ -309,8 +389,20 @@ export async function bookMeeting(
 /** How far ahead the dashboard looks. */
 const UPCOMING_DAYS = 14;
 
+type UpcomingSheet = {
+  _id: ObjectId;
+  title: string;
+  date: string;
+  slots: Array<{
+    startTime: string;
+    endTime: string;
+    claims: Array<{ team?: ObjectId | null; user: ObjectId }>;
+  }>;
+};
+
 type MeetingRow = {
   _id: ObjectId;
+  title: string;
   startDate: string;
   startTime?: string;
   endTime?: string;
@@ -320,9 +412,12 @@ type MeetingRow = {
 };
 
 /**
- * The signed-in teacher's booked meetings from today on, soonest first.
- * Only meetings they are attending: a booking names the teachers who were
- * free, and those are the ones who need to turn up.
+ * What the signed-in teacher has on from today, soonest first:
+ * - booked meetings they attend (a booking names the teachers who were free,
+ *   and those are the ones who need to turn up);
+ * - meetings they set up themselves, e.g. from a "find a time" poll;
+ * - every taken slot on a sign-up sheet they run or that is for a group
+ *   project's teams, which is the running order of a review day.
  */
 export async function getUpcomingMeetings(): Promise<UpcomingMeeting[]> {
   const session = await auth();
@@ -331,15 +426,21 @@ export async function getUpcomingMeetings(): Promise<UpcomingMeeting[]> {
 
   try {
     const today = todayKey();
-    const rows = await CalendarEvent.find({
-      category: "meeting",
-      sharedWith: new ObjectId(me),
-      startDate: { $gte: today, $lte: addDays(today, UPCOMING_DAYS) },
-    })
-      .sort({ startDate: 1, startTime: 1 })
-      .populate("owner", "name avatarUrl")
-      .populate("sharedWith", "name role")
-      .lean<MeetingRow[]>();
+    const until = addDays(today, UPCOMING_DAYS);
+    const [rows, sheets] = await Promise.all([
+      CalendarEvent.find({
+        category: "meeting",
+        $or: [{ sharedWith: new ObjectId(me) }, { owner: new ObjectId(me) }],
+        startDate: { $gte: today, $lte: until },
+      })
+        .populate("owner", "name avatarUrl")
+        .populate("sharedWith", "name role")
+        .lean<MeetingRow[]>(),
+      SignupSheet.find({
+        date: { $gte: today, $lte: until },
+        $or: [{ owner: new ObjectId(me) }, { audience: "project" }],
+      }).lean<UpcomingSheet[]>(),
+    ]);
 
     const teamNames = new Map<string, string>();
     const studentIds = rows.map((row) => row.owner?._id).filter(Boolean) as ObjectId[];
@@ -359,19 +460,61 @@ export async function getUpcomingMeetings(): Promise<UpcomingMeeting[]> {
       }
     }
 
-    return rows.map((row) => ({
-      id: String(row._id),
-      date: row.startDate,
-      startTime: row.startTime ?? "",
-      endTime: row.endTime ?? "",
-      topic: row.description ?? "",
-      studentName: row.owner?.name ?? "A student",
-      studentAvatarUrl: row.owner?.avatarUrl ?? undefined,
-      withTeachers: (row.sharedWith ?? [])
-        .filter((p) => p.role === "teacher" && String(p._id) !== me)
-        .map((p) => p.name ?? "A teacher"),
-      teamName: teamNames.get(String(row._id)),
-    }));
+    const meetings: UpcomingMeeting[] = rows.map((row) => {
+      const mine = row.owner && String(row.owner._id) === me;
+      return {
+        id: String(row._id),
+        date: row.startDate,
+        startTime: row.startTime ?? "",
+        endTime: row.endTime ?? "",
+        // A meeting the teacher set up is known by its title, not its owner.
+        topic: mine ? "" : (row.description ?? ""),
+        studentName: mine ? row.title : (row.owner?.name ?? "A student"),
+        studentAvatarUrl: mine ? undefined : (row.owner?.avatarUrl ?? undefined),
+        withTeachers: (row.sharedWith ?? [])
+          .filter((p) => p.role === "teacher" && String(p._id) !== me)
+          .map((p) => p.name ?? "A teacher"),
+        teamName: teamNames.get(String(row._id)),
+      };
+    });
+
+    // Sign-up sheets: one row per taken slot.
+    const claimed = sheets.flatMap((sheet) =>
+      sheet.slots.flatMap((slot) => slot.claims.map((claim) => ({ sheet, slot, claim })))
+    );
+    if (claimed.length > 0) {
+      const [teams, people] = await Promise.all([
+        Team.find(
+          { _id: { $in: claimed.flatMap(({ claim }) => (claim.team ? [claim.team] : [])) } },
+          { name: 1 }
+        ).lean<Array<{ _id: ObjectId; name: string }>>(),
+        User.find(
+          { _id: { $in: claimed.map(({ claim }) => claim.user) } },
+          { name: 1, avatarUrl: 1 }
+        ).lean<Array<{ _id: ObjectId; name: string; avatarUrl?: string }>>(),
+      ]);
+      const teamName = new Map(teams.map((team) => [String(team._id), team.name]));
+      const person = new Map(people.map((user) => [String(user._id), user]));
+      for (const { sheet, slot, claim } of claimed) {
+        const user = person.get(String(claim.user));
+        meetings.push({
+          id: `sheet-${sheet._id}-${slot.startTime}-${claim.team ?? claim.user}`,
+          date: sheet.date,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          topic: sheet.title,
+          studentName: claim.team
+            ? (teamName.get(String(claim.team)) ?? "A team")
+            : (user?.name ?? "A student"),
+          studentAvatarUrl: claim.team ? undefined : (user?.avatarUrl ?? undefined),
+          withTeachers: [],
+        });
+      }
+    }
+
+    return meetings.sort(
+      (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
+    );
   } catch (error) {
     handleActionError("getUpcomingMeetings", error);
     return [];

@@ -10,7 +10,8 @@ import {
 
 /**
  * A weekly window in which students may book a meeting with the teachers,
- * e.g. Tuesdays 13:00–15:00 from 5 October to 18 December. Windows belong
+ * e.g. Tuesdays 13:00–15:00 in 30-minute meetings from 5 October to 18
+ * December. Windows belong
  * to the teacher team, not to one teacher: a slot inside a window is offered
  * only when no lecture or holiday is on and enough teachers have no
  * "unavailable" event at that time (see serverActions/meetings). Times are
@@ -22,6 +23,8 @@ const bookingWindowSchema = new Schema(
     weekday: { type: Schema.Types.Number, required: true, min: 0, max: 6 },
     startTime: { type: Schema.Types.String, required: true },
     endTime: { type: Schema.Types.String, required: true },
+    /** How long each meeting in the window lasts; 20 when not set. */
+    slotMinutes: { type: Schema.Types.Number, required: false },
     validFrom: { type: Schema.Types.String, required: true },
     validTo: { type: Schema.Types.String, required: true, index: true },
   },

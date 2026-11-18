@@ -7,7 +7,6 @@ import {
   addMinutes,
   allowedVisibilities,
   coversSlot,
-  slotStarts,
   timesOverlap,
   weekdayOf,
   canEditEvent,
@@ -225,12 +224,6 @@ describe("meeting slots", () => {
   it("adds minutes to a clock time", () => {
     expect(addMinutes("13:40", 20)).toBe("14:00");
     expect(addMinutes("23:50", 20)).toBe("00:10");
-  });
-
-  it("splits a window into slot starts that fit whole meetings", () => {
-    expect(slotStarts("13:00", "14:00")).toEqual(["13:00", "13:20", "13:40"]);
-    expect(slotStarts("13:00", "13:50")).toEqual(["13:00", "13:20"]);
-    expect(slotStarts("13:00", "13:10")).toEqual([]);
   });
 
   it("treats touching ranges as not overlapping", () => {

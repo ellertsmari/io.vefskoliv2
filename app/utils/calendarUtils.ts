@@ -32,6 +32,7 @@ export const pickableCategories = (isTeacher: boolean): EventCategory[] =>
  * this many teachers have nothing else on, and all of them are booked.
  */
 export const MIN_TEACHERS_PRESENT = 2;
+/** The length of a meeting in hours that were saved without one. */
 export const MEETING_SLOT_MINUTES = 20;
 
 /**
@@ -402,33 +403,29 @@ export const WEEKDAY_NAMES = [
   "Sunday",
 ];
 
-/** Every slot start inside a window, e.g. 13:00, 13:20, 13:40 for 13–14. */
-export const slotStarts = (
-  startTime: string,
-  endTime: string,
-  minutes = MEETING_SLOT_MINUTES
-): string[] => {
-  const starts: string[] = [];
-  for (let t = startTime; addMinutes(t, minutes) <= endTime && starts.length < 100; t = addMinutes(t, minutes)) {
-    starts.push(t);
-  }
-  return starts;
-};
-
 export const BookingWindowInputSchema = z
   .object({
     weekday: z.coerce.number().int().min(0).max(6),
     startTime: z.string().regex(TIME_RE, "Please pick a start time"),
     endTime: z.string().regex(TIME_RE, "Please pick an end time"),
+    /** How long each meeting lasts. */
+    slotMinutes: z.coerce
+      .number()
+      .int()
+      .min(10)
+      .max(120)
+      .default(MEETING_SLOT_MINUTES),
     validFrom: z.string().regex(DATE_RE, "Please pick the first day"),
     validTo: z.string().regex(DATE_RE, "Please pick the last day"),
   })
   .superRefine((input, ctx) => {
-    if (addMinutes(input.startTime, MEETING_SLOT_MINUTES) > input.endTime) {
+    const [startH, startM] = input.startTime.split(":").map(Number);
+    const [endH, endM] = input.endTime.split(":").map(Number);
+    if (startH * 60 + startM + input.slotMinutes > endH * 60 + endM) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["endTime"],
-        message: `A window needs room for at least one ${MEETING_SLOT_MINUTES}-minute meeting`,
+        message: `The hours need room for at least one ${input.slotMinutes}-minute meeting`,
       });
     }
     if (input.validTo < input.validFrom) {
