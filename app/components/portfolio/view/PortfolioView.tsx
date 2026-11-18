@@ -31,7 +31,10 @@ export const PortfolioView = ({ portfolio }: Props) => {
       />
       <Main>
         <Container>
-          <Hero profile={portfolio.content.profile} />
+          <Hero
+            profile={portfolio.content.profile}
+            availability={portfolio.content.availability}
+          />
           {activeTab === "work" ? (
             <Works projects={portfolio.content.projects} />
           ) : (

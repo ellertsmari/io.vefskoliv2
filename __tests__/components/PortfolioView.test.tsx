@@ -175,6 +175,25 @@ describe("PortfolioView", () => {
     );
   });
 
+  it("shows when the student is open to an internship", () => {
+    render(<PortfolioView portfolio={mockPublicPortfolio} />);
+
+    expect(screen.getByText("Open for work/internship → January 2027")).toBeInTheDocument();
+  });
+
+  it("hides the availability badge when the student is not looking", () => {
+    const portfolio: PublicPortfolio = {
+      content: {
+        ...mockPublicPortfolio.content,
+        availability: { ...mockPublicPortfolio.content.availability, openToInternships: false },
+      },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    expect(screen.queryByText(/Open for work/)).not.toBeInTheDocument();
+  });
+
   it("leaves out the works section when there are no projects", () => {
     const portfolio: PublicPortfolio = {
       content: { ...mockPublicPortfolio.content, projects: [] },

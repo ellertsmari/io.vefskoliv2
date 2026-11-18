@@ -234,6 +234,27 @@ export const Tagline = styled.span`
   letter-spacing: 0.02em;
 `;
 
+/* Shown only while the student is open to an internship. */
+export const Availability = styled.p`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-green-10);
+  color: var(--accent-green-text);
+  font-family: var(--portfolio-mono), monospace;
+  font-size: var(--text-xs);
+`;
+
+export const AvailabilityDot = styled.span`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-green-100);
+`;
+
 /* ---------- Works ---------- */
 
 export const WorksSection = styled.section`
@@ -247,12 +268,38 @@ export const WorksHeading = styled.h2`
   font-weight: 600;
 `;
 
-/* Two cards per row, as in Figma. The Gallery's grid keeps adding columns
-   on a wide screen, so it is not reused here; the cards themselves are. */
-export const WorksGrid = styled.div`
+/* The number of columns depends on how many projects there are (see
+   Works.tsx). The Gallery's grid keeps adding columns on a wide screen, so it
+   is not reused here; the cards themselves are. */
+export const WorksGrid = styled.div<{ $columns: 1 | 2 | 3 }>`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(${({ $columns }) => $columns}, 1fr);
   gap: 24px;
+
+  /* A single project: one wide card with the image on the left. */
+  ${({ $columns }) =>
+    $columns === 1 &&
+    css`
+      @media (min-width: ${BREAKPOINT}) {
+        & > * {
+          flex-direction: row;
+        }
+
+        & > * > :first-child {
+          flex: none;
+          width: 50%;
+        }
+      }
+    `}
+
+  /* Three columns get too narrow on a tablet. */
+  ${({ $columns }) =>
+    $columns === 3 &&
+    css`
+      @media (max-width: 1100px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    `}
 
   @media (max-width: ${BREAKPOINT}) {
     grid-template-columns: 1fr; /* one card per row on phones */
@@ -260,10 +307,10 @@ export const WorksGrid = styled.div`
 `;
 
 /* The Gallery image box has a fixed height, which looks flat in a wide
-   two-column card. Here it keeps the 3:2 shape from Figma at any width. */
+   two-column card. Here it keeps a 16:10 shape at any width. */
 export const ProjectImage = styled(GalleryItemImage)`
   height: auto;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 16 / 10;
 
   @media (min-width: 768px) {
     height: auto;
