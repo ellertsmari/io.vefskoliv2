@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { saveSemester } from "serverActions/semester";
 import {
@@ -8,44 +9,60 @@ import {
   importSemesterPlan,
 } from "serverActions/calendarEvents";
 import { addDays } from "utils/calendarUtils";
-import type { BookingWindowInfo, SemesterInfo } from "types/calendarTypes";
-import { MeetingHoursCard } from "./MeetingHoursCard";
+import type { SemesterInfo } from "types/calendarTypes";
 import { Input } from "UIcomponents/input/Input";
 import { Button } from "globalStyles/buttons/default/style";
 import {
-  SettingsCard,
-  SettingsSummary,
-  SettingsBody,
+  Overlay,
   SettingsSection,
-  SettingsTitle,
   FieldRow,
   FieldHint,
   FormError,
   FormSuccess,
 } from "./style";
+import {
+  DialogBody,
+  DialogHeader,
+  DialogTitle,
+  IconButton,
+  MeetingsCard,
+  Tab,
+  Tabs,
+} from "./meetings/style";
 
 type Errors = Record<string, string[] | undefined>;
 
 /**
- * Teacher-only term settings, folded away under the calendar header.
+ * Teacher-only term setup, opened from the "Term" button. It is needed about
+ * twice a year, so it stays out of the calendar's way and shows one job at a
+ * time.
  *
- * Left: the term's dates, which decide which months the calendar shows.
- * Right: two ways to fill a new term without typing. "Import the built-in
- * plan" loads the autumn 2026 schedule that used to be hardcoded; "Copy
- * events" moves a past range forward by whole weeks, so last year's
- * Wednesday lectures land on this year's Wednesdays. Both are safe to run
+ * "Dates" decides which months the calendar shows. "Fill the calendar" has
+ * two ways to fill a new term without typing: copy a past range forward by
+ * whole weeks, so last year's Wednesday lectures land on this year's
+ * Wednesdays, or load the built-in autumn 2026 plan. Both are safe to run
  * twice.
  */
-export const SemesterCard = ({
+export const TermDialog = ({
   semester,
   eventCount,
-  windows,
+  onClose,
 }: {
   semester: SemesterInfo;
   eventCount: number;
-  windows: BookingWindowInfo[];
+  onClose: () => void;
 }) => {
   const router = useRouter();
+  const [tab, setTab] = useState<"dates" | "fill">("dates");
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const [saving, startSave] = useTransition();
   const [label, setLabel] = useState(semester.label);
   const [startDate, setStartDate] = useState(semester.startDate);
@@ -102,16 +119,49 @@ export const SemesterCard = ({
     });
   };
 
-  return (
-    <SettingsCard>
-      <details>
-        <SettingsSummary>
-          Semester settings
-          {!semester.saved && " · using the built-in default until saved"}
-        </SettingsSummary>
-        <SettingsBody>
+  const dialog = (
+    <Overlay onClick={onClose}>
+      <MeetingsCard
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="term-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <DialogHeader>
+          <DialogTitle id="term-title">Term setup</DialogTitle>
+          <IconButton type="button" aria-label="Close" onClick={onClose}>
+            ✕
+          </IconButton>
+        </DialogHeader>
+        <DialogBody>
+          <Tabs role="tablist">
+            <Tab
+              type="button"
+              role="tab"
+              aria-selected={tab === "dates"}
+              $active={tab === "dates"}
+              onClick={() => setTab("dates")}
+            >
+              Dates
+            </Tab>
+            <Tab
+              type="button"
+              role="tab"
+              aria-selected={tab === "fill"}
+              $active={tab === "fill"}
+              onClick={() => setTab("fill")}
+            >
+              Fill the calendar
+            </Tab>
+          </Tabs>
+
+          {tab === "dates" && (
           <SettingsSection as="form" onSubmit={handleSave}>
-            <SettingsTitle>This term</SettingsTitle>
+            {!semester.saved && (
+              <FieldHint>
+                Showing the built-in default until you save a term.
+              </FieldHint>
+            )}
             <Input
               id="semester-label"
               type="text"
@@ -180,9 +230,10 @@ export const SemesterCard = ({
                 <FormError role="alert">{saveMessage.text}</FormError>
               ))}
           </SettingsSection>
+          )}
 
+          {tab === "fill" && (
           <SettingsSection as="form" onSubmit={handleCopy}>
-            <SettingsTitle>Fill the calendar</SettingsTitle>
             <FieldHint>
               {eventCount === 0
                 ? "The calendar is empty."
@@ -251,11 +302,11 @@ export const SemesterCard = ({
                 <FormError role="alert">{copyMessage.text}</FormError>
               ))}
           </SettingsSection>
-        </SettingsBody>
-        <SettingsBody>
-          <MeetingHoursCard windows={windows} semester={semester} />
-        </SettingsBody>
-      </details>
-    </SettingsCard>
+          )}
+        </DialogBody>
+      </MeetingsCard>
+    </Overlay>
   );
+
+  return typeof document === "undefined" ? null : createPortal(dialog, document.body);
 };

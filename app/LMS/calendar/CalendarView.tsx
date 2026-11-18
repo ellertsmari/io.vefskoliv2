@@ -15,15 +15,22 @@ import {
   toDateKey,
   MONTH_LONG,
 } from "utils/calendarUtils";
+import { needsSignUp } from "utils/meetingUtils";
 import type {
+  BookingWindowInfo,
   CalendarEvent,
   CategoryMeta,
   EventCategory,
   MeetingSlot,
   SemesterInfo,
+  SignupSheetInfo,
+  SignupTargets,
 } from "types/calendarTypes";
 import { EventForm } from "./EventForm";
 import { BookMeetingDialog } from "./BookMeetingDialog";
+import { TermDialog } from "./TermDialog";
+import { MeetingsDialog, type MeetingsView } from "./meetings/MeetingsDialog";
+import { CountBadge } from "./meetings/style";
 import { Avatar } from "UIcomponents/avatar/Avatar";
 import {
   CalendarContainer,
@@ -126,6 +133,7 @@ type Dialog =
   | { mode: "create"; date?: string }
   | { mode: "edit"; event: CalendarEvent }
   | { mode: "book"; date?: string; startTime?: string }
+  | { mode: "term" }
   | null;
 
 const isHatched = (event: CalendarEvent) => event.category === "unavailable";
@@ -150,7 +158,10 @@ export default function CalendarView({
   teamName = null,
   people = [],
   slots = [],
-  settings,
+  windows = [],
+  sheets = [],
+  targets = { projects: [], teamName: null },
+  eventCount = 0,
 }: {
   events: CalendarEvent[];
   semester: SemesterInfo;
@@ -161,8 +172,14 @@ export default function CalendarView({
   people?: ShareableUser[];
   /** Bookable meeting times for the term; students only. */
   slots?: MeetingSlot[];
-  /** Teacher-only settings, rendered under the header. */
-  settings?: React.ReactNode;
+  /** Teachers: the weekly meeting hours. */
+  windows?: BookingWindowInfo[];
+  /** Sign-up sheets the viewer runs or is invited to. */
+  sheets?: SignupSheetInfo[];
+  /** What a new sign-up sheet may be for. */
+  targets?: SignupTargets;
+  /** Stored events, for the term setup's "n events in the calendar". */
+  eventCount?: number;
 }) {
   const router = useRouter();
   const months = useMemo(
@@ -175,6 +192,7 @@ export default function CalendarView({
   );
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [meetings, setMeetings] = useState<MeetingsView | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, startDelete] = useTransition();
@@ -242,6 +260,8 @@ export default function CalendarView({
     ? slots.filter((slot) => slot.date === selectedKey)
     : [];
   const canBook = !isTeacher && slots.length > 0;
+  /** Sheets still waiting for the viewer to pick a slot. */
+  const waiting = sheets.filter(needsSignUp).length;
 
   const monthEventCount = useMemo(() => {
     const prefix = `${year}-${pad(month + 1)}`;
@@ -316,16 +336,25 @@ export default function CalendarView({
               Today
             </TodayButton>
           </MonthNav>
-          {canBook && (
+          {isTeacher && (
             <SecondaryButton
               type="button"
-              onClick={() =>
-                setDialog({ mode: "book", date: selectedKey ?? undefined })
-              }
+              onClick={() => setDialog({ mode: "term" })}
             >
-              Book a meeting
+              Term
             </SecondaryButton>
           )}
+          <SecondaryButton
+            type="button"
+            onClick={() => setMeetings({ name: "home" })}
+          >
+            Meetings
+            {waiting > 0 && (
+              <CountBadge aria-label={`${waiting} waiting for you`}>
+                {waiting}
+              </CountBadge>
+            )}
+          </SecondaryButton>
           <AddEventButton
             type="button"
             onClick={() =>
@@ -336,8 +365,6 @@ export default function CalendarView({
           </AddEventButton>
         </HeaderActions>
       </Header>
-
-      {settings}
 
       <Legend>
         {Object.values(CATEGORY_META).map((meta) => (
@@ -476,7 +503,21 @@ export default function CalendarView({
                         {event.description && (
                           <EventDescription>{event.description}</EventDescription>
                         )}
-                        {event.source === "generated" ? (
+                        {event.meetingRef ? (
+                          <EventActions>
+                            <SmallActionButton
+                              type="button"
+                              onClick={() =>
+                                setMeetings({
+                                  name: "sheet",
+                                  id: event.meetingRef!.id,
+                                })
+                              }
+                            >
+                              {event.tentative ? "Pick a time" : "Open sign-up sheet"}
+                            </SmallActionButton>
+                          </EventActions>
+                        ) : event.source === "generated" ? (
                           <OwnerLine>From group projects; edit it there.</OwnerLine>
                         ) : (
                           <CreatorRow>
@@ -621,7 +662,34 @@ export default function CalendarView({
           onClose={closeDialog}
         />
       )}
-      {dialog && dialog.mode !== "book" && (
+      {dialog?.mode === "term" && (
+        <TermDialog
+          semester={semester}
+          eventCount={eventCount}
+          onClose={closeDialog}
+        />
+      )}
+      {meetings && (
+        <MeetingsDialog
+          view={meetings}
+          onView={setMeetings}
+          onClose={() => setMeetings(null)}
+          onBook={() => {
+            setMeetings(null);
+            setDialog({ mode: "book", date: selectedKey ?? undefined });
+          }}
+          isTeacher={isTeacher}
+          sheets={sheets}
+          targets={targets}
+          people={people}
+          events={events}
+          canBook={canBook}
+          windows={windows}
+          semester={semester}
+          selectedDate={selectedKey ?? undefined}
+        />
+      )}
+      {dialog && (dialog.mode === "create" || dialog.mode === "edit") && (
         <EventForm
           key={dialog.mode === "edit" ? dialog.event.id : `new-${dialog.date ?? ""}`}
           initial={dialog.mode === "edit" ? dialog.event : undefined}

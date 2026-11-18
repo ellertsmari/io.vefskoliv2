@@ -9,11 +9,27 @@ jest.mock("next/navigation", () => ({
 }));
 jest.mock("serverActions/meetings", () => ({
   bookMeeting: jest.fn(),
+  saveBookingWindow: jest.fn(),
+  deleteBookingWindow: jest.fn(),
+}));
+jest.mock("serverActions/semester", () => ({
+  saveSemester: jest.fn(),
+}));
+jest.mock("serverActions/signupSheets", () => ({
+  createSignupSheet: jest.fn(),
+  deleteSignupSheet: jest.fn(),
+  claimSlot: jest.fn().mockResolvedValue({ success: true }),
+  releaseSlot: jest.fn(),
+  assignSlot: jest.fn(),
+  addSlot: jest.fn(),
+  removeSlot: jest.fn(),
 }));
 jest.mock("serverActions/calendarEvents", () => ({
   createCalendarEvent: jest.fn(),
   updateCalendarEvent: jest.fn(),
   deleteCalendarEvent: jest.fn().mockResolvedValue({ success: true }),
+  copyCalendarEvents: jest.fn(),
+  importSemesterPlan: jest.fn(),
 }));
 
 // These tests exercise interactions. jsdom's CSS parser predates container

@@ -32,6 +32,8 @@ const VERIFY_USERS = {
  *   shape the continuous attempt has to merge.
  *     #1: quiz 1 right only on the third try, short answer wrong.
  *     #2: quiz 4 right first time, code task fully passing.
+ * - "E2E Group Project": an active group project with two teams, Kaffistofan
+ *   (Anna, Bjorn) and Wanderlust (Lilja), for sign-up sheets and meetings.
  */
 async function seedVerifyExtras(db, { guide, password, now }) {
   const legacy = {
@@ -43,6 +45,45 @@ async function seedVerifyExtras(db, { guide, password, now }) {
     updatedAt: now,
   };
   await db.collection("users").insertOne(legacy);
+
+  const byEmail = async (email) =>
+    (await db.collection("users").findOne({ email }))._id;
+  const project = {
+    _id: new ObjectId(),
+    title: "E2E Group Project",
+    description: "Build something together.",
+    module: 3,
+    startDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+    endDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
+    status: "active",
+    presentationSlots: [],
+    rubric: [],
+    panelWeight: 0.8,
+    peerEvalOpen: false,
+    teamEvalOpen: false,
+    gradesReleased: false,
+    briefPublic: false,
+    autoApplied: { activated: true },
+    createdBy: await byEmail(USERS.teacher.email),
+    createdAt: now,
+  };
+  await db.collection("groupprojects").insertOne(project);
+  await db.collection("teams").insertMany([
+    {
+      _id: new ObjectId(),
+      project: project._id,
+      name: "Kaffistofan",
+      members: [await byEmail(USERS.anna.email), await byEmail(USERS.bjorn.email)],
+      createdAt: now,
+    },
+    {
+      _id: new ObjectId(),
+      project: project._id,
+      name: "Wanderlust",
+      members: [legacy._id],
+      createdAt: now,
+    },
+  ]);
 
   const quiz = (n, goal) => ({
     _id: new ObjectId(),

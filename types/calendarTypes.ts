@@ -67,6 +67,12 @@ export interface CalendarEvent {
   canEdit?: boolean;
   /** Set on every occurrence of a repeating event. */
   seriesId?: string;
+  /** The viewer created it. Decides whose "not available" counts as busy. */
+  mine?: boolean;
+  /** A reminder rather than a place to be; never counts as "taken". */
+  tentative?: boolean;
+  /** Set on events drawn from a sign-up sheet; opens it in Meetings. */
+  meetingRef?: { kind: "sheet"; id: string };
 }
 
 export interface CategoryMeta {
@@ -121,4 +127,72 @@ export interface UpcomingMeeting {
   withTeachers: string[];
   /** Set when the student put it on their team's calendar too. */
   teamName?: string;
+}
+
+// ── Sign-up sheets ────────────────────────────────────────────────────────
+
+/**
+ * Who a sign-up sheet is for.
+ * - project: the teams of one group project; a team takes one slot together
+ * - everyone / team / shared: people sign up one by one
+ */
+export type SignupAudience = "project" | "everyone" | "team" | "shared";
+
+/** One team or person on a slot. */
+export interface SignupClaim {
+  /** Team id on a team sheet, user id otherwise. */
+  id: string;
+  /** Team name or the person's name. */
+  label: string;
+  /** Team members' names, on a team sheet. */
+  members?: string[];
+  /** The viewer, or the viewer's team. */
+  mine: boolean;
+}
+
+export interface SignupSlot {
+  startTime: string;
+  endTime: string;
+  claims: SignupClaim[];
+  /** No places left. */
+  full: boolean;
+  /** Already started; nobody can sign up any more. */
+  past: boolean;
+}
+
+export interface SignupSheetInfo {
+  id: string;
+  title: string;
+  description?: string;
+  /** "YYYY-MM-DD". */
+  date: string;
+  slotMinutes: number;
+  /** Places on each slot. */
+  capacity: number;
+  audience: SignupAudience;
+  /** True when a whole team takes a slot. */
+  byTeam: boolean;
+  /** "Teams of Module 3", "Everyone", "Kaffistofan", "Anna, Björn". */
+  audienceLabel: string;
+  ownerName: string;
+  isOwner: boolean;
+  /** The owner and teachers: clear, move and assign slots, delete the sheet. */
+  canManage: boolean;
+  /** The viewer (or their team) may take a slot. */
+  canSignUp: boolean;
+  /** Who would be signed up: the viewer's team name on a team sheet. */
+  signUpAs?: string;
+  /** Start time of the slot the viewer (or their team) holds. */
+  mySlot?: string;
+  slots: SignupSlot[];
+  /** For managers of a team sheet: teams that have not picked a slot yet. */
+  waiting?: Array<{ id: string; label: string }>;
+}
+
+/** What the "new sign-up sheet" form may offer the viewer. */
+export interface SignupTargets {
+  /** Teachers only: group projects that have teams. */
+  projects: Array<{ id: string; title: string; teams: number }>;
+  /** The viewer's current team, if any. */
+  teamName: string | null;
 }
