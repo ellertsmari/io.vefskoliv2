@@ -10,6 +10,7 @@ import {
 } from "../__mocks__/mongoHandler";
 import { CalendarEvent, type CalendarEventType } from "models/calendarEvent";
 import { BookingWindow } from "models/bookingWindow";
+import { SignupSheet } from "models/signupSheet";
 import { Team } from "models/team";
 import {
   bookMeeting,
@@ -377,6 +378,108 @@ describe("meetings", () => {
         startDate: nextTuesday,
       });
       expect(byHand.success).toBe(false);
+    });
+  });
+
+  describe("length and other commitments", () => {
+    it("offers meetings of the length the hours were saved with", async () => {
+      await BookingWindow.deleteMany({});
+      signInAs(smari);
+      const saved = await saveBookingWindow({
+        weekday: 1,
+        startTime: "13:00",
+        endTime: "16:00",
+        slotMinutes: 90,
+        validFrom: todayKey(),
+        validTo: addDays(todayKey(), 120),
+      });
+      expect(saved.success).toBe(true);
+      expect((await getBookingWindows())[0].slotMinutes).toBe(90);
+
+      signInAs(anna);
+      const slots = await getMeetingSlots(rangeFrom, rangeTo);
+      expect(slots.map((slot) => `${slot.startTime}-${slot.endTime}`)).toEqual([
+        "13:00-14:30",
+        "14:30-16:00",
+      ]);
+    });
+
+    it("refuses a length that is not offered", async () => {
+      signInAs(smari);
+      const result = await saveBookingWindow({
+        weekday: 2,
+        startTime: "10:00",
+        endTime: "12:00",
+        slotMinutes: 25,
+        validFrom: todayKey(),
+        validTo: addDays(todayKey(), 30),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("drops times that overlap a meeting a teacher is in, at any start", async () => {
+      // E.g. scheduled from a "find a time" poll: not on the 20-minute grid.
+      await CalendarEvent.create({
+        title: "Staff sync",
+        category: "meeting",
+        startDate: nextTuesday,
+        endDate: nextTuesday,
+        startTime: "13:10",
+        endTime: "13:30",
+        owner: smari._id,
+        visibility: "shared",
+        sharedWith: [hanna._id],
+      });
+      signInAs(anna);
+      const slots = await getMeetingSlots(rangeFrom, rangeTo);
+      expect(slots.map((slot) => slot.startTime)).toEqual(["13:40"]);
+    });
+
+    it("ignores a meeting between students", async () => {
+      const bjarni = await createDummyUser("user", { name: "Bjarni" });
+      await CalendarEvent.create({
+        title: "Study group",
+        category: "meeting",
+        startDate: nextTuesday,
+        endDate: nextTuesday,
+        startTime: "13:00",
+        endTime: "14:00",
+        owner: bjarni._id,
+        visibility: "shared",
+        sharedWith: [anna._id],
+      });
+      signInAs(anna);
+      expect(await getMeetingSlots(rangeFrom, rangeTo)).toHaveLength(3);
+    });
+
+    it("keeps the teacher running a sign-up sheet out of meetings meanwhile", async () => {
+      await SignupSheet.create({
+        title: "Design review",
+        owner: smari._id,
+        date: nextTuesday,
+        slotMinutes: 20,
+        capacity: 1,
+        audience: "everyone",
+        slots: [
+          { startTime: "13:00", endTime: "13:20", claims: [] },
+          { startTime: "13:20", endTime: "13:40", claims: [{ user: anna._id }] },
+        ],
+      });
+      signInAs(anna);
+      const slots = await getMeetingSlots(rangeFrom, rangeTo);
+      expect(slots.map((slot) => slot.startTime)).toEqual(["13:40"]);
+
+      // And the taken slot is on the teacher's dashboard.
+      signInAs(smari);
+      const upcoming = await getUpcomingMeetings();
+      expect(upcoming).toHaveLength(1);
+      expect(upcoming[0]).toMatchObject({
+        date: nextTuesday,
+        startTime: "13:20",
+        endTime: "13:40",
+        studentName: "Anna",
+        topic: "Design review",
+      });
     });
   });
 });

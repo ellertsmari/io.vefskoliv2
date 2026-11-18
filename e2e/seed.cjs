@@ -19,6 +19,8 @@ const USERS = {
 // Not in USERS: the browser tests sign in as every user listed there.
 const VERIFY_USERS = {
   legacy: { name: "Lilja Legacy", email: "legacy@e2e.test", role: "user" },
+  // Booking a meeting needs two teachers free.
+  teacher2: { name: "Tomas Teacher", email: "teacher2@e2e.test", role: "teacher" },
 };
 
 /**
@@ -34,6 +36,8 @@ const VERIFY_USERS = {
  *     #2: quiz 4 right first time, code task fully passing.
  * - "E2E Group Project": an active group project with two teams, Kaffistofan
  *   (Anna, Bjorn) and Wanderlust (Lilja), for sign-up sheets and meetings.
+ * - Tomas Teacher: a second teacher, since a student can only book a meeting
+ *   when two teachers are free.
  */
 async function seedVerifyExtras(db, { guide, password, now }) {
   const legacy = {
@@ -45,6 +49,14 @@ async function seedVerifyExtras(db, { guide, password, now }) {
     updatedAt: now,
   };
   await db.collection("users").insertOne(legacy);
+  await db.collection("users").insertOne({
+    _id: new ObjectId(),
+    ...VERIFY_USERS.teacher2,
+    password,
+    status: "active",
+    createdAt: now,
+    updatedAt: now,
+  });
 
   const byEmail = async (email) =>
     (await db.collection("users").findOne({ email }))._id;

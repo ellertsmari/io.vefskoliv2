@@ -32,6 +32,10 @@ Everyone's password is `e2e-pass-123`.
 | `teacher@e2e.test` | teacher | grading queue, guide editor, people, view-as |
 | `anna@e2e.test`, `bjorn@e2e.test` | student | a student with nothing done yet |
 | `legacy@e2e.test` | student | two old numbered attempts at the full exercise, for the merge into one continuous attempt |
+| `teacher2@e2e.test` | teacher | a second teacher: students can only book a meeting when two are free |
+
+Anna and Bjorn are the team Kaffistofan and Lilja is Wanderlust, both on the
+active "E2E Group Project", for sign-up sheets and anything else about teams.
 
 | Guide | Address | What it has |
 |---|---|---|

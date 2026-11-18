@@ -100,6 +100,8 @@ export interface BookingWindowInfo {
   weekday: number;
   startTime: string;
   endTime: string;
+  /** How long each meeting in the window lasts, in minutes. */
+  slotMinutes: number;
   /** Inclusive "YYYY-MM-DD" range the window applies to. */
   validFrom: string;
   validTo: string;
@@ -121,6 +123,7 @@ export interface UpcomingMeeting {
   startTime: string;
   endTime: string;
   topic: string;
+  /** Who the teacher is meeting: a student, a team, or the meeting's title. */
   studentName: string;
   studentAvatarUrl?: string;
   /** The other teachers attending, by name. */

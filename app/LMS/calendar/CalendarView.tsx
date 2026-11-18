@@ -28,7 +28,6 @@ import type {
   SignupTargets,
 } from "types/calendarTypes";
 import { EventForm } from "./EventForm";
-import { BookMeetingDialog } from "./BookMeetingDialog";
 import { TermDialog } from "./TermDialog";
 import { MeetingsDialog, type MeetingsView } from "./meetings/MeetingsDialog";
 import { CountBadge } from "./meetings/style";
@@ -133,7 +132,6 @@ const isMine = (event: CalendarEvent) =>
 type Dialog =
   | { mode: "create"; date?: string }
   | { mode: "edit"; event: CalendarEvent }
-  | { mode: "book"; date?: string; startTime?: string }
   | { mode: "term" }
   | null;
 
@@ -625,8 +623,8 @@ export default function CalendarView({
                         type="button"
                         title={`With ${slot.teachers.join(" and ")}`}
                         onClick={() =>
-                          setDialog({
-                            mode: "book",
+                          setMeetings({
+                            name: "book",
                             date: slot.date,
                             startTime: slot.startTime,
                           })
@@ -659,15 +657,6 @@ export default function CalendarView({
         </Panel>
       </Layout>
 
-      {dialog?.mode === "book" && (
-        <BookMeetingDialog
-          slots={slots}
-          date={dialog.date}
-          startTime={dialog.startTime}
-          teamName={teamName}
-          onClose={closeDialog}
-        />
-      )}
       {dialog?.mode === "term" && (
         <TermDialog
           semester={semester}
@@ -680,18 +669,14 @@ export default function CalendarView({
           view={meetings}
           onView={setMeetings}
           onClose={() => setMeetings(null)}
-          onBook={() => {
-            setMeetings(null);
-            setDialog({ mode: "book", date: selectedKey ?? undefined });
-          }}
           isTeacher={isTeacher}
           sheets={sheets}
           polls={polls}
           targets={targets}
-          teamName={targets.teamName}
+          teamName={teamName ?? targets.teamName}
           people={people}
           events={events}
-          canBook={canBook}
+          slots={slots}
           windows={windows}
           semester={semester}
           selectedDate={selectedKey ?? undefined}

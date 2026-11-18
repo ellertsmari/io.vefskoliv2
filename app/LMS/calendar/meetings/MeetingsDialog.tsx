@@ -9,12 +9,14 @@ import type {
   BookingWindowInfo,
   CalendarEvent,
   MeetingPollInfo,
+  MeetingSlot,
   SemesterInfo,
   SignupSheetInfo,
   SignupTargets,
 } from "types/calendarTypes";
 import { Overlay } from "../style";
-import { MeetingHoursCard } from "../MeetingHoursCard";
+import { BookPanel } from "./BookPanel";
+import { HoursPanel } from "./HoursPanel";
 import { PollForm } from "./PollForm";
 import { PollView } from "./PollView";
 import { SheetForm } from "./SheetForm";
@@ -51,14 +53,13 @@ export type MeetingsView =
   | { name: "sheet"; id: string }
   | { name: "poll-new" }
   | { name: "poll"; id: string }
-  | { name: "hours" };
+  | { name: "hours" }
+  | { name: "book"; date?: string; startTime?: string };
 
 type Props = {
   view: MeetingsView;
   onView: (view: MeetingsView) => void;
   onClose: () => void;
-  /** Students: open the "meet the teachers" booking. */
-  onBook: () => void;
   isTeacher: boolean;
   sheets: SignupSheetInfo[];
   polls: MeetingPollInfo[];
@@ -68,8 +69,8 @@ type Props = {
   people: ShareableUser[];
   /** Everything on the viewer's calendar, sheets included. */
   events: CalendarEvent[];
-  /** Whether the teachers have any open time to book. */
-  canBook: boolean;
+  /** Students: the teachers' open times. */
+  slots: MeetingSlot[];
   windows: BookingWindowInfo[];
   semester: SemesterInfo;
   /** The day selected in the calendar, if any. */
@@ -91,7 +92,6 @@ export const MeetingsDialog = ({
   view,
   onView,
   onClose,
-  onBook,
   isTeacher,
   sheets,
   polls,
@@ -99,7 +99,7 @@ export const MeetingsDialog = ({
   teamName,
   people,
   events,
-  canBook,
+  slots,
   windows,
   semester,
   selectedDate,
@@ -113,6 +113,7 @@ export const MeetingsDialog = ({
   }, [onClose]);
 
   const today = todayKey();
+  const canBook = !isTeacher && slots.length > 0;
   const sheet = view.name === "sheet" ? sheets.find((s) => s.id === view.id) : undefined;
   const poll = view.name === "poll" ? polls.find((p) => p.id === view.id) : undefined;
 
@@ -127,13 +128,18 @@ export const MeetingsDialog = ({
             ? "Find a time"
             : view.name === "hours"
               ? "Meeting hours"
+              : view.name === "book"
+                ? "Meet the teachers"
               : view.name === "poll"
                 ? (poll?.title ?? "Find a time")
                 : (sheet?.title ?? "Sign-up sheet");
   const back: MeetingsView | null =
     view.name === "home"
       ? null
-      : view.name === "sheet-new" || view.name === "poll-new" || view.name === "hours"
+      : view.name === "sheet-new" ||
+          view.name === "poll-new" ||
+          view.name === "hours" ||
+          view.name === "book"
         ? { name: "new" }
         : { name: "home" };
 
@@ -316,7 +322,11 @@ export const MeetingsDialog = ({
                   </ChoiceText>
                 </ChoiceCard>
               ) : (
-                <ChoiceCard type="button" disabled={!canBook} onClick={onBook}>
+                <ChoiceCard
+                  type="button"
+                  disabled={!canBook}
+                  onClick={() => onView({ name: "book", date: selectedDate })}
+                >
                   <ChoiceIcon aria-hidden>☺</ChoiceIcon>
                   <ChoiceTitle>Meet the teachers</ChoiceTitle>
                   <ChoiceText>
@@ -378,10 +388,17 @@ export const MeetingsDialog = ({
             </DialogBody>
           ))}
 
-        {view.name === "hours" && (
-          <DialogBody>
-            <MeetingHoursCard windows={windows} semester={semester} />
-          </DialogBody>
+        {view.name === "hours" && <HoursPanel windows={windows} semester={semester} />}
+
+        {view.name === "book" && (
+          <BookPanel
+            slots={slots}
+            events={events}
+            date={view.date}
+            startTime={view.startTime}
+            teamName={teamName}
+            onBooked={() => onView({ name: "home" })}
+          />
         )}
       </MeetingsCard>
     </Overlay>

@@ -10,7 +10,7 @@
 //    cleanly onto this year's dates by week number.
 //
 // Calendar events now live in the database (models/calendarEvent). This file
-// is the seed a teacher can import from the calendar's semester settings, and
+// is the seed a teacher can import from the calendar's Term setup, and
 // the fallback semester range shown before any semester has been saved.
 
 import type {
@@ -29,7 +29,7 @@ export const CATEGORY_META: Record<EventCategory, CategoryMeta> = {
   meeting: { label: "Meeting", color: "var(--theme-module3-100)" },
 };
 
-/** Used until a teacher saves a semester in the calendar settings. */
+/** Used until a teacher saves one in the calendar's Term setup. */
 export const DEFAULT_SEMESTER = {
   label: "Autumn Semester 2026",
   startDate: "2026-08-17",
