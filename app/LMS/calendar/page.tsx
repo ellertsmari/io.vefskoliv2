@@ -11,6 +11,7 @@ import {
 import { getSemester } from "serverActions/semester";
 import { getBookingWindows, getMeetingSlots } from "serverActions/meetings";
 import { getSignupSheets, getSignupTargets } from "serverActions/signupSheets";
+import { getMeetingPolls } from "serverActions/meetingPolls";
 import { sheetCalendarEvents } from "utils/meetingUtils";
 import type { CalendarEvent } from "types/calendarTypes";
 import CalendarView from "./CalendarView";
@@ -44,6 +45,7 @@ export default async function CalendarPage() {
     slots,
     sheets,
     targets,
+    polls,
   ] = await Promise.all([
     semesterRequest,
     getCalendarEvents(),
@@ -56,6 +58,7 @@ export default async function CalendarPage() {
       : semesterRequest.then((s) => getMeetingSlots(s.startDate, s.endDate)),
     getSignupSheets(),
     getSignupTargets(),
+    getMeetingPolls(),
   ]);
 
   // Group projects are managed on their own pages; here they are read-only.
@@ -76,6 +79,7 @@ export default async function CalendarPage() {
       slots={slots}
       windows={windows}
       sheets={sheets}
+      polls={polls}
       targets={targets}
     />
   );

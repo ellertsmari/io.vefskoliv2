@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type {
   CalendarEvent,
+  MeetingPollInfo,
+  PollOption,
   SignupSheetInfo,
 } from "types/calendarTypes";
 
@@ -274,3 +276,128 @@ export const sheetCalendarEvents = (sheets: SignupSheetInfo[]): CalendarEvent[] 
   }
   return events;
 };
+
+// ── Find a time ───────────────────────────────────────────────────────────
+
+/** A poll asks about at most this many days. */
+export const MAX_POLL_DAYS = 14;
+
+/**
+ * The size of one cell in a poll's grid: half an hour, or a quarter for
+ * meetings shorter than that, so a 20-minute meeting is not asked about in
+ * half-hour blocks.
+ */
+export const pollCellMinutes = (lengthMinutes: number): number =>
+  lengthMinutes >= 30 ? 30 : 15;
+
+/** The start of every cell in one day of a poll's grid. */
+export const pollTimes = (
+  dayStart: string,
+  dayEnd: string,
+  lengthMinutes: number
+): string[] =>
+  buildSlots(dayStart, dayEnd, pollCellMinutes(lengthMinutes)).map(
+    (slot) => slot.startTime
+  );
+
+export const cellKey = (date: string, time: string) => `${date} ${time}`;
+
+type PollShape = Pick<
+  MeetingPollInfo,
+  "days" | "dayStart" | "dayEnd" | "lengthMinutes" | "responses"
+>;
+
+/** Every cell a poll asks about, for checking an answer against. */
+export const pollCells = (poll: Omit<PollShape, "responses">): Set<string> => {
+  const times = pollTimes(poll.dayStart, poll.dayEnd, poll.lengthMinutes);
+  return new Set(poll.days.flatMap((day) => times.map((time) => cellKey(day, time))));
+};
+
+/**
+ * Every time the meeting could start, best first: most people free, then
+ * earliest. A person is free for a time when they marked every cell it
+ * covers. Times nobody can make are left out.
+ */
+export const pollOptions = (poll: PollShape): PollOption[] => {
+  const cell = pollCellMinutes(poll.lengthMinutes);
+  const times = pollTimes(poll.dayStart, poll.dayEnd, poll.lengthMinutes);
+  const end = toMinutes(poll.dayEnd);
+  const answers = poll.responses.map((response) => ({
+    name: response.name,
+    cells: new Set(response.cells),
+  }));
+  const options: PollOption[] = [];
+  for (const date of poll.days) {
+    for (const startTime of times) {
+      const start = toMinutes(startTime);
+      if (start + poll.lengthMinutes > end) continue;
+      const covered: string[] = [];
+      for (let t = start; t < start + poll.lengthMinutes; t += cell) {
+        covered.push(cellKey(date, fromMinutes(t)));
+      }
+      const free: string[] = [];
+      const busy: string[] = [];
+      for (const answer of answers) {
+        (covered.every((key) => answer.cells.has(key)) ? free : busy).push(answer.name);
+      }
+      if (free.length === 0) continue;
+      options.push({
+        date,
+        startTime,
+        endTime: fromMinutes(start + poll.lengthMinutes),
+        free,
+        busy,
+      });
+    }
+  }
+  return options.sort(
+    (a, b) =>
+      b.free.length - a.free.length ||
+      a.date.localeCompare(b.date) ||
+      a.startTime.localeCompare(b.startTime)
+  );
+};
+
+export const MeetingPollInputSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(1, "Please add a title")
+      .max(120, "Keep the title under 120 characters"),
+    description: optionalText(1000, "Keep the description under 1000 characters"),
+    days: z
+      .array(z.string().regex(DATE_RE, "Please pick a day"))
+      .min(1, "Pick at least one day")
+      .max(MAX_POLL_DAYS, `Pick at most ${MAX_POLL_DAYS} days`),
+    dayStart: z.string().regex(TIME_RE, "Times look like 09:00"),
+    dayEnd: z.string().regex(TIME_RE, "Times look like 16:00"),
+    lengthMinutes: z.coerce
+      .number()
+      .refine(isMeetingLength, "Pick one of the listed lengths"),
+    audience: z.enum(["everyone", "team", "shared"]),
+    /** audience "shared": user ids. */
+    sharedWith: z.array(z.string().trim().min(1)).max(200).default([]),
+  })
+  .superRefine((input, ctx) => {
+    if (
+      TIME_RE.test(input.dayStart) &&
+      TIME_RE.test(input.dayEnd) &&
+      toMinutes(input.dayStart) + input.lengthMinutes > toMinutes(input.dayEnd)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["dayEnd"],
+        message: "The hours need room for at least one meeting",
+      });
+    }
+    if (input.audience === "shared" && input.sharedWith.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sharedWith"],
+        message: "Pick at least one person",
+      });
+    }
+  });
+
+export type MeetingPollInput = z.input<typeof MeetingPollInputSchema>;

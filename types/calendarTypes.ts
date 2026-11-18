@@ -196,3 +196,52 @@ export interface SignupTargets {
   /** The viewer's current team, if any. */
   teamName: string | null;
 }
+
+// ── Find a time ───────────────────────────────────────────────────────────
+
+/** Who a "find a time" poll is for; people answer one by one. */
+export type PollAudience = "everyone" | "team" | "shared";
+
+export interface PollResponse {
+  /** User id. */
+  id: string;
+  name: string;
+  /** Grid cells the person is free in, each "YYYY-MM-DD HH:MM". */
+  cells: string[];
+  mine: boolean;
+}
+
+export interface MeetingPollInfo {
+  id: string;
+  title: string;
+  description?: string;
+  /** Candidate days, "YYYY-MM-DD", in order. */
+  days: string[];
+  /** The hours asked about on each day, "HH:MM". */
+  dayStart: string;
+  dayEnd: string;
+  /** How long the meeting will be. */
+  lengthMinutes: number;
+  audience: PollAudience;
+  audienceLabel: string;
+  ownerName: string;
+  isOwner: boolean;
+  /** The owner and teachers: pick the time, delete the poll. */
+  canManage: boolean;
+  responses: PollResponse[];
+  /** The viewer has marked their times. */
+  answered: boolean;
+  /** How many people were asked, when that is a fixed list. */
+  invited?: number;
+}
+
+/** One possible meeting time on a poll, with who can make it. */
+export interface PollOption {
+  date: string;
+  startTime: string;
+  endTime: string;
+  /** Names of those who are free for all of it. */
+  free: string[];
+  /** Names of those who answered but are not. */
+  busy: string[];
+}

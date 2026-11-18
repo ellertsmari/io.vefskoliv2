@@ -465,3 +465,156 @@ export const Tab = styled.button<{ $active: boolean }>`
   border-bottom: 2px solid
     ${({ $active }) => ($active ? "var(--theme-module3-100)" : "transparent")};
 `;
+
+// ── Find a time: the grid ─────────────────────────────────────────────────
+
+export const GridWrap = styled.div`
+  overflow-x: auto;
+  border: 1px solid var(--primary-black-10);
+  border-radius: var(--radius-md);
+`;
+
+/** Days across, times down. Painting needs the browser not to scroll. */
+export const PollGrid = styled.div<{ $days: number; $paint?: boolean }>`
+  display: grid;
+  grid-template-columns: 3.25rem repeat(${({ $days }) => $days}, minmax(3.5rem, 1fr));
+  min-width: ${({ $days }) => `${3.25 + $days * 3.5}rem`};
+  user-select: none;
+  touch-action: ${({ $paint }) => ($paint ? "none" : "auto")};
+`;
+
+export const PollDayHead = styled.div`
+  position: sticky;
+  top: 0;
+  padding: 0.4rem 0.25rem;
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--primary-black-100);
+  background: var(--primary-black-5);
+  border-bottom: 1px solid var(--primary-black-10);
+  border-left: 1px solid var(--primary-black-10);
+
+  small {
+    display: block;
+    font-weight: 600;
+    color: var(--primary-black-60);
+  }
+`;
+
+export const PollCorner = styled.div`
+  background: var(--primary-black-5);
+  border-bottom: 1px solid var(--primary-black-10);
+`;
+
+export const PollTimeLabel = styled.div<{ $tall: boolean }>`
+  height: ${({ $tall }) => ($tall ? "1.5rem" : "1rem")};
+  padding-right: 0.4rem;
+  text-align: right;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--primary-black-60);
+  transform: translateY(-0.35rem);
+`;
+
+const BUSY_HATCH =
+  "repeating-linear-gradient(135deg, transparent 0 4px, rgba(0, 0, 0, 0.13) 4px 6px)";
+
+/**
+ * One cell. On the viewer's own grid it is green when marked free; on the
+ * group grid its purple deepens with the share of people who are free.
+ * Stripes mean the viewer's calendar already has something then.
+ */
+export const PollCell = styled.button<{
+  $tall: boolean;
+  $hour: boolean;
+  $on?: boolean;
+  $busy?: boolean;
+  $heat?: number;
+}>`
+  height: ${({ $tall }) => ($tall ? "1.5rem" : "1rem")};
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--primary-black-10);
+  border-top: 1px
+    ${({ $hour }) => ($hour ? "solid var(--primary-black-30)" : "dotted var(--primary-black-10)")};
+  background-color: ${({ $on, $heat }) =>
+    $on
+      ? "var(--error-success-100)"
+      : $heat
+        ? `color-mix(in srgb, var(--theme-module3-100) ${Math.round(15 + $heat * 85)}%, var(--primary-white))`
+        : "var(--primary-white)"};
+  background-image: ${({ $busy }) => ($busy ? BUSY_HATCH : "none")};
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: inset 0 0 0 2px var(--theme-module3-100);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-module3-100);
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    box-shadow: none;
+  }
+`;
+
+export const LegendRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-size: var(--text-xs);
+  color: var(--primary-black-60);
+`;
+
+export const Swatch = styled.span<{ $kind: "free" | "busy" | "heat" }>`
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.35rem;
+  vertical-align: -0.1rem;
+  border: 1px solid var(--primary-black-30);
+  border-radius: 2px;
+  background: ${({ $kind }) =>
+    $kind === "free"
+      ? "var(--error-success-100)"
+      : $kind === "heat"
+        ? "var(--theme-module3-100)"
+        : BUSY_HATCH};
+`;
+
+export const DayChip = styled.button<{ $on: boolean; $weekend: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3.1rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid
+    ${({ $on }) => ($on ? "var(--theme-module3-100)" : "var(--primary-black-30)")};
+  border-radius: var(--radius-md);
+  background: ${({ $on, $weekend }) =>
+    $on
+      ? "var(--theme-module3-100)"
+      : $weekend
+        ? "var(--primary-black-5)"
+        : "var(--primary-white)"};
+  color: ${({ $on }) => ($on ? "var(--primary-white)" : "var(--primary-black-100)")};
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+
+  strong {
+    font-size: var(--text-sm);
+  }
+
+  &:hover {
+    border-color: var(--theme-module3-100);
+  }
+`;

@@ -21,6 +21,7 @@ import type {
   CalendarEvent,
   CategoryMeta,
   EventCategory,
+  MeetingPollInfo,
   MeetingSlot,
   SemesterInfo,
   SignupSheetInfo,
@@ -160,6 +161,7 @@ export default function CalendarView({
   slots = [],
   windows = [],
   sheets = [],
+  polls = [],
   targets = { projects: [], teamName: null },
   eventCount = 0,
 }: {
@@ -176,6 +178,8 @@ export default function CalendarView({
   windows?: BookingWindowInfo[];
   /** Sign-up sheets the viewer runs or is invited to. */
   sheets?: SignupSheetInfo[];
+  /** "Find a time" polls the viewer started or was asked on. */
+  polls?: MeetingPollInfo[];
   /** What a new sign-up sheet may be for. */
   targets?: SignupTargets;
   /** Stored events, for the term setup's "n events in the calendar". */
@@ -260,8 +264,10 @@ export default function CalendarView({
     ? slots.filter((slot) => slot.date === selectedKey)
     : [];
   const canBook = !isTeacher && slots.length > 0;
-  /** Sheets still waiting for the viewer to pick a slot. */
-  const waiting = sheets.filter(needsSignUp).length;
+  /** Sheets waiting for the viewer to pick a slot, and polls to answer. */
+  const waiting =
+    sheets.filter(needsSignUp).length +
+    polls.filter((poll) => !poll.answered).length;
 
   const monthEventCount = useMemo(() => {
     const prefix = `${year}-${pad(month + 1)}`;
@@ -680,7 +686,9 @@ export default function CalendarView({
           }}
           isTeacher={isTeacher}
           sheets={sheets}
+          polls={polls}
           targets={targets}
+          teamName={targets.teamName}
           people={people}
           events={events}
           canBook={canBook}

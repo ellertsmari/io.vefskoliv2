@@ -8,12 +8,15 @@ import { lengthLabel, needsSignUp } from "utils/meetingUtils";
 import type {
   BookingWindowInfo,
   CalendarEvent,
+  MeetingPollInfo,
   SemesterInfo,
   SignupSheetInfo,
   SignupTargets,
 } from "types/calendarTypes";
 import { Overlay } from "../style";
 import { MeetingHoursCard } from "../MeetingHoursCard";
+import { PollForm } from "./PollForm";
+import { PollView } from "./PollView";
 import { SheetForm } from "./SheetForm";
 import { SheetView } from "./SheetView";
 import {
@@ -46,6 +49,8 @@ export type MeetingsView =
   | { name: "new" }
   | { name: "sheet-new" }
   | { name: "sheet"; id: string }
+  | { name: "poll-new" }
+  | { name: "poll"; id: string }
   | { name: "hours" };
 
 type Props = {
@@ -56,7 +61,10 @@ type Props = {
   onBook: () => void;
   isTeacher: boolean;
   sheets: SignupSheetInfo[];
+  polls: MeetingPollInfo[];
   targets: SignupTargets;
+  /** The viewer's team, for "My team" polls. */
+  teamName: string | null;
   people: ShareableUser[];
   /** Everything on the viewer's calendar, sheets included. */
   events: CalendarEvent[];
@@ -86,7 +94,9 @@ export const MeetingsDialog = ({
   onBook,
   isTeacher,
   sheets,
+  polls,
   targets,
+  teamName,
   people,
   events,
   canBook,
@@ -104,6 +114,7 @@ export const MeetingsDialog = ({
 
   const today = todayKey();
   const sheet = view.name === "sheet" ? sheets.find((s) => s.id === view.id) : undefined;
+  const poll = view.name === "poll" ? polls.find((p) => p.id === view.id) : undefined;
 
   const title =
     view.name === "home"
@@ -112,16 +123,22 @@ export const MeetingsDialog = ({
         ? "New meeting"
         : view.name === "sheet-new"
           ? "New sign-up sheet"
-          : view.name === "hours"
-            ? "Meeting hours"
-            : (sheet?.title ?? "Sign-up sheet");
+          : view.name === "poll-new"
+            ? "Find a time"
+            : view.name === "hours"
+              ? "Meeting hours"
+              : view.name === "poll"
+                ? (poll?.title ?? "Find a time")
+                : (sheet?.title ?? "Sign-up sheet");
   const back: MeetingsView | null =
     view.name === "home"
       ? null
-      : view.name === "sheet-new" || view.name === "hours"
+      : view.name === "sheet-new" || view.name === "poll-new" || view.name === "hours"
         ? { name: "new" }
         : { name: "home" };
 
+  const unanswered = polls.filter((p) => !p.answered);
+  const answeredPolls = polls.filter((p) => p.answered);
   const todo = sheets.filter(needsSignUp);
   const upcoming = sheets.filter((s) => s.date >= today && !needsSignUp(s));
   const earlier = sheets.filter((s) => s.date < today);
@@ -164,6 +181,32 @@ export const MeetingsDialog = ({
     );
   };
 
+  const pollRow = (p: MeetingPollInfo, attention: boolean) => (
+    <li key={p.id}>
+      <MeetingRow
+        type="button"
+        $attention={attention}
+        onClick={() => onView({ name: "poll", id: p.id })}
+      >
+        <RowWhen>
+          <strong>{shortDate(p.days[0])}</strong>
+          {p.days.length > 1 ? `to ${shortDate(p.days[p.days.length - 1])}` : "one day"}
+        </RowWhen>
+        <RowBody>
+          <RowTitle>{p.title}</RowTitle>
+          <RowSub>
+            {attention
+              ? `${p.ownerName} asks when you are free · ${lengthLabel(p.lengthMinutes)}`
+              : `Finding a time · ${p.responses.length}${p.invited ? ` of ${p.invited}` : ""} answered${p.isOwner ? "" : ` · by ${p.ownerName}`}`}
+          </RowSub>
+        </RowBody>
+        <RowAction $strong={attention}>
+          {attention ? "Mark my times →" : p.canManage ? "Pick a time →" : "Open →"}
+        </RowAction>
+      </MeetingRow>
+    </li>
+  );
+
   const dialog = (
     <Overlay onClick={onClose}>
       <MeetingsCard
@@ -188,28 +231,32 @@ export const MeetingsDialog = ({
           <DialogBody>
             <Toolbar>
               <Muted>
-                {todo.length > 0
-                  ? `${todo.length} waiting for you.`
-                  : "Sign-up sheets and booked meetings."}
+                {todo.length + unanswered.length > 0
+                  ? `${todo.length + unanswered.length} waiting for you.`
+                  : "Sign-up sheets, polls and booked meetings."}
               </Muted>
               <PrimaryButton type="button" onClick={() => onView({ name: "new" })}>
                 + New meeting
               </PrimaryButton>
             </Toolbar>
 
-            {todo.length > 0 && (
+            {todo.length + unanswered.length > 0 && (
               <Section>
                 <SectionTitle>Waiting for you</SectionTitle>
-                <RowList>{todo.map((s) => sheetRow(s, true))}</RowList>
+                <RowList>
+                  {todo.map((s) => sheetRow(s, true))}
+                  {unanswered.map((p) => pollRow(p, true))}
+                </RowList>
               </Section>
             )}
 
             <Section>
               <SectionTitle>Coming up</SectionTitle>
-              {upcoming.length === 0 && booked.length === 0 ? (
+              {upcoming.length === 0 && booked.length === 0 && answeredPolls.length === 0 ? (
                 <Muted>Nothing planned yet.</Muted>
               ) : (
                 <RowList>
+                  {answeredPolls.map((p) => pollRow(p, false))}
                   {upcoming.map((s) => sheetRow(s, false))}
                   {booked.map((event) => (
                     <li key={event.id}>
@@ -250,6 +297,14 @@ export const MeetingsDialog = ({
                 <ChoiceText>
                   You set the times, {isTeacher ? "teams or people" : "people"} each
                   pick one. For reviews, presentations and meet-ups.
+                </ChoiceText>
+              </ChoiceCard>
+              <ChoiceCard type="button" onClick={() => onView({ name: "poll-new" })}>
+                <ChoiceIcon aria-hidden>▦</ChoiceIcon>
+                <ChoiceTitle>Find a time</ChoiceTitle>
+                <ChoiceText>
+                  Everyone marks when they are free; you pick the time that suits
+                  most.
                 </ChoiceText>
               </ChoiceCard>
               {isTeacher ? (
@@ -297,6 +352,29 @@ export const MeetingsDialog = ({
           ) : (
             <DialogBody>
               <Muted>This sign-up sheet is no longer there.</Muted>
+            </DialogBody>
+          ))}
+
+        {view.name === "poll-new" && (
+          <PollForm
+            teamName={teamName}
+            people={people}
+            defaultDate={selectedDate}
+            onCreated={(id) => onView({ name: "poll", id })}
+          />
+        )}
+
+        {view.name === "poll" &&
+          (poll ? (
+            <PollView
+              key={poll.id}
+              poll={poll}
+              events={events}
+              onGone={() => onView({ name: "home" })}
+            />
+          ) : (
+            <DialogBody>
+              <Muted>This poll is closed. If a time was picked, it is on the calendar.</Muted>
             </DialogBody>
           ))}
 

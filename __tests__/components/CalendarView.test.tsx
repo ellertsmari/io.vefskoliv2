@@ -15,6 +15,12 @@ jest.mock("serverActions/meetings", () => ({
 jest.mock("serverActions/semester", () => ({
   saveSemester: jest.fn(),
 }));
+jest.mock("serverActions/meetingPolls", () => ({
+  createMeetingPoll: jest.fn(),
+  deleteMeetingPoll: jest.fn(),
+  savePollAvailability: jest.fn(),
+  schedulePoll: jest.fn(),
+}));
 jest.mock("serverActions/signupSheets", () => ({
   createSignupSheet: jest.fn(),
   deleteSignupSheet: jest.fn(),
