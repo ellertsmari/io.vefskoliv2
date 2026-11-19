@@ -128,6 +128,11 @@ const contactSchema = new Schema(
       type: Schema.Types.String,
       required: false,
     },
+
+    cvUrl: {
+      type: Schema.Types.String,
+      required: false,
+    },
   },
   { _id: false }
 );
