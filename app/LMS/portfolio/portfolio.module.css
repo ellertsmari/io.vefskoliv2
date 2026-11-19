@@ -1,0 +1,59 @@
+.builder {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+}
+
+.workspace {
+  display: flex;
+  min-height: 740px;
+}
+
+.preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  background: #f2f2f2;
+}
+
+.previewToolbar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-bottom: 1px solid #e6e6e6;
+  background: #fff;
+}
+
+.liveLabel { display: flex; align-items: center; gap: 8px; color: #111; font-size: 12px; font-weight: 600; }
+.previewHint { border-left: 1px solid #d6d6d6; padding-left: 9px; color: #777; font-weight: 400; }
+.liveDot { width: 7px; height: 7px; border-radius: 50%; background: #40a665; }
+.deviceButtons { display: flex; align-items: center; gap: 6px; }
+.deviceButtons button { padding: 6px 12px; border: 1px solid #d6d6d6; border-radius: 6px; background: #fff; color: #777; font: inherit; font-size: 12px; cursor: not-allowed; }
+.deviceButtons button:first-child { border-color: #111; color: #111; }
+.previewBody { display: grid; flex: 1; place-items: center; padding: 28px; }
+.emptyPreview { max-width: 420px; padding: 40px; border: 1px dashed #d6d6d6; border-radius: 12px; background: #fff; text-align: center; }
+.emptyPreview h2 { margin: 0 0 12px; font-size: 22px; font-weight: 500; }
+.emptyPreview p { margin: 0 0 8px; color: #555; font-size: 13px; line-height: 1.5; }
+.emptyPreview .note { color: #888; font-size: 11px; }
+.themeBar { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 8px 20px; border-top: 1px solid #e6e6e6; background: #fff; font-size: 13px; font-weight: 600; }
+.themeButtons { display: flex; gap: 8px; }
+.themeButtons button { padding: 8px 12px; border: 1px solid #d6d6d6; border-radius: 6px; background: #fff; color: #777; font: inherit; font-size: 12px; cursor: not-allowed; }
+.themeButtons .selectedTheme { border: 2px solid #111; color: #111; }
+
+@media (max-width: 950px) {
+  .workspace { min-height: 600px; }
+}
+
+@media (max-width: 700px) {
+  .workspace { flex-direction: column; }
+  .previewBody { min-height: 320px; }
+  .previewToolbar { flex-wrap: wrap; padding: 10px 16px; }
+  .themeBar { flex-wrap: wrap; padding: 12px 16px; }
+  .emptyPreview { padding: 24px; }
+}
