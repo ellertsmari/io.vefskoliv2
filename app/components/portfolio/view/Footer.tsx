@@ -16,8 +16,7 @@ type Props = {
 
 export const Footer = ({ portfolio }: Props) => {
   const { contact } = portfolio.content;
-  // TODO: use portfolio.content.contact.cvUrl once it is added to the types (#16)
-  const cvUrl = "#";
+  const { cvUrl } = contact;
 
   return (
     <FooterBar id="contact">

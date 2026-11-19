@@ -31,8 +31,7 @@ export const Header = ({
   onContactClick,
 }: Props) => {
   const { profile } = portfolio.content;
-  // TODO: use portfolio.content.contact.cvUrl once it is added to the types (#16).
-  const cvUrl = "#";
+  const { cvUrl } = portfolio.content.contact;
 
   return (
     <HeaderBar>
