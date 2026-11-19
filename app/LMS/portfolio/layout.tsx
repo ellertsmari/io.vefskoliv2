@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import styles from "./layout.module.css";
 
-// The main LMS layout already includes the header and navigation.
+// The Portfolio Builder uses its own header and step navigation.
 export default function PortfolioLayout({
   children,
 }: {
