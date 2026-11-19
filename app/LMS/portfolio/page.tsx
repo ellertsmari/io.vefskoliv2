@@ -5,17 +5,13 @@ import styles from "./portfolio.module.css";
 import TopBar from "./builder/TopBar";
 import StepRail from "./builder/StepRail";
 import SidePanel from "./builder/SidePanel";
-import DemoPortfolio from "./DemoPortfolio";
+import Preview from "./builder/Preview";
 import type { PortfolioStepId } from "./builder/steps";
 import { getMyPortfolio } from "serverActions/portfolio/getMyPortfolio";
 
 export default function PortfolioBuilderPage() {
-
   const [activeStep, setActiveStep] = useState<PortfolioStepId>("profile");
-
-  const [publicationStatus, setPublicationStatus] = useState(
-    "Checking publication status..."
-  );
+  const [publicationStatus, setPublicationStatus] = useState("Checking publication status...");
 
   useEffect(() => {
     let active = true;
@@ -23,7 +19,6 @@ export default function PortfolioBuilderPage() {
     async function loadPortfolioStatus() {
       try {
         const result = await getMyPortfolio();
-
         if (!active) return;
 
         if (!result.success) {
@@ -49,7 +44,6 @@ export default function PortfolioBuilderPage() {
     };
   }, []);
 
-
   return (
     <main className={styles.builder} aria-label="Portfolio Builder">
       <TopBar status={publicationStatus} />
@@ -57,33 +51,7 @@ export default function PortfolioBuilderPage() {
       <div className={styles.workspace}>
         <StepRail activeStep={activeStep} onStepChange={setActiveStep} />
         <SidePanel activeStep={activeStep} />
-
-        <section className={styles.preview} aria-label="Portfolio demo preview">
-          <div className={styles.previewToolbar}>
-            <span className={styles.liveLabel}>
-              <span className={styles.liveDot} aria-hidden="true" />
-              Live preview
-               <span className={styles.previewHint}>Changes appear instantly</span>
-            </span>
-            <div className={styles.deviceButtons} aria-label="Preview device options">
-              <button type="button" disabled title="Desktop preview coming later" aria-label="Desktop preview">▣</button>
-              <button type="button" disabled title="Mobile preview coming later" aria-label="Mobile preview">▯</button>
-            </div>
-          </div>
-
-          <div className={styles.previewBody}>
-            <DemoPortfolio />
-          </div>
-
-          <div className={styles.themeBar} aria-label="Preview theme options">
-            <span>Theme</span>
-            <div className={styles.themeButtons}>
-              <button type="button" disabled className={styles.selectedTheme}>● Editorial</button>
-              <button type="button" disabled>● Minimal</button>
-              <button type="button" disabled>○ Studio</button>
-            </div>
-          </div>
-        </section>
+        <Preview />
       </div>
     </main>
   );
