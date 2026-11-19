@@ -44,12 +44,14 @@ export default async function RootLayout({
 
   // Landing page (/) when not logged in should render without the LMS layout,
   // as do the external judge pages (/judge/<token> — judges have no account)
-  // the public project showcase and the full-bleed project briefs.
+  // the public project showcase, the full-bleed project briefs and the
+  // students' public portfolios, which have their own header.
   const isStandalonePage =
     (pathname === "/" && !isLoggedIn) ||
     pathname.startsWith("/judge") ||
     pathname.startsWith("/showcase") ||
-    pathname.startsWith("/projects");
+    pathname.startsWith("/projects") ||
+    pathname.startsWith("/portfolio");
 
   return (
     <html lang="en">
