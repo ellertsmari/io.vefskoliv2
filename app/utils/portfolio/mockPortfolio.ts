@@ -63,6 +63,8 @@ export const mockPortfolioContent: PortfolioContent = {
         "A small travel guide for hiking routes in Iceland.",
       imageUrl: null,
       technologies: ["HTML", "CSS", "JavaScript"],
+      liveUrl: "https://example.com/",
+      githubUrl: "https://github.com/",
     },
 
     {
@@ -73,6 +75,7 @@ export const mockPortfolioContent: PortfolioContent = {
         "and typography systems for the screen.",
       imageUrl: null,
       technologies: ["Figma", "CSS", "React"],
+      githubUrl: "https://github.com/",
     },
 
     {
@@ -82,7 +85,7 @@ export const mockPortfolioContent: PortfolioContent = {
         "A lightweight field journal for collecting " +
         "visual references, places, and observations.",
       imageUrl: null,
-      technologies: ["React", "JavaScript", "CSS"],
+      technologies: ["React", "JavaScript", "CSS", "TypeScript", "Figma"],
     },
 
     {
@@ -90,7 +93,10 @@ export const mockPortfolioContent: PortfolioContent = {
       title: "Space Between",
       description:
         "A digital exhibition concept shaped around " +
-        "quiet transitions and generous negative space.",
+        "quiet transitions and generous negative space. " +
+        "Visitors move through five rooms, each built around " +
+        "one material and one sound, and the layout adapts " +
+        "from a wide gallery wall to a single phone screen.",
       imageUrl: null,
       technologies: ["3D", "React", "CSS"],
     },
@@ -100,6 +106,7 @@ export const mockPortfolioContent: PortfolioContent = {
     email: "anna@example.com",
     linkedinUrl: "https://www.linkedin.com/",
     githubUrl: "https://github.com/",
+    cvUrl: "https://example.com/anna-jonsdottir-cv.pdf",
   },
 
   theme: "editorial",
