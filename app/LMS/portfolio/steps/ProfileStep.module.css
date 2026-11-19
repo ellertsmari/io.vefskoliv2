@@ -1,0 +1,37 @@
+.form { display: flex; flex-direction: column; gap: 18px; color: #111; }
+.demoButton { padding: 10px; border: 1px dashed #8a84c9; border-radius: 8px; background: #f0efff; color: #38318b; font-size: 11px; cursor: pointer; }
+.photoRow { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: start; gap: 12px; min-width: 0; }
+.photoBox { display: grid; place-items: center; width: 64px; height: 64px; overflow: hidden; border-radius: 12px; background: #ececf0; color: #666; font-size: 25px; }
+.photoBox img { width: 100%; height: 100%; object-fit: cover; }
+
+.field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.field > span { color: #666; font-family: monospace; font-size: 10px; }
+.field input, .field textarea, .skillInput input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #d5d5d5;
+  border-radius: 8px;
+  background: white;
+  color: #111;
+  font: inherit;
+  font-size: 12px;
+}
+.field textarea { resize: vertical; line-height: 1.5; }
+.field input:focus, .field textarea:focus, .skillInput input:focus { outline: 2px solid #736dff; outline-offset: 1px; }
+.field small { color: #777; font-size: 10px; }
+.twoColumns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 0; }
+
+.availability { display: flex; flex-direction: column; gap: 14px; padding: 12px; border: 1px solid #e3e3e3; border-radius: 10px; background: #f7f7f7; }
+.switchRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.switchRow span { display: flex; flex-direction: column; gap: 5px; }
+.switchRow strong { font-size: 12px; }
+.switchRow small { color: #888; font-size: 9px; }
+.switchRow input { width: 19px; height: 19px; margin: 0; accent-color: #29a65e; cursor: pointer; }
+
+.skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.skills button { padding: 6px 9px; border: 0; border-radius: 6px; background: #eee; color: #333; font-size: 10px; cursor: pointer; }
+.skillInput { display: flex; gap: 6px; }
+.skillInput button { flex-shrink: 0; padding: 0 10px; border: 1px dashed #999; border-radius: 7px; background: white; font-size: 11px; cursor: pointer; }
+.draftNote { margin: 0; padding: 10px; border-radius: 8px; background: #f0efff; color: #3b3784; font-size: 10px; line-height: 1.5; }
