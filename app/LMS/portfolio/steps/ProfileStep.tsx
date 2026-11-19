@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
 import styles from "./ProfileStep.module.css";
 
@@ -19,7 +20,8 @@ export default function ProfileStep() {
   }
   const [photoUrl, setPhotoUrl] = useState("");
   const [location, setLocation] = useState("");
-  const [languages, setLanguages] = useState("");
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [newLanguage, setNewLanguage] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState("");
   const [openToInternships, setOpenToInternships] = useState(false);
@@ -38,25 +40,23 @@ export default function ProfileStep() {
     setSkills(skills.filter((item) => item !== skill));
   }
 
-  function loadFigmaExample() {
-    setName("Anna Jónsdóttir");
-    setHeadline("Frontend developer");
-    setTagline("Creative thinker");
-    setAbout("I’m a frontend student at Vefskólinn. I enjoy turning designs into accessible, responsive websites and I care about the small details that make them feel finished.");
-    setLocation("Reykjavík · remote");
-    setLanguages("Icelandic, English");
-    setSkills(["HTML", "CSS", "JavaScript", "TypeScript", "React", "Figma"]);
-    setOpenToInternships(true);
-    setAvailableFrom("2027-01");
-    setLookingFor("Frontend / UI internship");
+  function addLanguage() {
+    const language = newLanguage.trim();
+    if (language && !languages.some((item) => item.toLowerCase() === language.toLowerCase())) {
+      setLanguages([...languages, language]);
+    }
+    setNewLanguage("");
+  }
+
+  function removeLanguage(language: string) {
+    setLanguages(languages.filter((item) => item !== language));
   }
 
   return (
     <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
-      <button className={styles.demoButton} type="button" onClick={loadFigmaExample}>Load Figma example (demo only)</button>
       <div className={styles.photoRow}>
         <div className={styles.photoBox}>
-          {photoUrl ? <img src={photoUrl} alt="Profile photo preview" /> : <span aria-hidden="true">▧</span>}
+          {photoUrl ? <Image src={photoUrl} alt="Profile photo preview" width={64} height={64} unoptimized /> : <span aria-hidden="true">▧</span>}
         </div>
         <ImageUploadField
           id="portfolioPhoto"
@@ -134,10 +134,20 @@ export default function ProfileStep() {
         <small>Choose your technologies, or type your own.</small>
       </div>
 
-      <label className={styles.field}>
+      <div className={styles.field}>
         <span>LANGUAGES</span>
-        <input value={languages} onChange={(event) => setLanguages(event.target.value)} placeholder="e.g. Icelandic, English" />
-      </label>
+        <div className={styles.skills}>
+          {languages.map((language) => (
+            <button type="button" key={language} onClick={() => removeLanguage(language)} aria-label={`Remove language ${language}`}>
+              {language} ×
+            </button>
+          ))}
+        </div>
+        <div className={styles.skillInput}>
+          <input aria-label="New language" value={newLanguage} onChange={(event) => setNewLanguage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addLanguage(); } }} placeholder="e.g. Icelandic" />
+          <button type="button" onClick={addLanguage}>+ Add language</button>
+        </div>
+      </div>
 
       <p className={styles.draftNote}>Your changes are local to this page for now. Saving and live preview will be connected in a separate task.</p>
     </form>
