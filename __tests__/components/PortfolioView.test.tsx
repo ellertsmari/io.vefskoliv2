@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { PortfolioView } from "app/components/portfolio/view/PortfolioView";
 import { mockPublicPortfolio } from "utils/portfolio/mockPortfolio";
 import type { PublicPortfolio } from "types/portfolioTypes";
@@ -51,12 +51,20 @@ describe("PortfolioView", () => {
     const { profile, contact } = mockPublicPortfolio.content;
 
     expect(screen.getByText(profile.location)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "E-MAIL" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "download CV" })).toHaveAttribute(
+      "href",
+      contact.cvUrl
+    );
+
+    // Project cards have GitHub links too, so look inside the footer only.
+    const footer = within(screen.getByRole("contentinfo"));
+    expect(footer.getByRole("link", { name: "E-MAIL" })).toHaveAttribute(
       "href",
       `mailto:${contact.email}`
     );
-    expect(screen.getByRole("link", { name: "LinkedIn" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "GitHub" })).toBeInTheDocument();
+    expect(footer.getByRole("link", { name: "LinkedIn" })).toBeInTheDocument();
+    expect(footer.getByRole("link", { name: "GitHub" })).toBeInTheDocument();
+    expect(footer.getByRole("link", { name: "CV" })).toHaveAttribute("href", contact.cvUrl);
   });
 
   it("hides contact links the student has not filled in", () => {
@@ -66,9 +74,9 @@ describe("PortfolioView", () => {
 
     render(<PortfolioView portfolio={withoutLinks} />);
 
-    expect(screen.queryByRole("link", { name: "E-MAIL" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "LinkedIn" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "GitHub" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "download CV" })).not.toBeInTheDocument();
+    // Project cards keep their own GitHub links; the footer has none left.
+    expect(within(screen.getByRole("contentinfo")).queryAllByRole("link")).toHaveLength(0);
   });
 
   it("outlines only the last word of the name", () => {
@@ -99,5 +107,100 @@ describe("PortfolioView", () => {
 
     expect(screen.queryByText(headline)).not.toBeInTheDocument();
     expect(screen.queryByText(tagline)).not.toBeInTheDocument();
+  });
+
+  it("shows a card for every project", () => {
+    render(<PortfolioView portfolio={mockPublicPortfolio} />);
+
+    const titles = screen
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent);
+    expect(titles).toEqual(mockPublicPortfolio.content.projects.map((p) => p.title));
+  });
+
+  it("shows only the project links the student has filled in", () => {
+    const [first] = mockPublicPortfolio.content.projects;
+    const portfolio: PublicPortfolio = {
+      content: {
+        ...mockPublicPortfolio.content,
+        projects: [{ ...first, liveUrl: "https://example.com", githubUrl: undefined }],
+      },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    expect(screen.getByRole("link", { name: /Live page/ })).toHaveAttribute(
+      "href",
+      "https://example.com"
+    );
+    // The header and footer have links too, so only count the ones in the works section.
+    const works = screen.getByRole("region", { name: /Projects I'm proud of/ });
+    expect(within(works).getAllByRole("link")).toHaveLength(1);
+  });
+
+  it("shortens a long project description and keeps the full text in a popover", () => {
+    const [first] = mockPublicPortfolio.content.projects;
+    const longText = `${"A sentence about the project. ".repeat(8)}The end.`;
+    const portfolio: PublicPortfolio = {
+      content: {
+        ...mockPublicPortfolio.content,
+        projects: [{ ...first, description: longText }],
+      },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    // The cut text ends on a whole word, and screen readers skip it.
+    const cut = screen.getByText(/…$/);
+    expect(cut).toHaveAttribute("aria-hidden", "true");
+    expect(cut.textContent).toMatch(/project\.…$/);
+    // The full text is in the popover (shown with CSS on hover or focus).
+    expect(screen.getByText(longText)).toBeInTheDocument();
+  });
+
+  it("shows three technologies and hides the rest behind +N", () => {
+    const [first] = mockPublicPortfolio.content.projects;
+    const portfolio: PublicPortfolio = {
+      content: {
+        ...mockPublicPortfolio.content,
+        projects: [{ ...first, technologies: ["HTML", "CSS", "React", "Figma", "Next.js"] }],
+      },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    expect(screen.getByText("+2")).toHaveAttribute(
+      "aria-label",
+      "2 more technologies: Figma, Next.js"
+    );
+  });
+
+  it("shows when the student is open to an internship", () => {
+    render(<PortfolioView portfolio={mockPublicPortfolio} />);
+
+    expect(screen.getByText("Open for work/internship → January 2027")).toBeInTheDocument();
+  });
+
+  it("hides the availability badge when the student is not looking", () => {
+    const portfolio: PublicPortfolio = {
+      content: {
+        ...mockPublicPortfolio.content,
+        availability: { ...mockPublicPortfolio.content.availability, openToInternships: false },
+      },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    expect(screen.queryByText(/Open for work/)).not.toBeInTheDocument();
+  });
+
+  it("leaves out the works section when there are no projects", () => {
+    const portfolio: PublicPortfolio = {
+      content: { ...mockPublicPortfolio.content, projects: [] },
+    };
+
+    render(<PortfolioView portfolio={portfolio} />);
+
+    expect(screen.queryByRole("heading", { name: /Projects I'm proud of/ })).not.toBeInTheDocument();
   });
 });
