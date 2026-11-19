@@ -6,7 +6,11 @@ import publishIcon from "public/portfolio/icons/publish.svg";
 import styles from "./TopBar.module.css";
 
 // These actions will be connected in their separate tasks.
-export default function TopBar() {
+export default function TopBar({
+  status,
+}: {
+  status: string;
+}) {
   return (
     <header className={styles.topBar}>
       <div className={styles.brand}>
@@ -16,7 +20,7 @@ export default function TopBar() {
 
       <div className={styles.status}>
         <span className={styles.statusDot} aria-hidden="true" />
-        Not published yet
+        {status}
       </div>
 
       <div className={styles.actions}>
