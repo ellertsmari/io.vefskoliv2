@@ -1,5 +1,6 @@
 
 "use client";
+
 import { useEffect, useState } from "react";
 import type { LocalDraft, PortfolioContent } from "types/portfolioTypes";
 
@@ -38,7 +39,6 @@ function createEmptyPortfolio(): PortfolioContent {
   };
 }
 
-
 export function useDraft() {
   // Start with an empty portfolio
   const [draft, setDraft] = useState<LocalDraft>(() => ({
@@ -47,9 +47,13 @@ export function useDraft() {
     basedOn: null,
   }));
 
-  // Track whether we have checked localStorage
+  // Track whether localStorage has been checked
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Track unpublished local changes
+  const [hasLocalChanges, setHasLocalChanges] = useState(false);
+
+  // Load any previously saved draft
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -76,6 +80,9 @@ export function useDraft() {
             },
           },
         });
+
+        // The student already has a saved local draft
+        setHasLocalChanges(true);
       }
     } catch (error) {
       console.error("Could not load portfolio draft:", error);
@@ -84,11 +91,12 @@ export function useDraft() {
     }
   }, []);
 
-
-  // Update student profile information
+  // 1. Update student profile information
   const updateProfile = (
     changes: Partial<PortfolioContent["profile"]>
   ) => {
+    setHasLocalChanges(true);
+
     setDraft((previous) => ({
       ...previous,
       content: {
@@ -101,9 +109,12 @@ export function useDraft() {
     }));
   };
 
-   const updateAvailability = (
+  // 2. Update internship availability
+  const updateAvailability = (
     changes: Partial<PortfolioContent["availability"]>
   ) => {
+    setHasLocalChanges(true);
+
     setDraft((previous) => ({
       ...previous,
       content: {
@@ -116,8 +127,7 @@ export function useDraft() {
     }));
   };
 
-
-  // Add a new project to the portfolio
+  // 3. Add a new project
   const addProject = () => {
     const newProject: PortfolioContent["projects"][number] = {
       id: crypto.randomUUID(),
@@ -126,6 +136,8 @@ export function useDraft() {
       imageUrl: null,
       technologies: [],
     };
+
+    setHasLocalChanges(true);
 
     setDraft((previous) => ({
       ...previous,
@@ -136,11 +148,13 @@ export function useDraft() {
     }));
   };
 
-  // Update a project using its ID
+  // 4. Update an existing project
   const updateProject = (
     id: string,
     changes: Partial<PortfolioContent["projects"][number]>
   ) => {
+    setHasLocalChanges(true);
+
     setDraft((previous) => ({
       ...previous,
       content: {
@@ -154,8 +168,10 @@ export function useDraft() {
     }));
   };
 
-  // Remove a project using its ID
+  // 5. Remove a project
   const removeProject = (id: string) => {
+    setHasLocalChanges(true);
+
     setDraft((previous) => ({
       ...previous,
       content: {
@@ -167,11 +183,12 @@ export function useDraft() {
     }));
   };
 
-
-  // Update student contact information
+  // 6. Update student contact information
   const updateContact = (
     changes: Partial<PortfolioContent["contact"]>
   ) => {
+    setHasLocalChanges(true);
+
     setDraft((previous) => ({
       ...previous,
       content: {
@@ -183,10 +200,11 @@ export function useDraft() {
       },
     }));
   };
- 
-   
-  // Change the portfolio design theme
+
+  // 7. Change the portfolio theme
   const setTheme = (theme: PortfolioContent["theme"]) => {
+    setHasLocalChanges(true);
+
     setDraft((previous) => ({
       ...previous,
       content: {
@@ -196,9 +214,11 @@ export function useDraft() {
     }));
   };
 
+  // Make the draft and editing functions available
   return {
     draft,
     isLoaded,
+    hasLocalChanges,
     updateProfile,
     updateAvailability,
     addProject,
@@ -206,5 +226,5 @@ export function useDraft() {
     removeProject,
     updateContact,
     setTheme,
-};
+  };
 }
