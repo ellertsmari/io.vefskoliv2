@@ -49,12 +49,8 @@ describe("Portfolio Builder shell", () => {
     expect(screen.getByText("Step 3 of 4")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Contact" }));
-    expect(
-      screen.getByRole("heading", { name: "Help them reach you" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Contact settings will go here.")
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Help them reach you" })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email \(optional\)/)).toBeInTheDocument();
     expect(screen.getByText("Step 4 of 4")).toBeInTheDocument();
   });
 
