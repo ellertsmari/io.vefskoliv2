@@ -22,9 +22,7 @@ describe("Portfolio Builder shell", () => {
       screen.getByRole("heading", { name: "Tell your story" })
     ).toBeInTheDocument();
     expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
-    expect(
-      screen.getByText("Profile settings will go here.")
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
   });
 
   test("switches to each placeholder step", async () => {

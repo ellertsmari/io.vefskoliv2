@@ -1,9 +1,155 @@
-// The Profile form will be built in a separate task.
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { ImageUploadField } from "UIcomponents/imageUpload/ImageUploadField";
+import styles from "./ProfileStep.module.css";
+
+// Issue #34: these values are local until the shared draft API is connected.
 export default function ProfileStep() {
+  const [name, setName] = useState("");
+  const [headline, setHeadline] = useState("");
+  const [tagline, setTagline] = useState("");
+  const [about, setAbout] = useState("");
+  const aboutWordCount = (about.match(/\S+/g) || []).length;
+
+  function updateAbout(text: string) {
+    if ((text.match(/\S+/g) || []).length <= 1000) {
+      setAbout(text);
+    }
+  }
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [location, setLocation] = useState("");
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [newLanguage, setNewLanguage] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [newSkill, setNewSkill] = useState("");
+  const [openToInternships, setOpenToInternships] = useState(false);
+  const [availableFrom, setAvailableFrom] = useState("");
+  const [lookingFor, setLookingFor] = useState("");
+
+  function addSkill() {
+    const skill = newSkill.trim();
+    if (skill && !skills.some((item) => item.toLowerCase() === skill.toLowerCase())) {
+      setSkills([...skills, skill]);
+    }
+    setNewSkill("");
+  }
+
+  function removeSkill(skill: string) {
+    setSkills(skills.filter((item) => item !== skill));
+  }
+
+  function addLanguage() {
+    const language = newLanguage.trim();
+    if (language && !languages.some((item) => item.toLowerCase() === language.toLowerCase())) {
+      setLanguages([...languages, language]);
+    }
+    setNewLanguage("");
+  }
+
+  function removeLanguage(language: string) {
+    setLanguages(languages.filter((item) => item !== language));
+  }
+
   return (
-    <div>
-      <h2>Profile</h2>
-      <p>Profile settings will go here.</p>
-    </div>
+    <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
+      <div className={styles.photoRow}>
+        <div className={styles.photoBox}>
+          {photoUrl ? <Image src={photoUrl} alt="Profile photo preview" width={64} height={64} unoptimized /> : <span aria-hidden="true">▧</span>}
+        </div>
+        <ImageUploadField
+          id="portfolioPhoto"
+          prefix="portfolio-profile"
+          label="Profile photo"
+          description="JPG or PNG · square images work best"
+          value={photoUrl}
+          onChange={setPhotoUrl}
+        />
+      </div>
+
+      <label className={styles.field}>
+        <span>Name</span>
+        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" />
+      </label>
+
+      <div className={styles.twoColumns}>
+        <label className={styles.field}>
+          <span>Role / headline</span>
+          <input value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder="Frontend developer" />
+        </label>
+        <label className={styles.field}>
+          <span>Second line</span>
+          <input value={tagline} onChange={(event) => setTagline(event.target.value)} placeholder="Creative thinker" />
+        </label>
+      </div>
+
+      <label className={styles.field}>
+        <span>About me</span>
+        <textarea rows={7} value={about} onChange={(event) => updateAbout(event.target.value)} placeholder="Who you are, what you enjoy building and what you're looking for next." />
+        <small>{aboutWordCount} / 1000 words</small>
+      </label>
+
+      <div className={styles.availability}>
+        <label className={styles.switchRow}>
+          <span>
+            <strong>Open to internships</strong>
+            <small>Show an availability badge on your portfolio</small>
+          </span>
+          <input type="checkbox" checked={openToInternships} onChange={(event) => setOpenToInternships(event.target.checked)} />
+        </label>
+
+        {openToInternships && (
+          <>
+            <label className={styles.field}>
+              <span>Available from</span>
+              <input type="month" value={availableFrom} onChange={(event) => setAvailableFrom(event.target.value)} />
+            </label>
+            <label className={styles.field}>
+              <span>Looking for</span>
+              <input value={lookingFor} onChange={(event) => setLookingFor(event.target.value)} placeholder="Frontend / UI internship" />
+            </label>
+          </>
+        )}
+      </div>
+
+      <label className={styles.field}>
+        <span>Location</span>
+        <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Reykjavík · remote" />
+      </label>
+
+      <div className={styles.field}>
+        <span>Skills</span>
+        <div className={styles.skills}>
+          {skills.map((skill) => (
+            <button type="button" key={skill} onClick={() => removeSkill(skill)} aria-label={`Remove ${skill}`}>
+              {skill} ×
+            </button>
+          ))}
+        </div>
+        <div className={styles.skillInput}>
+          <input aria-label="New skill" value={newSkill} onChange={(event) => setNewSkill(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addSkill(); } }} placeholder="Add a skill" />
+          <button type="button" onClick={addSkill}>+ Add</button>
+        </div>
+        <small>Choose your technologies, or type your own.</small>
+      </div>
+
+      <div className={styles.field}>
+        <span>Languages</span>
+        <div className={styles.skills}>
+          {languages.map((language) => (
+            <button type="button" key={language} onClick={() => removeLanguage(language)} aria-label={`Remove language ${language}`}>
+              {language} ×
+            </button>
+          ))}
+        </div>
+        <div className={styles.skillInput}>
+          <input aria-label="New language" value={newLanguage} onChange={(event) => setNewLanguage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addLanguage(); } }} placeholder="e.g. Icelandic" />
+          <button type="button" onClick={addLanguage}>+ Add language</button>
+        </div>
+      </div>
+
+      <p className={styles.draftNote}>Your changes are local to this page for now. Saving and live preview will be connected in a separate task.</p>
+    </form>
   );
 }
