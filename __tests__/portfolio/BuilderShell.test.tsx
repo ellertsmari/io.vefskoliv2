@@ -52,7 +52,7 @@ describe("Portfolio Builder shell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Contact" }));
     expect(screen.getByRole("heading", { name: "Help them reach you" })).toBeInTheDocument();
-    expect(screen.getByLabelText(/EMAIL \(OPTIONAL\)/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email \(optional\)/)).toBeInTheDocument();
     expect(screen.getByText("Step 4 of 4")).toBeInTheDocument();
   });
 

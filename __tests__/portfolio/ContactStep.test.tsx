@@ -5,9 +5,9 @@ describe("Contact step", () => {
   test("has optional email, LinkedIn and GitHub fields", () => {
     render(<ContactStep />);
 
-    const email = screen.getByRole("textbox", { name: /EMAIL/ }) as HTMLInputElement;
-    const linkedin = screen.getByRole("textbox", { name: "LINKEDIN" }) as HTMLInputElement;
-    const github = screen.getByRole("textbox", { name: "GITHUB" }) as HTMLInputElement;
+    const email = screen.getByRole("textbox", { name: /Email/ }) as HTMLInputElement;
+    const linkedin = screen.getByRole("textbox", { name: "LinkedIn" }) as HTMLInputElement;
+    const github = screen.getByRole("textbox", { name: "GitHub" }) as HTMLInputElement;
 
     expect(email.type).toBe("email");
     expect(email.required).toBe(false);
@@ -18,9 +18,9 @@ describe("Contact step", () => {
 
   test("allows students to enter and change their contact links", () => {
     render(<ContactStep />);
-    const email = screen.getByRole("textbox", { name: /EMAIL/ }) as HTMLInputElement;
-    const linkedin = screen.getByRole("textbox", { name: "LINKEDIN" }) as HTMLInputElement;
-    const github = screen.getByRole("textbox", { name: "GITHUB" }) as HTMLInputElement;
+    const email = screen.getByRole("textbox", { name: /Email/ }) as HTMLInputElement;
+    const linkedin = screen.getByRole("textbox", { name: "LinkedIn" }) as HTMLInputElement;
+    const github = screen.getByRole("textbox", { name: "GitHub" }) as HTMLInputElement;
 
     fireEvent.change(email, { target: { value: "student@example.com" } });
     fireEvent.change(linkedin, { target: { value: "https://www.linkedin.com/in/student" } });

@@ -1,6 +1,6 @@
 .form { display: flex; flex-direction: column; gap: 18px; color: var(--primary-black-100); }
 .field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-.field span { color: var(--primary-black-60); font-size: var(--text-xs); font-weight: 600; }
+.field span { text-transform: uppercase; color: var(--primary-black-60); font-size: var(--text-xs); font-weight: 600; }
 .field input {
   box-sizing: border-box; width: 100%; min-width: 0; padding: 11px 12px;
   border: 1px solid var(--primary-black-30); border-radius: var(--radius-md);

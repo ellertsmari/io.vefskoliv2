@@ -11,7 +11,7 @@ export default function ContactStep() {
   return (
     <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
       <label className={styles.field}>
-        <span>EMAIL (OPTIONAL)</span>
+        <span>Email (optional)</span>
         <input
           type="email"
           value={email}
@@ -22,7 +22,7 @@ export default function ContactStep() {
       </label>
 
       <label className={styles.field}>
-        <span>LINKEDIN</span>
+        <span>LinkedIn</span>
         <input
           type="url"
           value={linkedin}
@@ -32,7 +32,7 @@ export default function ContactStep() {
       </label>
 
       <label className={styles.field}>
-        <span>GITHUB</span>
+        <span>GitHub</span>
         <input
           type="url"
           value={github}
