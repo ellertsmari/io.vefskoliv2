@@ -181,19 +181,58 @@ export const Main = styled.main`
   padding: 64px 0 96px;
 `;
 
-/* Placeholder until the real sections arrive (#25 Hero, #26 Works, #27 About). */
-export const SectionPlaceholder = styled.section`
-  border: 1.5px dashed var(--primary-black-30);
-  border-radius: var(--radius-lg);
-  padding: 40px 24px;
-  color: var(--primary-black-60);
-  text-align: center;
-`;
-
 /* ---------- Hero ---------- */
 
-export const HeroSection = styled.section`
+export const HeroSection = styled.section<{ $withPhoto?: boolean }>`
   margin-bottom: 48px;
+
+  /* On the about tab the photo sits to the right of the name;
+     on phones it moves under the text. */
+  ${({ $withPhoto }) =>
+    $withPhoto &&
+    css`
+      @media (min-width: ${BREAKPOINT}) {
+        display: grid;
+        grid-template-columns: 1fr minmax(200px, 320px);
+        gap: 32px;
+        align-items: center;
+      }
+    `}
+`;
+
+export const HeroText = styled.div`
+  min-width: 0; /* lets a long name wrap inside the grid column */
+`;
+
+export const HeroPhoto = styled.div`
+  margin-top: 24px;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  @media (min-width: ${BREAKPOINT}) {
+    margin-top: 0;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+/* Neutral, like the project image placeholder. */
+export const HeroPhotoPlaceholder = styled(HeroPhoto)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-black-5);
+  color: var(--primary-black-60);
+  font-family: var(--portfolio-mono), monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 `;
 
 export const HeroName = styled.h1`
@@ -253,6 +292,36 @@ export const AvailabilityDot = styled.span`
   height: 8px;
   border-radius: 50%;
   background: var(--accent-green-100);
+`;
+
+/* About tab: the headline gets its own line; the badge and the tagline
+   share the next one, and the tagline wraps under the badge on phones. */
+export const AboutHeadline = styled.p`
+  margin: 8px 0 0;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+`;
+
+export const HeroRow = styled.div`
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+
+  ${Availability} {
+    margin: 0; /* the row already gives the spacing */
+  }
+`;
+
+export const AboutTagline = styled.p`
+  margin: 0;
+  font-family: var(--portfolio-serif), serif;
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
 `;
 
 /* ---------- Works ---------- */
@@ -369,6 +438,123 @@ export const DescriptionHover = styled.div`
     outline-offset: 4px;
     border-radius: 4px;
   }
+`;
+
+/* ---------- About ---------- */
+
+export const AboutSection = styled.section`
+  margin-bottom: 48px;
+`;
+
+export const AboutHeading = styled.h2`
+  margin: 0 0 16px;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+`;
+
+export const AboutText = styled.div`
+  max-width: 65ch; /* comfortable line length for reading */
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.6;
+
+  p {
+    margin: 0 0 1em;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+/* One row of facts between two lines; 2 × 2 on phones. */
+export const Facts = styled.dl`
+  margin: 0 0 48px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border-top: 1.5px solid var(--primary-black-100);
+  border-bottom: 1.5px solid var(--primary-black-100);
+
+  @media (max-width: ${BREAKPOINT}) {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+export const Fact = styled.div`
+  padding: 20px 16px 20px 0;
+
+  & + & {
+    padding-left: 20px;
+    border-left: 1px solid var(--primary-black-10);
+  }
+
+  @media (max-width: ${BREAKPOINT}) {
+    padding: 12px 8px 12px 0;
+
+    & + & {
+      padding-left: 0;
+      border-left: none;
+    }
+  }
+`;
+
+export const FactLabel = styled.dt`
+  margin: 0 0 6px;
+  color: var(--primary-black-60);
+  font-family: var(--portfolio-mono), monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+`;
+
+export const FactValue = styled.dd`
+  margin: 0;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: var(--text-base);
+  font-weight: 700;
+`;
+
+export const SkillsHeading = styled.h2`
+  margin: 0 0 24px;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: var(--text-2xl);
+  font-weight: 600;
+`;
+
+export const SkillGroups = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px 48px;
+`;
+
+export const SkillCard = styled.div`
+  padding: 20px;
+  border: 1.5px solid var(--primary-black-100);
+  border-radius: var(--radius-lg);
+`;
+
+/* Styled like the facts row: a small grey label, the skills big and bold,
+   because the skills are what a recruiter looks for. */
+export const SkillCardTitle = styled.h3`
+  margin: 0 0 8px;
+  color: var(--primary-black-60);
+  font-family: var(--portfolio-mono), monospace;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+`;
+
+export const SkillCardList = styled.p`
+  margin: 0;
+  font-family: var(--portfolio-sans), sans-serif;
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.5;
 `;
 
 /* ---------- Footer ---------- */
