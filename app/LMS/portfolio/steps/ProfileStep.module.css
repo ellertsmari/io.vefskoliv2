@@ -3,7 +3,7 @@
 .photoBox { display: grid; place-items: center; width: 64px; height: 64px; overflow: hidden; border-radius: var(--radius-lg); background: var(--primary-black-10); color: var(--primary-black-60); font-size: var(--text-2xl); }
 .photoBox img { width: 100%; height: 100%; object-fit: cover; }
 .field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-.field > span { color: var(--primary-black-60); font-size: var(--text-xs); font-weight: 600; }
+.field > span { text-transform: uppercase; color: var(--primary-black-60); font-size: var(--text-xs); font-weight: 600; }
 .field input, .field textarea, .skillInput input {
   box-sizing: border-box; width: 100%; min-width: 0; padding: 11px 12px;
   border: 1px solid var(--primary-black-30); border-radius: var(--radius-md);

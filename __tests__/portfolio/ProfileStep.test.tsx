@@ -8,22 +8,22 @@ jest.mock("UIcomponents/imageUpload/ImageUploadField", () => ({
 describe("Profile step", () => {
   test("shows fields and example information", () => {
     render(<ProfileStep />);
-    expect(screen.getByLabelText("NAME")).toBeInTheDocument();
-    expect(screen.getByLabelText("ROLE / HEADLINE")).toBeInTheDocument();
-    expect(screen.getByLabelText("SECOND LINE")).toBeInTheDocument();
-    expect(screen.getByLabelText(/ABOUT ME/)).toBeInTheDocument();
-    expect(screen.getByLabelText("LOCATION")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Role / headline")).toBeInTheDocument();
+    expect(screen.getByLabelText("Second line")).toBeInTheDocument();
+    expect(screen.getByLabelText(/About me/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Location")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "New language" })).toBeInTheDocument();
     expect(screen.getByText("Profile photo upload")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: /Open to internships/ }));
-    expect(screen.getByLabelText("AVAILABLE FROM")).toBeInTheDocument();
+    expect(screen.getByLabelText("Available from")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: /Open to internships/ }));
-    expect(screen.queryByLabelText("AVAILABLE FROM")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Available from")).not.toBeInTheDocument();
   });
 
   test("limits About Me to 1000 words", () => {
     render(<ProfileStep />);
-    const about = screen.getByLabelText(/ABOUT ME/) as HTMLTextAreaElement;
+    const about = screen.getByLabelText(/About me/) as HTMLTextAreaElement;
     fireEvent.change(about, { target: { value: "hello ".repeat(1000) } });
     expect(screen.getByText("1000 / 1000 words")).toBeInTheDocument();
     fireEvent.change(about, { target: { value: "hello ".repeat(1001) } });

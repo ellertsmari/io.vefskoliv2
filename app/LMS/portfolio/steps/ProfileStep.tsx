@@ -61,7 +61,7 @@ export default function ProfileStep() {
         <ImageUploadField
           id="portfolioPhoto"
           prefix="portfolio-profile"
-          label="PROFILE PHOTO"
+          label="Profile photo"
           description="JPG or PNG · square images work best"
           value={photoUrl}
           onChange={setPhotoUrl}
@@ -69,23 +69,23 @@ export default function ProfileStep() {
       </div>
 
       <label className={styles.field}>
-        <span>NAME</span>
+        <span>Name</span>
         <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" />
       </label>
 
       <div className={styles.twoColumns}>
         <label className={styles.field}>
-          <span>ROLE / HEADLINE</span>
+          <span>Role / headline</span>
           <input value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder="Frontend developer" />
         </label>
         <label className={styles.field}>
-          <span>SECOND LINE</span>
+          <span>Second line</span>
           <input value={tagline} onChange={(event) => setTagline(event.target.value)} placeholder="Creative thinker" />
         </label>
       </div>
 
       <label className={styles.field}>
-        <span>ABOUT ME</span>
+        <span>About me</span>
         <textarea rows={7} value={about} onChange={(event) => updateAbout(event.target.value)} placeholder="Who you are, what you enjoy building and what you're looking for next." />
         <small>{aboutWordCount} / 1000 words</small>
       </label>
@@ -102,11 +102,11 @@ export default function ProfileStep() {
         {openToInternships && (
           <>
             <label className={styles.field}>
-              <span>AVAILABLE FROM</span>
+              <span>Available from</span>
               <input type="month" value={availableFrom} onChange={(event) => setAvailableFrom(event.target.value)} />
             </label>
             <label className={styles.field}>
-              <span>LOOKING FOR</span>
+              <span>Looking for</span>
               <input value={lookingFor} onChange={(event) => setLookingFor(event.target.value)} placeholder="Frontend / UI internship" />
             </label>
           </>
@@ -114,12 +114,12 @@ export default function ProfileStep() {
       </div>
 
       <label className={styles.field}>
-        <span>LOCATION</span>
+        <span>Location</span>
         <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Reykjavík · remote" />
       </label>
 
       <div className={styles.field}>
-        <span>SKILLS</span>
+        <span>Skills</span>
         <div className={styles.skills}>
           {skills.map((skill) => (
             <button type="button" key={skill} onClick={() => removeSkill(skill)} aria-label={`Remove ${skill}`}>
@@ -135,7 +135,7 @@ export default function ProfileStep() {
       </div>
 
       <div className={styles.field}>
-        <span>LANGUAGES</span>
+        <span>Languages</span>
         <div className={styles.skills}>
           {languages.map((language) => (
             <button type="button" key={language} onClick={() => removeLanguage(language)} aria-label={`Remove language ${language}`}>
