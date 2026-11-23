@@ -1,0 +1,137 @@
+.preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--primary-black-5);
+}
+
+.toolbar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 48px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--primary-black-10);
+  background: var(--primary-white);
+}
+
+.previewLabel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--primary-black-100);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--error-success-100);
+}
+
+.sampleLabel {
+  border-left: 1px solid var(--primary-black-30);
+  padding-left: 9px;
+  color: var(--primary-black-60);
+  font-weight: 400;
+}
+
+.devices {
+  display: flex;
+  gap: 6px;
+}
+
+.devices button,
+.themeButtons button {
+  padding: 7px 12px;
+  border: 1px solid var(--primary-black-30);
+  border-radius: var(--radius-md);
+  background: var(--primary-white);
+  color: var(--primary-black-60);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.devices button[aria-pressed="true"] {
+  border-color: var(--primary-black-100);
+  background: var(--primary-black-100);
+  color: var(--primary-white);
+}
+
+.previewBody {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 28px 16px;
+}
+
+.desktop,
+.mobile {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  background: var(--primary-white);
+  box-shadow: 0 3px 18px color-mix(in srgb, var(--primary-black-100) 8%, transparent);
+}
+
+.desktop {
+  max-width: 1048px;
+}
+
+.mobile {
+  max-width: 375px;
+  border: 7px solid var(--primary-black-100);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.themeBar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 20px;
+  border-top: 1px solid var(--primary-black-10);
+  background: var(--primary-white);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.themeButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.themeButtons button {
+  cursor: not-allowed;
+}
+
+.themeButtons .selectedTheme {
+  border-color: var(--primary-black-100);
+  color: var(--primary-black-100);
+}
+
+@media (max-width: 700px) {
+  .toolbar,
+  .themeBar {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .previewBody {
+    padding: 16px 8px;
+  }
+}

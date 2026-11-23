@@ -203,4 +203,83 @@ describe("PortfolioView", () => {
 
     expect(screen.queryByRole("heading", { name: /Projects I'm proud of/ })).not.toBeInTheDocument();
   });
+
+  describe("about tab", () => {
+    const { profile, availability } = mockPublicPortfolio.content;
+
+    const withProfile = (changes: Partial<typeof profile>): PublicPortfolio => ({
+      content: { ...mockPublicPortfolio.content, profile: { ...profile, ...changes } },
+    });
+
+    const openAbout = (portfolio: PublicPortfolio = mockPublicPortfolio) => {
+      render(<PortfolioView portfolio={portfolio} />);
+      fireEvent.click(screen.getByRole("button", { name: "about me" }));
+    };
+
+
+    it("splits the bio into paragraphs at empty lines", () => {
+      openAbout(withProfile({ about: "First paragraph.\n\nSecond paragraph." }));
+
+      const about = within(screen.getByRole("region", { name: "About me" }));
+      expect(about.getByText("First paragraph.").tagName).toBe("P");
+      expect(about.getByText("Second paragraph.").tagName).toBe("P");
+    });
+
+    it("shows the quick facts", () => {
+      openAbout();
+
+      // Each label (dt) is followed by its value (dd).
+      expect(screen.getByText("Looking for").nextElementSibling).toHaveTextContent(
+        availability.lookingFor
+      );
+      expect(screen.getByText("Available").nextElementSibling).toHaveTextContent(
+        "From January 2027"
+      );
+      expect(screen.getByText("Based in").nextElementSibling).toHaveTextContent(profile.location);
+      expect(screen.getByText("Languages").nextElementSibling).toHaveTextContent(
+        "Icelandic · English"
+      );
+    });
+
+    it("hides the internship facts when the student is not looking", () => {
+      openAbout({
+        content: {
+          ...mockPublicPortfolio.content,
+          availability: { ...availability, openToInternships: false },
+        },
+      });
+
+      expect(screen.queryByText("Looking for")).not.toBeInTheDocument();
+      expect(screen.queryByText("Available")).not.toBeInTheDocument();
+      expect(screen.getByText("Based in")).toBeInTheDocument();
+    });
+
+    it("groups skills into cards and puts unknown ones in Other", () => {
+      openAbout(withProfile({ skills: ["HTML", "CSS", "React", "Figma", "Blender"] }));
+
+      const card = (title: string) =>
+        screen.getByRole("heading", { level: 3, name: title }).nextElementSibling;
+      expect(card("Core Frontend")).toHaveTextContent("HTML, CSS");
+      expect(card("Frameworks")).toHaveTextContent("React");
+      expect(card("Tools & Design")).toHaveTextContent("Figma");
+      expect(card("Other")).toHaveTextContent("Blender");
+    });
+
+    it("leaves out empty skill groups", () => {
+      openAbout(withProfile({ skills: ["React"] }));
+
+      expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(1);
+    });
+
+
+    it("shows the student's photo", () => {
+      openAbout(withProfile({ photoUrl: "https://example.com/anna.jpg" }));
+
+      expect(screen.getByRole("img", { name: profile.name })).toHaveAttribute(
+        "src",
+        "https://example.com/anna.jpg"
+      );
+      expect(screen.queryByText("[ Photo ]")).not.toBeInTheDocument();
+    });
+  });
 });
