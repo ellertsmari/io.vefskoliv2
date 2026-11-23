@@ -1,12 +1,9 @@
 import type { PortfolioContent } from "types/portfolioTypes";
 import { formatMonth } from "./formatMonth";
 import {
-  AboutHeadline,
-  AboutTagline,
   Availability,
   AvailabilityDot,
   Headline,
-  HeroLines,
   HeroName,
   HeroPhoto,
   HeroPhotoPlaceholder,
@@ -49,27 +46,12 @@ export const Hero = ({ profile, availability, showPhoto = false }: Props) => {
             </>
           )}
         </HeroName>
-        {showPhoto ? (
-          // About tab: the headline on its own line, then the badge and the tagline.
-          <>
-            {headline && <AboutHeadline>{headline}</AboutHeadline>}
-            {(badge || tagline) && (
-              <HeroRow>
-                {badge}
-                {tagline && <AboutTagline>{tagline}</AboutTagline>}
-              </HeroRow>
-            )}
-          </>
-        ) : (
-          <>
-            {(headline || tagline) && (
-              <HeroLines>
-                {headline && <Headline>{headline}</Headline>}
-                {tagline && <Tagline>{tagline}</Tagline>}
-              </HeroLines>
-            )}
+        {headline && <Headline>{headline}</Headline>}
+        {(badge || tagline) && (
+          <HeroRow>
             {badge}
-          </>
+            {tagline && <Tagline>{tagline}</Tagline>}
+          </HeroRow>
         )}
       </HeroText>
       {showPhoto &&

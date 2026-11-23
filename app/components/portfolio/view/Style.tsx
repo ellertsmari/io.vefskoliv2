@@ -202,11 +202,32 @@ export const HeroSection = styled.section<{ $withPhoto?: boolean }>`
 
 export const HeroText = styled.div`
   min-width: 0; /* lets a long name wrap inside the grid column */
+
+  /* On phones the headline and the tagline share a line and the badge goes
+     under them. The row around the badge and the tagline steps aside (see
+     HeroRow), the badge is moved to the end, and an empty full-width item
+     before it starts a new line. */
+  @media (max-width: ${BREAKPOINT}) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 16px;
+
+    & > h1 {
+      flex-basis: 100%;
+    }
+
+    &::after {
+      content: "";
+      flex-basis: 100%;
+      order: 1;
+    }
+  }
 `;
 
 export const HeroPhoto = styled.div`
   margin-top: 24px;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1; /* the builder asks for square photos */
   border-radius: var(--radius-lg);
   overflow: hidden;
 
@@ -253,24 +274,11 @@ export const NameOutline = styled.span`
   }
 `;
 
-export const HeroLines = styled.p`
-  margin: 8px 0 0;
-  display: flex;
-  flex-wrap: wrap; /* on phones the tagline moves to its own line */
-  align-items: baseline;
-  column-gap: 16px;
-  font-family: var(--portfolio-sans), sans-serif;
-  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
-  line-height: 1.15;
-`;
-
-export const Headline = styled.span`
-  font-weight: 700;
-`;
-
-export const Tagline = styled.span`
-  font-family: var(--portfolio-serif), serif;
-  letter-spacing: 0.02em;
+/* On phones the tagline sits on the right, so the two lines form a step. */
+const taglineRightOnPhones = css`
+  @media (max-width: ${BREAKPOINT}) {
+    margin-left: auto;
+  }
 `;
 
 /* Shown only while the student is open to an internship. */
@@ -294,9 +302,9 @@ export const AvailabilityDot = styled.span`
   background: var(--accent-green-100);
 `;
 
-/* About tab: the headline gets its own line; the badge and the tagline
-   share the next one, and the tagline wraps under the badge on phones. */
-export const AboutHeadline = styled.p`
+/* The headline gets its own line; the badge and the tagline share the next
+   one (on phones see HeroText). */
+export const Headline = styled.p`
   margin: 8px 0 0;
   font-family: var(--portfolio-sans), sans-serif;
   font-size: clamp(1.5rem, 3.5vw, 2.5rem);
@@ -314,14 +322,24 @@ export const HeroRow = styled.div`
   ${Availability} {
     margin: 0; /* the row already gives the spacing */
   }
+
+  @media (max-width: ${BREAKPOINT}) {
+    display: contents; /* the badge and the tagline join the text around them */
+
+    ${Availability} {
+      order: 2;
+      margin-top: 16px;
+    }
+  }
 `;
 
-export const AboutTagline = styled.p`
+export const Tagline = styled.p`
   margin: 0;
   font-family: var(--portfolio-serif), serif;
   font-size: clamp(1.5rem, 3.5vw, 2.5rem);
   line-height: 1.15;
   letter-spacing: 0.02em;
+  ${taglineRightOnPhones}
 `;
 
 /* ---------- Works ---------- */
