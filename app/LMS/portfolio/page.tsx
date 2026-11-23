@@ -1,5 +1,5 @@
 "use client";
-
+import { useDraft } from "./builder/useDraft";
 import { useEffect, useState } from "react";
 import styles from "./portfolio.module.css";
 import TopBar from "./builder/TopBar";
@@ -12,6 +12,13 @@ import { getMyPortfolio } from "serverActions/portfolio/getMyPortfolio";
 export default function PortfolioBuilderPage() {
 
   const [activeStep, setActiveStep] = useState<PortfolioStepId>("profile");
+  const { 
+    draft, 
+    isLoaded, 
+    hasLocalChanges, 
+    error,
+    updateProfile,
+  } = useDraft();
 
   const [publicationStatus, setPublicationStatus] = useState(
     "Checking publication status..."
@@ -49,11 +56,33 @@ export default function PortfolioBuilderPage() {
     };
   }, []);
 
-
   return (
     <main className={styles.builder} aria-label="Portfolio Builder">
       <TopBar status={publicationStatus} />
+      <p role="status">
+        {!isLoaded
+          ? "Loading draft..."
+          : error
+            ? error
+            : hasLocalChanges
+              ? `Local draft: ${draft.content.profile.name || "Unnamed portfolio"}`
+              : "Ready to edit"}
+      </p>
+       <div>
+        <label htmlFor="test-profile-name">
+          Test portfolio name:
+        </label>
 
+        <input
+          id="test-profile-name"
+          type="text"
+          value={draft.content.profile.name}
+          onChange={(event) =>
+            updateProfile({ name: event.target.value })
+          }
+          disabled={!isLoaded}
+        />
+      </div>
       <div className={styles.workspace}>
         <StepRail activeStep={activeStep} onStepChange={setActiveStep} />
         <SidePanel activeStep={activeStep} />

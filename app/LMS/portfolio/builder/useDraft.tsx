@@ -1,12 +1,13 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { LocalDraft, PortfolioContent } from "types/portfolioTypes";
+import { getMyPortfolio } from "serverActions/portfolio/getMyPortfolio";
 
 const STORAGE_KEY = "portfolio-draft";
 
-// Starting point for a student who has no portfolio yet.
+// Starting portfolio for a new student
 function createEmptyPortfolio(): PortfolioContent {
   return {
     profile: {
@@ -40,58 +41,112 @@ function createEmptyPortfolio(): PortfolioContent {
 }
 
 export function useDraft() {
-  // Start with an empty portfolio
+  // Current portfolio draft
   const [draft, setDraft] = useState<LocalDraft>(() => ({
     content: createEmptyPortfolio(),
     savedAt: "",
     basedOn: null,
   }));
 
-  // Track whether localStorage has been checked
+  // Has localStorage been checked?
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Track unpublished local changes
+  // Does the student have unpublished changes?
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
 
-  // Load any previously saved draft
+  // Error when loading or saving a local draft
+  const [error, setError] = useState<string | null>(null);
+
+  // Load an existing local draft when the hook starts
+  
+  // Load the local draft first, or the published portfolio
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+    let active = true;
 
-      if (saved) {
-        const localDraft = JSON.parse(saved) as LocalDraft;
+    async function loadDraft() {
+      try {
+        // First, check the browser for a saved draft
+        const saved = localStorage.getItem(STORAGE_KEY);
 
-        // Restore the availability date as a Date object
-        const availableFrom = new Date(
-          localDraft.content.availability.availableFrom
-        );
+        if (saved) {
+          const localDraft = JSON.parse(saved) as LocalDraft;
 
-        if (Number.isNaN(availableFrom.getTime())) {
-          throw new Error("Invalid availability date");
+          const availableFrom = new Date(
+            localDraft.content.availability.availableFrom
+          );
+
+          if (Number.isNaN(availableFrom.getTime())) {
+            throw new Error("Invalid availability date");
+          }
+
+          if (!active) return;
+
+          setDraft({
+            ...localDraft,
+            content: {
+              ...localDraft.content,
+              availability: {
+                ...localDraft.content.availability,
+                availableFrom,
+              },
+            },
+          });
+
+          setHasLocalChanges(true);
+          return;
         }
 
-        setDraft({
-          ...localDraft,
-          content: {
-            ...localDraft.content,
-            availability: {
-              ...localDraft.content.availability,
-              availableFrom,
-            },
-          },
-        });
+        // No local draft? Load the portfolio from the server
+        const result = await getMyPortfolio();
 
-        // The student already has a saved local draft
-        setHasLocalChanges(true);
+        if (!active) return;
+
+        if (!result.success) {
+          setError("Could not load your published portfolio.");
+          return;
+        }
+
+        if (result.data) {
+          const availableFrom = new Date(
+            result.data.content.availability.availableFrom
+          );
+
+          if (Number.isNaN(availableFrom.getTime())) {
+            throw new Error("Invalid availability date");
+          }
+
+          setDraft({
+            content: {
+              ...result.data.content,
+              availability: {
+                ...result.data.content.availability,
+                availableFrom,
+              },
+            },
+            savedAt: "",
+            basedOn: result.data.updatedAt,
+          });
+        }
+      } catch (error) {
+        if (active) {
+          console.error("Could not load portfolio:", error);
+          setError("Could not load your portfolio draft.");
+        }
+      } finally {
+        if (active) {
+          setIsLoaded(true);
+        }
       }
-    } catch (error) {
-      console.error("Could not load portfolio draft:", error);
-    } finally {
-      setIsLoaded(true);
     }
+
+    void loadDraft();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // 1. Update student profile information
+  // 1. Update profile
   const updateProfile = (
     changes: Partial<PortfolioContent["profile"]>
   ) => {
@@ -99,6 +154,7 @@ export function useDraft() {
 
     setDraft((previous) => ({
       ...previous,
+      savedAt: new Date().toISOString(),
       content: {
         ...previous.content,
         profile: {
@@ -109,7 +165,7 @@ export function useDraft() {
     }));
   };
 
-  // 2. Update internship availability
+  // 2. Update availability
   const updateAvailability = (
     changes: Partial<PortfolioContent["availability"]>
   ) => {
@@ -117,6 +173,7 @@ export function useDraft() {
 
     setDraft((previous) => ({
       ...previous,
+      savedAt: new Date().toISOString(),
       content: {
         ...previous.content,
         availability: {
@@ -127,7 +184,7 @@ export function useDraft() {
     }));
   };
 
-  // 3. Add a new project
+  // 3. Add a project
   const addProject = () => {
     const newProject: PortfolioContent["projects"][number] = {
       id: crypto.randomUUID(),
@@ -141,6 +198,7 @@ export function useDraft() {
 
     setDraft((previous) => ({
       ...previous,
+      savedAt: new Date().toISOString(),
       content: {
         ...previous.content,
         projects: [...previous.content.projects, newProject],
@@ -148,7 +206,7 @@ export function useDraft() {
     }));
   };
 
-  // 4. Update an existing project
+  // 4. Update a project
   const updateProject = (
     id: string,
     changes: Partial<PortfolioContent["projects"][number]>
@@ -157,6 +215,7 @@ export function useDraft() {
 
     setDraft((previous) => ({
       ...previous,
+      savedAt: new Date().toISOString(),
       content: {
         ...previous.content,
         projects: previous.content.projects.map((project) =>
@@ -174,6 +233,7 @@ export function useDraft() {
 
     setDraft((previous) => ({
       ...previous,
+      savedAt: new Date().toISOString(),
       content: {
         ...previous.content,
         projects: previous.content.projects.filter(
@@ -183,7 +243,7 @@ export function useDraft() {
     }));
   };
 
-  // 6. Update student contact information
+  // 6. Update contact information
   const updateContact = (
     changes: Partial<PortfolioContent["contact"]>
   ) => {
@@ -191,6 +251,7 @@ export function useDraft() {
 
     setDraft((previous) => ({
       ...previous,
+      savedAt: new Date().toISOString(),
       content: {
         ...previous.content,
         contact: {
@@ -201,12 +262,13 @@ export function useDraft() {
     }));
   };
 
-  // 7. Change the portfolio theme
+  // 7. Change portfolio theme
   const setTheme = (theme: PortfolioContent["theme"]) => {
     setHasLocalChanges(true);
 
     setDraft((previous) => ({
       ...previous,
+      savedAt: new Date().toISOString(),
       content: {
         ...previous.content,
         theme,
@@ -214,11 +276,31 @@ export function useDraft() {
     }));
   };
 
-  // Make the draft and editing functions available
+  // 8. Save the draft to localStorage only
+  const saveDraft = useCallback(() => {
+    if (!isLoaded) return;
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+      setError(null);
+    } catch (error) {
+      console.error("Could not save portfolio draft:", error);
+      setError("Could not save your draft in this browser.");
+    }
+  }, [draft, isLoaded]);
+
+  // Automatically save whenever the student makes changes
+  useEffect(() => {
+    if (!isLoaded || !hasLocalChanges) return;
+
+    saveDraft();
+  }, [draft, isLoaded, hasLocalChanges, saveDraft]);
+
   return {
     draft,
     isLoaded,
     hasLocalChanges,
+    error,
     updateProfile,
     updateAvailability,
     addProject,
@@ -226,5 +308,6 @@ export function useDraft() {
     removeProject,
     updateContact,
     setTheme,
+    saveDraft,
   };
 }
