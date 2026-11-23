@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import type { LocalDraft, PortfolioContent } from "types/portfolioTypes";
 import { getMyPortfolio } from "serverActions/portfolio/getMyPortfolio";
-
+import { useCallback, useEffect, useState } from "react";
+import { getPortfolioStudentId } from "serverActions/portfolio/getPortfolioStudentId";
 const STORAGE_KEY = "portfolio-draft";
 
 // Starting portfolio for a new student
@@ -50,7 +50,7 @@ export function useDraft() {
 
   // Has localStorage been checked?
   const [isLoaded, setIsLoaded] = useState(false);
-
+  const [storageKey, setStorageKey] = useState<string | null>(null);
   // Does the student have unpublished changes?
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
 
@@ -65,9 +65,25 @@ export function useDraft() {
 
     async function loadDraft() {
       try {
-        // First, check the browser for a saved draft
-        const saved = localStorage.getItem(STORAGE_KEY);
+        
+        // Find out which student is logged in
+        const studentId = await getPortfolioStudentId();
 
+        if (!active) return;
+
+        if (!studentId) {
+            setError("Please sign in to edit your portfolio.");
+            return;
+        }
+
+        // Create a different localStorage key for each student
+        const key = `${STORAGE_KEY}:${studentId}`;
+
+        setStorageKey(key);
+
+        // Check only this student's saved draft
+        const saved = localStorage.getItem(key);
+        
         if (saved) {
           const localDraft = JSON.parse(saved) as LocalDraft;
 
@@ -278,16 +294,16 @@ export function useDraft() {
 
   // 8. Save the draft to localStorage only
   const saveDraft = useCallback(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !storageKey) return;
 
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+      localStorage.setItem(storageKey, JSON.stringify(draft));
       setError(null);
     } catch (error) {
       console.error("Could not save portfolio draft:", error);
       setError("Could not save your draft in this browser.");
     }
-  }, [draft, isLoaded]);
+  }, [draft, isLoaded, storageKey]);
 
   // Automatically save whenever the student makes changes
   useEffect(() => {
