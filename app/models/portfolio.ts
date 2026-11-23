@@ -22,7 +22,7 @@ const profileSchema = new Schema(
 
     about: {
       type: Schema.Types.String,
-      required: true,
+      default: "",
     },
 
     photoUrl: {
@@ -32,7 +32,7 @@ const profileSchema = new Schema(
 
     location: {
       type: Schema.Types.String,
-      required: true,
+      default: "",
     },
 
     skills: {
