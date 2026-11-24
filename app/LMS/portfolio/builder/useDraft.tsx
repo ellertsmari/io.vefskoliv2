@@ -53,7 +53,7 @@ export function useDraft() {
   const [storageKey, setStorageKey] = useState<string | null>(null);
   // Does the student have unpublished changes?
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
-
+  const [isPublishing, setIsPublishing] = useState(false);
   // Error when loading or saving a local draft
   const [error, setError] = useState<string | null>(null);
 
@@ -293,17 +293,32 @@ export function useDraft() {
   };
 
   // 8. Save the draft to localStorage only
+  
   const saveDraft = useCallback(() => {
     if (!isLoaded || !storageKey) return;
 
     try {
+      // Save the draft immediately in the browser
       localStorage.setItem(storageKey, JSON.stringify(draft));
-      setError(null);
+
+      // Clear an earlier storage error asynchronously
+      queueMicrotask(() => {
+        setError((current) =>
+          current === "Could not save your draft in this browser."
+            ? null
+            : current
+        );
+      });
     } catch (error) {
       console.error("Could not save portfolio draft:", error);
-      setError("Could not save your draft in this browser.");
+
+      // Report the storage error asynchronously
+      queueMicrotask(() => {
+        setError("Could not save your draft in this browser.");
+      });
     }
   }, [draft, isLoaded, storageKey]);
+
 
   // Automatically save whenever the student makes changes
   useEffect(() => {
@@ -311,6 +326,18 @@ export function useDraft() {
 
     saveDraft();
   }, [draft, isLoaded, hasLocalChanges, saveDraft]);
+
+  // Temporary until Issue #38's publishing action is available
+  const publishDraft = async (): Promise<boolean> => {
+    setIsPublishing(true);
+
+    try {
+      setError("Publishing is not available yet. Waiting for Issue #38.");
+      return false;
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return {
     draft,
@@ -325,5 +352,7 @@ export function useDraft() {
     updateContact,
     setTheme,
     saveDraft,
+    isPublishing,
+    publishDraft,
   };
 }
