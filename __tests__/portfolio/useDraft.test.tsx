@@ -18,7 +18,10 @@ describe("useDraft", () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
-
+ Object.defineProperty(globalThis.crypto, "randomUUID", {
+    configurable: true,
+    value: jest.fn(() => "test-project-id"),
+    });
     jest.mocked(getPortfolioStudentId).mockResolvedValue("test-student");
     jest.mocked(getMyPortfolio).mockResolvedValue({
       success: true,
@@ -220,6 +223,159 @@ describe("useDraft", () => {
       // Restore normal browser storage behavior
       saveSpy.mockRestore();
     }
+  });
+
+  test("updates contact information and theme", async () => {
+    const { result } = renderHook(() => useDraft());
+
+    // Wait for the hook to finish loading
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
+
+    // Simulate the student making two changes
+    act(() => {
+      result.current.updateContact({
+        email: "anna@example.com",
+      });
+
+      result.current.setTheme("minimal");
+    });
+
+    // Check the React state
+    expect(result.current.draft.content.contact.email).toBe(
+      "anna@example.com"
+    );
+
+    expect(result.current.draft.content.theme).toBe("minimal");
+
+    // Check that localStorage saved both changes
+    await waitFor(() => {
+      const saved = localStorage.getItem(
+        "portfolio-draft:test-student"
+      );
+
+      expect(saved).not.toBeNull();
+
+      const savedDraft = JSON.parse(saved!);
+
+      expect(savedDraft.content.contact.email).toBe(
+        "anna@example.com"
+      );
+
+      expect(savedDraft.content.theme).toBe("minimal");
+    });
+  });
+
+
+  test("adds, updates, and removes a project", async () => {
+    const { result } = renderHook(() => useDraft());
+
+    // Wait for the draft to finish loading
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
+
+    // 1. Add a project
+    act(() => {
+      result.current.addProject();
+    });
+
+    expect(result.current.draft.content.projects).toHaveLength(1);
+
+    // Get the ID of the newly created project
+    const projectId = result.current.draft.content.projects[0].id;
+
+    // 2. Update the project's title
+    act(() => {
+      result.current.updateProject(projectId, {
+        title: "My Portfolio Website",
+      });
+    });
+
+    expect(result.current.draft.content.projects[0].title).toBe(
+      "My Portfolio Website"
+    );
+
+    // Check that the updated project was saved
+    await waitFor(() => {
+      const saved = localStorage.getItem(
+        "portfolio-draft:test-student"
+      );
+
+      expect(saved).not.toBeNull();
+      expect(JSON.parse(saved!).content.projects[0].title).toBe(
+        "My Portfolio Website"
+      );
+    });
+
+    // 3. Remove the project
+    act(() => {
+      result.current.removeProject(projectId);
+    });
+
+    expect(result.current.draft.content.projects).toHaveLength(0);
+
+    // Check that removal was also saved
+    await waitFor(() => {
+      const saved = localStorage.getItem(
+        "portfolio-draft:test-student"
+      );
+
+      expect(JSON.parse(saved!).content.projects).toHaveLength(0);
+    });
+  });
+
+
+  test("saves availability changes and restores the date", async () => {
+    const { result, unmount } = renderHook(() => useDraft());
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
+
+    // Update the student's availability
+    act(() => {
+      result.current.updateAvailability({
+        openToInternships: true,
+        availableFrom: new Date("2027-01-15T00:00:00.000Z"),
+        lookingFor: "Frontend internship",
+      });
+    });
+
+    // Verify that the changes were saved
+    await waitFor(() => {
+      const saved = localStorage.getItem(
+        "portfolio-draft:test-student"
+      );
+
+      expect(saved).not.toBeNull();
+
+      const savedDraft = JSON.parse(saved!);
+
+      expect(savedDraft.content.availability.openToInternships).toBe(true);
+      expect(savedDraft.content.availability.lookingFor).toBe(
+        "Frontend internship"
+      );
+    });
+
+    // Simulate closing and reopening the builder
+    unmount();
+
+    const { result: reloaded } = renderHook(() => useDraft());
+
+    await waitFor(() => {
+      expect(reloaded.current.isLoaded).toBe(true);
+    });
+
+    // The restored value must be a JavaScript Date
+    expect(
+      reloaded.current.draft.content.availability.availableFrom
+    ).toBeInstanceOf(Date);
+
+    expect(
+      reloaded.current.draft.content.availability.availableFrom.toISOString()
+    ).toBe("2027-01-15T00:00:00.000Z");
   });
 
 });
