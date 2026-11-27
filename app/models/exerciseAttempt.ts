@@ -84,6 +84,12 @@ const exerciseAttemptSchema = new Schema({
   score: { type: Schema.Types.Number, required: true },
   passed: { type: Schema.Types.Boolean, required: true },
 
+  // Counts saves of the answer state. A save names the revision it read and
+  // is refused if another request saved in between, so two requests (two
+  // tabs, or an answer given while a code task is still being graded) cannot
+  // overwrite each other's answers. Absent on attempts older than the field.
+  revision: { type: Schema.Types.Number, required: false, default: 0 },
+
   createdAt: { type: Schema.Types.Date, required: true, default: Date.now },
 });
 

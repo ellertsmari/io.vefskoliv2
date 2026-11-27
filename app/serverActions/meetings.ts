@@ -185,7 +185,9 @@ const freeTeachers = (
  * at least MIN_TEACHERS_PRESENT teachers are free: not "not available", not
  * in another meeting, and not running a sign-up sheet at that time.
  */
-async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSlot[]> {
+type ComputedSlot = MeetingSlot & { teacherIds: ObjectId[] };
+
+async function computeSlots(fromDate: string, toDate: string): Promise<ComputedSlot[]> {
   const windows = await BookingWindow.find({
     validFrom: { $lte: toDate },
     validTo: { $gte: fromDate },
@@ -254,7 +256,7 @@ async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSl
   const today = todayKey();
   const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-  const slots: MeetingSlot[] = [];
+  const slots: ComputedSlot[] = [];
   // Two windows can overlap; a time is offered once.
   const offered = new Set<string>();
   for (let date = fromDate, i = 0; date <= toDate && i < MAX_RANGE_DAYS; date = addDays(date, 1), i++) {
@@ -287,6 +289,9 @@ async function computeSlots(fromDate: string, toDate: string): Promise<MeetingSl
           startTime,
           endTime,
           teachers: free.map((teacher) => teacher.name),
+          // Server-side only: booking attaches these, never the names (two
+          // teachers can share a name). Stripped before a slot leaves here.
+          teacherIds: free.map((teacher) => teacher._id),
         });
       }
     }
@@ -306,7 +311,9 @@ export async function getMeetingSlots(
     return [];
   }
   try {
-    return await computeSlots(fromDate, toDate);
+    return (await computeSlots(fromDate, toDate)).map(
+      ({ teacherIds: _ids, ...slot }) => slot
+    );
   } catch (error) {
     handleActionError("getMeetingSlots", error);
     return [];
@@ -346,12 +353,8 @@ export async function bookMeeting(
       );
     }
 
-    const teachers = await User.find(
-      { role: "teacher", status: { $ne: "pending" }, name: { $in: slot.teachers } },
-      { _id: 1 }
-    ).lean<Array<{ _id: ObjectId }>>();
     const studentId = new ObjectId(session.user.id);
-    const attendees = teachers.map((teacher) => teacher._id);
+    const attendees = [...slot.teacherIds];
 
     if (withTeam) {
       const team = await Team.findOne({ members: studentId }, { members: 1 })
@@ -374,6 +377,41 @@ export async function bookMeeting(
       visibility: "shared",
       sharedWith: attendees,
     });
+
+    // The check above and the save are two steps, so two students can pass
+    // the check for the same time together. Look again now that ours is
+    // saved: if an earlier meeting holds any of these teachers at this time,
+    // ours gives way. Whichever was saved first keeps the slot, so exactly
+    // one of the two survives.
+    const sameDay = await CalendarEvent.find(
+      {
+        _id: { $lt: created._id },
+        category: "meeting",
+        startDate: date,
+        $or: [
+          { sharedWith: { $in: slot.teacherIds } },
+          { owner: { $in: slot.teacherIds } },
+        ],
+      },
+      { startTime: 1, endTime: 1 }
+    ).lean<Array<{ startTime?: string; endTime?: string }>>();
+    const taken = sameDay.some(
+      (other) =>
+        other.startTime &&
+        timesOverlap(
+          startTime,
+          slot.endTime,
+          other.startTime,
+          other.endTime ??
+            fromMinutes(toMinutes(other.startTime) + ASSUMED_MEETING_MINUTES)
+        )
+    );
+    if (taken) {
+      await CalendarEvent.deleteOne({ _id: created._id });
+      return failure(
+        "Someone booked that time a moment before you. Pick another slot from the list."
+      );
+    }
     revalidatePath(CALENDAR_PATH);
     return success(
       { id: String(created._id), teachers: slot.teachers },

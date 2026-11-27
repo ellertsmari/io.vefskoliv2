@@ -53,6 +53,21 @@ describe("activity log access and lifecycle", () => {
     const cards = await getGuides(String(anna._id));
     expect(cards?.find((g) => String(g._id) === guideId)?.activityProgress?.eligibleMinutes).toBe(600);
   });
+  it("opens the year's rules again when its only activity is deleted", async () => {
+    expect((await saveActivityEntry(input({ status: "draft" }))).success).toBe(true);
+    const draft = await ActivityEntryModel.findOne();
+    expect((await ActivityCycleModel.findById(cycleId))!.locked).toBe(true);
+    // A second activity keeps the year locked when the first is deleted.
+    expect((await saveActivityEntry(input({ name: "Conference" }))).success).toBe(true);
+    const second = await ActivityEntryModel.findOne({ normalizedName: { $ne: draft!.normalizedName } });
+    expect((await deleteActivityEntry(guideId, String(draft!._id), 0)).success).toBe(true);
+    expect((await ActivityCycleModel.findById(cycleId))!.locked).toBe(true);
+
+    expect((await deleteActivityEntry(guideId, String(second!._id), 0)).success).toBe(true);
+    expect((await ActivityCycleModel.findById(cycleId))!.locked).toBe(false);
+    login(teacher);
+    expect((await saveActivityCycle(guideId, { ...settings, activityCapMinutes: 300 }, cycleId)).success).toBe(true);
+  });
   it("cannot read, edit, delete or reuse another student's evidence", async () => {
     await saveActivityEntry(input());
     const stored = await ActivityEntryModel.findOne();

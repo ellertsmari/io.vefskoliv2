@@ -92,7 +92,8 @@ describe("buildGuidePayload", () => {
     expect(payload.module).toEqual({ title: "3 - The fundamentals", number: 3 });
     expect(payload.category).toBe("designSpeciality");
     expect(payload.classes).toEqual([{ title: "Slides", link: "https://s" }]);
-    expect(payload.exercise).toBeNull();
+    // Left out, not null: a stored exercise survives a switch away from auto.
+    expect("exercise" in payload).toBe(false);
     expect(payload.gradingMode).toBe("peerReview");
   });
 

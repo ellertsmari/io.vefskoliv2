@@ -175,4 +175,53 @@ describe("PUT /api/guides/[id] order", () => {
     expect(saved!.exercise.tasks.map((t) => t.type)).toEqual(["quiz", "shortAnswer", "shortAnswer", "code"]);
     expect(saved!.exercise.poolSizes).toEqual({ shortAnswer: 1 });
   });
+
+  it("keeps the exercise when the guide is switched away from auto-graded", async () => {
+    const guide = await createDummyGuide();
+    await Guide.collection.updateOne(
+      { _id: guide._id },
+      {
+        $set: {
+          module: { title: "3 - The fundamentals", number: 3 },
+          gradingMode: "auto",
+          exercise: {
+            passThreshold: 0.7,
+            tasks: [
+              { type: "quiz", prompt: "Pick one", options: ["a", "b"], correctAnswers: [0], points: 1 },
+              { type: "code", prompt: "Write it", entryPoint: "f", tests: [], points: 2 },
+            ],
+          },
+        },
+      }
+    );
+    const id = String(guide._id);
+    const saveAs = async (mode: "peerReview" | "activityLog" | "auto") => {
+      const loaded = await getGuideForTeacher(id);
+      return put(
+        id,
+        buildGuidePayload(formFromGuide(loaded!), exerciseFromGuide(loaded!), mode, "code", false)
+      );
+    };
+    const stored = () =>
+      Guide.findById(id).lean<{
+        gradingMode: string;
+        submissionType?: string;
+        exercise?: { tasks: { type: string }[] };
+      }>();
+
+    expect((await saveAs("peerReview")).status).toBe(200);
+    expect((await stored())!.gradingMode).toBe("peerReview");
+    expect((await stored())!.exercise?.tasks.map((t) => t.type)).toEqual(["quiz", "code"]);
+
+    expect((await saveAs("activityLog")).status).toBe(200);
+    expect((await stored())!.submissionType).toBe("activityLog");
+    expect((await stored())!.exercise?.tasks.map((t) => t.type)).toEqual(["quiz", "code"]);
+
+    // And it is there to switch back to.
+    expect((await saveAs("auto")).status).toBe(200);
+    const back = await stored();
+    expect(back!.gradingMode).toBe("auto");
+    expect(back!.submissionType).toBeUndefined();
+    expect(back!.exercise?.tasks.map((t) => t.type)).toEqual(["quiz", "code"]);
+  });
 });

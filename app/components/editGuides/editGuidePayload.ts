@@ -202,8 +202,12 @@ export const buildGuidePayload = (
             ...(Object.keys(poolSizes).length > 0 ? { poolSizes } : {}),
           },
         }
-      : // Peer-reviewed guide: clear any previously authored exercise.
-        { gradingMode: "peerReview", exercise: null };
+      : // Not auto-graded: leave `exercise` out, so a stored exercise stays
+        // where it is. It is inactive (every reader asks for gradingMode
+        // "auto" first) and comes back when the guide is switched back.
+        // Sending null here used to delete the answer key on Save, including
+        // tasks written by hand that the editor cannot recreate.
+        { gradingMode: "peerReview" };
 
   // Empty list rows are dropped rather than saved as blanks.
   const kept = <T extends Record<string, string>>(rows: T[]) =>

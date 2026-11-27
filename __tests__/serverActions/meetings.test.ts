@@ -20,7 +20,7 @@ import {
   getUpcomingMeetings,
   saveBookingWindow,
 } from "serverActions/meetings";
-import { createCalendarEvent } from "serverActions/calendarEvents";
+import { createCalendarEvent, updateCalendarEvent } from "serverActions/calendarEvents";
 import { addDays, todayKey, weekdayOf } from "utils/calendarUtils";
 import { auth } from "../../auth";
 
@@ -279,6 +279,79 @@ describe("meetings", () => {
 
       const slots = await getMeetingSlots(rangeFrom, rangeTo);
       expect(slots.map((slot) => slot.startTime)).toEqual(["13:00", "13:40"]);
+    });
+
+    it("gives the slot to one of two students who book it at the same moment", async () => {
+      const bjarni = await createDummyUser("user", { name: "Bjarni" });
+      // Whoever asks is signed in: alternate between the two students.
+      (auth as jest.Mock)
+        .mockResolvedValueOnce({ user: { id: anna._id.toString(), role: "user", name: "Anna" } })
+        .mockResolvedValueOnce({ user: { id: bjarni._id.toString(), role: "user", name: "Bjarni" } });
+      const booking = { date: nextTuesday, startTime: "13:20", topic: "Feedback" };
+
+      const results = await Promise.all([bookMeeting(booking), bookMeeting(booking)]);
+
+      expect(results.filter((result) => result.success)).toHaveLength(1);
+      expect(await CalendarEvent.countDocuments({ category: "meeting" })).toBe(1);
+    });
+
+    it("attaches the free teachers themselves, not everyone with their name", async () => {
+      const namesake = await createDummyUser("teacher", { name: "Hanna" });
+      signInAs(namesake);
+      await createCalendarEvent({
+        title: "Away",
+        category: "unavailable",
+        startDate: nextTuesday,
+        visibility: "everyone",
+      });
+      signInAs(anna);
+
+      await bookMeeting({ date: nextTuesday, startTime: "13:00", topic: "Feedback" });
+
+      const stored = await CalendarEvent.findOne({ category: "meeting" }).lean<CalendarEventType>();
+      expect(stored?.sharedWith.map(String).sort()).toEqual(
+        [smari._id.toString(), hanna._id.toString()].sort()
+      );
+    });
+
+    it("lets the student reword a booked meeting but not move or re-share it", async () => {
+      signInAs(anna);
+      await bookMeeting({ date: nextTuesday, startTime: "13:20", topic: "Feedback" });
+      const booked = await CalendarEvent.findOne({ category: "meeting" }).lean<CalendarEventType>();
+      const asBooked = {
+        title: "Meeting: Anna",
+        category: "meeting" as const,
+        startDate: nextTuesday,
+        startTime: "13:20",
+        endTime: "13:40",
+        visibility: "shared" as const,
+      };
+
+      const moved = await updateCalendarEvent(String(booked!._id), {
+        ...asBooked,
+        startTime: "18:00",
+        endTime: "18:20",
+      });
+      expect(moved.success).toBe(false);
+
+      const reworded = await updateCalendarEvent(String(booked!._id), {
+        ...asBooked,
+        description: "Feedback on the second prototype",
+        visibility: "private",
+      });
+      expect(reworded.success).toBe(true);
+      const after = await CalendarEvent.findById(booked!._id).lean<CalendarEventType>();
+      expect(after).toEqual(
+        expect.objectContaining({
+          description: "Feedback on the second prototype",
+          startTime: "13:20",
+          endTime: "13:40",
+          visibility: "shared",
+        })
+      );
+      expect(after?.sharedWith.map(String).sort()).toEqual(
+        [smari._id.toString(), hanna._id.toString()].sort()
+      );
     });
 
     it("includes the team when asked", async () => {

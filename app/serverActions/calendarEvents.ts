@@ -342,6 +342,10 @@ const loadEditable = async (eventId: string, session: Session) => {
     team?: ObjectId | null;
     sharedWith?: ObjectId[];
     seriesId?: string;
+    startDate: string;
+    endDate: string;
+    startTime?: string;
+    endTime?: string;
   }>();
   if (!event) return null;
   const isTeacher = isActingAsTeacher(session);
@@ -382,7 +386,24 @@ export async function updateCalendarEvent(
       team: event.team ?? null,
       sharedWith: event.sharedWith ?? [],
     };
-    if (!isTeacher) {
+    // A booked meeting is the outcome of the booking rules: inside meeting
+    // hours, two teachers free, nobody double-booked. The student who booked
+    // it may reword it, but its time and who attends stay as booked;
+    // otherwise an edit is a way around every one of those rules.
+    const bookedMeeting = event.category === "meeting" && !isTeacher;
+    if (bookedMeeting) {
+      const moved =
+        base.startDate !== event.startDate ||
+        base.endDate !== event.endDate ||
+        (base.startTime ?? "") !== (event.startTime ?? "") ||
+        (base.endTime ?? "") !== (event.endTime ?? "");
+      if (moved) {
+        return failure(
+          "A booked meeting keeps its time. To move it, delete it and book another slot."
+        );
+      }
+    }
+    if (!isTeacher && !bookedMeeting) {
       const resolved = await resolveAudience(
         input.visibility,
         input.sharedWith,

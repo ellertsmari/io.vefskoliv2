@@ -217,6 +217,10 @@ export const EventForm = ({
     });
   };
 
+  // A student's booked meeting: the wording can change, its time and who
+  // attends cannot (the server refuses it too; see updateCalendarEvent).
+  const bookedMeeting = !!initial && initial.category === "meeting" && !isTeacher;
+
   const timeField = (
     id: string,
     label: string,
@@ -233,7 +237,7 @@ export const EventForm = ({
       placeholder="10:00"
       pattern="([01]?[0-9]|2[0-3])[:.h]?[0-5]?[0-9]?"
       maxLength={5}
-      disabled={isPending}
+      disabled={isPending || bookedMeeting}
       value={value}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
         setValue(e.target.value)
@@ -316,7 +320,7 @@ export const EventForm = ({
                   name="startDate"
                   label="First day"
                   required
-                  disabled={isPending}
+                  disabled={isPending || bookedMeeting}
                   value={startDate}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setStartDate(e.target.value);
@@ -332,7 +336,7 @@ export const EventForm = ({
                   type="date"
                   name="endDate"
                   label="Last day"
-                  disabled={isPending}
+                  disabled={isPending || bookedMeeting}
                   min={startDate}
                   value={endDate}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -350,7 +354,14 @@ export const EventForm = ({
               {timeField("event-start-time", "From (optional)", startTime, setStartTime, "startTime")}
               {timeField("event-end-time", "To (optional)", endTime, setEndTime, "endTime")}
             </FieldRow>
-            <FieldHint>24-hour clock, e.g. 09:30 or 14:00.</FieldHint>
+            {bookedMeeting ? (
+              <FieldHint>
+                A booked meeting keeps its time. To move it, delete it and
+                book another slot.
+              </FieldHint>
+            ) : (
+              <FieldHint>24-hour clock, e.g. 09:30 or 14:00.</FieldHint>
+            )}
 
             <Input
               id="event-link"
@@ -383,6 +394,11 @@ export const EventForm = ({
 
             {isTeacher ? (
               <FieldHint>Visible to everyone.</FieldHint>
+            ) : bookedMeeting ? (
+              <FieldHint>
+                Seen by you and the people who were invited when it was
+                booked.
+              </FieldHint>
             ) : (
               <Field>
                 <FieldLabel as="span">Who can see this?</FieldLabel>

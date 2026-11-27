@@ -179,8 +179,15 @@ export async function deleteActivityEntry(guideId: string, entryId: string, revi
   if (!session?.user?.id || isActingAsTeacher(session)) return failure("Only the student can delete their activity.");
   if (!idSchema.safeParse(entryId).success || !idSchema.safeParse(guideId).success || !Number.isInteger(revision)) return failure("Invalid activity.");
   try {
-    const result = await ActivityEntryModel.deleteOne({ _id: entryId, guide: guideId, owner: session.user.id, revision });
-    if (!result.deletedCount) return failure("This activity changed. Reload and try again.");
+    const deleted = await ActivityEntryModel.findOneAndDelete({ _id: entryId, guide: guideId, owner: session.user.id, revision }).select("cycle").lean<{ cycle: Types.ObjectId }>();
+    if (!deleted) return failure("This activity changed. Reload and try again.");
+    // The first activity locks the year's rules. When the last one goes, open
+    // them again: an empty year that can be neither edited nor replaced is a
+    // dead end. Lock again if an activity arrived in between.
+    if (!(await ActivityEntryModel.exists({ cycle: deleted.cycle }))) {
+      await ActivityCycleModel.updateOne({ _id: deleted.cycle }, { $set: { locked: false } });
+      if (await ActivityEntryModel.exists({ cycle: deleted.cycle })) await ActivityCycleModel.updateOne({ _id: deleted.cycle }, { $set: { locked: true } });
+    }
     refresh(guideId);
     return successNoData("Activity deleted. Its hours have been removed from your totals.");
   } catch (error) { return handleActionError("deleteActivityEntry", error, "Could not delete the activity."); }

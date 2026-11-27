@@ -113,7 +113,8 @@ const GuideUpdateSchema = z.object({
     .array(z.object({ title: z.string(), link: z.string() }))
     .optional(),
   gradingMode: z.enum(["peerReview", "auto"]).optional(),
-  // null clears a previously authored exercise (peer-review guides).
+  // null deletes a stored exercise. The editor no longer sends it: switching
+  // a guide away from auto-graded leaves the exercise stored and inactive.
   exercise: z
     .object({
       passThreshold: z.number().min(0).max(1),
@@ -247,8 +248,14 @@ export async function PUT(
     } else if (submissionType !== undefined) {
       update.submissionType = submissionType;
       update.gradingMode = "peerReview";
+      // An activity log has no exercise of its own, but one authored earlier
+      // stays stored (inactive) rather than being deleted with the switch.
       delete update.exercise;
-      update.$unset = { ...(update.$unset as Record<string, number> ?? {}), exercise: 1 };
+      const unset = update.$unset as Record<string, number> | undefined;
+      if (unset) {
+        delete unset.exercise;
+        if (Object.keys(unset).length === 0) delete update.$unset;
+      }
     }
 
     // A new order number that another guide in the module already has moves

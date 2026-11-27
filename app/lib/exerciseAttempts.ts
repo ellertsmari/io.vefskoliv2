@@ -29,6 +29,7 @@ type AttemptDoc = InstanceType<typeof ExerciseAttempt> & {
   score: number;
   passed: boolean;
   answeredCount?: number;
+  revision?: number;
 };
 
 export const LEGACY_STATUSES = ["submitted", "inProgress"];
@@ -45,29 +46,44 @@ export const stateOf = (doc: AttemptDoc): AttemptState => ({
 
 /**
  * Write a changed state back, with the score cached alongside it.
- * Mixed fields are replaced wholesale and marked modified — mongoose does not
- * see changes nested inside them.
+ *
+ * Returns null, having written nothing, when the attempt was saved by another
+ * request since `doc` was read. The four state fields are replaced wholesale,
+ * so without this a slow request (a code task takes seconds to grade) would
+ * put back the state it read at its start: answers given meanwhile were lost,
+ * and a multiple-choice question locked meanwhile came back open, at full
+ * value, after its answer had been shown. The caller reads again and reapplies.
  */
 export const saveAttempt = async (
   doc: AttemptDoc,
   exercise: ServerExercise,
   state: AttemptState
-): Promise<DerivedAttempt> => {
+): Promise<DerivedAttempt | null> => {
   const derived = deriveAttempt(exercise, state);
-  doc.set({
-    slots: state.slots,
-    served: state.served,
-    tries: state.tries,
-    answers: state.answers,
-    codeResults: state.codeResults,
-    score: derived.summary.score,
-    passed: derived.summary.passed,
-    answeredCount: derived.summary.answered,
-  });
-  for (const field of ["slots", "tries", "answers", "codeResults"]) {
-    doc.markModified(field);
-  }
-  await doc.save();
+  const read = doc.revision ?? 0;
+  const result = await ExerciseAttempt.updateOne(
+    {
+      _id: doc._id,
+      status: "active",
+      // Attempts from before the field have none; null matches a missing one.
+      revision: read === 0 ? { $in: [0, null] } : read,
+    },
+    {
+      $set: {
+        slots: state.slots,
+        served: state.served,
+        tries: state.tries,
+        answers: state.answers,
+        codeResults: state.codeResults,
+        score: derived.summary.score,
+        passed: derived.summary.passed,
+        answeredCount: derived.summary.answered,
+        revision: read + 1,
+      },
+    }
+  );
+  if (result.matchedCount !== 1) return null;
+  doc.revision = read + 1;
   return derived;
 };
 

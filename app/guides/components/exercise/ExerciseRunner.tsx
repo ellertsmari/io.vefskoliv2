@@ -209,10 +209,37 @@ export const ExerciseRunner = ({
   const answerable =
     !!item && item.status !== "correct" && item.status !== "locked";
 
+  /**
+   * The server refused something this screen offered, so the screen is
+   * behind: the exercise moved on somewhere else (another tab, another
+   * computer). Load it again, so what is shown matches the message. A
+   * question the message calls locked then shows as locked, with its button
+   * for a new one.
+   */
+  const catchUp = async () => {
+    const res = await openExercise(guideId);
+    if (!res.success) return;
+    const { exercise: current, items: currentItems, score: currentScore } = res.data;
+    setExercise(current);
+    setItems(currentItems);
+    setScore(currentScore);
+    setOptionOrder((prev) => {
+      const next = { ...prev };
+      for (const t of current.tasks) {
+        if (t.type === ExerciseTaskType.QUIZ && !next[t.id]) {
+          next[t.id] = shuffledIndices(t.options.length);
+        }
+      }
+      return next;
+    });
+    setIndex((i) => Math.min(i, Math.max(current.tasks.length - 1, 0)));
+  };
+
   const submitAnswer = async () => {
     if (!task || busy || !hasDraft || !answerable) return;
     setBusy(true);
     const res = await checkAnswer({ guideId, taskId: task.id, answer: draft });
+    if (!res.success) await catchUp();
     setBusy(false);
 
     if (!res.success) {
@@ -237,6 +264,7 @@ export const ExerciseRunner = ({
     if (!task || busy || item?.status !== "locked") return;
     setBusy(true);
     const res = await newQuestion({ guideId, taskId: task.id });
+    if (!res.success) await catchUp();
     setBusy(false);
 
     if (!res.success) {

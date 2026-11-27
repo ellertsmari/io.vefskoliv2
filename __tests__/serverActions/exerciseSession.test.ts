@@ -19,6 +19,7 @@ import {
   type OpenedExercise,
 } from "serverActions/exerciseSession";
 import { getGuides } from "serverActions/getGuides";
+import { findActiveAttempt, saveAttempt, stateOf } from "app/lib/exerciseAttempts";
 import { extendGuides } from "utils/guideUtils";
 import { ReturnStatus } from "types/guideTypes";
 import type { UserDocument } from "models/user";
@@ -252,6 +253,39 @@ describe("exercise session", () => {
     it("refuses an answer before the exercise is opened", async () => {
       const res = await checkAnswer({ guideId, taskId: "x", answer: RIGHT });
       expect(res.success).toBe(false);
+    });
+  });
+
+  describe("two requests at once", () => {
+    it("keeps both answers when two questions are checked together", async () => {
+      const opened = await open(guideId);
+      const [first, second] = quizIds(opened);
+
+      const results = await Promise.all([
+        checkAnswer({ guideId, taskId: first, answer: WRONG }),
+        checkAnswer({ guideId, taskId: second, answer: RIGHT }),
+      ]);
+
+      expect(results.every((result) => result.success)).toBe(true);
+      const items = (await open(guideId)).items;
+      expect(items[first]?.status).toBe("locked");
+      expect(items[second]?.status).toBe("correct");
+    });
+
+    it("refuses to save over a newer save, so a locked question stays locked", async () => {
+      const opened = await open(guideId);
+      const id = quizIds(opened)[0];
+      const guide = await Guide.findById(guideId).lean<{ exercise: never }>();
+      const owner = student._id.toString();
+      // A slow request read the attempt before the wrong guess was saved...
+      const stale = await findActiveAttempt(owner, guideId);
+      await checkAnswer({ guideId, taskId: id, answer: WRONG });
+
+      // ...and now tries to write back what it read.
+      expect(await saveAttempt(stale!, guide!.exercise, stateOf(stale!))).toBeNull();
+
+      const items = (await open(guideId)).items;
+      expect(items[id]?.status).toBe("locked");
     });
   });
 

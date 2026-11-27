@@ -3,6 +3,10 @@ import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import { Guide } from "../models/guide";
+import { Return } from "../models/return";
+import { ExerciseAttempt } from "../models/exerciseAttempt";
+import { ActivityEntryModel } from "../models/activityEntry";
+import { ActivityCycleModel } from "../models/activityCycle";
 import { isActingAsTeacher } from "../utils/userUtils";
 import { getDiscipline, getIsSpecialty } from "../utils/guideTaxonomy";
 import { extractModuleNumber } from "../utils/moduleUtils";
@@ -105,8 +109,25 @@ export async function deleteGuide(guideId: string): Promise<ActionResult<void>> 
   if (!ObjectId.isValid(guideId)) return failure(ErrorMessages.NOT_FOUND("Guide"));
 
   try {
-    const result = await Guide.deleteOne({ _id: new ObjectId(guideId) });
+    const id = new ObjectId(guideId);
+    // A guide that students have worked on stays. Grades are read starting
+    // from the guide, so deleting it would silently drop every return, review
+    // and score on it from each student's average, with nothing to restore.
+    const [returned, attempted, logged] = await Promise.all([
+      Return.exists({ guide: id }),
+      ExerciseAttempt.exists({ guide: id }),
+      ActivityEntryModel.exists({ guide: id }),
+    ]);
+    if (returned || attempted || logged) {
+      return failure(
+        "Students have already worked on this guide, so it cannot be deleted. Their returns, exercise attempts or logged activities would be lost from their grades."
+      );
+    }
+    const result = await Guide.deleteOne({ _id: id });
     if (result.deletedCount === 0) return failure(ErrorMessages.NOT_FOUND("Guide"));
+    // Reporting years belong to the guide and hold nothing once it has no
+    // activities (checked above).
+    await ActivityCycleModel.deleteMany({ guide: id });
     revalidatePath("/guides");
     revalidatePath("/LMS/edit-guides");
     return successNoData("Guide deleted");

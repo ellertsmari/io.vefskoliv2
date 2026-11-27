@@ -9,6 +9,8 @@ import {
   createDummyUser,
 } from "../__mocks__/mongoHandler";
 import { Guide } from "models/guide";
+import { Return } from "models/return";
+import { ActivityCycleModel } from "models/activityCycle";
 import { deleteGuide, getGuidesForEditor } from "serverActions/editGuideActions";
 import { auth } from "../../auth";
 
@@ -69,5 +71,27 @@ describe("editGuideActions", () => {
     expect((await deleteGuide(String(guide._id))).success).toBe(true);
     expect(await Guide.countDocuments()).toBe(0);
     expect((await deleteGuide(String(guide._id))).success).toBe(false);
+  });
+
+  it("keeps a guide students have worked on", async () => {
+    const guide = await createDummyGuide();
+    const student = await createDummyUser();
+    await Return.collection.insertOne({ guide: guide._id, owner: student._id, createdAt: new Date() });
+    signInAs("teacher");
+
+    const refused = await deleteGuide(String(guide._id));
+
+    expect(refused.success).toBe(false);
+    expect(refused.message).toMatch(/already worked on this guide/);
+    expect(await Guide.countDocuments()).toBe(1);
+  });
+
+  it("takes an unused guide's reporting years with it", async () => {
+    const guide = await createDummyGuide();
+    await ActivityCycleModel.collection.insertOne({ guide: guide._id, label: "2026–2027" });
+    signInAs("teacher");
+
+    expect((await deleteGuide(String(guide._id))).success).toBe(true);
+    expect(await ActivityCycleModel.countDocuments()).toBe(0);
   });
 });

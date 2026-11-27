@@ -83,10 +83,19 @@ export const BookPanel = ({
   const [weekStart, setWeekStart] = useState(() =>
     mondayOf(date ?? firstOpen?.date ?? todayKey())
   );
-  const [picked, setPicked] = useState<MeetingSlot | null>(
+  const [pickedSlot, setPicked] = useState<MeetingSlot | null>(
     () =>
       slots.find((slot) => slot.date === date && slot.startTime === startTime) ?? null
   );
+  // A time someone else took meanwhile leaves the list when it reloads; drop
+  // it as the choice too, or the button keeps offering a time that is gone.
+  const picked =
+    pickedSlot &&
+    slots.some(
+      (slot) => slot.date === pickedSlot.date && slot.startTime === pickedSlot.startTime
+    )
+      ? pickedSlot
+      : null;
   const [topic, setTopic] = useState("");
   const [withTeam, setWithTeam] = useState(false);
   const [error, setError] = useState<string | undefined>();

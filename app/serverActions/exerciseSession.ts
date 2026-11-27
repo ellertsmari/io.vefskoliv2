@@ -344,6 +344,15 @@ export const openExercise = async (
   }
 };
 
+/**
+ * How often an answer is reapplied when another request saved the attempt in
+ * between. Each round reads fresh, so more than one retry means several
+ * requests are landing at once; give up politely rather than loop.
+ */
+const SAVE_ROUNDS = 4;
+const SAVE_CONFLICT =
+  "This exercise was saving from another tab at the same moment, so that was not saved. Try again.";
+
 const CheckSchema = z.object({
   guideId: z.string().trim().min(1),
   taskId: z.string().trim().min(1),
@@ -368,81 +377,88 @@ export const checkAnswer = async (
     const exercise = await loadExercise(guideId);
     if (!exercise) return failure(ErrorMessages.NOT_FOUND("Exercise"));
 
-    const attempt = await findActiveAttempt(ownerId, guideId);
-    if (!attempt) return failure("Open the exercise before answering");
-
-    const state = stateOf(attempt);
-    // The question must be one ON SHOW in this attempt — derived on the
-    // server, never trusted from the request.
-    const before = deriveAttempt(exercise, state).items.find(
-      (item) => item.taskId === id
-    );
-    const task = tasksById(exercise).get(id);
-    if (!before || !task) {
-      return failure("That question is not part of your exercise");
-    }
-    if (before.status === "correct") {
-      return failure("You have already answered that one");
-    }
-    if (before.status === "locked") {
-      return failure("That question is locked — ask for a new one");
-    }
-
+    // Read, apply, save; if another request saved in between, read again and
+    // reapply to what is there now (see saveAttempt). The code grader runs
+    // once: its verdict depends on the code, not on the rest of the attempt.
     let code: CodeFeedback | undefined;
-    if (task.type === "code") {
-      if (typeof answer !== "string") return failure(ErrorMessages.INVALID_INPUT);
-      try {
-        // Loaded on demand: it pulls in the TypeScript compiler and QuickJS,
-        // which every guide page would otherwise parse on a cold start.
-        const { runCodeSubmission } = await import("utils/codeRunner");
-        code = await runCodeSubmission(
-          {
-            entryPoint: task.entryPoint,
-            tests: task.tests ?? [],
-            requires: task.requires,
-          },
-          answer
-        );
-      } catch (sandboxError) {
-        // The grader itself failed. Record nothing against the student for
-        // our problem.
-        console.error("[checkAnswer] code grader failed", sandboxError);
-        return failure(
-          "The code grader could not run just now. This is a problem on our side, not with your code — try again in a moment."
-        );
+    for (let round = 0; round < SAVE_ROUNDS; round++) {
+      const attempt = await findActiveAttempt(ownerId, guideId);
+      if (!attempt) return failure("Open the exercise before answering");
+
+      const state = stateOf(attempt);
+      // The question must be one ON SHOW in this attempt — derived on the
+      // server, never trusted from the request.
+      const before = deriveAttempt(exercise, state).items.find(
+        (item) => item.taskId === id
+      );
+      const task = tasksById(exercise).get(id);
+      if (!before || !task) {
+        return failure("That question is not part of your exercise");
       }
+      if (before.status === "correct") {
+        return failure("You have already answered that one");
+      }
+      if (before.status === "locked") {
+        return failure("That question is locked — ask for a new one");
+      }
+
+      if (task.type === "code" && !code) {
+        if (typeof answer !== "string") return failure(ErrorMessages.INVALID_INPUT);
+        try {
+          // Loaded on demand: it pulls in the TypeScript compiler and QuickJS,
+          // which every guide page would otherwise parse on a cold start.
+          const { runCodeSubmission } = await import("utils/codeRunner");
+          code = await runCodeSubmission(
+            {
+              entryPoint: task.entryPoint,
+              tests: task.tests ?? [],
+              requires: task.requires,
+            },
+            answer
+          );
+        } catch (sandboxError) {
+          // The grader itself failed. Record nothing against the student for
+          // our problem.
+          console.error("[checkAnswer] code grader failed", sandboxError);
+          return failure(
+            "The code grader could not run just now. This is a problem on our side, not with your code — try again in a moment."
+          );
+        }
+      }
+
+      if (task.type === "quiz") {
+        if (!Array.isArray(answer)) return failure(ErrorMessages.INVALID_INPUT);
+        const slot = state.slots[before.slot!];
+        slot.entries[slot.entries.length - 1] = { taskId: id, answer };
+      } else if (task.type === "shortAnswer") {
+        if (typeof answer !== "string") return failure(ErrorMessages.INVALID_INPUT);
+        state.tries = { ...state.tries, [id]: [...(state.tries[id] ?? []), answer] };
+      } else if (code) {
+        state.codeResults = { ...state.codeResults, [id]: code };
+      }
+      state.answers = { ...state.answers, [id]: answer };
+
+      const derived = await saveAttempt(attempt, exercise, state);
+      if (!derived) continue;
+      const after = derived.items.find((item) => item.taskId === id)!;
+      revalidateQuietly("/guides", `/guides/${guideId}`);
+
+      const wrong = after.status === "locked" || after.status === "tried";
+      const hint =
+        wrong && task.type !== "quiz" && task.hint ? task.hint : undefined;
+      const answerNotes = wrong ? notesFor(task, answer) : undefined;
+
+      return success(
+        {
+          item: clientItem(exercise, state, after),
+          score: derived.summary,
+          ...(hint ? { hint } : {}),
+          ...(answerNotes ? { answerNotes } : {}),
+        },
+        after.status === "correct" ? "Correct" : "Not quite"
+      );
     }
-
-    if (task.type === "quiz") {
-      if (!Array.isArray(answer)) return failure(ErrorMessages.INVALID_INPUT);
-      const slot = state.slots[before.slot!];
-      slot.entries[slot.entries.length - 1] = { taskId: id, answer };
-    } else if (task.type === "shortAnswer") {
-      if (typeof answer !== "string") return failure(ErrorMessages.INVALID_INPUT);
-      state.tries = { ...state.tries, [id]: [...(state.tries[id] ?? []), answer] };
-    } else if (code) {
-      state.codeResults = { ...state.codeResults, [id]: code };
-    }
-    state.answers = { ...state.answers, [id]: answer };
-
-    const derived = await saveAttempt(attempt, exercise, state);
-    const after = derived.items.find((item) => item.taskId === id)!;
-    revalidateQuietly("/guides", `/guides/${guideId}`);
-
-    const wrong = after.status === "locked" || after.status === "tried";
-    const hint =
-      wrong && task.type !== "quiz" && task.hint ? task.hint : undefined;
-    const answerNotes = wrong ? notesFor(task, answer) : undefined;
-
-    return success(
-      {
-        item: clientItem(exercise, state, after),
-        score: derived.summary,
-        ...(hint ? { hint } : {}),
-        ...(answerNotes ? { answerNotes } : {}),
-      },
-      after.status === "correct" ? "Correct" : "Not quite"
-    );
+    return failure(SAVE_CONFLICT);
   } catch (e) {
     return handleActionError("checkAnswer", e, "Could not check that answer");
   }
@@ -468,35 +484,39 @@ export const newQuestion = async (
     const exercise = await loadExercise(guideId);
     if (!exercise) return failure(ErrorMessages.NOT_FOUND("Exercise"));
 
-    const attempt = await findActiveAttempt(ownerId, guideId);
-    if (!attempt) return failure("Open the exercise first");
+    for (let round = 0; round < SAVE_ROUNDS; round++) {
+      const attempt = await findActiveAttempt(ownerId, guideId);
+      if (!attempt) return failure("Open the exercise first");
 
-    const state = stateOf(attempt);
-    const locked = deriveAttempt(exercise, state).items.find(
-      (item) => item.taskId === id
-    );
-    if (!locked || locked.status !== "locked" || locked.slot === undefined) {
-      return failure("Only a locked question can be swapped for a new one");
+      const state = stateOf(attempt);
+      const locked = deriveAttempt(exercise, state).items.find(
+        (item) => item.taskId === id
+      );
+      if (!locked || locked.status !== "locked" || locked.slot === undefined) {
+        return failure("Only a locked question can be swapped for a new one");
+      }
+
+      const next = pickReplacement(exercise, state, id, Math.random);
+      if (!next) return failure("There are no new questions left");
+
+      const nextId = taskId(next);
+      state.slots[locked.slot].entries.push({ taskId: nextId });
+
+      const derived = await saveAttempt(attempt, exercise, state);
+      if (!derived) continue;
+      const item = derived.items.find((i) => i.taskId === nextId)!;
+
+      return success(
+        {
+          replaced: id,
+          task: publicTask(next),
+          item: clientItem(exercise, state, item),
+          score: derived.summary,
+        },
+        "New question"
+      );
     }
-
-    const next = pickReplacement(exercise, state, id, Math.random);
-    if (!next) return failure("There are no new questions left");
-
-    const nextId = taskId(next);
-    state.slots[locked.slot].entries.push({ taskId: nextId });
-
-    const derived = await saveAttempt(attempt, exercise, state);
-    const item = derived.items.find((i) => i.taskId === nextId)!;
-
-    return success(
-      {
-        replaced: id,
-        task: publicTask(next),
-        item: clientItem(exercise, state, item),
-        score: derived.summary,
-      },
-      "New question"
-    );
+    return failure(SAVE_CONFLICT);
   } catch (e) {
     return handleActionError("newQuestion", e, "Could not get a new question");
   }
